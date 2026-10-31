@@ -1001,9 +1001,10 @@ export const THEMES = [
     burst: { shape: 'streak', colors: ['#FFFFFF', '#CFE0FF'], size: 0.1, speed: 1.6, gravity: -2, drag: 2.4, life: 1.1 },
   },
   {
-    // 자연사 박물관 진열장. 화석이 실제로 도드라진 돌판. 면마다 돌과 화석이 다르다:
-    // 무지갯빛 암몰라이트(회색 셰일), 삼엽충(석회암), 고사리(청회색 셰일), 물고기(크림색 석회암),
-    // 성게(사문석), 움푹 팬 공룡 발자국(붉은 사암)
+    // 자연사 박물관 진열장. 화석이 실제로 도드라진 돌판. 면마다 돌과 화석이 다르다: 봉합선이 고사리잎처럼 주름진
+    // 암모나이트와 조각조각 비치는 암몰라이트(셰일), 미간 돌기와 겹눈, 볼가시, 마디가 또렷한 삼엽충(석회암),
+    // 깃이 엇갈린 탄화된 고사리(청회색 셰일), 뼈마디가 보이는 작은 청어(크림빛 석회암과 검은 수지상 무늬),
+    // 다섯 꽃잎과 숨구멍 줄의 성게(사문석), 진흙이 밀려 올라온 공룡 발자국(갈라진 붉은 사암)
     id: 'fossil',
     name: '화석',
     bg: '#18221F',
@@ -1049,8 +1050,9 @@ export const THEMES = [
     burst: { shape: 'drip', colors: 'faces', size: 0.09, speed: 2.2, gravity: -6, drag: 1.2, life: 1.1 },
   },
   {
-    // 네모난 행성들. 조각 하나하나가 작은 정육면체 행성이라 칸마다 행성 겉이 꽉 찬다. 지표가 자전하고 구름이 흐르며,
-    // 낮밤 경계가 지나가면 밤쪽에 불빛이 켜진다. 테두리엔 대기가 빛나고, 몇 행성엔 고리가 가로지른다
+    // 네모난 행성들. 조각 하나하나가 작은 정육면체 행성이라 칸마다 행성 겉이 꽉 찬다. 면마다 실제 천체를 본떴다
+    // (목성, 지구, 유로파, 화성, 이오, 해왕성). 지표가 자전하고, 낮밤 경계가 지나가면 밤쪽에 도시 불빛과 용암이 켜지며,
+    // 테두리를 따라 대기가 빛난다
     id: 'planet',
     name: '행성',
     bg: '#04040C',
@@ -1064,7 +1066,7 @@ export const THEMES = [
     drift: 'radial-gradient(30% 22% at 65% 70%, rgba(255,120,200,.1), transparent 70%)',
     form: { bevel: 0.05, size: 0.94, radius: 0.06, grid: 32 },
     body: { color: '#2A2C36', roughness: 0.45, metalness: 0.6 },
-    faces: ['#D89A5A', '#2A6AC8', '#E8EEF4', '#C8502A', '#3E8A3E', '#7A4AC8'],
+    faces: ['#D89A5A', '#2A78B8', '#E8EEF4', '#C8502A', '#E0C84A', '#3A48C0'],
     lights: {
       sky: '#3a3a6a', ground: '#000000', hemi: 0.35,
       key: ['#ffffff', 3.4, [-7, 3, 4]], fill: ['#6b5cff', 0.25, [6, -2, 3]], rim: ['#9fd8ff', 1, [4, 2, -6]],
@@ -1076,7 +1078,7 @@ export const THEMES = [
   },
   {
     // 체크무늬 식탁보 위 도마. 과일을 깍둑썰기해 조각마다 네모난 과일 덩어리다(수박, 배, 파인애플, 망고, 키위, 용과).
-    // 과즙 알갱이가 번들거리고 씨가 박혀 있으며, 몇 조각엔 껍질이나 심이 붙어 있다
+    // 반짝이는 과즙 알갱이와 섬유, 씨와 껍질, 심, 맺힌 과즙 방울
     id: 'fruit',
     name: '과일',
     bg: '#F6EFE6',
@@ -1221,32 +1223,6 @@ export const THEMES = [
     burst: { shape: 'star', colors: 'faces', size: 0.17, speed: 2.2, gravity: -1, drag: 2.4, life: 0.8 },
   },
   {
-    // SF 영화의 조종석 화면. 어두운 유리판마다 다른 계기(레이더, 회전 고리, 막대그래프, 파형, 육각 스캔,
-    // 조준경)가 돌아가고, 주사선과 모서리 빛줄. 기계처럼 딱딱 돈다
-    id: 'hud',
-    name: 'HUD',
-    bg: '#03080C',
-    ink: '#9FF4FF',
-    backdrop: [
-      'repeating-linear-gradient(180deg, rgba(120,230,255,.035) 0 1px, transparent 1px 4px)',
-      'linear-gradient(rgba(80,200,255,.06) 1px, transparent 1px) 0 0 / 48px 48px',
-      'linear-gradient(90deg, rgba(80,200,255,.06) 1px, transparent 1px) 0 0 / 48px 48px',
-      'radial-gradient(60% 50% at 50% 45%, #0A2230, #03080C)',
-    ].join(', '),
-    drift: 'linear-gradient(180deg, transparent 45%, rgba(120,230,255,.06) 50%, transparent 55%)',
-    form: { bevel: 0.05, size: 0.92, radius: 0.05 },
-    body: { color: '#0E1A22', roughness: 0.35, metalness: 0.7 },
-    faces: ['#20E0F0', '#FFB020', '#FF3A8A', '#8AF03A', '#E8F4FF', '#8A6AFF'],
-    lights: {
-      sky: '#3a6a8a', ground: '#000000', hemi: 0.5,
-      key: ['#cfefff', 1.4, [-4, 5, 5]], fill: ['#2ab8ff', 0.5, [6, 0, 3]], rim: ['#6af0ff', 1.6, [0, 4, -6]],
-    },
-    surface: 'hud',
-    motion: 'mechanical',
-    ambient: { mode: 'rise', shape: 'square', colors: ['#6AF0FF', '#9FF4FF'], count: 40, size: 0.035, speed: 0.6, opacity: 0.6, additive: true },
-    burst: { shape: 'square', colors: 'faces', size: 0.09, speed: 3, gravity: 0, drag: 3, life: 0.6, additive: true },
-  },
-  {
     // 카지노 초록 펠트 위 주사위. 칸마다 진짜 주사위 눈이 움푹 파여 있고, 마주 보는 면을 더하면 7.
     // 놋쇠 몸통, 데굴 구르듯 튀며 돈다
     id: 'dice',
@@ -1326,31 +1302,6 @@ export const THEMES = [
     motion: 'fluid',
     ambient: { mode: 'float', shape: 'dot', colors: ['#FFFFFF', '#E8DCC8'], count: 24, size: 0.03, speed: 0.25, opacity: 0.6 },
     burst: { shape: 'streak', colors: 'faces', size: 0.14, speed: 1.6, gravity: -1.4, drag: 2.2, life: 1.4 },
-  },
-  {
-    // 동네 도넛 가게 진열대. 칸마다 도넛이 실제로 솟아 있고, 면마다 다른 아이싱이 흘러내린 위로 스프링클.
-    // 초콜릿 몸통, 말랑하게 출렁이며 돈다
-    id: 'donut',
-    name: '도넛',
-    bg: '#F8D8DE',
-    ink: '#3A1E14',
-    backdrop: [
-      'radial-gradient(circle at 50% 50%, rgba(255,255,255,.55) 0 18%, transparent 20%) 0 0 / 46px 46px',
-      'radial-gradient(circle at 50% 50%, rgba(255,255,255,.55) 0 18%, transparent 20%) 23px 23px / 46px 46px',
-      'radial-gradient(70% 55% at 50% 42%, #FCE6EA, #F0B8C4)',
-    ].join(', '),
-    form: { bevel: 0.07, size: 0.94, radius: 0.2, grid: 40 },
-    body: { color: '#3A2018', roughness: 0.35 },
-    sticker: { roughness: 0.4 },
-    faces: ['#F27AAE', '#FAF4E8', '#F6DA4A', '#8AC060', '#6A8AE8', '#D8892E'],
-    lights: {
-      sky: '#fff4f0', ground: '#a07060', hemi: 1.8,
-      key: ['#fff1e0', 2.2, [-4, 6, 5]], fill: ['#ffd0dc', 0.6, [6, 0, 3]], rim: ['#ffffff', 1, [0, 4, -6]],
-    },
-    surface: 'donut',
-    motion: 'squish',
-    ambient: { mode: 'fall', shape: 'streak', colors: ['#FF5A8A', '#5AC8FF', '#FFE05A', '#8AE05A', '#FFFFFF'], count: 40, size: 0.05, speed: 0.5, opacity: 0.9 },
-    burst: { shape: 'streak', colors: ['#FF5A8A', '#5AC8FF', '#FFE05A', '#8AE05A', '#FFFFFF'], size: 0.1, speed: 2.6, gravity: -5, drag: 1.2, life: 1.2 },
   },
   {
     // 사랑방 문갑 위 한지. 먹과 전통 안료(먹, 주홍, 쪽빛, 송화색, 녹색, 자주) 방울이 떨어져 번지고,
@@ -1433,9 +1384,9 @@ export const THEMES = [
     burst: { shape: 'glow', colors: 'faces', size: 0.16, speed: 1.4, gravity: 1.2, drag: 1.6, life: 1.6, additive: true },
   },
   {
-    // 살아 있는 살갗 견본. 면마다 다른 생물의 피부다: 사람(땀구멍, 잔주름, 주근깨, 점, 솜털), 코끼리(깊은 주름),
-    // 독화살개구리(젖은 파랑에 검은 무늬), 문어(물결처럼 피었다 오므라드는 색소포), 청개구리(촉촉한 초록),
-    // 비단뱀(겹친 비늘과 얼룩). 숨 쉬듯 부풀었다 가라앉고, 잡으면 사람 피부에 소름이 돋는다. 돌리면 땀이 맺혀 떨어진다
+    // 사람 살갗 견본. 면마다 다른 사람 피부다: 주근깨 난 흰 피부, 윤기 도는 짙은 피부, 햇볕에 그을린 황금빛 피부,
+    // 번져 가는 멍, 햇볕에 익어 껍질이 일어난 피부, 먹물 문신. 땀구멍과 잔주름, 솜털, 속에서 비치는 붉은 기.
+    // 숨 쉬듯 부풀었다 가라앉고, 잡으면 소름이 돋는다. 돌리면 땀이 맺혀 떨어진다
     id: 'skin',
     name: '피부',
     bg: '#1A1210',
@@ -1445,8 +1396,8 @@ export const THEMES = [
       'radial-gradient(90% 70% at 50% 45%, #2A1C18, #0E0908)',
     ].join(', '),
     form: { bevel: 0.12, size: 0.9, radius: 0.14, grid: 44 },
-    body: { color: '#3A2420', roughness: 0.6 },
-    faces: ['#E8B49C', '#8C8A86', '#2A62D8', '#D8502A', '#6AB040', '#E2BE4A'],
+    body: { color: '#202428', roughness: 0.6 },
+    faces: ['#F0CDB8', '#5C3626', '#D6A25E', '#6E4C8A', '#D85A48', '#2E4E6A'],
     lights: {
       sky: '#ffe8dc', ground: '#2a1410', hemi: 1.4,
       key: ['#fff0e4', 2.4, [-4, 6, 5]], fill: ['#ffb8a0', 0.5, [6, -1, 3]], rim: ['#ffd8c8', 1.2, [2, 3, -6]],
@@ -1505,81 +1456,6 @@ export const THEMES = [
     burst: { shape: 'glow', colors: ['#FFFFFF', '#FFE07A', '#FF9A3A'], size: 0.12, speed: 2.4, gravity: 1, drag: 2, life: 0.8, additive: true },
   },
   {
-    // 심해. 칸마다 빛나는 해파리가 우산을 오므렸다 펴며 떠 있고, 가장자리 빛 점과 방사관, 네 잎 생식소가 빛나며
-    // 긴 촉수가 흔들린다. 해파리 빛이 곧 면 색. 희미한 빛줄기와 바다 눈, 물처럼 느리게 돈다
-    id: 'jellyfish',
-    name: '해파리',
-    bg: '#020A18',
-    ink: '#CFF4FF',
-    backdrop: [
-      'linear-gradient(170deg, rgba(120,200,255,.1) 0 8%, transparent 30%)',
-      'linear-gradient(190deg, rgba(120,200,255,.07) 0 6%, transparent 26%)',
-      'radial-gradient(80% 60% at 50% 0%, #0A2A48, transparent 70%)',
-      'linear-gradient(180deg, #06223C, #01050C)',
-    ].join(', '),
-    drift: 'radial-gradient(30% 22% at 30% 70%, rgba(120,255,240,.06), transparent 70%)',
-    form: { bevel: 0.06, size: 0.92, radius: 0.1, depth: 0.02 },
-    body: { color: '#0A1426', roughness: 0.2 },
-    faces: ['#3AE0F0', '#FF5AB0', '#F4F0FF', '#9AF03A', '#FF9A3A', '#9A6AFF'],
-    lights: {
-      sky: '#2a5a8a', ground: '#000000', hemi: 0.5,
-      key: ['#9fd8ff', 0.9, [0, 7, 3]], fill: ['#3a6aff', 0.3, [6, -2, 3]], rim: ['#7fe8ff', 1, [0, 3, -6]],
-    },
-    surface: 'jellyfish',
-    motion: 'fluid',
-    ambient: { mode: 'fall', shape: 'dot', colors: ['#CFEFFF', '#FFFFFF'], count: 70, size: 0.025, speed: 0.12, opacity: 0.55 },
-    burst: { shape: 'glow', colors: 'faces', size: 0.12, speed: 1.4, gravity: 0.8, drag: 1.4, life: 1.6, additive: true },
-  },
-  {
-    // 자연사 박물관 곤충 표본 상자. 칸마다 솜종이 위에 핀으로 꽂은 보석풍뎅이. 볼록한 딱지날개가 금속처럼
-    // 반짝이고 보는 각도에 따라 빛이 바뀐다. 점줄, 다리 여섯과 더듬이, 진주 핀 머리, 손글씨 이름표
-    id: 'insect',
-    name: '곤충 표본',
-    bg: '#1C1712',
-    ink: '#EADFC8',
-    backdrop: [
-      'radial-gradient(45% 35% at 50% 30%, rgba(255,230,180,.18), transparent 70%)',
-      'linear-gradient(90deg, rgba(0,0,0,.3) 0 3%, transparent 3% 97%, rgba(0,0,0,.3) 97%)',
-      'repeating-linear-gradient(91deg, rgba(0,0,0,.14) 0 2px, transparent 2px 8px, rgba(255,220,170,.025) 8px 10px, transparent 10px 18px)',
-      'linear-gradient(180deg, #2E241A, #120E0A)',
-    ].join(', '),
-    form: { bevel: 0.05, size: 0.94, radius: 0.05, grid: 44 },
-    body: { color: '#2A2018', roughness: 0.45 },
-    faces: ['#1EA05A', '#2A50D0', '#E0B030', '#C02A3A', '#A03AB0', '#D07A3A'],
-    lights: {
-      sky: '#fff0d8', ground: '#2a1e12', hemi: 0.45,
-      key: ['#fff2dc', 1.5, [-3, 7, 5]], fill: ['#ffd8a0', 0.4, [6, 0, 3]], rim: ['#ffffff', 1.4, [2, 3, -6]],
-    },
-    env: 0.5,
-    surface: 'insect',
-    motion: 'heavy',
-    ambient: { mode: 'float', shape: 'dot', colors: ['#FFE8C0', '#FFFFFF'], count: 30, size: 0.025, speed: 0.15, opacity: 0.5 },
-    burst: { shape: 'star', colors: 'faces', size: 0.12, speed: 2, gravity: 0, drag: 2.6, life: 0.8, additive: true },
-  },
-  {
-    // 초밥집 카운터. 칸마다 위에서 내려다본 초밥 한 점(연어, 참치, 계란말이, 오징어, 장어, 아보카도)이
-    // 꽉 차게 놓여 있고, 가장자리로 밥알이 비친다. 검은 옻칠 접시 몸통, 노송나무 카운터
-    id: 'sushi',
-    name: '초밥',
-    bg: '#E8D4B0',
-    ink: '#2A1A10',
-    backdrop: [
-      'linear-gradient(180deg, transparent 0 82%, rgba(110,70,30,.16) 82% 83%, rgba(255,255,255,.12) 83% 84%, transparent 84%)',
-      'repeating-linear-gradient(90deg, rgba(150,110,60,.08) 0 2px, transparent 2px 13px, rgba(150,110,60,.05) 13px 14px, transparent 14px 31px)',
-      'radial-gradient(75% 60% at 50% 48%, #F2E2C4, #D8BE92)',
-    ].join(', '),
-    form: { bevel: 0.06, size: 0.94, radius: 0.16, grid: 36 },
-    body: { color: '#1E1A1A', roughness: 0.2 },
-    faces: ['#F28A50', '#B8202E', '#F4D040', '#F2F0EA', '#6A3A1E', '#8AB040'],
-    lights: {
-      sky: '#fff8ee', ground: '#a08060', hemi: 1.9,
-      key: ['#fff6e8', 2.3, [-3, 7, 5]], fill: ['#ffe8d0', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.1, [2, 4, -6]],
-    },
-    surface: 'sushi',
-    motion: 'smooth',
-    burst: { shape: 'dot', colors: ['#F4EAD0', '#2A2018'], size: 0.05, speed: 2, gravity: -5, drag: 1.4, life: 1 },
-  },
-  {
     // 음악 감상실. 칸마다 색 레코드판이 33⅓회전으로 돌고, 촘촘한 소릿골이 나비 모양으로 번쩍이며,
     // 이름표의 글자 줄이 돌아간다. 호두나무 턴테이블 몸통, 판이 꽂힌 선반 앞
     id: 'vinyl',
@@ -1627,55 +1503,6 @@ export const THEMES = [
     motion: 'fluid',
     ambient: { mode: 'float', shape: 'star', colors: 'faces', count: 30, size: 0.06, speed: 0.3, opacity: 0.7, additive: true },
     burst: { shape: 'star', colors: 'faces', size: 0.16, speed: 2.4, gravity: 0, drag: 2.4, life: 0.9, additive: true },
-  },
-  {
-    // 실험실 조명대 위 배양접시. 칸마다 색 배지가 밑에서 비추는 빛에 은은히 비치고, 그 위로 균 무리가 자라
-    // 손가락처럼 갈라지며 퍼진다. 접시마다 이름표 테이프, 50초쯤 자라면 새 접시로 바뀐다
-    id: 'petri',
-    name: '배양접시',
-    bg: '#DCE6EA',
-    ink: '#16242C',
-    backdrop: [
-      'linear-gradient(rgba(120,150,165,.12) 1px, transparent 1px) 0 0 / 36px 36px',
-      'linear-gradient(90deg, rgba(120,150,165,.12) 1px, transparent 1px) 0 0 / 36px 36px',
-      'radial-gradient(60% 50% at 50% 45%, #F4FAFC, #CCD8DE)',
-    ].join(', '),
-    form: { bevel: 0.06, size: 0.94, radius: 0.12 },
-    body: { color: '#F2F4F4', roughness: 0.35 },
-    faces: ['#C82A3A', '#E05AA8', '#E8C83A', '#3A7AD8', '#4AB060', '#7A4AC0'],
-    lights: {
-      sky: '#ffffff', ground: '#c8d8e0', hemi: 2,
-      key: ['#ffffff', 1.8, [-3, 7, 5]], fill: ['#e0f0ff', 0.6, [6, 0, 3]], rim: ['#ffffff', 1, [0, 4, -6]],
-    },
-    surface: 'petri',
-    motion: 'smooth',
-    burst: { shape: 'bubble', colors: 'faces', size: 0.1, speed: 1.4, gravity: 1, drag: 1.6, life: 1.2, opacity: 0.8 },
-  },
-  {
-    // 역 벽의 지하철 노선도. 칸마다 면 색 노선이 굵게 지나가고(곧게, 또는 45도로 꺾여) 다른 노선이 가늘게 엇갈리며,
-    // 강이 흐르는 칸도 있다. 하얀 역과 갈아타는 역, 노선을 따라 작은 열차가 달린다
-    id: 'transit',
-    name: '노선도',
-    bg: '#F4F2EC',
-    ink: '#1A1A1A',
-    backdrop: [
-      'linear-gradient(35deg, transparent 47%, rgba(224,48,42,.16) 47% 49.5%, transparent 49.5%)',
-      'linear-gradient(-20deg, transparent 60%, rgba(42,90,208,.14) 60% 62%, transparent 62%)',
-      'linear-gradient(90deg, transparent 22%, rgba(42,160,72,.14) 22% 23.5%, transparent 23.5%)',
-      'linear-gradient(0deg, transparent 30%, rgba(242,184,30,.18) 30% 31.6%, transparent 31.6%)',
-      'linear-gradient(170deg, transparent 70%, rgba(150,200,235,.3) 70% 76%, transparent 76%)',
-      '#F4F2EC',
-    ].join(', '),
-    form: { bevel: 0.05, size: 0.94, radius: 0.06 },
-    body: { color: '#5A5E66', roughness: 0.5, metalness: 0.6 },
-    faces: ['#E0302A', '#2A5AD0', '#F2B81E', '#2AA048', '#8A3AB0', '#9A5A2A'],
-    lights: {
-      sky: '#ffffff', ground: '#d0d0d0', hemi: 2.3,
-      key: ['#ffffff', 1.4, [-3, 6, 5]], fill: ['#ffffff', 0.4, [6, 0, 3]], rim: ['#ffffff', 0.6, [0, 4, -6]],
-    },
-    surface: 'transit',
-    motion: 'mechanical',
-    burst: { shape: 'square', colors: 'faces', size: 0.09, speed: 2.4, gravity: 0, drag: 2.8, life: 0.7 },
   },
   {
     // 기차역 대합실의 플립 보드. 칸마다 반으로 갈린 판에 숫자가 적혀 있다가, 때가 되면 위쪽 판이 툭 떨어지며

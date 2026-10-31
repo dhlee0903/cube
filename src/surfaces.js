@@ -8,6 +8,8 @@
 // uCharge  방금 돌린 만큼 차올랐다 빠지는 값(0~1)
 // uBlink   조각을 잡는 순간 1, 곧 0으로
 // uPointer 손가락·마우스가 가리키는 곳(시점 공간)
+// vHome    스티커가 원래 있던 면 위 칸 자리. xy 면 전체를 -1~1로 본 칸 가운데, z 조각 한 칸이 면 좌표로 얼마인지.
+//          fxFace()가 면 전체 좌표를 준다. 면 하나에 그림 한 장을 그리면 다 맞췄을 때 그림이 이어진다
 //
 // 각 질감은 네 군데에 들어간다. 앞에서 선언한 변수는 뒤에서 그대로 쓴다(같은 main 안).
 //   color     diffuseColor(바탕색)
@@ -33,6 +35,7 @@ varying vec3 vLocal;
 varying vec3 vTx;
 varying vec3 vTy;
 varying vec3 vTz;
+varying vec3 vHome;
 `;
 
 // 정점·조각 셰이더 양쪽에서 쓰는 것
@@ -117,6 +120,8 @@ const FRAG = /* glsl */ `
 
 // 스티커 안 좌표. fxQ는 -1~1, fxUV는 0~1
 vec2 fxQ() { return vLocal.xy / uSticker.x; }
+// 원래 면 전체 좌표(-1~1). 다 맞추면 면 하나가 그림 한 장이 된다
+vec2 fxFace() { return vHome.xy + vLocal.xy * vHome.z; }
 vec2 fxUV() { return vLocal.xy / (2. * uSticker.x) + .5; }
 // 스티커 가장자리에서 안쪽으로 얼마나 들어왔는지(0이 가장자리)
 float fxEdge() { return fxEdgeAt(vLocal.xy); }
@@ -1710,73 +1715,143 @@ B.blueprint = {
 };
 
 S.fossil = {
-  // 박물관 진열장의 돌판. 화석이 실제로 도드라져 있고 둘레는 정으로 쪼아 낸 자국.
-  // 면마다 돌과 화석이 다르다: 무지갯빛 암몰라이트, 삼엽충, 고사리, 물고기, 성게, 공룡 발자국(움푹 패임)
+  // 박물관 진열장의 돌판. 화석이 실제로 도드라져 있다. 면마다 돌과 화석이 다르다:
+  // 암모나이트(나선 껍질에 갈비 같은 늑과 고사리잎처럼 주름진 봉합선, 조각조각 붉고 푸르게 비치는 암몰라이트, 짙은 셰일),
+  // 삼엽충(머리방패의 볼록한 미간 돌기와 초승달 겹눈, 볼가시, 가운데 축과 양옆 늑엽으로 나뉜 가슴마디, 작은 꼬리방패, 석회암),
+  // 고사리(둥근 작은잎이 줄지은 깃이 엇갈려 달린 탄화된 잎, 청회색 셰일), 물고기(그린리버층의 작은 청어처럼
+  // 척추뼈와 갈비뼈, 지느러미살, 갈라진 꼬리, 크림빛 석회암에 검은 수지상 무늬), 성게(다섯 꽃잎과 숨구멍 줄, 잔 돌기, 사문석),
+  // 공룡 발자국(발톱 자국이 뾰족한 세 발가락이 움푹 패고 둘레로 진흙이 밀려 올라왔다. 갈라진 진흙과 물결 자국, 붉은 사암)
   head: `
-    // 화석 모양. 높이(-1~1)를 돌려주고 inside에 화석 안쪽 정도를 담는다
-    float fxFossil(vec2 q, out float inside) {
+    float fxSegF(vec2 p, vec2 a, vec2 b) { vec2 pa = p - a, ba = b - a; return length(pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0., 1.)); }
+    // 화석 높이(-1~1). inside 화석 안쪽 정도, mark 무늬 선(봉합선, 마디 골, 잎맥, 뼈, 숨구멍)
+    float fxFossil(vec2 q, out float inside, out float mark) {
       float r = length(q);
       float th = atan(q.y, q.x);
       float h = 0.;
       inside = 0.;
+      mark = 0.;
       if (uFace < .5) {
         float s = log(max(r, .02)) / .22 - th / 6.2832;
-        float whorl = abs(fract(s) - .5);
+        float wf = fract(s);
+        float whorl = abs(wf - .5);
         inside = 1. - smoothstep(.66, .7, r);
         float rib = .5 + .5 * sin(th * 30. + s * 2.);
-        h = inside * (smoothstep(.04, .22, whorl) * .7 + rib * .3 * smoothstep(.15, .5, whorl));
+        float sa = th / 6.2832 * 14. + floor(s) * .37 + wf * .25;
+        float frill = .07 * sin(wf * 38.) + .035 * sin(wf * 97. + 1.) + .018 * sin(wf * 210.);
+        float sx = fract(sa + frill);
+        mark = (1. - smoothstep(.018, .04, min(sx, 1. - sx) * r * 6.2832 / 14.)) * smoothstep(.06, .2, r) * inside * smoothstep(.04, .12, whorl);
+        float umb = 1. - smoothstep(.05, .1, r);
+        h = inside * (smoothstep(.04, .22, whorl) * .7 + rib * .3 * smoothstep(.15, .5, whorl)) - umb * .5;
       } else if (uFace < 1.5) {
-        vec2 p = q * vec2(1.2, 1.);
-        inside = 1. - smoothstep(.62, .66, length(p * vec2(1., .74)));
-        float seg = .5 + .5 * sin(p.y * 30.);
-        float axial = 1. - smoothstep(.1, .15, abs(p.x));
-        float pleura = smoothstep(.15, .2, abs(p.x));
-        float head = 1. - smoothstep(.0, .06, abs(length(p - vec2(0., .38)) - .26));
-        float eyes = 1. - smoothstep(.04, .07, length(vec2(abs(p.x) - .18, p.y - .42)));
-        h = inside * (.35 + .4 * axial + .25 * seg * pleura * step(p.y, .3) + .3 * eyes) + head * inside * .2;
+        vec2 p = vec2(abs(q.x), q.y) * 1.08;
+        float ceph = step(.24, p.y) * (1. - smoothstep(.98, 1.02, length((p - vec2(0., .24)) / vec2(.44, .34))));
+        float gen = 1. - smoothstep(.02, .035, fxSegF(p, vec2(.4, .27), vec2(.47, -.16)) - .035 * (1. - clamp((.27 - p.y) / .43, 0., 1.)));
+        float glab = 1. - smoothstep(.95, 1.05, length((p - vec2(0., .4)) / vec2(.12 + .04 * (p.y - .3), .17)));
+        float gfur = glab * (1. - smoothstep(.006, .016, min(abs(p.y - .37), abs(p.y - .45)))) * step(.05, p.x);
+        float eye = 1. - smoothstep(.015, .025, abs(length(p - vec2(.22, .39)) - .06));
+        eye *= step(.36, p.y) * step(p.x, .29);
+        float lens = eye * step(.5, fract(atan(p.y - .39, p.x - .22) * 6.));
+        float hw = mix(.4, .3, clamp((.24 - p.y) / .62, 0., 1.));
+        float thor = step(-.4, p.y) * step(p.y, .24) * step(p.x, hw - .02 * fract((.24 - p.y) / .056));
+        float segL = fract((.24 - p.y) / .056);
+        float groove = thor * (1. - smoothstep(.0, .12, min(segL, 1. - segL)));
+        float axial = 1. - smoothstep(.1, .13, p.x);
+        float axFur = thor * (1. - smoothstep(.0, .015, abs(p.x - .115)));
+        float pleuFur = thor * step(.13, p.x) * (1. - smoothstep(.0, .1, abs(segL - .45)));
+        float pyg = step(p.y, -.4) * (1. - smoothstep(.95, 1.05, length((p - vec2(0., -.4)) / vec2(.3, .2))));
+        float pygSeg = pyg * (1. - smoothstep(.0, .12, abs(fract((-.4 - p.y) / .05) - .5) - .38)) * step(p.x, .2);
+        inside = max(max(ceph, gen), max(thor, pyg));
+        mark = clamp(max(max(gfur, groove), max(axFur, max(pleuFur * .7, pygSeg))) + lens * .8, 0., 1.);
+        h = inside * (.4 + .35 * axial * (1. - ceph * (1. - glab)) + .45 * glab + .35 * eye - .25 * groove - .15 * pleuFur);
       } else if (uFace < 2.5) {
-        vec2 p = fxRot(.3) * q;
-        float rachis = 1. - smoothstep(.015, .035, abs(p.x));
-        float w = .48 * (1. - abs(p.y) * 1.05);
-        float leaf = step(abs(p.x), w) * smoothstep(.25, .45, abs(fract(p.y * 8. - abs(p.x) * 1.3) - .5) * 2.) ;
-        inside = max(rachis, leaf) * step(abs(p.y), .78);
-        h = inside * (.45 + .55 * rachis);
+        vec2 p = fxRot(.35) * q;
+        float rach = 1. - smoothstep(.012, .03, abs(p.x + sin(p.y * 2.) * .03));
+        float leaf = 0.;
+        float vein = 0.;
+        float L0 = .72 * (1. - smoothstep(-.75, .85, p.y));
+        for (int k = -6; k <= 6; k++) {
+          float fk = float(k);
+          float side = mod(fk, 2.) < .5 ? 1. : -1.;
+          float y0 = fk * .12 + side * .03;
+          float u = p.x * side;
+          if (u < 0.) continue;
+          float L = L0 * (1. - abs(fk) * .04);
+          float v = p.y - y0 - u * .45;
+          float hw = .095 * (1. - u / max(L, .01) * .8);
+          float lobe = .5 + .5 * abs(cos(u * 32.));
+          float pin = step(u, L) * (1. - smoothstep(hw * lobe * .9, hw * lobe, abs(v)));
+          leaf = max(leaf, pin);
+          vein = max(vein, pin * (1. - smoothstep(.003, .009, abs(v))));
+        }
+        inside = max(rach, leaf) * step(abs(p.y), .82);
+        mark = max(vein, rach * .5) * inside;
+        h = inside * (.4 + .5 * rach);
       } else if (uFace < 3.5) {
-        vec2 p = q;
-        float spine = (1. - smoothstep(.015, .035, abs(p.y))) * step(abs(p.x), .58);
-        float ribs = (1. - smoothstep(.0, .02, abs(fract(p.x * 8.) - .5) - .44)) * step(abs(p.y), .3 * (1. - abs(p.x + .1) * 1.1)) * step(-.45, p.x) * step(p.x, .42);
-        float head = 1. - smoothstep(.14, .17, length((p - vec2(.56, 0.)) * vec2(1., 1.25)));
-        float eye = 1. - smoothstep(.03, .045, length(p - vec2(.6, .04)));
-        float tail = step(p.x, -.48) * step(abs(p.y), (-.48 - p.x) * 1.3) * step(-.8, p.x);
-        float fin = step(abs(p.y), .45) * step(.3, abs(p.y)) * step(abs(p.x - .05), .1 - (abs(p.y) - .3));
-        inside = max(max(spine, ribs), max(max(head, tail), fin));
-        h = inside * (.7 - eye * .5);
+        vec2 p = q - vec2(.02, 0.);
+        float bx = clamp((p.x + .58) / 1.2, 0., 1.);
+        float hw = .21 * pow(max(0., sin(bx * 3.1416)), .7) + .03;
+        float body = step(-.58, p.x) * step(p.x, .62) * (1. - smoothstep(hw - .01, hw, abs(p.y)));
+        float spineY = .015 * sin(p.x * 4.);
+        float vert = step(-.5, p.x) * step(p.x, .4) * (1. - smoothstep(.016, .024, abs(p.y - spineY))) * step(.18, abs(fract(p.x / .042) - .5));
+        float ribX = fract((p.x + abs(p.y - spineY) * .45) / .042);
+        float ribs = step(-.3, p.x) * step(p.x, .38) * (1. - smoothstep(.0, .2, min(ribX, 1. - ribX) * 2.)) * step(abs(p.y - spineY), hw * .85) * step(.02, abs(p.y - spineY));
+        float skull = step(.4, p.x) * body;
+        float orbit = 1. - smoothstep(.006, .014, abs(length(p - vec2(.52, .04)) - .045));
+        float oper = (1. - smoothstep(.006, .014, abs(length(p - vec2(.62, 0.)) - .2))) * step(p.x, .45) * step(.38, p.x) * step(abs(p.y), .16);
+        float df = step(abs(p.x - .05), .12) * step(hw - .01, p.y) * step(p.y, hw + .17 - abs(p.x - .02) * .6);
+        float dfRay = df * (1. - smoothstep(.0, .25, abs(fract((p.x + (p.y - hw) * .5) / .025) - .5) * 2. - .5));
+        float tx = -.58 - p.x;
+        float tail = step(-.05, tx) * step(tx, .24) * step(abs(p.y), .05 + tx * 1.05) * (1. - step(abs(p.y), max(0., tx - .1) * .9));
+        float tRay = tail * (1. - smoothstep(.0, .25, abs(fract(atan(p.y, tx + .08) * 9.) - .5) * 2. - .45));
+        inside = max(body, max(df, tail));
+        mark = clamp(max(max(vert, ribs), max(orbit + oper, max(dfRay, tRay))) + skull * .55, 0., 1.);
+        h = inside * (.25 + .35 * mark);
       } else if (uFace < 4.5) {
-        float pet = abs(cos(th * 2.5));
-        float star = (1. - smoothstep(.0, .03, abs(r - .32 - .22 * pet) - .05)) * step(.12, r);
-        float pores = step(.6, fract(r * 22.)) * star;
-        inside = 1. - smoothstep(.66, .7, r);
-        h = inside * (.45 + .45 * (1. - r)) + star * .25 - pores * .15;
-      } else {
-        // 세 발가락 공룡 발자국. 움푹 들어간다
-        vec2 p = q + vec2(0., .1);
-        float heel = length(p * vec2(1., 1.2)) - .22;
-        float toes = 1e3;
-        for (int i = 0; i < 3; i++) {
-          float a = 1.5708 + (float(i) - 1.) * .55;
+        inside = 1. - smoothstep(.64, .68, r);
+        float pet = 0.;
+        float pores = 0.;
+        for (int k = 0; k < 5; k++) {
+          float a = 1.5708 + float(k) * 1.2566;
           vec2 dir = vec2(cos(a), sin(a));
-          vec2 t = p - dir * clamp(dot(p, dir), 0., .58);
-          toes = min(toes, length(t) - .085 * (1. - clamp(dot(p, dir), 0., .58)));
+          float u = dot(q, dir);
+          float v = dot(q, vec2(-dir.y, dir.x));
+          float w = .11 * sin(3.1416 * clamp((u - .06) / .44, 0., 1.));
+          float inP = step(.06, u) * step(u, .5) * (1. - smoothstep(w - .01, w, abs(v)));
+          pet = max(pet, inP);
+          float rowD = abs(abs(v) - w * .82);
+          float dots = 1. - smoothstep(.006, .012, length(vec2(rowD, (fract(u / .028) - .5) * .028)));
+          pores = max(pores, dots * step(.08, u) * step(u, .48));
+        }
+        vec2 tg = fract(q * 26.) - .5;
+        float tub = (1. - smoothstep(.12, .25, length(tg))) * (1. - pet) * inside;
+        float apex = 1. - smoothstep(.04, .06, r);
+        mark = clamp(pores + apex * .6, 0., 1.) * inside;
+        h = inside * (.4 + .4 * (1. - r) + pet * .12 + tub * .1) - pores * .12;
+      } else {
+        vec2 p = q + vec2(0., .1);
+        float heel = length(p * vec2(1., 1.25)) - .2;
+        float toes = 1e3;
+        float pads = 0.;
+        for (int i = 0; i < 3; i++) {
+          float a = 1.5708 + (float(i) - 1.) * .52;
+          vec2 dir = vec2(cos(a), sin(a));
+          float t = clamp(dot(p, dir), 0., .66);
+          vec2 tp = p - dir * t;
+          float w = .085 * (1. - t / .74) + .008;
+          toes = min(toes, length(tp) - w);
+          pads = max(pads, (.5 + .5 * cos(t * 30.)) * (1. - smoothstep(0., w, length(tp))) * step(t, .55));
         }
         float d = min(heel, toes);
         inside = 1. - smoothstep(-.02, .02, d);
-        h = -inside * (.6 + .4 * (1. - smoothstep(-.15, 0., d)));
+        float rim = exp(-pow((d - .07) / .05, 2.)) * (1. - inside);
+        h = -inside * (.55 + .35 * (1. - smoothstep(-.15, 0., d)) - pads * .2) + rim * .35;
+        mark = rim;
       }
       return h;
     }
     float fxFossilH(vec2 p, float seed) {
-      float inside;
-      float f = fxFossil(p / uSticker.x, inside);
+      float inside, mark;
+      float f = fxFossil(p / uSticker.x, inside, mark);
       float rough = fxN2(p * 40. + seed * 7.);
       return smoothstep(0., .1, fxEdgeAt(p)) * (.012 + .004 * rough + f * .026);
     }`,
@@ -1784,27 +1859,51 @@ S.fossil = {
   color: `
     if (fxEdge() < 0.) discard;
     vec2 fxQf = fxQ();
-    float fxIn;
-    float fxH = fxFossil(fxQf, fxIn);
+    float fxIn, fxMk;
+    float fxH = fxFossil(fxQf, fxIn, fxMk);
     float fxStone = fxF2(vLocal.xy * 9. + vSeed * 7.);
     float fxLayer = fxN2(vec2(vLocal.y * 34. + fxStone * 3., vSeed));
     vec3 fxRock = diffuseColor.rgb * (.78 + .32 * fxStone) * (.92 + .08 * fxLayer);
     vec3 fxFos;
-    if (uFace < .5) fxFos = vec3(.2, .17, .15) * (.6 + .6 * smoothstep(.1, .5, fxH));
-    else if (uFace < 1.5) fxFos = vec3(.16, .13, .12) * (.8 + .5 * fxH);
-    else if (uFace < 2.5) fxFos = vec3(.1, .09, .08);
-    else if (uFace < 3.5) fxFos = vec3(.42, .27, .13) * (.8 + .4 * fxH);
-    else if (uFace < 4.5) fxFos = vec3(.9, .86, .74) * (.85 + .2 * fxH);
-    else fxFos = diffuseColor.rgb * .55;
+    if (uFace < .5) {
+      fxRock *= .9 + .12 * step(.5, fract(vLocal.y * 60. + fxStone * 2.));
+      fxFos = vec3(.3, .24, .2) * (.6 + .6 * smoothstep(.1, .5, fxH));
+      fxFos = mix(fxFos, vec3(.9, .84, .7), fxMk * .95);
+    } else if (uFace < 1.5) {
+      vec3 sh = fxVoronoi(fxQf * 7. + vSeed);
+      fxRock = mix(fxRock, fxRock * 1.15, (1. - smoothstep(.05, .12, sh.x)) * step(.85, sh.z));
+      fxFos = vec3(.44, .36, .28) * (.65 + .55 * fxH);
+      fxFos *= 1. - fxMk * .6;
+    } else if (uFace < 2.5) {
+      float nod = length(fxQf * vec2(.95, 1.1));
+      fxRock = mix(fxRock, fxRock * vec3(1.15, .95, .75), smoothstep(.75, .95, nod) * .6);
+      fxFos = vec3(.07, .065, .06) + fxMk * .12;
+    } else if (uFace < 3.5) {
+      float dend = (1. - smoothstep(.0, .06, abs(fxN2(fxQf * 7. + vSeed * 3.) * 2. - 1.))) * smoothstep(.55, .8, fxN2(fxQf * 1.5 + 4.)) * (1. - fxIn);
+      fxRock = mix(fxRock, vec3(.15, .12, .1), dend * .7);
+      fxFos = mix(fxRock * .8, vec3(.4, .25, .11), fxMk);
+    } else if (uFace < 4.5) {
+      float vein = 1. - smoothstep(0., .03, abs(fxN2(fxQf * 3. + vSeed) - .5));
+      fxRock = mix(fxRock, vec3(.85, .9, .82), vein * .5);
+      fxFos = vec3(.88, .84, .72) * (.82 + .25 * fxH);
+      fxFos = mix(fxFos, vec3(.32, .28, .22), fxMk * .8);
+    } else {
+      vec3 mc = fxVoronoi(fxQf * 3. + vSeed * 4.);
+      float crack = (1. - smoothstep(0., .04, mc.y)) * (1. - fxIn) * (1. - fxMk);
+      float ripple = .5 + .5 * sin(fxQf.y * 30. + fxN2(fxQf * 3.) * 3.);
+      fxRock *= (.92 + .1 * ripple) * (1. - crack * .45);
+      fxRock = mix(fxRock, fxRock * 1.15, fxMk);
+      fxFos = diffuseColor.rgb * .58;
+    }
+    float fxAm = step(uFace, .5) * smoothstep(.68, .78, fxN2(fxQf * 2.6 + vSeed * 3.)) * (1. - fxMk) * smoothstep(.15, .5, fxH);
     diffuseColor.rgb = mix(fxRock, fxFos, clamp(fxIn, 0., 1.));`,
-  normal: 'normal = fxBump(normal, fxStone * .003 + fxLayer * .001);',
-  surface: 'roughnessFactor = mix(.88, uFace < .5 ? .15 : .45, fxIn); metalnessFactor = uFace < .5 ? fxIn * .4 : 0.;',
+  normal: 'normal = fxBump(normal, fxStone * .003 + fxLayer * .001 + fxMk * fxIn * .0012);',
+  surface: 'roughnessFactor = mix(.88, uFace < .5 ? mix(.4, .12, fxAm) : .45, fxIn); metalnessFactor = uFace < .5 ? fxIn * fxAm * .5 : 0.;',
   emissive: `
-    // 암몰라이트: 보는 각도에 따라 무지갯빛
+    // 암몰라이트: 붉은빛과 초록빛이 조각조각, 보는 각도에 따라 바뀐다
     float fxVd = abs(dot(normal, normalize(vViewPosition)));
-    // 암몰라이트는 붉은빛과 초록빛이 조각조각 비치는 정도다. 높이로 색을 돌리면 등고선 무지개가 돼 버린다
-    vec3 fxIrid = .5 + .5 * cos(6.2832 * (fxVd * .5 + fxN2(fxQf * 1.2 + vSeed) * .45 + vec3(0., .33, .67) * .6));
-    totalEmissiveRadiance = step(uFace, .5) * mix(diffuseColor.rgb, fxIrid, .5) * fxIn * smoothstep(.15, .6, fxH) * .35;`,
+    vec3 fxIrid = .5 + .5 * cos(6.2832 * (fxVd * .6 + fxN2(fxQf * 1.4 + vSeed) * .5 + vec3(0., .33, .67) * .6));
+    totalEmissiveRadiance = fxIrid * fxIn * fxAm * .55;`,
 };
 B.fossil = {
   // 거친 화강암 받침
@@ -1844,113 +1943,172 @@ B.jelly = {
 };
 
 S.planet = {
-  // 네모난 행성. 조각 하나하나가 작은 정육면체 행성이라 스티커 한 칸이 곧 행성의 한 면이다.
-  // 면마다 행성이 다르다(띠와 소용돌이의 가스 행성, 대륙과 도시 불빛의 바다 행성, 붉은 금이 간 얼음 위성,
-  // 극관과 운석구덩이의 붉은 행성, 강이 흐르는 밀림 행성, 번개 치는 폭풍 행성). 지표가 천천히 자전하고
-  // 구름은 따로 흐르며, 낮밤 경계가 지나가면 밤쪽에 불빛이 켜진다. 테두리를 따라 대기가 빛나고,
-  // 가스 행성과 폭풍 행성엔 고리가 비스듬히 가로지른다
+  // 네모난 행성. 다 맞추면 면 하나가 행성 하나의 얼굴이 된다. 면마다 실제 천체를 본떴다:
+  // 목성(폭이 제각각인 크림빛 대와 적갈색 띠, 띠 경계의 소용돌이, 적도대의 푸른 꽃줄 구름, 하얀 타원 줄, 띠에 파인 자리의 대적점),
+  // 지구(얕고 깊은 바다, 숲과 사막의 대륙, 극관, 소용돌이치는 태풍, 밤쪽 도시 불빛, 바다에 비친 해),
+  // 유로파(희푸른 얼음을 가로지르는 갈색 이중 능선, 얼음이 깨져 떠다니다 다시 언 지대, 갈색 반점),
+  // 화성(버터스카치빛 먼지와 바람에 드러난 검은 현무암, 운석구덩이, 면을 가로지르는 거대한 협곡, 방패 화산, 소용돌이 홈의 극관),
+  // 이오(노란 유황 들판, 붉은 고리를 두른 화산, 초록 테의 검은 용암 호수, 하얀 서리, 밤쪽에 달아오르는 용암),
+  // 해왕성(짙은 하늘빛의 옅은 띠, 대암점과 그 곁의 하얀 구름, 빠르게 흐르는 메탄 구름 줄).
+  // 지표가 천천히 자전하고, 낮밤 경계가 면을 가로질러 오가며, 면 테두리를 따라 대기가 빛난다
   head: `
     float fxPlanetH(vec2 p, float seed) {
       vec2 q = p / uSticker.x;
-      vec2 w = 1. - pow(abs(q), vec2(6.));
-      return .028 * w.x * w.y + .004;
+      vec2 w = 1. - pow(abs(q), vec2(8.));
+      return .016 * w.x * w.y + .004;
     }`,
   height: 'fxPlanetH',
   color: `
     if (fxEdge() < 0.) discard;
-    vec2 fxQp = fxQ();
-    float fxSpin = uTime * .035 + vSeed * 3.;
-    vec2 fxS = fxQp + vec2(fxSpin, 0.);
-    vec2 fxCl = fxQp + vec2(fxSpin * 1.7, 0.);
-    float fxSx = mod(fxS.x + 1., 2.) - 1.;
+    vec2 fxF = fxFace();
+    float fxSpin = uTime * .02;
+    vec2 fxS = fxF + vec2(fxSpin, 0.);
+    vec2 fxCl = fxF + vec2(fxSpin * 1.6, 0.);
+    float fxBorder = 1. - max(abs(fxF.x), abs(fxF.y));
     vec3 fxBase = diffuseColor.rgb;
     vec3 fxC = fxBase;
     float fxCloud = 0.;
     float fxLand = 0.;
-    float fxLightning = 0.;
+    float fxSea = 0.;
+    float fxHotSpot = 0.;
     vec3 fxAtm = mix(fxBase, vec3(.55, .8, 1.), .55);
-    float fxRingOn = 0.;
+    float fxAtmK = 1.;
+    float fxWrapX = mod(fxS.x + 1., 2.) - 1.;
     if (uFace < .5) {
-      // 가스 행성
-      float warp = fxF2(fxS * vec2(1.4, 3.6) + vec2(0., uTime * .015));
-      float band = fxQp.y * 4.6 + warp * 2.4;
-      fxC = mix(fxBase * .62, fxBase * 1.18, .5 + .5 * sin(band * 3.1));
-      fxC = mix(fxC, vec3(.96, .9, .78), smoothstep(.7, .95, sin(band * 1.7 + 1.)) * .6);
-      vec2 sp = vec2(fxSx - .25, fxQp.y + .3) / vec2(.3, .16);
+      float lat = fxF.y;
+      float turb = fxF2(vec2(fxS.x * 1.3, lat * 2.6) + vec2(uTime * .008, 0.));
+      float yb = lat + (turb - .5) * .14 + sin(fxS.x * 5. + lat * 8.) * .015;
+      float bv = sin(yb * 9.5) * .5 + sin(yb * 21. + 1.3) * .3 + sin(yb * 39. + 2.) * .2;
+      float streakJ = fxN2(vec2(fxS.x * 2.5, yb * 60.));
+      vec3 zone = vec3(.95, .9, .8);
+      vec3 beltC = mix(fxBase * .72, vec3(.55, .32, .2), .5);
+      fxC = mix(zone, fxBase * 1.05, smoothstep(-.3, .2, bv));
+      fxC = mix(fxC, beltC, smoothstep(.25, .6, bv));
+      fxC = mix(fxC, vec3(.86, .56, .3), smoothstep(.0, .2, bv) * (1. - smoothstep(.2, .4, bv)) * .45);
+      fxC *= .9 + .2 * streakJ;
+      float edge = 1. - abs(bv) * 1.6;
+      float eddy = smoothstep(.55, .8, fxN2(vec2(fxS.x * 7., lat * 11.))) * smoothstep(.6, 1., edge);
+      fxC = mix(fxC, mix(zone, beltC, .5) * 1.05, eddy * .5);
+      float fest = (1. - smoothstep(.0, .05, abs(fract(fxS.x * 2. + lat * 2.4) - .5) - .38)) * step(abs(lat - .05), .1);
+      fxC = mix(fxC, vec3(.45, .5, .62), fest * .45);
+      vec2 ov = vec2(fract((fxS.x + .3) * 1.2) * 1.67 - .83, lat + .62) / vec2(.07, .045);
+      fxC = mix(fxC, vec3(.98, .97, .94), (1. - smoothstep(.8, 1., length(ov))) * .9);
+      vec2 sp = vec2(fxWrapX - .15, lat + .3) / vec2(.3, .17);
       float spr = length(sp);
-      float swirl = .5 + .5 * sin(atan(sp.y, sp.x) * 2. + spr * 9. - uTime * .6);
-      fxC = mix(fxC, mix(vec3(.75, .3, .16), vec3(.95, .6, .4), swirl), 1. - smoothstep(.8, 1., spr));
-      fxRingOn = 1.;
+      float swirl = .5 + .5 * sin(atan(sp.y, sp.x) * 2. + spr * 8. - uTime * .4);
+      fxC = mix(fxC, vec3(.96, .9, .8), (1. - smoothstep(1., 1.3, spr)) * smoothstep(.85, 1., spr));
+      fxC = mix(fxC, mix(vec3(.72, .3, .17), vec3(.9, .55, .38), swirl), 1. - smoothstep(.8, 1., spr));
+      fxAtm = vec3(.95, .82, .62);
     } else if (uFace < 1.5) {
-      // 바다 행성
-      float h = fxF2(fxS * 1.5 + vSeed * 7.);
+      float h = fxF2(fxS * 1.1 + 7.);
       fxLand = smoothstep(.52, .55, h);
-      vec3 sea = mix(fxBase * .6, fxBase * 1.1, smoothstep(.3, .52, h));
-      vec3 land = mix(vec3(.25, .5, .2), vec3(.62, .5, .3), smoothstep(.6, .75, h));
+      fxSea = 1. - fxLand;
+      vec3 sea = mix(vec3(.02, .07, .22), fxBase * 1.15, smoothstep(.3, .52, h));
+      float dry = smoothstep(.45, .7, fxN2(fxS * 1.6 + 3.)) * (1. - smoothstep(.45, .8, abs(fxF.y)));
+      vec3 land = mix(vec3(.16, .36, .14), vec3(.74, .6, .38), dry);
+      land = mix(land, vec3(.45, .4, .32), smoothstep(.68, .8, h));
       fxC = mix(sea, land, fxLand);
-      fxCloud = smoothstep(.55, .75, fxF2(fxCl * 2.4 + vec2(0., uTime * .02) + vSeed));
-      fxC = mix(fxC, vec3(1.), smoothstep(.82, .95, abs(fxQp.y)) * .85);
+      fxC = mix(fxC, vec3(.97), smoothstep(.8, .88, abs(fxF.y) + fxN2(vec2(fxS.x * 3., 2.)) * .08));
+      vec2 cy = vec2(mod(fxCl.x - .35 + 1., 2.) - 1., fxF.y - .25);
+      float cyr = length(cy);
+      float spiral = .5 + .5 * sin(atan(cy.y, cy.x) * 2. - cyr * 22.);
+      fxCloud = smoothstep(.55, .75, fxF2(fxCl * 1.9 + vec2(0., uTime * .015)));
+      fxCloud = max(fxCloud, spiral * (1. - smoothstep(.06, .24, cyr)) * .95);
+      fxAtm = vec3(.45, .7, 1.);
     } else if (uFace < 2.5) {
-      // 얼음 위성: 붉은 금이 얽힌 얼음 껍질
-      vec3 v = fxVoronoi(fxS * 2.2 + vSeed * 5.);
-      float crack = 1. - smoothstep(0., .05, v.y);
-      float lin = 1. - smoothstep(0., .03, abs(fxN2(fxS * 3. + vSeed) - .5));
-      fxC = fxBase * (.88 + .14 * fxN2(fxS * 9.));
-      fxC = mix(fxC, vec3(.62, .32, .2), max(crack * .7, lin * .55));
-      fxC = mix(fxC, vec3(.6, .8, 1.), smoothstep(.6, .9, fxN2(fxS * 2. + 9.)) * .25);
+      fxC = fxBase * (.9 + .12 * fxN2(fxS * 7.));
+      fxC = mix(fxC, vec3(.62, .78, .95), smoothstep(.55, .85, fxN2(fxS * 1.3 + 9.)) * .35);
+      float lin = 0.;
+      for (int i = 0; i < 7; i++) {
+        float fi = float(i);
+        float ang = fxH1(fi + 3.) * 3.1416;
+        vec2 n = vec2(cos(ang), sin(ang));
+        float off = (fxH1(fi * 7. + 1.) - .5) * 1.8;
+        float dd = dot(fxS, n) - off + sin(dot(fxS, vec2(-n.y, n.x)) * 1.4 + fi) * .1;
+        float wid = .012 + .016 * fxH1(fi * 3.);
+        float dbl = (1. - smoothstep(.005, .011, abs(abs(dd) - wid))) + (1. - smoothstep(wid * .8, wid * 2.4, abs(dd))) * .45;
+        lin = max(lin, dbl * (.6 + .4 * fxH1(fi + 9.)));
+      }
+      vec3 v = fxVoronoi(fxS * 6. + 5.);
+      float chaos = smoothstep(.66, .72, fxN2(fxS * 1.1 + 2.));
+      float block = chaos * (1. - smoothstep(.02, .05, v.y));
+      vec3 brown = vec3(.55, .3, .17);
+      fxC = mix(fxC, brown, max(lin * .85, chaos * .4));
+      fxC = mix(fxC, fxC * 1.2 + .1, chaos * (1. - block) * step(.5, v.z) * .4);
+      vec3 lv = fxVoronoi(fxS * 9. + 21.);
+      fxC = mix(fxC, brown * .9, (1. - smoothstep(.08, .14, lv.x)) * step(.88, lv.z) * .7);
+      fxAtmK = .35;
     } else if (uFace < 3.5) {
-      // 붉은 사막 행성: 운석구덩이, 협곡, 극관, 흙바람
-      vec3 v = fxVoronoi(fxS * 3.2 + vSeed * 5.);
-      float crater = (1. - smoothstep(.18, .24, v.x)) * step(.5, v.z);
-      float crim = (1. - smoothstep(0., .04, abs(v.x - .24))) * step(.5, v.z);
-      float canyon = 1. - smoothstep(0., .05, abs(fxS.y - .15 + fxN2(vec2(fxS.x * 2., 3.)) * .4 - .2));
-      fxC = fxBase * (.8 + .3 * fxF2(fxS * 2.5 + vSeed));
-      fxC *= 1. - crater * .3 - canyon * .35;
-      fxC += crim * .12;
-      fxC = mix(fxC, vec3(.97, .95, .92), smoothstep(.72, .8, fxQp.y + fxN2(vec2(fxS.x * 4., 1.)) * .12));
-      fxCloud = smoothstep(.6, .8, fxF2(fxCl * 1.6 + 4.)) * .45;
+      float dark = smoothstep(.48, .62, fxF2(fxS * 1.1 + 4.));
+      float streak = fxN2(vec2(fxS.x * 1.2, fxS.y * 6.) + 2.);
+      fxC = mix(fxBase * vec3(1.08, .98, .82), vec3(.3, .22, .18), dark * (.6 + .3 * streak));
+      vec3 v = fxVoronoi(fxS * 4. + 5.);
+      float crater = (1. - smoothstep(.14, .2, v.x)) * step(.55, v.z);
+      float crim = (1. - smoothstep(0., .035, abs(v.x - .2))) * step(.55, v.z);
+      float canyon = 1. - smoothstep(0., .035, abs(fxS.y + .05 + fxN2(vec2(fxS.x * 2.4, 3.)) * .2 - .1));
+      float branch = (1. - smoothstep(0., .02, abs(fxS.y + .14 - fxS.x * .3 + fxN2(vec2(fxS.x * 4., 7.)) * .1))) * step(abs(fxWrapX + .3), .3);
+      vec2 om = vec2(fxWrapX + .45, fxF.y - .35);
+      float shield = 1. - smoothstep(.13, .17, length(om));
+      float caldera = 1. - smoothstep(.025, .035, length(om));
+      fxC *= 1. - crater * .3 - max(canyon, branch) * .45;
+      fxC += crim * .15;
+      fxC = mix(fxC, fxBase * 1.15, shield * .5);
+      fxC *= 1. - caldera * .4;
+      float cap = smoothstep(.72, .78, fxF.y + fxN2(vec2(fxS.x * 3., 1.)) * .1);
+      float trough = (1. - smoothstep(0., .05, abs(fract(atan(fxF.y - 1.2, fxF.x) * 2.5 + length(vec2(fxF.x, fxF.y - 1.2)) * 7.) - .5) - .38)) * cap;
+      fxC = mix(fxC, vec3(.97, .95, .92), cap * (1. - trough * .5));
+      fxCloud = smoothstep(.62, .82, fxF2(fxCl * 1.3 + 4.)) * .3;
+      fxAtm = vec3(1., .7, .55);
+      fxAtmK = .55;
     } else if (uFace < 4.5) {
-      // 밀림 행성: 짙은 숲, 굽이치는 강, 두꺼운 구름
-      float h = fxF2(fxS * 2. + vSeed * 3.);
-      float river = 1. - smoothstep(0., .025, abs(fxN2(fxS * 2.2 + vSeed) - .5));
-      fxC = fxBase * (.65 + .5 * h);
-      fxC = mix(fxC, vec3(.2, .45, .7), river * .9);
-      fxLand = 1. - river;
-      fxCloud = smoothstep(.5, .72, fxF2(fxCl * 2.6 + vec2(uTime * .03, 0.) + vSeed * 2.));
+      // 유황 들판: 노랑 바탕에 하얀 서리, 주황과 황갈색 얼룩
+      float m1 = fxF2(fxS * 2.2);
+      float m2 = fxF2(fxS * 3.4 + 7.);
+      fxC = fxBase * vec3(1.02, .98, .8) * (.8 + .3 * m1);
+      fxC = mix(fxC, vec3(.95, .93, .84), smoothstep(.58, .7, m2) * .7);
+      fxC = mix(fxC, vec3(.82, .5, .2), smoothstep(.52, .68, fxF2(fxS * 1.8 + 3.)) * .6);
+      fxC = mix(fxC, vec3(.5, .44, .26), smoothstep(.58, .74, fxF2(fxS * 2.8 + 11.)) * .55);
+      // 화산: 모양과 크기가 제각각인 검은 용암 호수, 그 둘레 초록빛 테, 드물게 붉은 분출 고리
+      vec3 v = fxVoronoi(fxS * 3. + 5.);
+      float wob = (fxN2(fxS * 10.) - .5) * .05 + (fxN2(fxS * 3.) - .5) * .05;
+      float pr = .03 + .08 * fract(v.z * 7.3);
+      float vol = step(.45, v.z);
+      float patera = vol * (1. - smoothstep(pr - .01, pr + .01, v.x + wob));
+      float greenEdge = vol * (1. - smoothstep(0., .03, abs(v.x + wob - pr - .02))) * .7;
+      float ringN = fxN2(vec2(atan(v.y, v.x) * 2., v.z * 9.));
+      float redRing = step(.8, v.z) * (1. - smoothstep(.02, .09, abs(v.x + wob * 2. - .28 - ringN * .08))) * smoothstep(.3, .5, ringN);
+      fxC = mix(fxC, vec3(.78, .3, .12), redRing * .75);
+      fxC = mix(fxC, vec3(.55, .58, .22), greenEdge * (1. - patera));
+      fxC = mix(fxC, vec3(.06, .05, .05), patera);
+      fxHotSpot = patera * (1. - smoothstep(0., pr, v.x)) * (.6 + .4 * sin(uTime * 2. + v.z * 40.));
+      fxAtmK = .3;
     } else {
-      // 폭풍 행성: 휘감는 띠와 가운데 큰 소용돌이, 구름 속 번개
-      vec2 c = fxQp - vec2(.1, .05);
-      float r = length(c);
-      float a = atan(c.y, c.x) + r * 5. - uTime * .25;
-      float vort = .5 + .5 * sin(a * 3. + fxN2(c * 4.) * 2.);
-      float band = .5 + .5 * sin(fxQp.y * 12. + fxF2(fxS * 2.) * 3.);
-      fxC = mix(fxBase * .6, fxBase * 1.25, mix(band, vort, 1. - smoothstep(.2, .7, r)));
-      float flash = step(.93, fxH1(floor(uTime * 6.) + vSeed * 9.));
-      fxLightning = flash * smoothstep(.55, .8, fxF2(fxQp * 4. + floor(uTime * 6.)));
-      fxRingOn = step(.5, fxH1(vSeed * 4.));
+      float band = .5 + .5 * sin(fxF.y * 8. + fxF2(fxS * vec2(.8, 3.)) * 2.);
+      fxC = fxBase * (.82 + .3 * band);
+      vec2 ds = vec2(fxWrapX + .1, fxF.y + .2) / vec2(.28, .15);
+      float dsr = length(ds);
+      fxC = mix(fxC, fxBase * .4, 1. - smoothstep(.75, 1., dsr));
+      float comp = 1. - smoothstep(0., .5, length(vec2(fxWrapX + .05, fxF.y - .0) / vec2(.22, .035)));
+      vec2 sc = fxF + vec2(uTime * .07, 0.);
+      float streaks = smoothstep(.62, .8, fxN2(vec2(sc.x * 1.6, sc.y * 14.))) * (1. - smoothstep(.0, .5, abs(fxF.y - .45)));
+      fxCloud = max(comp, streaks) * .85;
+      fxAtm = vec3(.4, .65, 1.);
     }
-    // 고리: 비스듬히 가로지르는 띠, 사이에 틈, 지표엔 고리 그림자
-    vec2 fxRd = normalize(vec2(1., .38));
-    float fxRu = dot(fxQp, vec2(-fxRd.y, fxRd.x));
-    float fxRingBand = step(abs(fxRu), .16) * step(.03, abs(abs(fxRu) - .07));
-    float fxRingTex = .7 + .3 * sin(fxRu * 140.);
-    float fxRing = fxRingOn * fxRingBand;
-    float fxShadow = fxRingOn * step(abs(fxRu + .22), .1) * (1. - fxRingBand);
-    // 낮밤 경계가 칸을 가로질러 지나간다
-    float fxDay = smoothstep(-.3, .3, sin(fxQp.x * 1.3 + fxQp.y * .4 + uTime * .12 + vSeed * 6.));
+    float fxDay = smoothstep(-.3, .3, fxF.x * .8 + fxF.y * .3 + .75 + .5 * sin(uTime * .05 + uFace * 1.7));
     fxC = mix(fxC, vec3(1.), fxCloud * .9);
-    fxC *= mix(.3, 1., fxDay) * (1. - fxShadow * .55);
-    vec3 fxRingC = mix(vec3(.9, .82, .68), fxBase, .35) * fxRingTex;
-    fxC = mix(fxC, fxRingC, fxRing * .9);
-    float fxCity = (1. - fxDay) * fxLand * (1. - fxCloud) * step(.82, fxH2(floor(fxS * 38.))) * step(uFace, 1.5) * step(.5, uFace);
+    fxC *= mix(.38, 1., fxDay);
+    float fxCity = (1. - fxDay) * fxLand * (1. - fxCloud) * step(.82, fxH2(floor(fxS * 60.))) * step(.5, uFace) * step(uFace, 1.5);
+    vec2 fxGl = fxF - vec2(-.4, .35);
+    float fxSunGlint = fxSea * fxDay * exp(-dot(fxGl, fxGl) * 5.) * (1. - fxCloud);
     diffuseColor.rgb = fxC;`,
-  surface: 'roughnessFactor = mix(.55, .3, fxRing);',
+  surface: 'roughnessFactor = mix(.6, .12, fxSea);',
   emissive: `
-    float fxRim = 1. - smoothstep(0., .14, fxEdge() / uSticker.x);
-    totalEmissiveRadiance = fxAtm * (fxRim * fxRim * 1.1 + fxFresnel(normal, 2.5) * .45)
+    float fxRim = 1. - smoothstep(0., .1, fxBorder);
+    totalEmissiveRadiance = fxAtm * fxAtmK * (fxRim * fxRim * 1.2 + fxFresnel(normal, 3.) * .25)
       + vec3(1., .78, .4) * fxCity * 1.6
-      + vec3(.85, .8, 1.) * fxLightning * 1.8
-      + diffuseColor.rgb * .05;`,
+      + vec3(1., .45, .1) * fxHotSpot * mix(.6, 2.2, 1. - fxDay)
+      + vec3(1., .95, .85) * fxSunGlint * .45
+      + diffuseColor.rgb * (.08 + .3 * fxDay);`,
 };
 B.planet = {
   // 우주 정거장 선체
@@ -1963,120 +2121,148 @@ B.planet = {
 };
 
 S.fruit = {
-  // 깍둑썰기한 과일. 칸마다 과일 덩어리를 네모나게 썬 단면이 꽉 찬다. 면마다 과일이 다르다
-  // (수박, 배, 파인애플, 망고, 키위, 용과). 과즙 알갱이가 반짝이고 씨가 박혀 있으며,
-  // 몇 조각은 한쪽에 껍질이나 심이 붙어 있다
+  // 깍둑썰기한 과일. 조각마다 네모난 과일 덩어리이고, 다 맞추면 면 하나가 과일 한 덩이를 자른 단면이 된다.
+  // 면마다 과일이 다르다: 수박(네모난 수박. 테두리를 따라 흰 속껍질과 줄무늬 껍질, 반짝이는 과육, 가운데를 두른 씨 고리),
+  // 배(가운데 별 모양 씨방과 갈색 씨, 둘레로 사각거리는 돌세포), 파인애플(가운데 옅고 질긴 심에서 바깥으로 뻗는 섬유),
+  // 망고(가운데 납작한 씨를 감싼 섬유, 진한 주황에서 바깥으로 노랗게), 키위(가운데 하얀 심, 그 둘레 옅은 격벽선 사이로
+  // 줄지은 까만 씨, 바깥은 짙은 초록 과육), 용과(고르게 박힌 까만 씨와 씨 둘레의 맑은 젤).
+  // 칸마다 과즙이 맺혀 번들거린다
   head: `
-    // 끝이 뾰족한 씨 하나. f는 칸 안 위치, a는 방향, s는 반지름(가로, 세로)
     float fxPip(vec2 f, float a, vec2 s) {
       vec2 p = fxRot(a) * f;
       p.x *= 1. + .7 * clamp(p.y / s.y, -1., 1.);
       return length(p / s);
+    }
+    // 가운데를 두른 씨 고리. r0~r1 사이, 둘레에 n개, 씨 크기 s(면 좌표)
+    float fxSeedRing(vec2 F, float r0, float r1, float n, vec2 s, float seed) {
+      float r = length(F);
+      float a = atan(F.y, F.x);
+      float ac = a / 6.2832 * n;
+      float cell = floor(ac);
+      float rr = mix(r0, r1, fxH1(cell * 1.3 + seed));
+      vec2 f = vec2((fract(ac) - .5) * r * 6.2832 / n, r - rr);
+      return step(.22, fxH1(cell * 2.7 + seed)) * (1. - smoothstep(.8, 1., fxPip(f, 3.1416, s)));
     }`,
   color: `
+    vec2 fxF = fxFace();
     vec2 fxQf = fxQ();
+    float fxR = length(fxF);
+    float fxA = atan(fxF.y, fxF.x);
+    float fxBorder = 1. - max(abs(fxF.x), abs(fxF.y));
     vec3 fxBase = diffuseColor.rgb;
-    vec3 fxSacV = fxVoronoi(vLocal.xy * 42. + vSeed * 7.);
-    float fxSac = smoothstep(0., .3, fxSacV.y);
-    float fxPick = fxH1(vSeed * 13.7);
-    float fxSideK = floor(fxH1(vSeed * 3.3) * 4.) * 1.5708;
-    vec2 fxDir = vec2(cos(fxSideK), sin(fxSideK));
-    float fxSide = dot(fxQf, fxDir);
-    vec2 fxAlong = vec2(-fxDir.y, fxDir.x);
+    vec3 fxCv = fxVoronoi(fxF * 26. + uFace * 7.);
+    float fxGrainK = uFace < .5 ? 1. : .3;
+    vec3 fxC = fxBase * (1. + (fxCv.z - .5) * .14 * fxGrainK) * (1. - (1. - smoothstep(0., .12, fxCv.y)) * .08 * fxGrainK) * (.94 + .1 * fxN2(fxF * 3. + uFace));
     float fxSeed = 0.;
-    vec3 fxSeedC = vec3(.05, .035, .03);
-    float fxPale = 0.;
-    vec3 fxPaleC = vec3(1.);
-    float fxSkinM = 0.;
-    vec3 fxSkin = vec3(0.);
+    vec3 fxSeedC = vec3(.04, .03, .025);
     float fxFiber = 0.;
-    vec3 fxC = fxBase * (.94 + .08 * fxSac) * (.92 + .14 * fxN2(fxQf * 2.5 + vSeed * 4.));
+    float fxSkinM = 0.;
+    float fxTrans = .14;
     if (uFace < .5) {
-      // 수박: 속 가운데를 중심으로 둥글게 줄지은 까만 씨, 몇 조각은 흰 속껍질과 줄무늬 초록 껍질
-      float rind = step(.5, fxPick);
-      vec2 d = fxQf + fxDir * 2.4;
-      float r = length(d);
-      float a = atan(d.y, d.x);
-      vec2 g = vec2(a * r * 2.3, r * 2.5);
-      vec2 cell = floor(g);
-      vec2 f = fract(g) - .5 - (vec2(fxH2(cell + 3.1), fxH2(cell + 5.3)) - .5) * .35;
-      float on = step(.5, fxH2(cell + vSeed * 9.)) * (1. - step(.35, fxSide) * rind);
-      fxSeed = on * (1. - smoothstep(.85, 1., fxPip(f * vec2(1., 1.4), 0., vec2(.12, .22))));
-      fxPale = rind * smoothstep(.5, .66, fxSide);
-      fxPaleC = vec3(.96, .93, .8);
-      float stripe = step(.5, fract(dot(fxQf, fxAlong) * 2.6 + fxN2(fxQf * 3. + vSeed) * .6));
-      fxSkinM = rind * smoothstep(.8, .83, fxSide);
-      fxSkin = mix(mix(vec3(.55, .78, .32), vec3(.1, .32, .12), stripe), vec3(.6, .82, .4), 1. - smoothstep(.83, .87, fxSide));
+      // 수박
+      float streak = 1. - smoothstep(0., .25, abs(fract(fxA / 6.2832 * 26. + fxN2(vec2(fxR * 3., fxA)) * .3) - .5) * 2.);
+      fxC = mix(fxC, fxC * 1.1 + .04, streak * .15 * smoothstep(.1, .3, fxR));
+      float s1 = fxSeedRing(fxF, .38, .58, 24., vec2(.028, .05), 3.);
+      float s2 = fxSeedRing(fxF * 1.15 + .02, .18, .26, 11., vec2(.024, .044), 9.) * .9;
+      fxSeed = max(s1, s2);
+      vec2 sc = vec2(floor(fxA / 6.2832 * 24.), 0.);
+      fxSeedC = mix(vec3(.04, .03, .025), vec3(.93, .88, .74), step(.8, fxH1(sc.x * 5.1)));
+      float pale = 1. - smoothstep(.06, .13, fxBorder);
+      fxC = mix(fxC, vec3(.97, .86, .82), pale * .75);
+      fxC = mix(fxC, vec3(.96, .95, .86), 1. - smoothstep(.045, .06, fxBorder));
+      float stripe = step(.5, fract((fxF.x + fxF.y) * 3. + fxN2(fxF * 4.) * .7));
+      fxSkinM = 1. - smoothstep(.022, .03, fxBorder);
+      vec3 skin = mix(vec3(.55, .78, .32), vec3(.1, .32, .12), stripe);
+      fxC = mix(fxC, vec3(.62, .84, .42), 1. - smoothstep(.03, .045, fxBorder));
+      fxC = mix(fxC, skin, fxSkinM);
+      fxTrans = .16;
     } else if (uFace < 1.5) {
-      // 배: 사각거리는 돌세포가 점점이, 몇 조각엔 반투명한 심과 갈색 씨
-      float grit = step(.93, fxH2(floor(vLocal.xy * 110.) + vSeed)) * .35;
-      fxC *= 1. - grit * .25;
-      float core = step(.55, fxPick);
-      vec2 cq = (fxQf - fxDir * .7) / vec2(.55, .55);
-      float cr = length(cq);
-      fxPale = core * (1. - smoothstep(.85, 1., cr)) * .6;
-      fxPaleC = fxBase * vec3(.9, .9, .82);
-      float line = core * (1. - smoothstep(0., .05, abs(cr - .95))) * .35;
-      fxC *= 1. - line * .3;
-      vec2 sp = fxQf - fxDir * .78;
-      fxSeed = core * max(
-        1. - smoothstep(.85, 1., fxPip(sp - fxAlong * .14, fxSideK + .3, vec2(.07, .13))),
-        1. - smoothstep(.85, 1., fxPip(sp + fxAlong * .14, fxSideK - .3, vec2(.07, .13))));
-      fxSeedC = vec3(.28, .15, .07);
+      // 배: 가운데 별 모양 씨방
+      float grit = step(.9, fxH2(floor(fxF * 90.))) * (.4 + .6 * (1. - smoothstep(.2, .45, abs(fxR - .32))));
+      fxC = fxC * (1. - grit * .12) + grit * .04;
+      float pet = .13 + .045 * cos(fxA * 5.);
+      float core = 1. - smoothstep(pet - .01, pet + .01, fxR);
+      float coreRing = 1. - smoothstep(.0, .03, abs(fxR - (.27 + .02 * sin(fxA * 5. + 1.))));
+      fxC = mix(fxC, fxBase * vec3(.9, .9, .82), (1. - smoothstep(.2, .3, fxR)) * .5);
+      fxC *= 1. - coreRing * .08;
+      fxC = mix(fxC, vec3(.86, .8, .66), core * .8);
+      float sd = 9.;
+      for (int k = 0; k < 5; k++) {
+        float a = float(k) * 1.2566 + .3;
+        vec2 dir = vec2(cos(a), sin(a));
+        vec2 sp = fxF - dir * .09;
+        sd = min(sd, fxPip(vec2(dot(sp, vec2(-dir.y, dir.x)), dot(sp, dir)), 0., vec2(.022, .045)));
+      }
+      fxSeed = 1. - smoothstep(.85, 1., sd);
+      fxSeedC = vec3(.3, .16, .07);
+      vec2 vb = vec2(fract(fxA / 6.2832 * 10.) - .5, (fxR - .42) * 6.);
+      fxC = mix(fxC, fxC * .95, (1. - smoothstep(.05, .1, length(vb))) * .6);
+      fxTrans = .14;
     } else if (uFace < 2.5) {
-      // 파인애플: 결 따라 촘촘한 섬유, 열매 조각 경계, 몇 조각은 옅고 질긴 심
-      float u = dot(fxQf, fxAlong);
-      fxFiber = .5 + .5 * sin(u * 95. + fxN2(fxQf * vec2(6., 2.) + vSeed) * 7.);
-      vec4 hx = fxHex(fxQf * 2.4 + vSeed * 3.);
-      float cellLine = 1. - smoothstep(.0, .06, hx.w);
-      fxC *= (.9 + .12 * fxFiber) * (1. - cellLine * .12);
-      float core = step(.5, fxPick);
-      fxPale = core * smoothstep(.45, .6, fxSide) * .75;
-      fxPaleC = vec3(.98, .94, .72);
+      // 파인애플: 심에서 바깥으로 섬유
+      float core = 1. - smoothstep(.2, .24, fxR + fxN2(vec2(fxA * 3., 1.)) * .02);
+      fxFiber = .5 + .5 * sin(fxA * 200. + fxN2(vec2(fxA * 30., fxR * 5.)) * 5.);
+      vec4 hx = fxHex(vec2(fxA * fxR * 3., fxR * 3.4) * 1.8);
+      float cellLine = (1. - smoothstep(0., .07, hx.w)) * smoothstep(.24, .3, fxR);
+      fxC *= (.86 + .16 * fxFiber) * (1. - cellLine * .12);
+      fxC = mix(fxC, fxC * 1.08 + vec3(.04, .02, -.02), smoothstep(.6, 1., 1. - fxBorder) * .4);
+      vec3 coreC = vec3(.98, .93, .7) * (.92 + .1 * (.5 + .5 * sin(fxA * 120.)));
+      fxC = mix(fxC, coreC, core);
+      fxTrans = .2;
     } else if (uFace < 3.5) {
-      // 망고: 매끈하고 진한 과육, 한쪽으로 노랗게, 가는 섬유가 물결친다
-      float u = dot(fxQf, fxAlong);
-      fxFiber = 1. - smoothstep(0., .06, abs(fract(u * 7. + fxN2(fxQf * 3. + vSeed) * 1.2) - .5));
-      fxC = mix(fxC, fxC * vec3(1.08, 1.12, .7), smoothstep(-1., 1., fxSide) * .5);
-      fxC *= 1. + fxFiber * .06;
+      // 망고: 가운데 납작한 씨와 그걸 감싼 섬유
+      vec2 pq = fxF / vec2(.46, .12);
+      float pr = length(pq);
+      float pit = 1. - smoothstep(.95, 1.05, pr);
+      float hairs = (1. - smoothstep(.0, .3, abs(fract(atan(pq.y, pq.x) * 14. + fxN2(fxF * 9.) * .6) - .5) * 2. - .4)) * smoothstep(1., 1.15, pr) * (1. - smoothstep(1.15, 1.9, pr));
+      fxC = mix(fxC * vec3(1.02, .88, .7), fxC * vec3(1.06, 1.12, .78), smoothstep(.2, 1., fxR));
+      fxC = mix(fxC, fxC * 1.12, hairs * .5);
+      vec3 pitC = vec3(.93, .88, .72) * (.85 + .15 * sin(fxF.x * 60. + fxN2(fxF * 20.) * 4.));
+      fxC = mix(fxC, pitC, pit);
+      fxFiber = hairs + pit * .5;
+      fxTrans = .22;
     } else if (uFace < 4.5) {
-      // 키위: 한쪽에 하얀 심, 둘레로 까만 씨 고리, 씨 너머로 뻗는 결
-      vec2 c = fxDir * .95;
-      vec2 d = fxQf - c;
-      float r = length(d);
-      float a = atan(d.y, d.x);
-      float coreR = .36 + .03 * sin(a * 9.);
-      float core = 1. - smoothstep(coreR - .03, coreR, r);
-      float ray = .5 + .5 * sin(a * 110. + fxN2(vec2(a * 20., r * 6.)) * 3.);
-      float ring = smoothstep(.4, .44, r) * (1. - smoothstep(.66, .72, r));
-      float ac = a / 6.2832 * 80.;
-      float cellA = floor(ac);
-      float rr = .47 + .16 * fxH1(cellA + vSeed * 3.);
-      vec2 f = vec2((fract(ac) - .5) * r * 6.2832 / 80., r - rr);
-      float seed = step(.2, fxH1(cellA * 1.7 + vSeed)) * (1. - smoothstep(.8, 1., length(f / vec2(.017, .045))));
-      fxC = mix(fxC * mix(1., 1.18, smoothstep(.36, .75, r)) * (.94 + .1 * ray), vec3(.93, .93, .78), core);
-      fxC = mix(fxC, fxC * 1.15 + .05, ring * .3);
-      fxSeed = seed;
-      fxFiber = ray * (1. - core);
+      // 키위: 가운데에만 하얀 심, 둘레는 씨 고리와 과육
+      vec2 cq = fxF / vec2(.21, .17);
+      float cr = length(cq) + fxN2(vec2(fxA * 4., 2.)) * .08;
+      float core = 1. - smoothstep(.9, 1.05, cr);
+      float septa = (1. - smoothstep(.0, .25, abs(fract(fxA / 6.2832 * 30. + fxN2(vec2(fxR * 3., fxA)) * .15) - .5) * 2.)) * smoothstep(.2, .26, fxR) * (1. - smoothstep(.5, .6, fxR));
+      float inner = smoothstep(.2, .26, fxR) * (1. - smoothstep(.5, .58, fxR));
+      fxSeed = max(fxSeedRing(fxF, .28, .36, 60., vec2(.012, .03), 4.), fxSeedRing(fxF, .38, .47, 70., vec2(.012, .03), 8.));
+      fxC = mix(fxC, fxC * vec3(1.12, 1.14, .82) + .04, inner * .55);
+      fxC = mix(fxC, vec3(.86, .93, .62), septa * .5);
+      fxC = mix(fxC, fxC * 1.08, (.5 + .5 * sin(fxA * 90.)) * smoothstep(.55, .7, fxR) * .4);
+      vec2 vb = fract(fxF * 14.) - .5;
+      fxC = mix(fxC, fxC * 1.2 + .04, (1. - smoothstep(.04, .07, length(vb))) * step(.8, fxH2(floor(fxF * 14.))) * smoothstep(.6, .7, fxR) * .5);
+      fxC = mix(fxC, vec3(.94, .93, .8) * (.95 + .05 * sin(fxA * 40.)), core);
+      fxFiber = septa;
+      fxTrans = .16;
     } else {
-      // 용과: 촘촘히 박힌 까만 씨, 씨 둘레로 맑은 젤
-      vec2 g = fxQf * 5. + vSeed * 5.;
+      // 용과
+      vec2 g = fxF * 13.;
       vec2 cell = floor(g);
       vec2 f = fract(g) - .5 - (vec2(fxH2(cell + 1.3), fxH2(cell + 2.9)) - .5) * .45;
-      float pd = fxPip(f, fxH2(cell + 4.1) * 6.28, vec2(.1, .15));
-      float on = step(.18, fxH2(cell + 7.7));
+      float pd = fxPip(f, fxH2(cell + 4.1) * 6.28, vec2(.11, .17));
+      float on = step(.12, fxH2(cell + 7.7));
       fxSeed = on * (1. - smoothstep(.8, 1., pd));
-      fxC = mix(fxC, fxC * 1.2 + .06, on * (1. - smoothstep(1., 2.6, pd)) * .5);
+      fxC = mix(fxC, fxC * 1.22 + .07, on * (1. - smoothstep(1., 2.6, pd)) * .5);
+      fxTrans = .18;
     }
-    fxC = mix(fxC, fxPaleC, fxPale);
-    fxC = mix(fxC, fxSkin, fxSkinM);
     fxC = mix(fxC, fxSeedC, fxSeed);
+    // 과즙 방울: 칸마다 몇 개 맺혀 빛을 모은다
+    vec2 fxDg = fxQf * 4. + vSeed * 9.;
+    vec2 fxDc = floor(fxDg);
+    vec2 fxDf = fract(fxDg) - .5 - (vec2(fxH2(fxDc + 2.), fxH2(fxDc + 6.)) - .5) * .5;
+    float fxDr = .11 + .08 * fxH2(fxDc + 4.);
+    float fxDrop = step(.84, fxH2(fxDc + 8.)) * (1. - smoothstep(fxDr - .02, fxDr, length(fxDf))) * (1. - fxSkinM);
+    float fxDropH = fxDrop * sqrt(max(0., 1. - dot(fxDf, fxDf) / (fxDr * fxDr)));
     diffuseColor.rgb = fxC;`,
-  normal: 'normal = fxBump(normal, fxSac * .0005 - fxSeed * .002 + fxFiber * .0005 + fxSkinM * .002);',
-  surface: 'roughnessFactor = mix(mix(.16, .28, fxPale), .45, fxSkinM);',
+  normal: 'normal = fxBump(normal, (fxCv.z * .0004 - (1. - smoothstep(0., .12, fxCv.y)) * .0004) * fxGrainK - fxSeed * .002 + fxFiber * .0005 + fxSkinM * .002 + fxDropH * .004);',
+  surface: 'roughnessFactor = mix(.22, .45, fxSkinM) * (1. - fxDrop * .9);',
   emissive: `
-    totalEmissiveRadiance = diffuseColor.rgb * .12 * (1. - fxSeed) * (1. - fxSkinM)
-      + vec3(1.) * fxGlint(vLocal.xy * 30. + vSeed, .1, 1.3) * .7 * (1. - fxSkinM);`,
+    totalEmissiveRadiance = diffuseColor.rgb * fxTrans * (1. - fxSeed) * (1. - fxSkinM)
+      + vec3(1.) * fxGlint(fxF * 30., .05 + .07 * step(uFace, .5), 1.3) * .5 * (1. - fxSkinM) * (1. - fxSeed)
+      + vec3(1.) * fxDropH * fxFresnel(normal, 1.5) * .3;`,
 };
 B.fruit = {
   // 나무 도마: 결과 칼자국
@@ -2265,65 +2451,6 @@ B.doodle = {
   surface: 'roughnessFactor = .9;',
 };
 
-S.hud = {
-  // SF 영화 속 화면. 어두운 유리판 위에 면마다 다른 계기가 돌아간다
-  // (레이더, 겹친 회전 고리, 막대그래프, 파형, 육각 스캔, 조준경). 면 색이 곧 화면 색이다
-  color: `
-    vec2 fxQh = fxQ();
-    float fxR = length(fxQh);
-    float fxTh = atan(fxQh.y, fxQh.x);
-    float fxT = uTime + vSeed * 10.;
-    float fxUi = 0.;
-    if (uFace < .5) {
-      float sweep = fract((fxTh - fxT * 1.6) / 6.2832);
-      fxUi = (1. - smoothstep(0., .25, sweep)) * step(fxR, .7) * .7;
-      fxUi += fxLine(abs(fxR - .7), .012) + fxLine(abs(fxR - .45), .008) + fxLine(abs(fxR - .2), .008);
-      fxUi += fxLine(min(abs(fxQh.x), abs(fxQh.y)), .006) * step(fxR, .7) * .5;
-      vec2 blip = vec2(cos(vSeed * 20.), sin(vSeed * 20.)) * .4;
-      fxUi += (1. - smoothstep(.03, .05, length(fxQh - blip))) * (1. - smoothstep(0., .5, fract((atan(blip.y, blip.x) - fxT * 1.6) / 6.2832)));
-    } else if (uFace < 1.5) {
-      float a1 = step(.5, fract(fxTh / 6.2832 * 12. + fxT * .3)) * fxLine(abs(fxR - .62), .03);
-      float a2 = step(.3, fract(fxTh / 6.2832 * 3. - fxT * .5)) * fxLine(abs(fxR - .48), .02);
-      float a3 = step(.7, fract(fxTh / 6.2832 * 24. + fxT * .8)) * fxLine(abs(fxR - .34), .04);
-      fxUi = a1 + a2 + a3 + (1. - smoothstep(.08, .1, fxR)) * (.6 + .4 * sin(fxT * 4.));
-    } else if (uFace < 2.5) {
-      vec2 g = fxUV();
-      float col = floor(g.x * 9.);
-      float h = .25 + .6 * (.5 + .5 * sin(fxT * (1. + fxH1(col) * 2.) + col));
-      float bar = step(.15, fract(g.x * 9.)) * step(fract(g.x * 9.), .85) * step(g.y, h) * step(.12, g.y);
-      fxUi = bar * (.45 + .55 * step(.5, fract(g.y * 22.))) + fxLine(abs(g.y - .12), .008);
-    } else if (uFace < 3.5) {
-      float x = fxQh.x * 6.;
-      float y = .35 * sin(x * 1.7 - fxT * 3.) * cos(x * .6 + fxT) ;
-      fxUi = fxLine(abs(fxQh.y - y), .02) + fxLine(abs(fxQh.y - y * .5 + .02), .008) * .5;
-      vec2 gl = abs(fract(fxUV() * 6.) - .5);
-      fxUi += (1. - smoothstep(.0, .02, .5 - max(gl.x, gl.y))) * .25;
-    } else if (uFace < 4.5) {
-      vec4 hx = fxHex(fxQh * 4.);
-      float scan = 1. - smoothstep(0., .15, abs(fract(fxQh.y * .5 - fxT * .3) * 2. - 1. - fxQh.y * .0));
-      fxUi = fxLine(hx.w, .04) * (.3 + .7 * scan) + step(.85, hx.z) * step(.15, hx.w) * .5 * (.5 + .5 * sin(fxT * 3. + hx.z * 20.));
-    } else {
-      float rot = fxT * .5;
-      vec2 q = fxRot(rot) * fxQh;
-      fxUi = fxLine(abs(fxR - .55), .01) * step(.6, fract(atan(q.y, q.x) / 6.2832 * 4.)) + fxLine(abs(fxR - .3), .012);
-      fxUi += fxLine(min(abs(fxQh.x), abs(fxQh.y)), .008) * step(.12, fxR) * step(fxR, .45);
-      fxUi += fxLine(abs(max(abs(fxQh.x), abs(fxQh.y)) - .7), .01) * step(.55, max(abs(fxQh.x), abs(fxQh.y)) - min(abs(fxQh.x), abs(fxQh.y)) + .0);
-    }
-    float fxFrame = fxLine(abs(fxEdge() / uSticker.x - .05), .01);
-    float fxScanline = .85 + .15 * step(.5, fract(vLocal.y * 120.));
-    fxUi = clamp(fxUi + fxFrame * .8, 0., 1.) * fxScanline;
-    vec3 fxGlowC = diffuseColor.rgb;
-    diffuseColor.rgb = vec3(.02, .03, .05) + fxGlowC * fxUi * .25;`,
-  surface: 'roughnessFactor = .12;',
-  emissive: 'totalEmissiveRadiance = fxGlowC * (fxUi * 1.8 + .06);',
-};
-B.hud = {
-  // 건메탈 몸통, 모서리를 따라 빛줄
-  color: `float fxRim = smoothstep(.92, .97, fxBodyRim());`,
-  surface: 'roughnessFactor = .35; metalnessFactor = .7;',
-  emissive: 'totalEmissiveRadiance = vec3(.3, .8, 1.) * fxRim * .6;',
-};
-
 S.dice = {
   // 면마다 주사위 한 면. 진짜 주사위처럼 마주 보는 면의 눈을 더하면 7이고(R1·L6, U2·D5, F3·B4),
   // 눈은 움푹 파여 있다. 1은 크게
@@ -2439,49 +2566,6 @@ B.embroidery = {
   surface: 'roughnessFactor = .5;',
 };
 
-S.donut = {
-  // 칸마다 도넛 하나가 실제로 솟아 있다. 노릇한 반죽 위에 면 색 아이싱이 흘러내리고 스프링클
-  head: `
-    float fxDonutH(vec2 p, float seed) {
-      float s = uSticker.x;
-      float d = length(p) - .48 * s;
-      float rt = .3 * s;
-      return sqrt(max(rt * rt - d * d, 0.)) * .9 + .004;
-    }`,
-  height: 'fxDonutH',
-  color: `
-    if (fxEdge() < 0.) discard;
-    vec2 fxP = vLocal.xy;
-    float fxS = uSticker.x;
-    float fxD = length(fxP) - .48 * fxS;
-    float fxRt = .3 * fxS;
-    float fxOn = step(abs(fxD), fxRt);
-    float fxTube = sqrt(max(fxRt * fxRt - fxD * fxD, 0.));
-    vec3 fxNl = fxOn > .5 ? normalize(vec3(normalize(fxP) * fxD, fxTube)) : vec3(0., 0., 1.);
-    float fxTh = atan(fxP.y, fxP.x);
-    float fxIce = fxOn * step(.42 + .14 * sin(fxTh * 7. + vSeed * 9.) + .06 * sin(fxTh * 17.), fxTube / fxRt);
-    vec2 fxSg = vec2(fxTh * 6., fxD / fxRt * 3.) + vSeed * 4.;
-    vec2 fxSc = floor(fxSg * vec2(1.6, 2.));
-    vec2 fxSf = fract(fxSg * vec2(1.6, 2.)) - .5;
-    float fxSa = fxH2(fxSc) * 6.2832;
-    float fxSpr = step(.55, fxH2(fxSc + 3.)) * (1. - smoothstep(.06, .1, length(fxRot(fxSa) * fxSf * vec2(1., 3.2)))) * fxIce;
-    vec3 fxSprC = .55 + .45 * cos(6.2832 * (fxH2(fxSc + 7.) + vec3(0., .33, .67)));
-    vec3 fxDough = mix(vec3(.85, .58, .3), vec3(.62, .36, .16), smoothstep(.2, .9, 1. - fxTube / fxRt)) * (.9 + .15 * fxN2(fxP * 80.));
-    vec3 fxPlate = vec3(.96, .94, .9) * (.94 + .06 * smoothstep(.3, .9, length(fxP) / fxS));
-    vec3 fxC = fxOn > .5 ? mix(fxDough, diffuseColor.rgb * (.95 + .08 * fxN2(fxP * 40.)), fxIce) : fxPlate;
-    fxC = mix(fxC, fxSprC, fxSpr);
-    diffuseColor.rgb = fxC;`,
-  normal: `
-    if (fxOn > .5) normal = normalize(vTx * fxNl.x + vTy * fxNl.y + vTz * fxNl.z);
-    normal = fxBump(normal, fxSpr * .004 + fxIce * .002);`,
-  surface: 'roughnessFactor = fxOn > .5 ? mix(.75, .12, fxIce) : .3;',
-  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * .06;',
-};
-B.donut = {
-  // 초콜릿 판
-  surface: 'roughnessFactor = .35;',
-};
-
 S.ink = {
   // 한지에 떨어뜨린 먹. 방울이 번지며 번지는 끝에 먹이 고여 테가 지고, 다 번지면 스러졌다 다시 떨어진다.
   // 면마다 먹 색이 다르다(먹, 주홍, 쪽빛, 송화색, 녹색, 자주)
@@ -2580,37 +2664,22 @@ B.lavalamp = {
 };
 
 S.skin = {
-  // 살아 있는 살갗 여섯 가지. 면마다 다른 생물의 피부다: 사람(땀구멍, 잔주름, 주근깨, 점, 솜털),
-  // 코끼리(깊게 갈라진 주름과 마른 먼지), 독화살개구리(젖은 파랑에 검은 무늬), 문어(색소포가 물결처럼
-  // 피었다 오므라든다), 청개구리(매끈하고 촉촉한 초록에 금빛 잔점), 비단뱀(겹친 비늘과 얼룩, 무지갯빛).
-  // 모두 숨 쉬듯 천천히 부풀었다 가라앉고, 조각을 잡으면 사람 피부에 소름이 돋는다
+  // 사람 살갗 견본. 면마다 다른 사람 피부다: 주근깨 난 흰 피부, 윤기 도는 짙은 피부, 햇볕에 그을린 황금빛 피부,
+  // 시퍼렇게 번진 멍, 햇볕에 익어 껍질이 일어난 피부, 먹물 문신(겹친 물결 비늘)이 덮인 피부.
+  // 모두 땀구멍과 잔주름, 솜털이 있고 속에서 붉은 기가 비친다. 숨 쉬듯 부풀었다 가라앉고,
+  // 조각을 잡으면 소름이 오돌토돌 돋는다
   head: `
     float fxSkinH(vec2 p, float seed) {
       vec2 q = p / uSticker.x;
-      float h = 0.;
-      if (uFace < .5) {
-        vec3 v = fxVoronoi(q * 8. + seed * 5.);
-        h = .003 * smoothstep(0., .15, v.y);
-        h += max(uBlink, uCharge * .6) * .011 * (1. - smoothstep(0., .3, v.x));
-      } else if (uFace < 1.5) {
-        vec3 v = fxVoronoi(q * 2.6 + seed * 5.);
-        float folds = sin(q.y * 11. + fxN2(q * 1.5 + seed) * 5.);
-        h = .016 * smoothstep(0., .25, v.y) + .006 * folds;
-      } else if (uFace < 2.5) {
-        vec3 v = fxVoronoi(q * 11. + seed * 5.);
-        h = .004 * (1. - smoothstep(0., .45, v.x));
-      } else if (uFace < 3.5) {
-        vec3 v = fxVoronoi(q * 3.5 + seed * 5.);
-        h = .012 * (1. - smoothstep(0., .5, v.x)) * step(.6, v.z);
-      } else if (uFace < 4.5) {
-        h = .003 * fxN2(q * 4. + seed);
-      } else {
-        vec2 g = q * vec2(4.5, 6.);
-        g.x += mod(floor(g.y), 2.) * .5;
-        vec2 f = fract(g) - vec2(.5, .3);
-        h = .008 * (1. - smoothstep(.1, .62, length(f * vec2(1., 1.4)))) * (.6 + .4 * f.y);
+      vec3 v = fxVoronoi(q * 8. + seed * 5.);
+      float h = .003 * smoothstep(0., .15, v.y);
+      vec3 g = fxVoronoi(q * 14. + seed * 3.);
+      h += max(uBlink, uCharge * .6) * .009 * (1. - smoothstep(0., .3, g.x));
+      if (uFace > 3.5 && uFace < 4.5) {
+        vec3 f = fxVoronoi(q * 6. + seed * 9.);
+        h += step(.8, f.z) * smoothstep(0., .1, f.y) * .003;
       }
-      float breath = 1. + .1 * sin(uTime * 1.3 + seed * 3.);
+      float breath = 1. + .12 * sin(uTime * 1.3 + seed * 3.);
       return smoothstep(0., .08, fxEdgeAt(p)) * (h * breath + .006);
     }`,
   height: 'fxSkinH',
@@ -2618,102 +2687,90 @@ S.skin = {
     if (fxEdge() < 0.) discard;
     vec2 fxQs = fxQ();
     vec3 fxBase = diffuseColor.rgb;
+    vec3 fxV = fxVoronoi(fxQs * 8. + vSeed * 5.);
+    float fxFurrow = 1. - smoothstep(0., .07, fxV.y);
+    vec3 fxPv = fxVoronoi(fxQs * 26. + vSeed * 3.);
+    float fxPore = (1. - smoothstep(0., .13, fxPv.x)) * step(.35, fxPv.z);
+    vec2 fxHc = floor(fxQs * 10.);
+    vec2 fxHp = fxRot(fxH2(fxHc + vSeed) + .4) * (fract(fxQs * 10.) - .5 - (vec2(fxH2(fxHc + 1.), fxH2(fxHc + 2.)) - .5) * .4);
+    float fxHair = (1. - smoothstep(.008, .02, abs(fxHp.x))) * step(abs(fxHp.y), .3) * step(.75, fxH2(fxHc + 7.));
+    float fxBlotch = smoothstep(.45, .75, fxF2(fxQs * 2. + vSeed * 9.));
     vec3 fxC = fxBase;
-    float fxWet = 0.;
+    float fxWet = .45;
+    float fxSss = .14;
     float fxDetail = 0.;
-    float fxSss = .1;
+    float fxMoleOk = 1.;
     if (uFace < .5) {
-      vec3 v = fxVoronoi(fxQs * 8. + vSeed * 5.);
-      float furrow = 1. - smoothstep(0., .07, v.y);
-      vec3 pr = fxVoronoi(fxQs * 26. + vSeed * 3.);
-      float pore = (1. - smoothstep(0., .13, pr.x)) * step(.35, pr.z);
-      float blotch = fxF2(fxQs * 2. + vSeed * 9.);
-      fxC = fxBase * mix(vec3(1.), vec3(1.06, .9, .88), smoothstep(.45, .75, blotch));
-      vec3 fr = fxVoronoi(fxQs * 9. + vSeed * 11.);
-      float freck = (1. - smoothstep(.1, .22, fr.x)) * step(.62, fr.z) * step(.45, fxN2(fxQs * 1.5 + vSeed * 4.));
-      fxC = mix(fxC, fxBase * vec3(.72, .55, .42), freck * .55);
-      vec2 mp = (vec2(fxH1(vSeed * 3.1), fxH1(vSeed * 5.7)) - .5) * 1.2;
-      float mole = (1. - smoothstep(.06, .085, length(fxQs - mp))) * step(.55, fxH1(vSeed * 7.3));
-      fxC = mix(fxC, vec3(.22, .13, .09), mole);
-      fxC *= 1. - furrow * .12 - pore * .18;
-      vec2 hc = floor(fxQs * 10.);
-      vec2 hp = fxRot(fxH2(hc + vSeed) + .4) * (fract(fxQs * 10.) - .5 - (vec2(fxH2(hc + 1.), fxH2(hc + 2.)) - .5) * .4);
-      float hair = (1. - smoothstep(.008, .02, abs(hp.x))) * step(abs(hp.y), .3) * step(.55, fxH2(hc + 7.));
-      fxC = mix(fxC, fxBase * .6, hair * .5);
-      fxDetail = -furrow * .0012 - pore * .001 + mole * .002;
-      fxWet = .3;
-      fxSss = .16;
+      // 흰 피부: 붉은 기가 얼룩지고 주근깨가 흩어졌다
+      fxC = fxBase * mix(vec3(1.), vec3(1.05, .87, .85), fxBlotch);
+      vec3 fr = fxVoronoi(fxQs * 11. + vSeed * 11.);
+      float freck = (1. - smoothstep(.08, .2, fr.x)) * step(.45, fr.z) * step(.35, fxN2(fxQs * 1.3 + vSeed * 4.));
+      fxC = mix(fxC, fxBase * vec3(.7, .5, .38), freck * .6);
+      fxSss = .18;
     } else if (uFace < 1.5) {
-      vec3 v = fxVoronoi(fxQs * 2.6 + vSeed * 5.);
-      vec3 v2 = fxVoronoi(fxQs * 9. + vSeed * 2.);
-      float deep = 1. - smoothstep(0., .1, v.y);
-      float fine = 1. - smoothstep(0., .05, v2.y);
-      float fold = .5 + .5 * sin(fxQs.y * 11. + fxN2(fxQs * 1.5 + vSeed) * 5.);
-      float dust = smoothstep(.5, .8, fxF2(fxQs * 3. + vSeed * 7.));
-      fxC = fxBase * (.75 + .3 * fold) * (1. - deep * .55) * (1. - fine * .25);
-      fxC = mix(fxC, vec3(.72, .64, .55), dust * .35 * (1. - deep));
-      fxDetail = -fine * .002;
-      fxWet = 0.;
-      fxSss = .03;
+      // 짙은 피부: 깊은 갈색에 윤기, 볼록한 데는 붉은 금빛이 돈다
+      fxC = fxBase * mix(vec3(1.), vec3(1.14, .96, .84), fxBlotch * .6);
+      fxWet = .6;
+      fxSss = .1;
     } else if (uFace < 2.5) {
-      float spots = fxF2(fxQs * 2.2 + vSeed * 9.);
-      vec3 sv = fxVoronoi(fxQs * 3. + vSeed * 4.);
-      float spot = max(smoothstep(.56, .6, spots), (1. - smoothstep(.18, .24, sv.x)) * step(.5, sv.z));
-      vec3 gr = fxVoronoi(fxQs * 11. + vSeed * 5.);
-      float gran = 1. - smoothstep(0., .45, gr.x);
-      fxC = mix(fxBase * (.85 + .25 * gran), vec3(.03, .03, .05), spot);
-      fxDetail = gran * .0012;
-      fxWet = 1.;
-      fxSss = .08;
-    } else if (uFace < 3.5) {
-      vec2 g = fxQs * 9. + vSeed * 3.;
-      vec2 cell = floor(g);
-      vec2 f = fract(g) - .5 - (vec2(fxH2(cell), fxH2(cell + 5.)) - .5) * .4;
-      float wave = .5 + .5 * sin(dot(cell, vec2(.45, .3)) - uTime * 2.2 + fxH2(cell + 9.) * 1.5);
-      float r = .12 + .3 * wave * wave;
-      float chrom = 1. - smoothstep(r - .05, r, length(f));
-      vec3 cc = fxH2(cell + 3.) > .7 ? vec3(.95, .7, .2) : vec3(.35, .05, .04);
-      vec3 pv = fxVoronoi(fxQs * 3.5 + vSeed * 5.);
-      float pap = (1. - smoothstep(0., .5, pv.x)) * step(.6, pv.z);
-      fxC = mix(fxBase * vec3(1.05, .85, .8) * 1.1, cc, chrom * .85);
-      fxC *= 1. - pap * .1;
-      fxDetail = chrom * .0008;
-      fxWet = .7;
+      // 햇볕에 그을린 황금빛 피부
+      fxC = fxBase * mix(vec3(1.), vec3(1.07, .93, .8), fxBlotch);
       fxSss = .14;
+      fxWet = .4;
+    } else if (uFace < 3.5) {
+      // 멍: 가운데는 검푸르고 번질수록 붉은 보라, 가장자리는 누런 초록으로 삭아 간다. 실핏줄 터진 점
+      vec3 skin = vec3(.86, .66, .56);
+      vec2 c = (vec2(fxH1(vSeed * 3.), fxH1(vSeed * 7.)) - .5) * .5;
+      float r = length((fxQs - c) * vec2(1., 1.2)) + (fxF2(fxQs * 2.5 + vSeed) - .5) * .5;
+      fxC = mix(fxBase * .72, mix(fxBase, vec3(.55, .2, .3), .5), smoothstep(.2, .6, r));
+      fxC = mix(fxC, vec3(.62, .6, .3), smoothstep(.62, .92, r));
+      fxC = mix(fxC, skin, smoothstep(.95, 1.25, r));
+      vec3 pv = fxVoronoi(fxQs * 18. + vSeed);
+      fxC = mix(fxC, vec3(.35, .05, .1), (1. - smoothstep(.05, .1, pv.x)) * step(.8, pv.z) * (1. - smoothstep(.4, .8, r)));
+      fxSss = .08;
+      fxMoleOk = 0.;
     } else if (uFace < 4.5) {
-      float g = fxN2(fxQs * 4. + vSeed);
-      vec3 sp = fxVoronoi(fxQs * 16. + vSeed * 6.);
-      float speck = (1. - smoothstep(.05, .12, sp.x)) * step(.75, sp.z);
-      fxC = fxBase * (.85 + .25 * g);
-      fxC = mix(fxC, vec3(.95, .85, .45), speck * .7);
-      fxDetail = g * .001;
-      fxWet = 1.;
-      fxSss = .12;
+      // 햇볕에 익은 피부: 벌겋게 달아오르고 군데군데 하얀 껍질이 들떠 벗겨진다
+      vec3 f = fxVoronoi(fxQs * 6. + vSeed * 9.);
+      float flake = step(.8, f.z) * smoothstep(.0, .05, f.y);
+      float flakeEdge = step(.8, f.z) * (1. - smoothstep(0., .025, f.y)) * step(.5, fract(atan(f.y, f.x) + f.z * 7.));
+      fxC = fxBase * (.88 + .18 * fxBlotch);
+      fxC = mix(fxC, mix(fxBase, vec3(.95, .82, .76), .35), flake * .55);
+      fxC = mix(fxC, vec3(.99, .95, .92), flakeEdge * .85);
+      fxDetail = flakeEdge * .002;
+      fxSss = .22;
+      fxWet = .25;
+      fxMoleOk = 0.;
     } else {
-      vec2 g = fxQs * vec2(4.5, 6.);
-      g.x += mod(floor(g.y), 2.) * .5;
-      vec2 cell = floor(g);
-      vec2 f = fract(g) - vec2(.5, .3);
-      float scaleEdge = smoothstep(.4, .6, length(f * vec2(1., 1.4)));
-      float blot = fxF2(fxQs * vec2(.8, 1.3) + vSeed * 7.);
-      float dark = smoothstep(.5, .53, blot);
-      float rimB = smoothstep(.46, .49, blot) - dark;
-      float saddle = smoothstep(.6, .63, blot);
-      fxC = mix(fxBase, vec3(.26, .15, .07), dark);
-      fxC = mix(fxC, vec3(.62, .45, .22), saddle);
-      fxC = mix(fxC, vec3(.1, .06, .03), rimB);
-      fxC *= (1. - scaleEdge * .5) * (.9 + .14 * fxH2(cell + vSeed));
-      fxWet = .55;
-      fxSss = .05;
+      // 문신: 먹으로 꽉 채운 바탕에 겹친 물결 비늘이 살빛 선으로 남아 있다. 먹은 살 속에서 조금 번졌다
+      vec3 skin = vec3(.84, .64, .52);
+      vec2 sg = fxQs * 2.4 + vSeed;
+      float row = floor(sg.y);
+      vec2 sc = vec2(sg.x + mod(row, 2.) * .5, sg.y);
+      vec2 sf = fract(sc) - vec2(.5, 0.);
+      float sr = length(sf);
+      float arcs = 1. - smoothstep(.07, .14, abs(fract(sr * 3.6) - .5));
+      float skinLine = arcs * step(sr, .95) * step(.12, sr);
+      float bleed = fxN2(fxQs * 30.) * .15;
+      vec3 ink = fxBase * (.85 + .2 * fxN2(fxQs * 6.));
+      float red = smoothstep(.6, .63, fxF2(fxQs * 1.3 + vSeed * 4.));
+      ink = mix(ink, vec3(.55, .12, .1), red);
+      fxC = mix(ink, skin, clamp(skinLine * .85 - bleed, 0., 1.));
+      fxSss = .1;
+      fxMoleOk = 0.;
     }
+    fxC *= 1. - fxFurrow * .05 - fxPore * .04;
+    fxC = mix(fxC, fxC * .7, fxHair * .2);
+    vec2 fxMp = (vec2(fxH1(vSeed * 3.1), fxH1(vSeed * 5.7)) - .5) * 1.2;
+    float fxMole = (1. - smoothstep(.05, .075, length(fxQs - fxMp))) * step(.7, fxH1(vSeed * 7.3)) * fxMoleOk;
+    fxC = mix(fxC, vec3(.2, .12, .08), fxMole);
+    fxDetail += -fxFurrow * .0009 - fxPore * .0006 + fxMole * .002;
     diffuseColor.rgb = fxC;`,
   normal: 'normal = fxBump(normal, fxDetail);',
-  surface: 'roughnessFactor = mix(.72, .12, fxWet);',
+  surface: 'roughnessFactor = mix(.72, .3, fxWet);',
   emissive: `
-    vec3 fxIr = .5 + .5 * cos(6.2832 * (fxFresnel(normal, 1.5) * 2. + vec3(0., .33, .67)));
     totalEmissiveRadiance = diffuseColor.rgb * vec3(1., .45, .35) * fxSss
-      + vec3(1.) * fxGlint(vLocal.xy * 25. + vSeed, .06 * fxWet, 1.2) * fxWet * .6
-      + step(4.5, uFace) * fxIr * fxFresnel(normal, 2.) * .3;`,
+      + vec3(1.) * fxGlint(vLocal.xy * 25. + vSeed, .05 * fxWet, 1.2) * fxWet * .5;`,
 };
 B.skin = {
   // 가죽처럼 질긴 속살
@@ -2829,219 +2886,6 @@ B.thermal = {
   emissive: 'totalEmissiveRadiance = fxCb * .9;',
 };
 
-S.jellyfish = {
-  // 깊은 바다. 칸마다 빛나는 해파리 한 마리가 우산을 오므렸다 펴며 떠 있고, 우산 가장자리의 빛 점과
-  // 속의 방사관, 네 잎 생식소가 은은히 빛나며, 긴 촉수와 입팔이 물결에 흔들린다. 해파리 빛이 곧 면 색.
-  // 위에서 희미한 빛줄기가 내리고 바다 눈이 떠다닌다
-  head: `
-    float fxSegJ(vec2 p, vec2 a, vec2 b) { vec2 pa = p - a, ba = b - a; return length(pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0., 1.)); }`,
-  color: `
-    vec2 fxQj = fxQ();
-    float fxT = uTime * .9 + vSeed * 20.;
-    float fxBt = pow(.5 + .5 * sin(fxT * 1.6), 2.);
-    vec2 fxC0 = vec2(sin(fxT * .3) * .1, .22 + .08 * sin(fxT * 1.6 - 1.2));
-    vec2 fxP = fxQj - fxC0;
-    vec2 fxBell = vec2(.6 - .13 * fxBt, .44 + .07 * fxBt);
-    vec2 fxBp = fxP / fxBell;
-    float fxBr = length(fxBp);
-    float fxCut = -.2 + .05 * sin(fxBp.x * 18.);
-    float fxUmb = (1. - smoothstep(.94, 1., fxBr)) * smoothstep(fxCut - .02, fxCut + .04, fxBp.y);
-    float fxRimJ = fxUmb * (1. - smoothstep(.0, .12, fxBp.y - fxCut)) ;
-    float fxDots = fxRimJ * (1. - smoothstep(.12, .25, abs(fract(fxBp.x * 9.) - .5)));
-    float fxCa = atan(fxP.x, fxBell.y - fxP.y);
-    float fxCanal = (1. - smoothstep(.0, .06, abs(fract(fxCa * 2.6 + .5) - .5))) * fxUmb * smoothstep(.0, .5, fxBr);
-    float fxGa = atan(fxP.y - .05, fxP.x);
-    float fxGr = length(fxP - vec2(0., .05)) / (.17 * (1. + .35 * cos(fxGa * 4.)));
-    float fxGon = (1. - smoothstep(.8, 1., fxGr)) * fxUmb;
-    float fxTent = 0.;
-    float fxBase = fxC0.y + fxCut * fxBell.y;
-    for (int i = 0; i < 7; i++) {
-      float fi = float(i);
-      float x0 = fxC0.x + (fi / 6. - .5) * fxBell.x * 1.7;
-      float below = fxBase - fxQj.y;
-      float x = x0 + sin(below * 7. - fxT * 2. + fi * 1.3) * .07 * below;
-      float w = .013 * (1. - smoothstep(0., 1.2, below));
-      fxTent = max(fxTent, (1. - smoothstep(w * .5, w + .004, abs(fxQj.x - x))) * step(0., below) * (1. - smoothstep(.6, 1.25, below)));
-    }
-    float fxArm = 0.;
-    for (int i = 0; i < 2; i++) {
-      float fi = float(i) * 2. - 1.;
-      float below = fxBase + .05 - fxQj.y;
-      float x = fxC0.x + fi * .06 + sin(below * 5. - fxT * 1.4 + fi) * .06;
-      float w = .045 * (1. - smoothstep(0., .8, below)) * (.7 + .3 * sin(below * 30. - fxT * 3.));
-      fxArm = max(fxArm, (1. - smoothstep(w * .6, w, abs(fxQj.x - x))) * step(0., below) * (1. - smoothstep(.4, .75, below)));
-    }
-    float fxHaloJ = exp(-dot(fxP, fxP) * 3.);
-    vec2 fxDn = fxDown();
-    float fxRay = pow(.5 + .5 * sin(dot(fxQj, vec2(fxDn.y, -fxDn.x)) * 5. + fxT * .2), 6.) * .25 * smoothstep(-1., 1., -dot(fxQj, fxDn));
-    float fxSnow = step(.97, fxH2(floor(fxQj * 30. + vec2(0., uTime * .5)) + vSeed)) * .4;
-    vec3 fxJel = diffuseColor.rgb;
-    diffuseColor.rgb = vec3(.01, .025, .06) + fxJel * .04 + vec3(.05, .1, .14) * fxRay + fxSnow * .05;`,
-  surface: 'roughnessFactor = .12;',
-  emissive: `
-    totalEmissiveRadiance = fxJel * (fxUmb * (.32 + .25 * fxBr) + fxRimJ * .9 + fxDots * 1.6 + fxCanal * .55 + fxGon * .7 + fxTent * .9 + fxArm * .65 + fxHaloJ * .18)
-      + vec3(1.) * fxDots * .35 + vec3(.5, .8, 1.) * (fxRay * .25 + fxSnow * .3);`,
-};
-B.jellyfish = {
-  color: `float fxRim = smoothstep(.85, 1., fxBodyRim());`,
-  surface: 'roughnessFactor = .2;',
-  emissive: 'totalEmissiveRadiance = vec3(.1, .5, .8) * fxRim * .25;',
-};
-
-S.insect = {
-  // 박물관 곤충 표본 상자. 칸마다 솜종이 위에 핀으로 꽂은 보석풍뎅이 한 마리. 딱지날개는 실제로 볼록하고
-  // 금속처럼 반짝이며 보는 각도에 따라 빛이 바뀐다(면마다 초록, 파랑, 금, 빨강, 보라, 구리).
-  // 날개엔 점줄이 패여 있고, 다리 여섯과 더듬이, 진주 핀 머리, 아래엔 손글씨 이름표
-  head: `
-    float fxSegI(vec2 p, vec2 a, vec2 b) { vec2 pa = p - a, ba = b - a; return length(pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0., 1.)); }
-    // 딱지날개, 앞가슴, 머리의 정규화 반지름(1이 가장자리)
-    vec3 fxBeetle(vec2 q) {
-      return vec3(length((q - vec2(0., -.16)) / vec2(.46, .56)), length((q - vec2(0., .43)) / vec2(.33, .17)), length((q - vec2(0., .63)) / vec2(.15, .1)));
-    }
-    float fxInsectH(vec2 p, float seed) {
-      vec2 q = p / uSticker.x;
-      vec3 r = fxBeetle(q);
-      float h = max(max(.045 * sqrt(max(0., 1. - r.x * r.x)), .03 * sqrt(max(0., 1. - r.y * r.y))), .02 * sqrt(max(0., 1. - r.z * r.z)));
-      vec2 pin = q - vec2(.1, -.02);
-      h = max(h, .055 * sqrt(max(0., 1. - dot(pin, pin) / .0025)));
-      return smoothstep(0., .05, fxEdgeAt(p)) * (h + .004);
-    }`,
-  height: 'fxInsectH',
-  color: `
-    if (fxEdge() < 0.) discard;
-    vec2 fxQi = fxQ();
-    vec3 fxBr = fxBeetle(fxQi);
-    float fxEly = 1. - smoothstep(.96, 1., fxBr.x);
-    float fxPro = 1. - smoothstep(.94, 1., fxBr.y);
-    float fxHead = 1. - smoothstep(.9, 1., fxBr.z);
-    float fxBody = max(fxEly, max(fxPro, fxHead));
-    vec2 fxAx = vec2(abs(fxQi.x), fxQi.y);
-    float fxLegD = 9.;
-    for (int i = 0; i < 3; i++) {
-      float fi = float(i);
-      float y0 = .36 - fi * .2;
-      vec2 a = vec2(.22, y0);
-      vec2 k = vec2(.56, y0 + .1 - fi * .16);
-      vec2 b = vec2(.74, y0 - .06 - fi * .26);
-      fxLegD = min(fxLegD, min(fxSegI(fxAx, a, k), fxSegI(fxAx, k, b)));
-    }
-    float fxLeg = (1. - smoothstep(.014, .024, fxLegD)) * (1. - fxBody);
-    float fxAnt = min(fxSegI(fxAx, vec2(.07, .7), vec2(.2, .84)), fxSegI(fxAx, vec2(.2, .84), vec2(.24, .95)));
-    float fxAntM = (1. - smoothstep(.008, .016, fxAnt)) * (1. - fxBody);
-    float fxSuture = (1. - smoothstep(.006, .014, abs(fxQi.x))) * fxEly;
-    vec2 fxSt = vec2(fract(fxQi.x * 11.) - .5, fract(fxQi.y * 22.) - .5);
-    float fxPunct = (1. - smoothstep(.12, .2, length(fxSt))) * fxEly * (1. - fxSuture);
-    vec2 fxPin = fxQi - vec2(.1, -.02);
-    float fxPinM = 1. - smoothstep(.042, .05, length(fxPin));
-    float fxLabel = step(abs(fxQi.x), .42) * step(abs(fxQi.y + .86), .09);
-    float fxScrib = fxLabel * (1. - smoothstep(.006, .016, abs(fxQi.y + .84 + (fxN2(vec2(fxQi.x * 18., 3.)) - .5) * .05))) * step(.25, fract(fxQi.x * 7. + .3)) * step(abs(fxQi.x), .34);
-    float fxLabelEdge = fxLabel * (1. - step(abs(fxQi.x), .4) * step(abs(fxQi.y + .86), .075));
-    vec2 fxSh = fxBeetle(fxQi - vec2(.05, -.05)).xy;
-    float fxShadow = (1. - smoothstep(.95, 1.25, min(fxSh.x, fxSh.y))) * (1. - fxBody);
-    vec3 fxMetal = diffuseColor.rgb;
-    vec3 fxPaper = mix(vec3(.84, .8, .7), fxMetal, .2) * (.9 + .12 * fxN2(vLocal.xy * 140.));
-    fxPaper *= 1. - fxShadow * .3;
-    fxPaper = mix(fxPaper, vec3(.97, .95, .9), fxLabel);
-    fxPaper = mix(fxPaper, vec3(.15, .12, .1), max(fxScrib, fxLabelEdge * .6));
-    vec3 fxShell = fxMetal * mix(.9, .62, fxPro * (1. - fxEly)) * (1. - fxPunct * .45) * (1. - fxSuture * .5);
-    vec3 fxC = mix(fxPaper, fxShell, fxBody);
-    fxC = mix(fxC, fxMetal * .25, max(fxLeg, fxAntM));
-    fxC = mix(fxC, vec3(.92, .9, .86), fxPinM);
-    diffuseColor.rgb = fxC;`,
-  normal: 'normal = fxBump(normal, -fxPunct * .0015 - fxSuture * .001);',
-  surface: 'roughnessFactor = mix(mix(.85, .2, fxBody), .15, fxPinM); metalnessFactor = max(fxBody, max(fxLeg, fxAntM) * .7) * (1. - fxPinM) * .92;',
-  emissive: `
-    float fxF = fxFresnel(normal, 1.6);
-    vec3 fxIr = .5 + .5 * cos(6.2832 * (fxF * 1.3 + vec3(0., .33, .67)));
-    totalEmissiveRadiance = mix(diffuseColor.rgb, fxIr, .45) * fxF * fxBody * .5 + diffuseColor.rgb * .03;`,
-};
-B.insect = {
-  // 짙은 나무 표본 상자
-  color: `diffuseColor.rgb *= .78 + .3 * fxN2(vec2(fxBodyUV().x * 4. + vSeed * 9., fxBodyUV().y * 60.));`,
-  surface: 'roughnessFactor = .45;',
-};
-
-S.sushi = {
-  // 초밥집 카운터. 칸마다 위에서 내려다본 초밥 한 점이 꽉 차게 놓여 있다. 면마다 재료가 다르다:
-  // 연어(흰 지방 줄), 참치(짙고 윤기 나는 붉은 살), 계란말이(겹겹의 결과 김 띠), 오징어(칼집 낸 반투명한 살),
-  // 장어(윤기 나는 양념과 그을린 자국, 깨), 아보카도(얇게 썰어 부채꼴로 편 조각, 깨). 가장자리로 밥알이 비친다
-  head: `
-    float fxNeta(vec2 q) { return fxBox(q, vec2(.84, .72), .32); }
-    float fxSushiH(vec2 p, float seed) {
-      vec2 q = p / uSticker.x;
-      float top = 1. - smoothstep(-.12, .02, fxNeta(q));
-      vec2 w = 1. - pow(abs(q) / vec2(1.02, 1.), vec2(4.));
-      vec3 g = fxVoronoi(q * 9. + seed * 3.);
-      float rice = (1. - smoothstep(.0, .45, g.x)) * .008 * (1. - top);
-      return smoothstep(0., .06, fxEdgeAt(p)) * (.012 + .022 * clamp(w.x * w.y, 0., 1.) + .014 * top + rice);
-    }`,
-  height: 'fxSushiH',
-  color: `
-    if (fxEdge() < 0.) discard;
-    vec2 fxQs = fxQ();
-    float fxNd = fxNeta(fxQs);
-    float fxTop = 1. - smoothstep(-.02, .02, fxNd);
-    vec3 fxGr = fxVoronoi(fxQs * 9. + vSeed * 3.);
-    vec3 fxRice = vec3(.96, .95, .9) * (1. - (1. - smoothstep(0., .1, fxGr.y)) * .3) * (.92 + .1 * fxGr.z);
-    vec3 fxBase = diffuseColor.rgb;
-    vec3 fxN = fxBase;
-    float fxGloss = .5;
-    float fxSesame = 0.;
-    float fxSss = .08;
-    if (uFace < .5) {
-      float s = fract((fxQs.x * .8 + fxQs.y) * 2.6 + sin(fxQs.x * 3. + vSeed) * .18);
-      float fat = smoothstep(.0, .05, s) * (1. - smoothstep(.1, .2, s));
-      fxN = mix(fxBase * (.92 + .12 * fxN2(fxQs * 5.)), vec3(.98, .9, .82), fat * .85);
-      fxGloss = .75;
-      fxSss = .16;
-    } else if (uFace < 1.5) {
-      float sin1 = 1. - smoothstep(0., .03, abs(fract((fxQs.x + fxQs.y * .3) * 3. + fxN2(fxQs * 2.) * .8) - .5));
-      fxN = fxBase * (.88 + .18 * fxN2(fxQs * 4. + vSeed)) * (1. + sin1 * .1);
-      fxGloss = .85;
-      fxSss = .14;
-    } else if (uFace < 2.5) {
-      float layer = .5 + .5 * sin(fxQs.y * 60. + fxN2(fxQs * 4.) * 3.);
-      fxN = fxBase * (.9 + .1 * layer) * mix(1., .82, smoothstep(.3, .7, fxQs.y));
-      float nori = step(abs(fxQs.x + .05), .17);
-      fxN = mix(fxN, vec3(.05, .07, .05) * (.8 + .4 * fxN2(fxQs * 40.)), nori);
-      fxGloss = mix(.35, .2, nori);
-    } else if (uFace < 3.5) {
-      vec2 sc = fxRot(.785) * fxQs * 5.;
-      float score = 1. - smoothstep(0., .06, min(abs(fract(sc.x) - .5), abs(fract(sc.y) - .5)));
-      fxN = fxBase * (.93 + .08 * fxN2(fxQs * 6.)) * (1. - score * .15);
-      fxGloss = .8;
-      fxSss = .2;
-    } else if (uFace < 4.5) {
-      float grill = 1. - smoothstep(.0, .12, abs(fract((fxQs.x - fxQs.y) * 2.2) - .5) - .3);
-      fxN = fxBase * (.85 + .25 * fxN2(fxQs * 6. + vSeed)) * (1. - grill * .45);
-      vec2 sg = fxQs * 7. + vSeed;
-      vec2 sf = fract(sg) - .5 - (vec2(fxH2(floor(sg)), fxH2(floor(sg) + 3.)) - .5) * .5;
-      fxSesame = step(.75, fxH2(floor(sg) + 9.)) * (1. - smoothstep(.8, 1., length(fxRot(fxH2(floor(sg) + 4.) * 6.) * sf / vec2(.06, .1))));
-      fxGloss = .9;
-    } else {
-      float sl = fxQs.x * 1.1 + fxQs.y * .5;
-      float idx = floor(sl * 4.);
-      float f = fract(sl * 4.);
-      fxN = mix(vec3(.85, .88, .4), fxBase * .75, smoothstep(.0, .9, f));
-      fxN = mix(fxN, vec3(.12, .25, .08), smoothstep(.9, .97, f));
-      vec2 sg = fxQs * 7. + vSeed;
-      vec2 sf = fract(sg) - .5;
-      fxSesame = step(.82, fxH2(floor(sg) + 9.)) * (1. - smoothstep(.8, 1., length(fxRot(fxH2(floor(sg) + 4.) * 6.) * sf / vec2(.06, .1))));
-      fxGloss = .55;
-    }
-    fxN = mix(fxN, vec3(.95, .9, .78), fxSesame);
-    vec3 fxC = mix(fxRice, fxN, fxTop);
-    fxC *= 1. - (1. - smoothstep(0., .1, abs(fxNd))) * .15;
-    diffuseColor.rgb = fxC;`,
-  normal: 'normal = fxBump(normal, fxSesame * .002);',
-  surface: 'roughnessFactor = mix(.6, mix(.5, .12, fxGloss), fxTop);',
-  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * fxSss * fxTop + vec3(1.) * fxGlint(vLocal.xy * 30. + vSeed, .05, 1.) * fxTop * fxGloss * .5;',
-};
-B.sushi = {
-  // 검은 옻칠 접시
-  surface: 'roughnessFactor = .2;',
-};
-
 S.vinyl = {
   // 음악 감상실. 칸마다 색 레코드판이 33⅓회전으로 돈다. 판 색이 곧 면 색이고, 촘촘한 소릿골이
   // 빛을 받아 나비 모양으로 번쩍이며, 곡 사이는 매끈한 띠, 가운데 이름표의 글자 줄이 돌아간다. 판 밖은 검은 펠트
@@ -3113,103 +2957,6 @@ B.kaleido = {
   color: `float fxRing = step(.6, fract(fxBodyUV().y * 12.));`,
   normal: 'normal = fxBump(normal, fxRing * .002);',
   surface: 'roughnessFactor = .3; metalnessFactor = 1.;',
-};
-
-S.petri = {
-  // 실험실 배양접시. 칸마다 색 배지를 부은 둥근 접시가 밑에서 비추는 빛을 받아 은은히 비치고, 그 위로
-  // 균 무리가 자라 퍼진다. 무리 가장자리는 손가락처럼 갈라지고 자란 테가 겹겹이 진다. 접시마다 이름표 테이프.
-  // 50초쯤 자라면 새 접시로 바뀐다. 배지 색이 곧 면 색
-  color: `
-    vec2 fxQp = fxQ();
-    float fxR = length(fxQp);
-    float fxDish = 1. - smoothstep(.88, .9, fxR);
-    float fxRimP = 1. - smoothstep(0., .035, abs(fxR - .92));
-    float fxCyc = fract(uTime / 50. + fxH1(vSeed * 3.));
-    float fxGen = floor(uTime / 50. + fxH1(vSeed * 3.));
-    float fxGrow = smoothstep(0., .75, fxCyc) * (1. - smoothstep(.96, 1., fxCyc));
-    float fxCol = 0.;
-    float fxRing = 0.;
-    for (int i = 0; i < 4; i++) {
-      float fi = float(i);
-      vec2 c = (vec2(fxH1(vSeed * 7. + fi + fxGen * 3.1), fxH1(vSeed * 11. + fi * 1.7 + fxGen)) - .5) * 1.1;
-      vec2 d = fxQp - c;
-      float r = length(d);
-      float ang = atan(d.y, d.x);
-      float fing = fxN2(vec2(ang * 3. + fi * 5., r * 4.)) * .2 + fxN2(vec2(ang * 9. + fi, r * 10.)) * .08;
-      float R = ((.1 + .28 * fxH1(vSeed * 13. + fi + fxGen)) + fing) * fxGrow;
-      float inside = 1. - smoothstep(R - .015, R, r);
-      fxCol = max(fxCol, inside);
-      fxRing = max(fxRing, inside * (.5 + .5 * sin(r / max(R, .01) * 16.)));
-    }
-    fxCol *= fxDish;
-    vec3 fxAgar = diffuseColor.rgb;
-    vec3 fxColony = mix(fxAgar * .5, vec3(.97, .95, .88), .55) * (.9 + .12 * fxRing);
-    float fxTape = step(abs(fxQp.x), .4) * step(abs(fxQp.y - .72), .08);
-    float fxPen = fxTape * (1. - smoothstep(.006, .016, abs(fxQp.y - .72 + (fxN2(vec2(fxQp.x * 16., fxGen)) - .5) * .06))) * step(.3, fract(fxQp.x * 6. + .2)) * step(abs(fxQp.x), .32);
-    vec3 fxBench = vec3(.86, .9, .92);
-    vec3 fxC = mix(fxBench, fxAgar * (.85 + .1 * fxN2(fxQp * 3.)), fxDish);
-    fxC = mix(fxC, fxColony, fxCol);
-    fxC = mix(fxC, vec3(.95, .96, .97), fxRimP * .7);
-    fxC = mix(fxC, vec3(.96, .95, .9), fxTape * .92);
-    fxC = mix(fxC, vec3(.1, .12, .25), fxPen);
-    diffuseColor.rgb = fxC;`,
-  normal: 'normal = fxBump(normal, fxCol * .003 + fxRing * fxCol * .0008 + fxRimP * .002);',
-  surface: 'roughnessFactor = mix(.25, .4, fxCol);',
-  emissive: 'totalEmissiveRadiance = fxAgar * fxDish * (1. - fxCol * .75) * (1. - fxTape) * .35 + vec3(1.) * fxRimP * fxFresnel(normal, 2.) * .3;',
-};
-B.petri = {
-  surface: 'roughnessFactor = .35;',
-};
-
-S.transit = {
-  // 지하철 노선도. 칸마다 면 색 노선이 굵게 지나가고(곧게, 또는 45도로 꺾여), 다른 노선이 가늘게 엇갈리며
-  // 강이 흐르는 칸도 있다. 하얀 역 동그라미와 갈아타는 역, 노선을 따라 작은 열차가 달린다
-  color: `
-    vec2 fxQt = fxQ();
-    float fxRk = floor(fxH1(vSeed * 5.) * 4.);
-    vec2 fxP = fxRot(fxRk * 1.5708) * fxQt;
-    float fxY0 = (fxH1(vSeed * 3.) - .5) * .5;
-    float fxBend = step(.4, fxH1(vSeed * 9.)) * (fxH1(vSeed * 2.) > .5 ? 1. : -1.);
-    float fxKx = (fxH1(vSeed * 7.) - .5) * .6;
-    float fxDx = fxP.x - fxKx;
-    float fxLy = fxY0 + fxBend * max(fxDx, 0.);
-    float fxD = abs(fxP.y - fxLy) * (abs(fxBend) > .5 && fxDx > 0. ? .7071 : 1.);
-    float fxMain = 1. - smoothstep(.2, .215, fxD);
-    float fxX1 = (fxH1(vSeed * 13.) - .5) * 1.2;
-    float fxSecOn = step(.3, fxH1(vSeed * 17.));
-    float fxSec = (1. - smoothstep(.035, .047, abs(fxP.x - fxX1))) * fxSecOn;
-    vec3 fxSecC = mix(.35 + .4 * cos(6.2832 * (fxH1(vSeed * 19.) + vec3(0., .33, .67))), vec3(.62), .6);
-    float fxRiverOn = step(.7, fxH1(vSeed * 23.));
-    float fxRiver = fxRiverOn * (1. - smoothstep(.12, .14, abs(fxP.y + .55 * sign(fxY0 + .01) - sin(fxP.x * 2.5) * .12)));
-    float fxSx = (floor(fxP.x / .55) + .5) * .55;
-    vec2 fxSp = vec2(fxSx, fxY0 + fxBend * max(fxSx - fxKx, 0.));
-    float fxSd = length(fxP - fxSp);
-    float fxStOk = 1. - fxSecOn * (1. - step(.3, abs(fxSx - fxX1)));
-    float fxStation = (1. - smoothstep(.09, .1, fxSd)) * fxStOk;
-    float fxStRim = (1. - smoothstep(.125, .135, fxSd)) * smoothstep(.09, .1, fxSd) * fxStOk;
-    vec2 fxIp = vec2(fxX1, fxY0 + fxBend * max(fxX1 - fxKx, 0.));
-    vec2 fxIq = fxP - fxIp;
-    float fxXd = fxBox(fxIq, vec2(.1, .22), .1);
-    float fxInter = fxSecOn * (1. - smoothstep(-.005, .005, fxXd));
-    float fxInterRim = fxSecOn * (1. - smoothstep(.02, .03, abs(fxXd)));
-    float fxTp = fract(uTime * .12 + fxH1(vSeed * 29.)) * 2.8 - 1.4;
-    vec2 fxTc = vec2(fxTp, fxY0 + fxBend * max(fxTp - fxKx, 0.));
-    vec2 fxTdir = normalize(vec2(1., fxTp > fxKx ? fxBend : 0.));
-    vec2 fxTl = vec2(dot(fxP - fxTc, fxTdir), dot(fxP - fxTc, vec2(-fxTdir.y, fxTdir.x)));
-    float fxTrain = 1. - smoothstep(-.005, .005, fxBox(fxTl, vec2(.13, .07), .06));
-    vec3 fxPaper = mix(vec3(.96, .95, .92), diffuseColor.rgb, .2) * (.97 + .04 * fxN2(vLocal.xy * 90.));
-    vec3 fxC = mix(fxPaper, vec3(.72, .85, .95), fxRiver);
-    fxC = mix(fxC, fxSecC, fxSec);
-    fxC = mix(fxC, diffuseColor.rgb, fxMain);
-    fxC = mix(fxC, vec3(.1), max(fxStRim, fxInterRim));
-    fxC = mix(fxC, vec3(1.), max(fxStation, fxInter * (1. - fxInterRim)));
-    fxC = mix(fxC, vec3(.12), fxTrain);
-    diffuseColor.rgb = fxC;`,
-  surface: 'roughnessFactor = .75;',
-  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * .06 + vec3(1., .95, .7) * fxTrain * .25;',
-};
-B.transit = {
-  surface: 'roughnessFactor = .5; metalnessFactor = .6;',
 };
 
 S.flip = {
@@ -3284,8 +3031,8 @@ export const MOVING = new Set([
   'electric', 'flesh', 'eldritch', 'gem', 'glitch', 'pixel', 'circuit', 'aurora', 'pumpkin',
   'stained', 'najeon', 'rain', 'mercury', 'gauge', 'honey', 'clay',
   'holo', 'blueprint', 'jelly', 'planet', 'disco',
-  'fossil', 'doodle', 'hud', 'ink', 'lavalamp', 'glass', 'fruit',
-  'skin', 'bubblewrap', 'thermal', 'jellyfish', 'vinyl', 'kaleido', 'petri', 'transit', 'flip',
+  'fossil', 'doodle', 'ink', 'lavalamp', 'glass', 'fruit',
+  'skin', 'bubblewrap', 'thermal', 'vinyl', 'kaleido', 'flip',
 ]);
 
 /**
@@ -3313,11 +3060,13 @@ export function wear(material, part, uniforms, face = -1) {
       .replace('#include <common>', `#include <common>
         ${UNIFORMS}
         attribute float aSeed;
+        ${part === 'sticker' ? 'attribute vec3 aHome;' : ''}
         ${VARYINGS}
         ${NOISE}
         ${head}`)
       .replace('#include <beginnormal_vertex>', `#include <beginnormal_vertex>
         vSeed = aSeed;
+        vHome = ${part === 'sticker' ? 'aHome' : 'vec3(0., 0., 1.)'};
         ${lift}`)
       .replace('#include <begin_vertex>', `#include <begin_vertex>
         vLocal = position;

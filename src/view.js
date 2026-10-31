@@ -6,7 +6,7 @@ import {
 } from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { FACES, layerOf } from './cube.js';
+import { FACES, createCube, layerOf } from './cube.js';
 import { MOVING, wear } from './surfaces.js';
 import { Ambient, Burst } from './particles.js';
 import { MOTIONS } from './motions.js';
@@ -264,8 +264,23 @@ export class CubeView {
     cube.cubies.forEach((piece, i) => {
       for (const s of piece.stickers) this.slots[s].push(i);
     });
+    // 스티커마다 원래 면의 어느 칸이었는지(면 전체를 -1~1로 본 좌표, 스티커 자신의 가로·세로 축 기준)와
+    // 칸 크기를 준다. 면 전체에 그림 한 장을 그리는 질감은 이걸로 다 맞췄을 때 그림이 이어진다
+    const home = createCube(cube.n).cubies;
     this.stickerMeshes = this.slots.map((list, s) => {
-      const mesh = instanced(seeded(this.stickerGeo, list.length), this.faceMats[s], list.length);
+      const g = seeded(this.stickerGeo, list.length);
+      const q = new Quaternion().setFromUnitVectors(AXES[2], new Vector3(...FACES[s]));
+      const ax = AXES[0].clone().applyQuaternion(q);
+      const ay = AXES[1].clone().applyQuaternion(q);
+      const at = new Float32Array(list.length * 3);
+      list.forEach((piece, k) => {
+        const p = new Vector3(...home[piece].pos).divideScalar(cube.n);
+        at[k * 3] = p.dot(ax);
+        at[k * 3 + 1] = p.dot(ay);
+        at[k * 3 + 2] = 2 / cube.n;
+      });
+      g.setAttribute('aHome', new InstancedBufferAttribute(at, 3));
+      const mesh = instanced(g, this.faceMats[s], list.length);
       mesh.renderOrder = 1;
       return mesh;
     });
