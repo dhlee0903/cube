@@ -123,3 +123,16 @@ test('돌아가는 곡선은 0에서 시작해 정확히 1에서 끝난다', asy
     assert.ok(time > 0);
   }
 });
+
+test('테마마다 소리 묶음이 있고 그 소리 파일이 모두 있다', async () => {
+  const { KITS } = await import('../src/sound.js');
+  const { existsSync } = await import('node:fs');
+  for (const t of THEMES) {
+    assert.ok(KITS.includes(t.sound), `${t.name}: 소리 묶음 '${t.sound}'이 없다`);
+  }
+  for (const kit of KITS) {
+    for (const name of [`${kit}-1`, `${kit}-2`, `${kit}-3`, `${kit}-solve`]) {
+      assert.ok(existsSync(new URL(`../public/sounds/${name}.mp3`, import.meta.url)), `${name}.mp3가 없다`);
+    }
+  }
+});

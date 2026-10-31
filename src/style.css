@@ -238,6 +238,40 @@ button:disabled {
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--ink) 12%, transparent);
 }
 
+.sound-button {
+  position: absolute;
+  z-index: 2;
+  top: calc(10px + env(safe-area-inset-top, 0px));
+  left: max(10px, env(safe-area-inset-left, 0px));
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--bg) 62%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+.sound-button svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.sound-button .spk { fill: currentColor; }
+.sound-button .mute { display: none; }
+.sound-button.off { opacity: .7; }
+.sound-button.off .wave { display: none; }
+.sound-button.off .mute { display: inline; }
+
 .dot {
   display: block;
   width: 28px;

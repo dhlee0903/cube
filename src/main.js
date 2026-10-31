@@ -5,6 +5,7 @@ import {
 import { GROUPS, themeById } from './themes.js';
 import { CubeView } from './view.js';
 import { Timer, formatTime } from './timer.js';
+import { Sound } from './sound.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -26,6 +27,7 @@ let history = []; // 맞춘 상태에서부터 돌린 것들. 맞추기와 힌�
 let playing = false;
 
 const timer = new Timer();
+const sound = new Sound(store);
 
 const view = new CubeView($('stage'), {
   onGrab() {
@@ -33,6 +35,9 @@ const view = new CubeView($('stage'), {
       timer.start();
       tickTimer();
     }
+  },
+  onSnap() {
+    sound.turn();
   },
   onMove(move) {
     const before = history.length;
@@ -43,6 +48,7 @@ const view = new CubeView($('stage'), {
         saveBest();
       }
       view.celebrate();
+      sound.solve();
     }
     refresh();
   },
@@ -63,6 +69,7 @@ async function play(moves, ms) {
   view.locked = true;
   refresh();
   for (const step of steps(moves)) {
+    sound.turn(true);
     await view.turn(step, ms);
     for (const move of step) commit(move);
     view.sync();
@@ -121,7 +128,10 @@ $('solve').addEventListener('click', async () => {
   timer.reset();
   const moves = simplify(invert(history), size);
   await play(moves, Math.max(55, Math.min(170, 5000 / moves.length)));
-  if (history.length === 0) view.celebrate(0.5);
+  if (history.length === 0) {
+    view.celebrate(0.5);
+    sound.solve();
+  }
 });
 
 // ---- 타이머 ----
@@ -286,8 +296,23 @@ function useTheme(theme) {
   for (const { theme: t, b } of choices) b.setAttribute('aria-checked', String(t === theme));
   themeButton.querySelector('.dot').innerHTML = cubeIcon(theme);
   view.setTheme(theme);
+  sound.setKit(theme.sound);
   store.set('cube.theme', theme.id);
 }
+
+// ---- 소리 ----
+
+const soundButton = $('sound');
+function showSound() {
+  soundButton.setAttribute('aria-pressed', String(sound.on));
+  soundButton.setAttribute('aria-label', sound.on ? '소리 끄기' : '소리 켜기');
+  soundButton.classList.toggle('off', !sound.on);
+}
+soundButton.addEventListener('click', () => {
+  sound.toggle();
+  showSound();
+});
+showSound();
 
 // 처음 오면 기기 설정을 따라 밝은 쪽/어두운 쪽을 고른다
 const forced = document.documentElement.dataset.theme;

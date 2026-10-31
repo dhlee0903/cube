@@ -80,10 +80,11 @@ function haloTexture(size, radius, shadow) {
 }
 
 export class CubeView {
-  constructor(host, { onMove, onGrab }) {
+  constructor(host, { onMove, onGrab, onSnap }) {
     this.host = host;
     this.onMove = onMove;
     this.onGrab = onGrab;
+    this.onSnap = onSnap;
     this.still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
     this.renderer = new WebGLRenderer({ antialias: true, alpha: true });
@@ -831,6 +832,8 @@ export class CubeView {
     let q = d.angle / QUARTER;
     if (Math.abs(speed) > 0.003) q += Math.sign(speed) * 0.4;
     const quarters = Math.round(q);
+    // 손을 떼는 순간 층이 칸에 맞아 들어가는 소리
+    if (((quarters % 4) + 4) % 4) this.onSnap?.();
     const from = d.angle;
     const to = quarters * QUARTER;
     const angles = [];
