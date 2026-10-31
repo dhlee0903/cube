@@ -3334,23 +3334,26 @@ S.star = {
   // 밝은 백반, 가장자리로 갈수록 어두워지는 주연 감광. 면 테두리에선 홍염 고리가 솟는다
   color: `
     vec2 fxF = fxFace();
-    vec3 fxV = fxVoronoi(fxF * 9. + vec2(uTime * .015, 0.) + uFace * 5.);
-    float fxGran = smoothstep(0., .22, fxV.y) * (.75 + .5 * fxV.z);
-    float fxBoil = .82 + .18 * sin(uTime * .8 + fxV.z * 30.);
+    vec2 fxW = fxF + (vec2(fxN2(fxF * 5. + uTime * .03), fxN2(fxF * 5. + 7. - uTime * .03)) - .5) * .06;
+    vec3 fxV = fxVoronoi(fxW * 40. + uFace * 5.);
+    float fxLane = smoothstep(.0, .28, fxV.y);
+    float fxGran = (.5 + .5 * fxLane) * (.9 + .12 * fxV.z) * (1. - .18 * smoothstep(.15, .7, fxV.x)) * (.94 + .12 * fxN2(fxF * 110.));
+    float fxBoil = (.9 + .1 * sin(uTime * .8 + fxV.z * 30.)) * (.86 + .28 * fxF2(fxF * 2.6 + uFace * 3.));
     vec2 fxSp = fxF - vec2(.28 * sin(uFace * 2.1 + 1.), .22 * cos(uFace * 1.3));
     float fxSr = length(fxSp * vec2(1., 1.3)) + (fxN2(fxF * 5.) - .5) * .06;
     float fxUmbra = 1. - smoothstep(.07, .1, fxSr);
     float fxPen = 1. - smoothstep(.1, .2, fxSr);
     float fxFil = .5 + .5 * sin(atan(fxSp.y, fxSp.x) * 46. + fxSr * 30.);
-    float fxFac = smoothstep(.6, .75, fxF2(fxF * 3. + 2.)) * .3;
+    float fxFac = smoothstep(.62, .78, fxF2(fxF * 3. + 2.)) * .35 * (.6 + .4 * fxLane);
     vec3 fxBase = diffuseColor.rgb;
-    vec3 fxHot = mix(fxBase, vec3(1.), .3);
+    vec3 fxHot = mix(fxBase, vec3(1.), .12);
     vec3 fxCol = fxHot * fxGran * fxBoil * (1. + fxFac);
     fxCol = mix(fxCol, fxBase * .4 * (.65 + .35 * fxFil), fxPen);
     fxCol = mix(fxCol, fxBase * .06, fxUmbra);
     float fxBorder = 1. - max(abs(fxF.x), abs(fxF.y));
-    fxCol *= .7 + .3 * smoothstep(0., .45, fxBorder);
-    float fxLoop = exp(-pow((length(fract(fxF * 2.) - .5) - .32) / .025, 2.)) * (1. - smoothstep(0., .14, fxBorder)) * (.6 + .4 * sin(uTime * .7 + fxF.x * 3.));
+    float fxMu = sqrt(max(0., 1. - pow(length(fxF) / 1.5, 2.)));
+    fxCol *= mix(vec3(1., .55, .3), vec3(1.), fxMu) * (.45 + .6 * fxMu);
+    float fxLoop = exp(-pow((length(fract(fxF * 2.) - .5) - .32) / .025, 2.)) * (1. - smoothstep(0., .07, fxBorder)) * (.6 + .4 * sin(uTime * .7 + fxF.x * 3.));
     fxCol += mix(fxBase, vec3(1., .5, .4), .4) * fxLoop * 1.2;
     diffuseColor.rgb = vec3(.004);`,
   surface: 'roughnessFactor = .4;',
@@ -3403,12 +3406,17 @@ S.bismuth = {
     vec3 fxHopper(vec2 q, float seed) {
       vec2 p = fxRot((fxH1(seed * 5.) - .5) * .5) * (q - (vec2(fxH1(seed * 3.), fxH1(seed * 9.)) - .5) * .25);
       float d = max(abs(p.x), abs(p.y));
-      float steps = d * 7.;
+      vec2 p2 = fxRot(.6) * (q - vec2(.62, -.6) * sign(fxH1(seed * 11.) - .5));
+      float d2 = max(abs(p2.x), abs(p2.y)) * 1.9;
+      float steps = d * 5.;
       float idx = floor(steps);
       float f = fract(steps);
-      float h = idx < 1.5 ? 0. : 1. - idx / 7.;
-      float rim = 1. - smoothstep(0., .12, f);
-      return vec3(h, idx, rim * step(1.5, idx));
+      float h = idx < .5 ? .15 : 1. - idx / 5.;
+      float rim = 1. - smoothstep(0., .1, f);
+      float idx2 = floor(d2 * 5.);
+      float h2 = idx2 < .5 ? .1 : (1. - idx2 / 5.) * .7;
+      if (h2 > h && d2 < 1.) { h = h2; idx = idx2 + 7.; rim = 1. - smoothstep(0., .1, fract(d2 * 5.)); }
+      return vec3(max(h, 0.), idx, rim * step(.5, mod(idx, 7.)));
     }
     float fxBismuthH(vec2 p, float seed) {
       vec3 hp = fxHopper(p / uSticker.x, seed);
@@ -3418,13 +3426,14 @@ S.bismuth = {
   color: `
     if (fxEdge() < 0.) discard;
     vec3 fxHp = fxHopper(fxQ(), vSeed);
-    diffuseColor.rgb = diffuseColor.rgb * (.7 + .3 * fxHp.x);`,
-  surface: 'roughnessFactor = .14; metalnessFactor = .85;',
+    diffuseColor.rgb = diffuseColor.rgb * (.18 + .28 * fxHp.x);`,
+  surface: 'roughnessFactor = .12; metalnessFactor = .9;',
   emissive: `
     float fxFr = fxFresnel(normal, 1.5);
-    float fxFilm = fxHp.y * .09 + fxFr * .6 + fxN2(fxQ() * 3. + vSeed) * .2;
+    float fxFilm = fxHp.y * .13 + fxFr * .6 + fxN2(fxQ() * 3. + vSeed) * .22;
     vec3 fxIr = .5 + .5 * cos(6.2832 * (fxFilm + vec3(0., .33, .67)));
-    totalEmissiveRadiance = mix(diffuse, fxIr, .42) * (.32 + .3 * fxHp.z + .25 * fxFr);`,
+    fxIr *= fxIr * 1.5;
+    totalEmissiveRadiance = mix(diffuse * diffuse * 1.2, fxIr, .42) * (.2 + .6 * fxHp.z + .35 * fxFr) * (.55 + .45 * fxHp.x);`,
 };
 B.bismuth = {
   surface: 'roughnessFactor = .25; metalnessFactor = 1.;',
@@ -3636,25 +3645,25 @@ S.carbon = {
   // 면마다 섬유 색이 다르다(검정, 빨강, 파랑, 노란 아라미드, 초록, 은색)
   color: `
     vec2 fxF = fxFace();
-    vec2 fxT = fxF * 7.;
+    vec2 fxT = fxF * 10.;
     vec2 fxCell = floor(fxT);
     vec2 fxFr = fract(fxT);
     float fxWarpTop = step(mod(fxCell.x + fxCell.y, 4.), 1.5);
     float fxAcross = fxWarpTop > .5 ? fxFr.x : fxFr.y;
     float fxAlong = fxWarpTop > .5 ? fxT.y : fxT.x;
     float fxTow = sqrt(max(0., 1. - pow(fxAcross * 2. - 1., 2.)));
-    float fxGap = 1. - smoothstep(0., .08, min(fxAcross, 1. - fxAcross));
-    float fxFib = fxN2(vec2(fxAcross * 60. + fxCell.x * 7., fxAlong * 2.));
+    float fxGap = 1. - smoothstep(0., .06, min(fxAcross, 1. - fxAcross));
+    float fxFib = fxN2(vec2(fxAcross * 38. + fxCell.x * 7. + fxCell.y * 3., fxAlong * 1.2));
     vec2 fxFiberDir = fxWarpTop > .5 ? vec2(0., 1.) : vec2(1., 0.);
     vec3 fxBase = diffuseColor.rgb;
-    vec3 fxC = fxBase * (.55 + .35 * fxTow) * (.9 + .15 * fxFib) * (1. - fxGap * .5);
+    vec3 fxC = fxBase * (.32 + .22 * fxTow) * (.75 + .5 * fxFib) * (1. - fxGap * .35) * (fxWarpTop > .5 ? 1. : .72);
     diffuseColor.rgb = fxC;`,
   normal: 'normal = fxBump(normal, fxTow * .0008 + fxFib * .0003);',
   surface: 'roughnessFactor = .06;',
   emissive: `
     vec2 fxUp = -fxDown();
     float fxSheen = pow(1. - abs(dot(fxFiberDir, fxUp)), 3.) * fxTow;
-    totalEmissiveRadiance = mix(fxBase, vec3(1.), .25) * fxSheen * .45 + fxBase * .03;`,
+    totalEmissiveRadiance = mix(fxBase, vec3(1.), .2) * fxSheen * (.35 + .25 * fxFib) + fxBase * .04;`,
 };
 B.carbon = {
   surface: 'roughnessFactor = .2; metalnessFactor = .4;',
