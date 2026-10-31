@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#E8E5E0">
+  <title>큐브</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+</head>
+<body>
+  <main id="stage" class="stage"></main>
+  <nav class="bar">
+    <div class="size" role="group" aria-label="크기">
+      <button id="smaller" type="button" aria-label="작게">−</button>
+      <output id="size">3×3</output>
+      <button id="bigger" type="button" aria-label="크게">+</button>
+    </div>
+    <div class="actions">
+      <button id="scramble" type="button">섞기</button>
+      <button id="solve" type="button">맞추기</button>
+    </div>
+    <div id="themes" class="themes" role="radiogroup" aria-label="색"></div>
+  </nav>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
