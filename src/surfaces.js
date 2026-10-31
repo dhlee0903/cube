@@ -1258,52 +1258,6 @@ B.clay = {
   surface: 'roughnessFactor = .65;',
 };
 
-S.blossom = {
-  // 벚꽃 가지를 그려 구운 도자기 타일. 칸마다 가지의 방향과 꽃 자리가 다르다
-  color: `
-    vec2 fxQb = fxQ();
-    float fxK = fxH1(vSeed * 5.) * 6.2832;
-    vec2 fxBq = fxRot(fxK) * fxQb;
-    float fxCurve = .25 * sin(fxBq.x * 2.2 + vSeed * 4.);
-    float fxBranch = 1. - smoothstep(0., .02, abs(fxBq.y - fxCurve) - (.035 - fxBq.x * .012));
-    float fxTwigX = .1 + .3 * fxH1(vSeed * 8.);
-    float fxTwig = (1. - smoothstep(0., .015, abs(fxBq.y - fxCurve - (fxBq.x - fxTwigX) * .9) - .012)) * step(fxTwigX, fxBq.x) * step(fxBq.x, fxTwigX + .3);
-    float fxFlower = 0.;
-    float fxHeart = 0.;
-    float fxBud = 0.;
-    for (int i = 0; i < 4; i++) {
-      float fi = float(i);
-      float fxTx = -.62 + fi * .42 + (fxH1(vSeed * 9. + fi) - .5) * .18;
-      vec2 fxFp = vec2(fxTx, .25 * sin(fxTx * 2.2 + vSeed * 4.) + (fxH1(vSeed * 3. + fi) - .5) * .3);
-      vec2 fxD = fxBq - fxFp;
-      float fxRr = length(fxD);
-      float fxTh = atan(fxD.y, fxD.x) + fi * 1.3;
-      float fxSz = fi == 3. ? .07 : .15 + .04 * fxH1(vSeed + fi);
-      float fxPet = fxSz * (.72 + .28 * pow(abs(cos(fxTh * 2.5)), .6)) - fxSz * .12 * pow(abs(cos(fxTh * 2.5)), 40.);
-      float fxIn = 1. - smoothstep(fxPet - .012, fxPet, fxRr);
-      if (fi == 3.) fxBud = max(fxBud, fxIn);
-      else {
-        fxFlower = max(fxFlower, fxIn * (.75 + .25 * smoothstep(0., fxPet, fxRr)));
-        fxHeart = max(fxHeart, 1. - smoothstep(fxSz * .2, fxSz * .3, fxRr));
-      }
-    }
-    vec3 fxC = diffuseColor.rgb * (.95 + .06 * fxN2(fxQb * 30.));
-    fxC = mix(fxC, vec3(.3, .19, .15), max(fxBranch, fxTwig));
-    fxC = mix(fxC, vec3(.99, .8, .86) * (.92 + .08 * fxFlower), step(.01, fxFlower));
-    fxC = mix(fxC, vec3(.95, .55, .65), fxBud);
-    fxC = mix(fxC, vec3(.86, .32, .46), fxHeart);
-    diffuseColor.rgb = fxC;`,
-  normal: 'normal = fxBump(normal, max(fxBranch, fxTwig) * .002 + step(.01, fxFlower) * .0015);',
-  surface: 'roughnessFactor = .08;',
-  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * .06;',
-};
-B.blossom = {
-  color: `
-    float fxN = fxF3(vLocal * vec3(3., 30., 3.) + vSeed * 7.);
-    diffuseColor.rgb *= .82 + .3 * fxN;`,
-  surface: 'roughnessFactor = .6;',
-};
-
 S.rust = {
   // 칠이 바랜 철판. 가장자리부터 칠이 벗겨져 녹이 슬고, 녹물이 아래로 흘러내린다. 네 귀퉁이 리벳
   color: `
@@ -1529,39 +1483,6 @@ S.jelly = {
 B.jelly = {
   surface: 'roughnessFactor = .08;',
   emissive: 'totalEmissiveRadiance = diffuseColor.rgb * (.25 + fxFresnel(normal, 2.) * .6);',
-};
-
-S.ceramic = {
-  // 면마다 다른 전통 유약(청자, 백자, 진사, 청화, 분청, 천목). 그물처럼 갈라진 빙렬, 가장자리에 고인 유약,
-  // 가운데 상감 구름무늬(밝은 유약엔 청화, 어두운 유약엔 백상감)
-  color: `
-    vec2 fxQc = fxQ();
-    vec3 fxV = fxVoronoi(vLocal.xy / uSticker.x * 4. + vSeed * 3.);
-    float fxCrack = 1. - smoothstep(0., .025, fxV.y);
-    float fxPool = smoothstep(0., .15, fxEdge());
-    float fxR = length(fxQc);
-    vec2 fxCp = fxQc * 2.2;
-    float fxCloud = max(fxLine(abs(length(fxCp - vec2(-.2, 0.)) - .3), .05) * step(0., fxCp.y),
-      fxLine(abs(length(fxCp - vec2(.25, -.05)) - .25), .05) * step(-.05, fxCp.y));
-    fxCloud = max(fxCloud, fxLine(abs(fxCp.y + .05), .05) * step(abs(fxCp.x), .55));
-    float fxInlay = max(fxLine(abs(fxR - .55), .025), fxCloud * step(fxR, .5));
-    vec3 fxGlaze = diffuseColor.rgb;
-    vec3 fxInlayC = dot(fxGlaze, vec3(.3, .59, .11)) > .6 ? vec3(.18, .26, .52) : vec3(.95, .94, .9);
-    vec3 fxC = fxGlaze * mix(.75, 1., fxPool) * (.95 + .05 * fxN2(vLocal.xy * 40.));
-    fxC = mix(fxC, fxInlayC, fxInlay * .9);
-    fxC = mix(fxC, fxC * .55, fxCrack * .5);
-    diffuseColor.rgb = fxC;`,
-  normal: 'normal = fxBump(normal, fxN2(vLocal.xy * 25. + vSeed) * .002 - fxCrack * .0015);',
-  surface: 'roughnessFactor = .05;',
-  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * fxFresnel(normal, 3.) * .2;',
-};
-B.ceramic = {
-  // 유약을 입히지 않은 굽. 모래가 박힌 흙
-  color: `
-    float fxG = fxN3(vLocal * 90. + vSeed * 5.);
-    diffuseColor.rgb *= .8 + .35 * fxG;`,
-  normal: 'normal = fxBump(normal, fxG * .004);',
-  surface: 'roughnessFactor = .95;',
 };
 
 S.planet = {

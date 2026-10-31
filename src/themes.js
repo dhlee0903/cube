@@ -890,30 +890,6 @@ export const THEMES = [
     burst: { shape: 'dot', colors: 'faces', size: 0.08, speed: 2.2, gravity: -7, drag: 1, life: 1 },
   },
   {
-    // 봄날 벚꽃 그늘. 벚꽃 가지를 그려 구운 도자기 타일, 꽃잎이 흩날린다
-    id: 'blossom',
-    name: '벚꽃',
-    bg: '#CFE6F5',
-    ink: '#2A2230',
-    backdrop: [
-      `${svg(100, 60, "<g stroke='#5A3A32' stroke-linecap='round' fill='none'><path d='M-4 6 C14 10 22 4 34 12' stroke-width='1.6'/><path d='M14 9 C18 16 16 20 22 24' stroke-width='.9'/><path d='M104 4 C88 10 80 6 68 14' stroke-width='1.6'/><path d='M86 8 C82 15 84 20 78 24' stroke-width='.9'/></g><g fill='#FFC6D6'><circle cx='32' cy='12' r='2.6'/><circle cx='26' cy='9' r='2.2'/><circle cx='21' cy='23' r='2.4'/><circle cx='18' cy='18' r='1.8'/><circle cx='70' cy='13' r='2.6'/><circle cx='76' cy='9' r='2'/><circle cx='79' cy='23' r='2.4'/><circle cx='83' cy='18' r='1.8'/><circle cx='9' cy='7' r='2'/><circle cx='92' cy='6' r='2.2'/></g>", 'xMidYMin meet')} top / 100% auto no-repeat`,
-      'radial-gradient(40% 30% at 50% 20%, rgba(255,255,255,.6), transparent 70%)',
-      'linear-gradient(#A9D2EE, #E6F1F8 70%, #F6EEF2)',
-    ].join(', '),
-    drift: 'radial-gradient(35% 25% at 70% 30%, rgba(255,220,235,.3), transparent 70%)',
-    form: { bevel: 0.06, size: 0.84, radius: 0.08, depth: 0.01 },
-    body: { color: '#A07850', roughness: 0.6 },
-    faces: ['#7FB8E8', '#8FD3B0', '#F5EEDC', '#B9A2E8', '#F4A87C', '#F2D46A'],
-    lights: {
-      sky: '#ffffff', ground: '#c8b8a8', hemi: 2.2,
-      key: ['#fff8f0', 2, [-3, 7, 5]], fill: ['#ffd8e8', 0.6, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
-    },
-    surface: 'blossom',
-    motion: 'smooth',
-    ambient: { mode: 'fall', shape: 'petal', colors: ['#FFC6D6', '#FFB0C8', '#FFE2EA'], count: 40, size: 0.14, speed: 0.25, opacity: 0.95 },
-    burst: { shape: 'petal', colors: ['#FFC6D6', '#FFB0C8', '#FFFFFF'], size: 0.16, speed: 1.8, gravity: -1.2, drag: 2.2, life: 1.8 },
-  },
-  {
     // 버려진 공장. 칠이 바랜 철판에 녹이 슬고, 녹물이 흘러내렸다. 먼지바람, 삐걱이며 묵직하게 돈다
     id: 'rust',
     name: '녹',
@@ -1059,30 +1035,6 @@ export const THEMES = [
     motion: 'squish',
     ambient: { mode: 'fall', shape: 'dot', colors: ['#FFFFFF'], count: 40, size: 0.03, speed: 0.2, opacity: 0.8 },
     burst: { shape: 'drip', colors: 'faces', size: 0.09, speed: 2.2, gravity: -6, drag: 1.2, life: 1.1 },
-  },
-  {
-    // 한옥 선반 위 도자기. 면마다 다른 유약(청자, 청화, 백자, 분청, 진사, 천목), 빙렬과 상감 구름무늬
-    id: 'ceramic',
-    name: '도자기',
-    bg: '#EFE6D6',
-    ink: '#2A221A',
-    backdrop: [
-      PAPER_GRAIN,
-      'linear-gradient(transparent 80%, #B08A60 80%, #A07A52 83%, #8A6642 83%, #C8A882 84.5%, #D2B690 100%)',
-      'linear-gradient(90deg, transparent 49.6%, rgba(120,90,60,.18) 49.6%, rgba(120,90,60,.18) 50.4%, transparent 50.4%)',
-      'radial-gradient(60% 50% at 50% 40%, #F8F2E6, #E8DCC6)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.84, radius: 0.12, depth: 0.012 },
-    body: { color: '#8A6A50', roughness: 0.95 },
-    faces: ['#5FA890', '#2E4E8E', '#F1EFE6', '#A8A090', '#A8343A', '#3A2A22'],
-    env: 0.6,
-    lights: {
-      sky: '#fff8ec', ground: '#8a7058', hemi: 1.9,
-      key: ['#fff2dc', 2.4, [-4, 7, 5]], fill: ['#e0e8ff', 0.4, [6, 0, 3]], rim: ['#ffffff', 1, [2, 4, -6]],
-    },
-    surface: 'ceramic',
-    motion: 'heavy',
-    burst: { shape: 'square', colors: ['#F1EFE6', '#5FA890', '#D8D0C0'], size: 0.06, speed: 1.8, gravity: -6, drag: 1, life: 1 },
   },
   {
     // 칸마다 작은 행성이 솟아 자전하는 태양계 모형. 면마다 다른 행성, 가장자리엔 대기가 빛난다
