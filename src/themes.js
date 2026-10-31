@@ -1248,8 +1248,8 @@ export const THEMES = [
     burst: { shape: 'square', colors: ['#F2C45A', '#FFE6A0', '#2A4AA8', '#A82A2A'], size: 0.08, speed: 2.4, gravity: -4, drag: 1.2, life: 1.2 },
   },
   {
-    // 리넨에 놓은 꽃자수. 꽃잎은 가운데서 밖으로 공단수를 놓아 실결 따라 광택이 흐르고,
-    // 꽃술은 매듭수로 도톰하다. 나무 수틀 몸통, 천처럼 사르르 돈다
+    // 수틀에 끼운 리넨 위 꽃자수. 칸마다 꽃 한 송이, 면마다 꽃이 다르다(장미, 수레국화, 해바라기, 수국, 라벤더, 튤립).
+    // 도톰하게 솟은 공단수 꽃잎이 밑동에서 끝으로 색이 번지고, 실결 따라 광택이 흐른다. 엇갈린 잎, 꼰 줄기, 매듭 꽃술
     id: 'embroidery',
     name: '자수',
     bg: '#E9E1D2',
@@ -1260,7 +1260,7 @@ export const THEMES = [
       'repeating-linear-gradient(90deg, rgba(120,100,70,.06) 0 1px, transparent 1px 3px)',
       'radial-gradient(70% 55% at 50% 42%, #F2ECE0, #D8CCB6)',
     ].join(', '),
-    form: { bevel: 0.07, size: 0.9, radius: 0.1 },
+    form: { bevel: 0.07, size: 0.9, radius: 0.1, grid: 48 },
     body: { color: '#C49A64', roughness: 0.5 },
     sticker: { roughness: 0.6 },
     faces: ['#D8283A', '#2E5AC8', '#F4C430', '#1E9A8A', '#8A4AC0', '#F07A2A'],

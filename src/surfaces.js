@@ -1603,8 +1603,8 @@ B.knit = {
 };
 
 S.fossil = {
-  // 박물관 진열장의 돌판. 다 맞추면 면 하나가 화석 하나를 품은 큰 돌판이 된다. 화석이 실제로 도드라져 있다.
-  // 면마다 돌과 화석이 다르다:
+  // 박물관 진열장의 돌판. 칸마다 화석이 하나씩 실제로 도드라져 있고, 칸마다 놓인 방향과 크기가 조금씩 다르다.
+  // 화석 둘레는 돌을 긁어낸 자국이 옅고 거칠게 남았다. 면마다 돌과 화석이 다르다:
   // 암모나이트(나선 껍질에 갈비 같은 늑과 고사리잎처럼 주름진 봉합선, 조각조각 붉고 푸르게 비치는 암몰라이트, 짙은 셰일),
   // 삼엽충(머리방패의 볼록한 미간 돌기와 초승달 겹눈, 볼가시, 가운데 축과 양옆 늑엽으로 나뉜 가슴마디, 작은 꼬리방패, 석회암),
   // 고사리(둥근 작은잎이 줄지은 깃이 엇갈려 달린 탄화된 잎, 청회색 셰일), 물고기(그린리버층의 작은 청어처럼
@@ -1717,52 +1717,54 @@ S.fossil = {
         mark = clamp(pores + apex * .6, 0., 1.) * inside;
         h = inside * (.4 + .4 * (1. - r) + pet * .12 + tub * .1) - pores * .12;
       } else {
-        // 세 발자국이 비스듬히 이어진 보행렬. 발가락 끝은 발톱으로 뾰족하고 둘레로 진흙이 밀려 올라왔다
-        float d = 1e3;
+        // 세 발가락 공룡 발자국. 발가락 끝은 발톱으로 뾰족하고 마디마다 살짝 패며, 둘레로 진흙이 밀려 올라왔다
+        vec2 p = q / .9 + vec2(0., .1);
+        float heel = length(p * vec2(1., 1.25)) - .2;
+        float toes = 1e3;
         float pads = 0.;
-        for (int k = 0; k < 3; k++) {
-          float fk = float(k);
-          vec2 c = vec2(-.36 + fk * .36 + (mod(fk, 2.) - .5) * .22, -.6 + fk * .58);
-          float ang = .35 + (mod(fk, 2.) - .5) * .3;
-          vec2 p = fxRot(ang) * (q - c) / .5 + vec2(0., .1);
-          float heel = length(p * vec2(1., 1.25)) - .2;
-          float toes = 1e3;
-          for (int i = 0; i < 3; i++) {
-            float a = 1.5708 + (float(i) - 1.) * .52;
-            vec2 dir = vec2(cos(a), sin(a));
-            float t = clamp(dot(p, dir), 0., .66);
-            vec2 tp = p - dir * t;
-            float w = .085 * (1. - t / .74) + .008;
-            toes = min(toes, length(tp) - w);
-            pads = max(pads, (.5 + .5 * cos(t * 30.)) * (1. - smoothstep(0., w, length(tp))) * step(t, .55));
-          }
-          d = min(d, min(heel, toes) * .5);
+        for (int i = 0; i < 3; i++) {
+          float a = 1.5708 + (float(i) - 1.) * .52;
+          vec2 dir = vec2(cos(a), sin(a));
+          float t = clamp(dot(p, dir), 0., .7);
+          vec2 tp = p - dir * t;
+          float w = .085 * (1. - t / .78) + .006;
+          toes = min(toes, length(tp) - w);
+          pads = max(pads, (.5 + .5 * cos(t * 30.)) * (1. - smoothstep(0., w, length(tp))) * step(t, .55));
         }
-        inside = 1. - smoothstep(-.01, .01, d);
-        float rim = exp(-pow((d - .035) / .025, 2.)) * (1. - inside);
-        h = -inside * (.55 + .35 * (1. - smoothstep(-.07, 0., d)) - pads * .2) + rim * .35;
+        float d = min(heel, toes) * .9;
+        inside = 1. - smoothstep(-.015, .015, d);
+        float rim = exp(-pow((d - .06) / .045, 2.)) * (1. - inside);
+        h = -inside * (.55 + .35 * (1. - smoothstep(-.14, 0., d)) - pads * .2) + rim * .35;
         mark = rim;
       }
       return h;
     }
+    // 칸마다 화석이 놓인 자세: 조금 돌고 크기가 다르다
+    vec2 fxPose(vec2 q, float seed) {
+      return fxRot((fxH1(seed * 7.1) - .5) * .8) * q * (.92 + .14 * fxH1(seed * 3.3));
+    }
     float fxFossilH(vec2 p, float seed) {
-      float inside, mark;
-      vec2 F = aHome.xy + p * aHome.z;
-      float f = fxFossil(F * 1.08, inside, mark);
-      float rough = fxN2(F * 40. + uFace * 7.);
-      return smoothstep(0., .1, fxEdgeAt(p)) * (.012 + .004 * rough + f * .026);
+      float inside, mark, wide, m2;
+      vec2 q = fxPose(p / uSticker.x, seed);
+      float f = fxFossil(q, inside, mark);
+      fxFossil(q * .9, wide, m2);
+      float prep = clamp(wide - inside, 0., 1.);
+      float rough = fxN2(p * 40. + seed * 7.);
+      return smoothstep(0., .1, fxEdgeAt(p)) * (.012 + .004 * rough * (1. + prep * 2.) + f * .026 - prep * .003);
     }`,
   height: 'fxFossilH',
   color: `
     if (fxEdge() < 0.) discard;
-    vec2 fxQf = fxFace() * 1.08;
-    float fxIn, fxMk;
+    vec2 fxQf = fxPose(fxQ(), vSeed);
+    float fxIn, fxMk, fxWide, fxM2;
     float fxH = fxFossil(fxQf, fxIn, fxMk);
-    float fxStone = fxF2(fxQf * 4. + uFace * 7.);
-    float fxLayer = fxN2(vec2(fxQf.y * 14. + fxStone * 3., uFace));
-    // 돌판 가장자리는 정으로 쪼아 낸 듯 거칠고 어둡다
-    float fxSlab = 1. - max(abs(fxQf.x), abs(fxQf.y)) / 1.08;
-    float fxChip = (1. - smoothstep(.0, .05, fxSlab + (fxN2(fxQf * 18.) - .5) * .03)) * .35;
+    fxFossil(fxQf * .9, fxWide, fxM2);
+    // 화석 둘레를 긁어낸 자리: 옅고 잔 자국이 거칠다
+    float fxPrep = clamp(fxWide - fxIn, 0., 1.);
+    float fxStone = fxF2(vLocal.xy * 9. + vSeed * 7.);
+    float fxLayer = fxN2(vec2(vLocal.y * 34. + fxStone * 3., vSeed));
+    // 칸 가장자리는 정으로 쪼아 낸 듯 거칠고 어둡다
+    float fxChip = (1. - smoothstep(.0, .06, fxEdge() / uSticker.x + (fxN2(vLocal.xy * 60.) - .5) * .03)) * .3;
     vec3 fxRock = diffuseColor.rgb * (.78 + .32 * fxStone) * (.92 + .08 * fxLayer);
     vec3 fxFos;
     if (uFace < .5) {
@@ -1796,8 +1798,11 @@ S.fossil = {
       fxFos = diffuseColor.rgb * .58;
     }
     float fxAm = step(uFace, .5) * smoothstep(.68, .78, fxN2(fxQf * 2.6 + vSeed * 3.)) * (1. - fxMk) * smoothstep(.15, .5, fxH);
+    float fxScratch = fxPrep * (1. - smoothstep(0., .25, abs(fract(dot(fxQf, vec2(.7, .7)) * 70. + fxN2(fxQf * 9.) * 2.) - .5) * 2.));
+    fxRock = mix(fxRock, fxRock * 1.18 + .03, fxPrep * .6);
+    fxRock *= 1. - fxScratch * .12;
     diffuseColor.rgb = mix(fxRock, fxFos, clamp(fxIn, 0., 1.)) * (1. - fxChip);`,
-  normal: 'normal = fxBump(normal, fxStone * .003 + fxLayer * .001 + fxMk * fxIn * .0012 + fxChip * fxN2(fxQf * 40.) * .004);',
+  normal: 'normal = fxBump(normal, fxStone * .003 + fxLayer * .001 + fxMk * fxIn * .0012 + fxChip * fxN2(vLocal.xy * 120.) * .004 + fxScratch * .0008 + fxPrep * fxN2(vLocal.xy * 160.) * .0015);',
   surface: 'roughnessFactor = mix(.88, uFace < .5 ? mix(.4, .12, fxAm) : .45, fxIn); metalnessFactor = uFace < .5 ? fxIn * fxAm * .5 : 0.;',
   emissive: `
     // 암몰라이트: 붉은빛과 초록빛이 조각조각, 보는 각도에 따라 바뀐다
@@ -2422,41 +2427,187 @@ B.mosaic = {
 };
 
 S.embroidery = {
-  // 리넨 위 공단수. 꽃잎은 가운데서 밖으로, 잎은 비스듬히 실을 촘촘히 놓아 실결 따라 광택이 흐르고,
-  // 꽃술은 매듭수로 도톰하다. 꽃잎 실 색이 곧 면 색이다
+  // 수틀에 끼운 리넨 위 꽃자수. 칸마다 꽃 한 송이를 수놓았고, 면마다 꽃이 다르다(장미, 수레국화, 해바라기, 수국, 라벤더, 튤립).
+  // 꽃잎은 공단수로 실을 촘촘히 놓아 실제로 도톰하게 솟았고, 밑동에서 끝으로 길고 짧은 땀을 엇갈려 색이 번지듯 바뀐다.
+  // 실결 따라 빛이 흘러 같은 꽃잎도 결마다 광택이 다르다. 잎은 잎맥에서 비스듬히 엇갈린 땀, 줄기는 꼰 줄기수,
+  // 꽃술은 오톨도톨한 매듭수. 바탕 리넨은 굵고 가는 실이 섞여 짜였다
+  head: `
+    // 수놓은 자리. x 꽃잎, y 잎, z 줄기, w 매듭. 맨 위에 놓인 땀의 실 방향(fxDirE), 실 가로 좌표(fxAcrossE),
+    // 꽃잎·잎 안 위치(fxShadeE, 0 밑동 ~ 1 끝)를 함께 남긴다
+    vec2 fxDirE;
+    float fxAcrossE;
+    float fxShadeE;
+    vec4 fxEmb(vec2 q) {
+      vec4 m = vec4(0.);
+      fxDirE = vec2(0., 1.);
+      fxAcrossE = q.x * 40.;
+      fxShadeE = 0.;
+      bool lav = uFace > 3.5 && uFace < 4.5;
+      vec2 c = vec2(0., .2);
+      vec2 d = q - c;
+      float r = length(d);
+      float a = atan(d.y, d.x);
+      // 줄기: 꽃 밑에서 아래로 살짝 휘며, 짧은 땀이 비스듬히 꼬였다
+      float sx = sin(q.y * 3.) * .05;
+      float stem = (1. - smoothstep(.022, .036, abs(q.x - sx))) * step(q.y, c.y - .2) * step(-.92, q.y) * (lav ? 0. : 1.);
+      if (stem > 0.) { m.z = stem; fxDirE = normalize(vec2(1., 1.6)); fxAcrossE = (q.y * 1.6 - q.x) * 50.; }
+      // 잎 둘: 잎맥에서 바깥으로 비스듬히 엇갈린 땀
+      for (int k = 0; k < 2; k++) {
+        float sd = k == 0 ? -1. : 1.;
+        float ang = sd * .85;
+        vec2 lp = fxRot(ang) * (q - vec2(sx, -.52 + float(k) * .14));
+        float w = .13 * sin(3.1416 * clamp(lp.y / .46, 0., 1.));
+        float leaf = step(0., lp.y) * step(lp.y, .46) * (1. - smoothstep(w - .012, w, abs(lp.x)));
+        if (lav) leaf *= 0.;
+        if (leaf > m.y) {
+          m.y = leaf;
+          vec2 ld = normalize(vec2(sign(lp.x), .9));
+          fxDirE = fxRot(-ang) * ld;
+          fxAcrossE = dot(lp, vec2(-ld.y, ld.x)) * 70.;
+          fxShadeE = lp.y / .46;
+        }
+      }
+      float petal = 0.;
+      vec2 pdir = vec2(0., 1.);
+      float across = 0.;
+      float shade = 0.;
+      if (uFace < .5) {
+        // 장미: 둥글게 감긴 꽃잎, 실은 꽃잎 곡선을 따라 돈다
+        float R = .46 + .04 * sin(a * 5.);
+        petal = 1. - smoothstep(R - .015, R, r);
+        pdir = vec2(-d.y, d.x) / max(r, 1e-3);
+        across = r * 55.;
+        shade = r / R;
+      } else if (uFace < 1.5) {
+        // 수레국화: 끝이 톱니진 좁은 꽃잎이 둘러난다, 가운데 매듭
+        float k = a * 8. / 6.2832;
+        float pa = abs(fract(k) - .5) * 2.;
+        float R = .18 + .38 * pow(max(1. - pa, 0.), .6) + .03 * sin(r * 70.) * step(.4, r);
+        petal = (1. - smoothstep(R - .015, R, r)) * step(.07, r);
+        pdir = d / max(r, 1e-3);
+        across = a * 90. / 6.2832;
+        shade = r / .56;
+        m.w = 1. - smoothstep(.08, .1, r);
+      } else if (uFace < 2.5) {
+        // 해바라기: 길쭉한 꽃잎이 겹겹이, 가운데 큼직한 매듭수 꽃판
+        float k = a * 16. / 6.2832;
+        float pa = abs(fract(k) - .5) * 2.;
+        float R = .22 + .33 * (1. - smoothstep(.2, 1., pa));
+        petal = (1. - smoothstep(R - .015, R, r)) * step(.17, r);
+        pdir = d / max(r, 1e-3);
+        across = a * 110. / 6.2832;
+        shade = (r - .17) / .38;
+        m.w = 1. - smoothstep(.17, .19, r);
+      } else if (uFace < 3.5) {
+        // 수국: 작은 네 잎 꽃이 모여 둥근 송이, 꽃마다 가운데 흰 매듭
+        for (int i = 0; i < 7; i++) {
+          float fi = float(i);
+          vec2 fc = c + (i == 0 ? vec2(0.) : .25 * vec2(cos(fi * 1.047 + .3), sin(fi * 1.047 + .3)));
+          vec2 fd = q - fc;
+          float fr = length(fd);
+          float fa = atan(fd.y, fd.x) + fi;
+          float R = .14 * (.62 + .38 * abs(cos(fa * 2.)));
+          float pm = 1. - smoothstep(R - .012, R, fr);
+          if (pm > petal) { petal = pm; pdir = fd / max(fr, 1e-3); across = fa * 40. / 6.2832; shade = fr / .14; }
+          m.w = max(m.w, 1. - smoothstep(.022, .03, fr));
+        }
+      } else if (uFace < 4.5) {
+        // 라벤더: 가는 줄기 셋에 작은 꽃봉오리가 엇갈려 줄지었다
+        for (int j = 0; j < 3; j++) {
+          float fj = float(j) - 1.;
+          float bx = fj * .26 + sin(q.y * 2.5 + fj) * .04;
+          float st = (1. - smoothstep(.012, .022, abs(q.x - bx))) * step(q.y, .75 - abs(fj) * .1) * step(-.9, q.y);
+          if (st > m.z) { m.z = st; fxDirE = vec2(0., 1.); fxAcrossE = q.x * 60.; }
+          for (int b = 0; b < 9; b++) {
+            float fb = float(b);
+            float by = -.05 + fb * .09 - abs(fj) * .1;
+            float side = mod(fb, 2.) < .5 ? 1. : -1.;
+            vec2 bc = vec2(bx + side * .035, by);
+            vec2 ax = normalize(vec2(side * .6, 1.));
+            vec2 bd = q - bc;
+            vec2 bl = vec2(dot(bd, vec2(-ax.y, ax.x)), dot(bd, ax));
+            float pm = (1. - smoothstep(.9, 1., length(bl / vec2(.032, .06)))) * step(by, .78 - abs(fj) * .1);
+            if (pm > petal) { petal = pm; pdir = ax; across = bl.x * 140.; shade = .5 + bl.y * 6.; }
+          }
+        }
+      } else {
+        // 튤립: 가운데 꽃잎과 양옆 꽃잎이 컵처럼 모였다. 실은 밑동에서 위로 모인다
+        vec2 p0 = (q - vec2(0., .26)) / vec2(.2, .3);
+        vec2 p1 = fxRot(.35) * (q - vec2(-.13, .22)) / vec2(.17, .29);
+        vec2 p2 = fxRot(-.35) * (q - vec2(.13, .22)) / vec2(.17, .29);
+        float m0 = 1. - smoothstep(.95, 1., length(p0));
+        float m1 = 1. - smoothstep(.95, 1., length(p1));
+        float m2 = 1. - smoothstep(.95, 1., length(p2));
+        petal = max(m0, max(m1, m2));
+        pdir = normalize(vec2((q.x) * -.8, 1.));
+        across = (q.x / max(q.y + .25, .2)) * 30.;
+        shade = (q.y + .05) / .6;
+        if (m0 > .5) shade += .15;
+      }
+      if (petal > 0.) {
+        m.x = petal;
+        fxDirE = pdir;
+        fxAcrossE = across;
+        fxShadeE = clamp(shade, 0., 1.);
+      }
+      return m;
+    }
+    float fxEmbH(vec2 p, float seed) {
+      vec4 m = fxEmb(p / uSticker.x * .8);
+      float t = fract(fxAcrossE);
+      float thread = sqrt(max(0., 1. - pow(t * 2. - 1., 2.)));
+      vec3 kv = fxVoronoi(p / uSticker.x * 34. + seed);
+      float knot = (1. - smoothstep(.15, .45, kv.x)) * m.w;
+      float h = max(max(m.x * (.013 + .004 * thread), m.y * (.009 + .003 * thread)), m.z * (.008 + .003 * thread));
+      h = max(h, m.w * (.012 + .01 * knot));
+      return smoothstep(0., .06, fxEdgeAt(p)) * (.006 + h);
+    }`,
+  height: 'fxEmbH',
   color: `
-    vec2 fxQe = fxQ();
+    if (fxEdge() < 0.) discard;
+    vec2 fxQe = fxQ() * .8;
+    vec4 fxM = fxEmb(fxQe);
+    float fxT = fract(fxAcrossE);
+    float fxThread = sqrt(max(0., 1. - pow(fxT * 2. - 1., 2.)));
+    float fxGroove = 1. - smoothstep(0., .14, min(fxT, 1. - fxT));
+    float fxId = floor(fxAcrossE);
+    float fxStep = clamp(floor((fxShadeE + (fxH1(fxId * 1.37 + vSeed) - .5) * .22) * 4.) / 3., 0., 1.);
+    vec3 fxBase = diffuseColor.rgb;
+    // 리넨: 굵고 가는 실이 섞인 평직, 면 색을 아주 옅게 머금었다
     vec2 fxW = vLocal.xy * 170.;
     float fxWeave = step(.5, fract(fxW.x)) == step(.5, fract(fxW.y)) ? 1. : 0.;
-    float fxThread = mix(.5 + .5 * sin(fxW.y * 6.2832), .5 + .5 * sin(fxW.x * 6.2832), fxWeave);
-    vec3 fxLinen = vec3(.93, .89, .81) * (.86 + .14 * fxThread) * (.96 + .06 * fxN2(vLocal.xy * 30.));
-    fxLinen = mix(fxLinen, fxLinen * (.55 + .6 * diffuseColor.rgb), .3);
-    vec2 fxFc = fxQe - vec2(0., .1);
-    float fxR = length(fxFc);
-    float fxTh = atan(fxFc.y, fxFc.x);
-    float fxPetalR = .27 + .33 * abs(cos(fxTh * 2.5));
-    float fxPetal = step(fxR, fxPetalR);
-    float fxSplit = (1. - smoothstep(.0, .035, abs(fxR - fxPetalR))) * step(fxR, fxPetalR + .02);
-    float fxHeart = 1. - smoothstep(.11, .13, fxR);
-    vec2 fxL1 = fxRot(.9) * (fxQe - vec2(-.5, -.55));
-    vec2 fxL2 = fxRot(-.9) * (fxQe - vec2(.5, -.55));
-    float fxLeaf = step(min(length(fxL1 * vec2(2.6, 1.)), length(fxL2 * vec2(2.6, 1.))), .26);
-    float fxStem = (1. - smoothstep(.012, .025, abs(fxQe.x + sin(fxQe.y * 4.) * .03))) * step(fxQe.y, -.3) * step(-.8, fxQe.y);
-    float fxSatinP = .5 + .5 * sin(fxTh * 70.);
-    float fxSatinL = .5 + .5 * sin(dot(fxQe, vec2(.7, .7)) * 160.);
-    vec2 fxKn = fract(fxFc * 30.) - .5;
-    float fxKnot = (1. - smoothstep(.2, .45, length(fxKn))) * fxHeart;
-    vec3 fxLeafC = dot(diffuseColor.rgb, vec3(.2, .7, .1)) > .45 && diffuseColor.g > diffuseColor.r ? vec3(.75, .58, .2) : vec3(.22, .45, .22);
+    float fxLinT = mix(.5 + .5 * sin(fxW.y * 6.2832), .5 + .5 * sin(fxW.x * 6.2832), fxWeave);
+    float fxSlub = smoothstep(.7, .9, fxN2(vec2(vLocal.x * 10., vLocal.y * 220.) + vSeed)) * .5 + smoothstep(.72, .9, fxN2(vec2(vLocal.x * 220., vLocal.y * 10.) + vSeed * 3.)) * .5;
+    vec3 fxLinen = mix(vec3(.93, .89, .81), fxBase, .26) * (.86 + .14 * fxLinT) * (1. + fxSlub * .08);
+    // 꽃잎: 밑동은 짙고 끝은 밝다(장미는 가운데가 짙다). 길고 짧은 땀으로 엇갈려 섞인다
+    vec3 fxPetC = mix(fxBase * .55, mix(fxBase, vec3(1.), .32), fxStep);
+    if (uFace > 1.5 && uFace < 2.5) fxPetC = mix(fxBase * .8, mix(fxBase, vec3(1., .95, .7), .3), fxStep);
+    vec3 fxLeafC = mix(vec3(.17, .32, .16), vec3(.45, .6, .32), fxStep);
+    vec3 fxStemC = vec3(.24, .38, .2);
+    vec3 fxKnotC = uFace < 1.5 ? vec3(.12, .1, .3) : uFace < 2.5 ? vec3(.3, .18, .08) : vec3(.97, .96, .9);
+    vec3 fxKv = fxVoronoi(fxQe * 34. + vSeed);
+    float fxKnot = (1. - smoothstep(.15, .45, fxKv.x));
     vec3 fxC = fxLinen;
-    fxC = mix(fxC, fxLeafC * (.7 + .4 * fxSatinL), max(fxLeaf, fxStem));
-    fxC = mix(fxC, diffuseColor.rgb * (.65 + .45 * fxSatinP), fxPetal);
-    fxC = mix(fxC, diffuseColor.rgb * .45, fxSplit);
-    fxC = mix(fxC, vec3(.95, .78, .25) * (.7 + .4 * fxKnot), fxHeart);
-    float fxSilk = max(max(fxPetal, fxLeaf), max(fxStem, fxHeart));
+    fxC = mix(fxC, fxStemC * (.75 + .35 * fxThread), fxM.z);
+    fxC = mix(fxC, fxLeafC * (.7 + .4 * fxThread), fxM.y);
+    fxC = mix(fxC, fxPetC * (.7 + .4 * fxThread), fxM.x);
+    fxC = mix(fxC, fxKnotC * (.6 + .5 * fxKnot), fxM.w);
+    // 장미: 겹겹이 감긴 꽃잎 가장자리
+    if (uFace < .5) {
+      vec2 fxRd = fxQe - vec2(0., .2);
+      float fxSw = fract(length(fxRd) * 7. + atan(fxRd.y, fxRd.x) / 6.2832 * 2.);
+      fxC = mix(fxC, fxC * .62, (1. - smoothstep(0., .09, fxSw)) * fxM.x);
+    }
+    float fxSilk = clamp(fxM.x + fxM.y + fxM.z, 0., 1.);
+    fxC *= 1. - fxGroove * .25 * fxSilk;
     diffuseColor.rgb = fxC;`,
-  normal: 'normal = fxBump(normal, fxSilk * (.004 + fxPetal * fxSatinP * .002 + fxLeaf * fxSatinL * .002 + fxKnot * .004) + fxThread * .0008);',
-  surface: 'roughnessFactor = mix(.9, .28, fxSilk);',
-  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * fxSilk * fxFresnel(normal, 2.) * .4;',
+  normal: 'normal = fxBump(normal, fxSilk * fxThread * .0012 + fxLinT * .0006 * (1. - fxSilk) + fxM.w * fxKnot * .0015);',
+  surface: 'roughnessFactor = mix(.92, .32, fxSilk);',
+  emissive: `
+    // 실결과 빛 방향이 맞는 땀일수록 번쩍인다(공단수의 광택)
+    vec2 fxUp = -fxDown();
+    float fxSheen = pow(abs(dot(fxDirE, fxUp)), 5.) * fxThread * fxSilk;
+    totalEmissiveRadiance = diffuseColor.rgb * (fxSheen * .55 + fxSilk * fxFresnel(normal, 2.) * .3) + diffuseColor.rgb * .03;`,
 };
 B.embroidery = {
   // 나무 수틀
