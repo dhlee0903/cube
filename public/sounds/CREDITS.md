@@ -81,6 +81,18 @@
 | flip-1.mp3 | kenney_casinoaudio/Audio/cardPlace1.ogg |
 | flip-2.mp3 | kenney_casinoaudio/Audio/cardPlace2.ogg |
 | flip-3.mp3 | kenney_casinoaudio/Audio/cardPlace3.ogg |
+| key-1.mp3 | bb - Keyboard Sounds (Mar 2021)/Keyboard - Key 1.wav |
+| key-2.mp3 | bb - Keyboard Sounds (Mar 2021)/Keyboard - Key 2.wav |
+| key-3.mp3 | bb - Keyboard Sounds (Mar 2021)/Keyboard - Key 3.wav |
+| coin-1.mp3 | kenney_rpgaudio/Audio/handleCoins.ogg |
+| coin-2.mp3 | kenney_rpgaudio/Audio/handleCoins2.ogg |
+| coin-3.mp3 | kenney_casinoaudio/Audio/chipsStack1.ogg |
+| book-1.mp3 | kenney_rpgaudio/Audio/bookFlip1.ogg |
+| book-2.mp3 | kenney_rpgaudio/Audio/bookFlip2.ogg |
+| book-3.mp3 | kenney_rpgaudio/Audio/bookFlip3.ogg |
+| sand-1.mp3 | kenney_impactsounds/Audio/footstep_snow_000.ogg |
+| sand-2.mp3 | kenney_impactsounds/Audio/footstep_snow_001.ogg |
+| sand-3.mp3 | kenney_impactsounds/Audio/footstep_snow_002.ogg |
 | space-1.mp3 | Micro Pack - Organic Wooshes/Classic Swish 1.wav |
 | space-2.mp3 | Micro Pack - Organic Wooshes/Classic Swish 2.wav |
 | space-3.mp3 | Micro Pack - Organic Wooshes/Gentle Swish.wav |

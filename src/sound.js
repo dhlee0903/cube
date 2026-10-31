@@ -9,7 +9,7 @@ const LEVEL = {
   cube: 1, candy: 0.7, dice: 0.7, squish: 0.8, molten: 0.8, pop: 0.8, paper: 0.9, nature: 0.8, water: 0.7,
   glass: 0.6, crystal: 0.5, stone: 0.9, ceramic: 0.7, wood: 0.9, metal: 0.6, mech: 0.8, cloth: 1, leather: 1,
   scale: 0.7, electric: 0.45, disco: 0.5, glitch: 0.45, pixel: 0.4, flip: 0.9, space: 0.8, fruit: 0.9,
-  flesh: 0.9, eldritch: 0.8, eye: 0.8,
+  flesh: 0.9, eldritch: 0.8, eye: 0.8, key: 0.9, coin: 0.7, book: 0.9, sand: 0.9,
 };
 
 export const KITS = Object.keys(LEVEL);
