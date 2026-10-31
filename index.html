@@ -8,7 +8,16 @@
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
 </head>
 <body>
-  <main id="stage" class="stage"></main>
+  <main id="stage" class="stage">
+    <div id="timer" class="timer" hidden>
+      <span id="time" class="time">0:00.00</span>
+      <span id="best" class="best"></span>
+    </div>
+    <button id="theme" class="theme-button" type="button" aria-label="색" aria-haspopup="true" aria-expanded="false" aria-controls="themes">
+      <span class="dot"></span>
+    </button>
+    <div id="themes" class="palette" role="radiogroup" aria-label="색" hidden></div>
+  </main>
   <nav class="bar">
     <div class="size" role="group" aria-label="크기">
       <button id="smaller" type="button" aria-label="작게">−</button>
@@ -17,9 +26,9 @@
     </div>
     <div class="actions">
       <button id="scramble" type="button">섞기</button>
+      <button id="hint" type="button">힌트</button>
       <button id="solve" type="button">맞추기</button>
     </div>
-    <div id="themes" class="themes" role="radiogroup" aria-label="색"></div>
   </nav>
   <script type="module" src="./src/main.js"></script>
 </body>

@@ -1,8 +1,10 @@
 import {
   Box3, DirectionalLight, Euler, Group, HemisphereLight, Matrix4, Mesh, MeshStandardMaterial,
-  PerspectiveCamera, Quaternion, Raycaster, Scene, Shape, ShapeGeometry, Vector2, Vector3, WebGLRenderer,
+  PMREMGenerator, PerspectiveCamera, Quaternion, Raycaster, Scene, Shape, ShapeGeometry, Vector2, Vector3,
+  WebGLRenderer,
 } from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { FACES, layerOf } from './cube.js';
 
 const BODY = 0.96;
@@ -31,9 +33,10 @@ function roundedSquare(size, r) {
 }
 
 export class CubeView {
-  constructor(host, { onMove }) {
+  constructor(host, { onMove, onGrab }) {
     this.host = host;
     this.onMove = onMove;
+    this.onGrab = onGrab;
 
     this.renderer = new WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -51,12 +54,12 @@ export class CubeView {
     this.root.quaternion.setFromEuler(new Euler(this.pitch, this.yaw, 0));
     this.scene.add(this.root);
 
-    this.scene.add(new HemisphereLight(0xffffff, 0x888888, 2.3));
-    const key = new DirectionalLight(0xffffff, 1.9);
-    key.position.set(-3, 6, 5);
-    const fill = new DirectionalLight(0xffffff, 0.45);
-    fill.position.set(5, -2, 4);
-    this.scene.add(key, fill);
+    this.hemi = new HemisphereLight(0xffffff, 0x888888, 2.3);
+    this.key = new DirectionalLight(0xffffff, 1.9);
+    this.key.position.set(-3, 6, 5);
+    this.fill = new DirectionalLight(0xffffff, 0.45);
+    this.fill.position.set(5, -2, 4);
+    this.scene.add(this.hemi, this.key, this.fill);
 
     this.bodyGeo = new RoundedBoxGeometry(BODY, BODY, BODY, 3, 0.08);
     this.stickerGeo = roundedSquare(STICKER, 0.09);
@@ -104,9 +107,48 @@ export class CubeView {
   }
 
   setTheme(theme) {
-    this.bodyMat.color.set(theme.body);
-    theme.faces.forEach((c, i) => this.faceMats[i].color.set(c));
+    const { body, sticker = {}, glow = 0, light = 1 } = theme;
+    this.bodyMat.color.set(body.color);
+    this.bodyMat.roughness = body.roughness ?? 0.55;
+    this.bodyMat.metalness = body.metalness ?? 0;
+    theme.faces.forEach((c, i) => {
+      const m = this.faceMats[i];
+      m.color.set(c);
+      m.emissive.set(c);
+      m.emissiveIntensity = Array.isArray(glow) ? glow[i] : glow;
+      m.roughness = sticker.roughness ?? 0.32;
+      m.metalness = sticker.metalness ?? 0;
+    });
+    this.hemi.intensity = 2.3 * light;
+    this.key.intensity = 1.9 * light;
+    this.fill.intensity = 0.45 * light;
+    this.scene.environment = theme.env ? this.room() : null;
+    this.scene.environmentIntensity = theme.env ?? 0;
     this.invalidate();
+  }
+
+  /** 금속이나 얼음처럼 비치는 재질이 반사할 방. 처음 쓸 때 한 번만 만든다. */
+  room() {
+    if (!this.envMap) {
+      const pmrem = new PMREMGenerator(this.renderer);
+      this.envMap = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+      pmrem.dispose();
+    }
+    return this.envMap;
+  }
+
+  /** 다음에 돌릴 층을 그 방향으로 두 번 살짝 밀었다 놓는다. */
+  nudge({ axis, layer, turns }) {
+    const dir = turns === 3 ? -1 : 1;
+    const angles = [];
+    this.turning = true;
+    return this.tween(1000, (k) => {
+      angles[layer] = dir * 0.3 * Math.sin(Math.PI * ((k * 2) % 1));
+      this.pose(axis, angles);
+    }).then(() => {
+      this.turning = false;
+      this.sync();
+    });
   }
 
   /** 상태에 맞춰 조각을 제자리에 놓는다. 회전이 끝날 때마다 부른다. */
@@ -304,6 +346,7 @@ export class CubeView {
       samples: [],
     });
     this.turning = true;
+    this.onGrab?.();
   }
 
   follow(d, dx, dy, time) {
