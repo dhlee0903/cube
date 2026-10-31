@@ -8,7 +8,8 @@ import {
 //   bubble  속이 빈 거품
 //   dot     또렷한 점(눈, 모래, 물방울, 잉크)
 //   streak  길쭉한 조각이 돌면서(색종이, 스프링클, 나뭇잎)
-const SHAPES = { glow: 0, bubble: 1, dot: 2, streak: 3 };
+//   square  네모난 픽셀
+const SHAPES = { glow: 0, bubble: 1, dot: 2, streak: 3, square: 4 };
 
 const SHAPE_FRAGMENT = /* glsl */ `
 uniform float uOpacity;
@@ -26,9 +27,11 @@ void main() {
   a += (1. - smoothstep(0., .1, length(c - vec2(-.16, .16)))) * .8;
 #elif SHAPE == 2
   float a = 1. - smoothstep(.3, .5, r);
-#else
+#elif SHAPE == 3
   vec2 q = mat2(cos(vSpin), -sin(vSpin), sin(vSpin), cos(vSpin)) * c;
   float a = 1. - smoothstep(.3, .45, length(q * vec2(1., 3.2)));
+#else
+  float a = 1. - step(.36, max(abs(c.x), abs(c.y)));
 #endif
   a *= vAlpha * uOpacity;
   if (a < .01) discard;

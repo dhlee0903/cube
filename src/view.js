@@ -140,6 +140,10 @@ export class CubeView {
     this.frame = 0;
     this.last = 0;
     this.moving = false;
+    this.swell = 0; // 다 맞췄을 때 한 번 부푸는 정도
+    this.pulse = false; // 심장처럼 뛰는 테마
+    this.jitter = false; // 가끔 화면이 튀는 테마
+    this.glitchAt = -1;
     this.drag = null;
     this.turning = false; // 손으로 돌리는 중이거나 놓고 나서 제자리로 가는 중
     this.locked = false; // 섞기·맞추기가 도는 중
@@ -160,7 +164,7 @@ export class CubeView {
       mesh.dispose();
     }
     this.cube = cube;
-    this.root.scale.setScalar(SIZE / cube.n);
+    this.breathe(performance.now() / 1000);
 
     // 조각마다 난수를 하나씩 줘서 무늬가 똑같이 반복되지 않게
     const seeded = (geometry, count) => {
@@ -316,6 +320,9 @@ export class CubeView {
     this.scene.environment = theme.env ? this.room() : null;
     this.scene.environmentIntensity = theme.env ?? 0;
 
+    this.pulse = !this.still && Boolean(theme.pulse);
+    this.jitter = !this.still && Boolean(theme.jitter);
+    this.root.position.set(0, 0, 0);
     this.ambient.set(this.still ? null : theme.ambient, theme.faces);
     this.burst.set(this.still ? null : theme.burst, theme.faces);
     this.moving = !this.still && (MOVING.has(surface) || Boolean(theme.ambient));
@@ -386,10 +393,31 @@ export class CubeView {
     }
     if (!this.still) {
       this.tween(650, (k) => {
-        this.root.scale.setScalar((SIZE / this.cube.n) * (1 + 0.07 * Math.sin(Math.PI * k) * (1 - k * 0.3)));
-      }).then(() => this.root.scale.setScalar(SIZE / this.cube.n));
+        this.swell = 0.07 * Math.sin(Math.PI * k) * (1 - k * 0.3);
+      }).then(() => {
+        this.swell = 0;
+      });
     }
     this.invalidate();
+  }
+
+  /** 크기는 매 프레임 여기서 정한다. 부풂과 박동을 더한다. */
+  breathe(seconds) {
+    let s = 1 + this.swell;
+    if (this.pulse) {
+      const t = (seconds * 1.15) % 1;
+      s += 0.018 * (Math.exp(-(((t - 0.08) / 0.035) ** 2)) + 0.6 * Math.exp(-(((t - 0.26) / 0.045) ** 2)));
+    }
+    this.root.scale.setScalar((SIZE / (this.cube?.n ?? 3)) * s);
+    if (this.jitter) {
+      // 70ms마다 주사위를 굴려 가끔 한두 프레임 옆으로 튄다
+      const slot = Math.floor(seconds * 14);
+      if (slot !== this.glitchAt) {
+        this.glitchAt = slot;
+        const hit = Math.random() < 0.06;
+        this.root.position.set(hit ? (Math.random() - 0.5) * 0.18 : 0, hit ? (Math.random() - 0.5) * 0.06 : 0, 0);
+      }
+    }
   }
 
   // ---- 그리기 ----
@@ -422,6 +450,7 @@ export class CubeView {
     const flash = this.uniforms.uFlash;
     if (flash.value > 0) flash.value = Math.max(0, flash.value - dt * 1.4);
     const bursting = this.burst.update(dt);
+    this.breathe(now / 1000);
 
     this.renderer.render(this.scene, this.camera);
     if (this.tweens.length || this.moving || bursting || flash.value > 0) this.invalidate();

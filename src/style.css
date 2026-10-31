@@ -230,6 +230,9 @@ button:disabled {
   display: grid;
   grid-template-columns: repeat(4, 64px);
   gap: 6px 4px;
+  max-height: calc(100% - 68px - env(safe-area-inset-top, 0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 10px;
   border-radius: 14px;
   background: var(--bg);
@@ -238,6 +241,12 @@ button:disabled {
 
 .palette[hidden] {
   display: none;
+}
+
+@media (min-width: 560px) {
+  .palette {
+    grid-template-columns: repeat(6, 64px);
+  }
 }
 
 .palette button {
