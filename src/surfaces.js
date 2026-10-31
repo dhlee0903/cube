@@ -2541,124 +2541,6 @@ B.lavalamp = {
   surface: 'roughnessFactor = .18; metalnessFactor = 1.;',
 };
 
-S.skin = {
-  // 사람 살갗 견본. 면마다 다른 사람 피부다: 주근깨 난 흰 피부, 윤기 도는 짙은 피부, 햇볕에 그을린 황금빛 피부,
-  // 시퍼렇게 번진 멍, 햇볕에 익어 껍질이 일어난 피부, 먹물 문신(겹친 물결 비늘)이 덮인 피부.
-  // 모두 땀구멍과 잔주름, 솜털이 있고 속에서 붉은 기가 비친다. 숨 쉬듯 부풀었다 가라앉고,
-  // 조각을 잡으면 소름이 오돌토돌 돋는다
-  head: `
-    float fxSkinH(vec2 p, float seed) {
-      vec2 q = p / uSticker.x;
-      vec3 v = fxVoronoi(q * 8. + seed * 5.);
-      float h = .003 * smoothstep(0., .15, v.y);
-      vec3 g = fxVoronoi(q * 14. + seed * 3.);
-      h += max(uBlink, uCharge * .6) * .009 * (1. - smoothstep(0., .3, g.x));
-      if (uFace > 3.5 && uFace < 4.5) {
-        vec3 f = fxVoronoi(q * 6. + seed * 9.);
-        h += step(.8, f.z) * smoothstep(0., .1, f.y) * .003;
-      }
-      float breath = 1. + .12 * sin(uTime * 1.3 + seed * 3.);
-      return smoothstep(0., .08, fxEdgeAt(p)) * (h * breath + .006);
-    }`,
-  height: 'fxSkinH',
-  color: `
-    if (fxEdge() < 0.) discard;
-    vec2 fxQs = fxQ();
-    vec3 fxBase = diffuseColor.rgb;
-    vec3 fxV = fxVoronoi(fxQs * 8. + vSeed * 5.);
-    float fxFurrow = 1. - smoothstep(0., .07, fxV.y);
-    vec3 fxPv = fxVoronoi(fxQs * 26. + vSeed * 3.);
-    float fxPore = (1. - smoothstep(0., .13, fxPv.x)) * step(.35, fxPv.z);
-    vec2 fxHc = floor(fxQs * 10.);
-    vec2 fxHp = fxRot(fxH2(fxHc + vSeed) + .4) * (fract(fxQs * 10.) - .5 - (vec2(fxH2(fxHc + 1.), fxH2(fxHc + 2.)) - .5) * .4);
-    float fxHair = (1. - smoothstep(.008, .02, abs(fxHp.x))) * step(abs(fxHp.y), .3) * step(.75, fxH2(fxHc + 7.));
-    float fxBlotch = smoothstep(.45, .75, fxF2(fxQs * 2. + vSeed * 9.));
-    vec3 fxC = fxBase;
-    float fxWet = .45;
-    float fxSss = .14;
-    float fxDetail = 0.;
-    float fxMoleOk = 1.;
-    if (uFace < .5) {
-      // 흰 피부: 붉은 기가 얼룩지고 주근깨가 흩어졌다
-      fxC = fxBase * mix(vec3(1.), vec3(1.05, .87, .85), fxBlotch);
-      vec3 fr = fxVoronoi(fxQs * 11. + vSeed * 11.);
-      float freck = (1. - smoothstep(.08, .2, fr.x)) * step(.45, fr.z) * step(.35, fxN2(fxQs * 1.3 + vSeed * 4.));
-      fxC = mix(fxC, fxBase * vec3(.7, .5, .38), freck * .6);
-      fxSss = .18;
-    } else if (uFace < 1.5) {
-      // 짙은 피부: 깊은 갈색에 윤기, 볼록한 데는 붉은 금빛이 돈다
-      fxC = fxBase * mix(vec3(1.), vec3(1.14, .96, .84), fxBlotch * .6);
-      fxWet = .6;
-      fxSss = .1;
-    } else if (uFace < 2.5) {
-      // 햇볕에 그을린 황금빛 피부
-      fxC = fxBase * mix(vec3(1.), vec3(1.07, .93, .8), fxBlotch);
-      fxSss = .14;
-      fxWet = .4;
-    } else if (uFace < 3.5) {
-      // 멍: 가운데는 검푸르고 번질수록 붉은 보라, 가장자리는 누런 초록으로 삭아 간다. 실핏줄 터진 점
-      vec3 skin = vec3(.86, .66, .56);
-      vec2 c = (vec2(fxH1(vSeed * 3.), fxH1(vSeed * 7.)) - .5) * .5;
-      float r = length((fxQs - c) * vec2(1., 1.2)) + (fxF2(fxQs * 2.5 + vSeed) - .5) * .5;
-      fxC = mix(fxBase * .72, mix(fxBase, vec3(.55, .2, .3), .5), smoothstep(.2, .6, r));
-      fxC = mix(fxC, vec3(.62, .6, .3), smoothstep(.62, .92, r));
-      fxC = mix(fxC, skin, smoothstep(.95, 1.25, r));
-      vec3 pv = fxVoronoi(fxQs * 18. + vSeed);
-      fxC = mix(fxC, vec3(.35, .05, .1), (1. - smoothstep(.05, .1, pv.x)) * step(.8, pv.z) * (1. - smoothstep(.4, .8, r)));
-      fxSss = .08;
-      fxMoleOk = 0.;
-    } else if (uFace < 4.5) {
-      // 햇볕에 익은 피부: 벌겋게 달아오르고 군데군데 하얀 껍질이 들떠 벗겨진다
-      vec3 f = fxVoronoi(fxQs * 6. + vSeed * 9.);
-      float flake = step(.8, f.z) * smoothstep(.0, .05, f.y);
-      float flakeEdge = step(.8, f.z) * (1. - smoothstep(0., .025, f.y)) * step(.5, fract(atan(f.y, f.x) + f.z * 7.));
-      fxC = fxBase * (.88 + .18 * fxBlotch);
-      fxC = mix(fxC, mix(fxBase, vec3(.95, .82, .76), .35), flake * .55);
-      fxC = mix(fxC, vec3(.99, .95, .92), flakeEdge * .85);
-      fxDetail = flakeEdge * .002;
-      fxSss = .22;
-      fxWet = .25;
-      fxMoleOk = 0.;
-    } else {
-      // 문신: 먹으로 꽉 채운 바탕에 겹친 물결 비늘이 살빛 선으로 남아 있다. 먹은 살 속에서 조금 번졌다
-      vec3 skin = vec3(.84, .64, .52);
-      vec2 sg = fxQs * 2.4 + vSeed;
-      float row = floor(sg.y);
-      vec2 sc = vec2(sg.x + mod(row, 2.) * .5, sg.y);
-      vec2 sf = fract(sc) - vec2(.5, 0.);
-      float sr = length(sf);
-      float arcs = 1. - smoothstep(.07, .14, abs(fract(sr * 3.6) - .5));
-      float skinLine = arcs * step(sr, .95) * step(.12, sr);
-      float bleed = fxN2(fxQs * 30.) * .15;
-      vec3 ink = fxBase * (.85 + .2 * fxN2(fxQs * 6.));
-      float red = smoothstep(.6, .63, fxF2(fxQs * 1.3 + vSeed * 4.));
-      ink = mix(ink, vec3(.55, .12, .1), red);
-      fxC = mix(ink, skin, clamp(skinLine * .85 - bleed, 0., 1.));
-      fxSss = .1;
-      fxMoleOk = 0.;
-    }
-    fxC *= 1. - fxFurrow * .05 - fxPore * .04;
-    fxC = mix(fxC, fxC * .7, fxHair * .2);
-    vec2 fxMp = (vec2(fxH1(vSeed * 3.1), fxH1(vSeed * 5.7)) - .5) * 1.2;
-    float fxMole = (1. - smoothstep(.05, .075, length(fxQs - fxMp))) * step(.7, fxH1(vSeed * 7.3)) * fxMoleOk;
-    fxC = mix(fxC, vec3(.2, .12, .08), fxMole);
-    fxDetail += -fxFurrow * .0009 - fxPore * .0006 + fxMole * .002;
-    diffuseColor.rgb = fxC;`,
-  normal: 'normal = fxBump(normal, fxDetail);',
-  surface: 'roughnessFactor = mix(.72, .3, fxWet);',
-  emissive: `
-    totalEmissiveRadiance = diffuseColor.rgb * vec3(1., .45, .35) * fxSss
-      + vec3(1.) * fxGlint(vLocal.xy * 25. + vSeed, .05 * fxWet, 1.2) * fxWet * .5;`,
-};
-B.skin = {
-  // 가죽처럼 질긴 속살
-  color: `
-    vec3 fxV = fxVoronoi(fxBodyUV() * 30. + vSeed * 7.);
-    diffuseColor.rgb *= (1. - (1. - smoothstep(0., .08, fxV.y)) * .35) * (.85 + .2 * fxN3(vLocal * 20.));`,
-  surface: 'roughnessFactor = .6;',
-  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * vec3(1., .4, .3) * .12;',
-};
-
 S.bubblewrap = {
   // 뽁뽁이로 싼 큐브. 칸마다 색종이 위에 공기 방울이 4×4로 실제로 볼록 솟아 있고, 반질한 비닐에
   // 빛이 맺힌다. 방울이 하나씩 톡 터지며 반짝하고 납작하게 구겨졌다가, 한참 지나면 다시 부푼다
@@ -3418,6 +3300,972 @@ B.toon = {
   surface: 'roughnessFactor = 1.; metalnessFactor = 0.;',
 };
 
+S.nebula = {
+  // 성운. 다 맞추면 면 하나가 성운 한 덩이다. 휘감기며 번지는 빛나는 가스, 그 앞을 가로막는 검은 먼지 띠,
+  // 갓 태어난 밝은 별과 그 둘레의 빛무리, 촘촘한 잔별. 가스 빛이 곧 면 색이고 아주 천천히 흐른다
+  color: `
+    vec2 fxF = fxFace();
+    vec2 fxP = fxF * 1.4 + uFace * 3.;
+    vec2 fxW = vec2(fxF2(fxP + uTime * .01), fxF2(fxP + 5.2 - uTime * .008));
+    float fxGas = fxF2(fxP + fxW * 2.2);
+    float fxGas2 = fxF2(fxP * 2. + fxW * 1.5 + 9.);
+    float fxDust = smoothstep(.55, .7, fxF2(fxP * 1.6 + fxW + 21.));
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxCol = fxBase * pow(fxGas, 2.) * 2.1 + mix(fxBase.gbr, vec3(1.), .35) * pow(fxGas2, 4.) * 1.1;
+    fxCol *= 1. - fxDust * .85;
+    vec2 fxSg = floor(fxF * 90.);
+    float fxSt = step(.985, fxH2(fxSg)) * (.6 + .4 * sin(uTime * 2. + fxH2(fxSg + 3.) * 30.));
+    vec3 fxBig = fxVoronoi(fxF * 6. + 3.);
+    float fxYoung = step(.86, fxBig.z);
+    fxCol += vec3(fxSt) * .8 + vec3(1.) * (1. - smoothstep(0., .04, fxBig.x)) * fxYoung + mix(fxBase, vec3(1.), .5) * exp(-fxBig.x * 16.) * fxYoung * .6;
+    diffuseColor.rgb = vec3(.004);`,
+  surface: 'roughnessFactor = .25;',
+  emissive: 'totalEmissiveRadiance = fxCol;',
+};
+B.nebula = {
+  color: `float fxRim = smoothstep(.9, 1., fxBodyRim());`,
+  surface: 'roughnessFactor = .3; metalnessFactor = .6;',
+  emissive: 'totalEmissiveRadiance = vec3(.6, .7, 1.) * fxRim * .15;',
+};
+
+S.star = {
+  // 항성 표면. 다 맞추면 면 하나가 별 하나의 얼굴이다. 면마다 별의 온도가 달라 빛이 다르다(붉은 왜성, 주황 별, 노란 해,
+  // 하얀 별, 푸른 거성, 갈색 왜성). 끓어오르는 쌀알 무늬가 꿈틀대고, 검은 흑점과 가는 실 같은 반그림자,
+  // 밝은 백반, 가장자리로 갈수록 어두워지는 주연 감광. 면 테두리에선 홍염 고리가 솟는다
+  color: `
+    vec2 fxF = fxFace();
+    vec3 fxV = fxVoronoi(fxF * 9. + vec2(uTime * .015, 0.) + uFace * 5.);
+    float fxGran = smoothstep(0., .22, fxV.y) * (.75 + .5 * fxV.z);
+    float fxBoil = .82 + .18 * sin(uTime * .8 + fxV.z * 30.);
+    vec2 fxSp = fxF - vec2(.28 * sin(uFace * 2.1 + 1.), .22 * cos(uFace * 1.3));
+    float fxSr = length(fxSp * vec2(1., 1.3)) + (fxN2(fxF * 5.) - .5) * .06;
+    float fxUmbra = 1. - smoothstep(.07, .1, fxSr);
+    float fxPen = 1. - smoothstep(.1, .2, fxSr);
+    float fxFil = .5 + .5 * sin(atan(fxSp.y, fxSp.x) * 46. + fxSr * 30.);
+    float fxFac = smoothstep(.6, .75, fxF2(fxF * 3. + 2.)) * .3;
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxHot = mix(fxBase, vec3(1.), .3);
+    vec3 fxCol = fxHot * fxGran * fxBoil * (1. + fxFac);
+    fxCol = mix(fxCol, fxBase * .4 * (.65 + .35 * fxFil), fxPen);
+    fxCol = mix(fxCol, fxBase * .06, fxUmbra);
+    float fxBorder = 1. - max(abs(fxF.x), abs(fxF.y));
+    fxCol *= .7 + .3 * smoothstep(0., .45, fxBorder);
+    float fxLoop = exp(-pow((length(fract(fxF * 2.) - .5) - .32) / .025, 2.)) * (1. - smoothstep(0., .14, fxBorder)) * (.6 + .4 * sin(uTime * .7 + fxF.x * 3.));
+    fxCol += mix(fxBase, vec3(1., .5, .4), .4) * fxLoop * 1.2;
+    diffuseColor.rgb = vec3(.004);`,
+  surface: 'roughnessFactor = .4;',
+  emissive: 'totalEmissiveRadiance = fxCol * 1.15;',
+};
+B.star = {
+  color: `float fxRim = smoothstep(.85, 1., fxBodyRim());`,
+  surface: 'roughnessFactor = .4; metalnessFactor = .4;',
+  emissive: 'totalEmissiveRadiance = uBodyGlow * fxRim * .35;',
+};
+
+S.galaxy = {
+  // 나선 은하. 다 맞추면 면 하나에 은하 하나가 천천히 돈다. 노란 중심 팽대부, 두 갈래로 감기는 나선팔과 그 안쪽을 따라
+  // 흐르는 검은 먼지 띠, 팔을 따라 점점이 붉은 별 탄생 구역. 둘레엔 잔별과 먼 은하. 팔 빛이 곧 면 색
+  color: `
+    vec2 fxF = fxFace();
+    float fxR = length(fxF);
+    float fxA = atan(fxF.y, fxF.x) - uTime * .02;
+    float fxArmP = fxA * 2. - log(max(fxR, .02)) * 3.2;
+    float fxArm = pow(.5 + .5 * cos(fxArmP), 3.);
+    float fxNz = fxF2(fxF * 4. + uFace * 3.);
+    float fxDisk = exp(-fxR * 2.4);
+    float fxBulge = exp(-fxR * fxR * 38.);
+    float fxLane = pow(.5 + .5 * cos(fxArmP - .7), 7.) * smoothstep(.08, .3, fxR) * (1. - smoothstep(.85, 1.1, fxR));
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxCol = fxBase * fxDisk * (.3 + 1.5 * fxArm * (.55 + .7 * fxNz));
+    fxCol += vec3(1., .9, .72) * fxBulge * 1.5;
+    fxCol *= 1. - fxLane * .65;
+    vec3 fxK = fxVoronoi(fxF * 16. + 4.);
+    fxCol += mix(fxBase, vec3(1., .45, .6), .55) * (1. - smoothstep(0., .07, fxK.x)) * step(.78, fxK.z) * fxArm * fxDisk * 2.4;
+    vec2 fxSg = floor(fxF * 80.);
+    fxCol += vec3(.8) * step(.988, fxH2(fxSg)) * (.5 + .5 * sin(uTime * 2. + fxH2(fxSg) * 20.));
+    vec3 fxFar = fxVoronoi(fxF * 3. + 11.);
+    fxCol += mix(fxBase.gbr, vec3(1.), .3) * .5 * (1. - smoothstep(0., .03, fxFar.x)) * step(.9, fxFar.z);
+    diffuseColor.rgb = vec3(.004);`,
+  surface: 'roughnessFactor = .25;',
+  emissive: 'totalEmissiveRadiance = fxCol;',
+};
+B.galaxy = {
+  color: `float fxRim = smoothstep(.9, 1., fxBodyRim());`,
+  surface: 'roughnessFactor = .3; metalnessFactor = .6;',
+  emissive: 'totalEmissiveRadiance = vec3(.8, .75, 1.) * fxRim * .15;',
+};
+
+S.bismuth = {
+  // 비스무트 결정. 칸마다 네모난 계단이 안으로 파고드는 깔때기 결정이 실제로 층층이 솟아 있고,
+  // 얇은 산화막이 빛을 받아 금속 무지갯빛으로 번쩍인다. 층마다 막 두께가 달라 빛깔이 조금씩 바뀌며, 면마다 도는 빛깔이 다르다
+  head: `
+    // 깔때기 결정: x 층 높이(0 바깥 ~ 1 가운데 테), y 층 번호, z 층 가장자리
+    vec3 fxHopper(vec2 q, float seed) {
+      vec2 p = fxRot((fxH1(seed * 5.) - .5) * .5) * (q - (vec2(fxH1(seed * 3.), fxH1(seed * 9.)) - .5) * .25);
+      float d = max(abs(p.x), abs(p.y));
+      float steps = d * 7.;
+      float idx = floor(steps);
+      float f = fract(steps);
+      float h = idx < 1.5 ? 0. : 1. - idx / 7.;
+      float rim = 1. - smoothstep(0., .12, f);
+      return vec3(h, idx, rim * step(1.5, idx));
+    }
+    float fxBismuthH(vec2 p, float seed) {
+      vec3 hp = fxHopper(p / uSticker.x, seed);
+      return smoothstep(0., .06, fxEdgeAt(p)) * (.006 + .03 * hp.x + .004 * hp.z);
+    }`,
+  height: 'fxBismuthH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxHp = fxHopper(fxQ(), vSeed);
+    diffuseColor.rgb = diffuseColor.rgb * (.7 + .3 * fxHp.x);`,
+  surface: 'roughnessFactor = .14; metalnessFactor = .85;',
+  emissive: `
+    float fxFr = fxFresnel(normal, 1.5);
+    float fxFilm = fxHp.y * .09 + fxFr * .6 + fxN2(fxQ() * 3. + vSeed) * .2;
+    vec3 fxIr = .5 + .5 * cos(6.2832 * (fxFilm + vec3(0., .33, .67)));
+    totalEmissiveRadiance = mix(diffuse, fxIr, .42) * (.32 + .3 * fxHp.z + .25 * fxFr);`,
+};
+B.bismuth = {
+  surface: 'roughnessFactor = .25; metalnessFactor = 1.;',
+};
+
+S.banded = {
+  // 줄무늬 광석 표본. 다 맞추면 면마다 갈아 낸 광석 한 판이다. 면마다 돌이 다르다:
+  // 공작석(초록 동심원 눈알 무늬), 능망간석(분홍과 흰 물결 띠), 남동석(짙은 파랑 덩이 띠), 호안석(결 따라 빛줄이 미끄러지는 금빛 섬유),
+  // 적철석(은빛 금속 띠와 붉은 벽옥이 번갈아 쌓인 줄무늬 철광), 라리마(하늘빛 바탕에 흰 거북등 그물). 반질하게 갈았다
+  color: `
+    vec2 fxF = fxFace();
+    vec3 fxBase = diffuseColor.rgb;
+    vec2 fxWp = fxF + (vec2(fxN2(fxF * 2. + 1.), fxN2(fxF * 2. + 7.)) - .5) * .3;
+    vec3 fxC = fxBase;
+    float fxMet = 0.;
+    float fxChat = 0.;
+    if (uFace < .5) {
+      vec3 v = fxVoronoi(fxWp * 2.2 + 3.);
+      float b = fract(v.x * 9. + fxN2(fxF * 6.) * .4);
+      fxC = mix(fxBase * .45, mix(fxBase, vec3(.6, .9, .7), .35), smoothstep(.3, .7, b));
+      fxC *= 1. - (1. - smoothstep(0., .05, v.y)) * .4;
+    } else if (uFace < 1.5) {
+      float b = fract(fxWp.y * 7. + sin(fxWp.x * 3.) * .4);
+      fxC = mix(fxBase, vec3(.97, .93, .92), smoothstep(.6, .75, b) * (1. - smoothstep(.85, .95, b)));
+      fxC = mix(fxC, fxBase * .7, smoothstep(.2, .3, b) * (1. - smoothstep(.35, .45, b)));
+    } else if (uFace < 2.5) {
+      vec3 v = fxVoronoi(fxWp * 3. + 5.);
+      float b = fract(v.x * 6. + v.z * 3.);
+      fxC = mix(fxBase * .5, fxBase * 1.25, smoothstep(.2, .8, b));
+      fxC = mix(fxC, vec3(.2, .55, .4), smoothstep(.62, .7, fxN2(fxF * 4.)) * .5);
+    } else if (uFace < 3.5) {
+      float fib = fxN2(vec2(fxWp.x * 3., fxWp.y * 140.));
+      float band = fract(fxWp.y * 3. + fxN2(fxF * 2.) * .5);
+      fxC = mix(fxBase, vec3(.35, .2, .1), smoothstep(.55, .62, band) * (1. - smoothstep(.8, .87, band)));
+      fxC *= .85 + .2 * fib;
+      fxChat = 1.;
+    } else if (uFace < 4.5) {
+      float b = fract(fxWp.y * 8. + fxN2(fxF * 3.) * .5);
+      float red = smoothstep(.45, .5, b) * (1. - smoothstep(.75, .8, b));
+      fxC = mix(fxBase * 1.1, vec3(.62, .15, .12), red);
+      fxMet = 1. - red;
+    } else {
+      vec3 v = fxVoronoi(fxWp * 3.5 + 1.);
+      float web = 1. - smoothstep(.02, .07, v.y);
+      fxC = mix(fxBase * (.85 + .25 * fxN2(fxF * 5.)), vec3(.95, .97, 1.), web * .85);
+    }
+    diffuseColor.rgb = fxC;`,
+  surface: 'roughnessFactor = mix(.08, .2, fxMet); metalnessFactor = fxMet * .8;',
+  emissive: `
+    float fxVd = abs(dot(normal, normalize(vViewPosition)));
+    float fxGlide = exp(-pow((fract(fxF.x * .8 + fxVd * 2. + .3) - .5) / .08, 2.)) * fxChat;
+    totalEmissiveRadiance = diffuseColor.rgb * (.08 + fxGlide * 1.1);`,
+};
+B.banded = {
+  color: `diffuseColor.rgb *= .78 + .3 * fxN3(vLocal * 25. + vSeed);`,
+  surface: 'roughnessFactor = .5;',
+};
+
+S.wild = {
+  // 야생 동물 무늬 털가죽. 다 맞추면 면마다 동물 한 마리의 옆구리다. 짧고 촘촘한 털 위로 면마다 무늬가 다르다:
+  // 호랑이(주황에 끝이 갈라지며 가늘어지는 검은 줄), 얼룩말(흰 바탕에 굵게 굽이치는 검은 줄), 표범(금빛에 가운데가 빈 매화 무늬),
+  // 기린(갈색 조각을 크림색 그물이 가른다), 흑소(검은 바탕에 큼직한 흰 얼룩), 비단뱀(초록 비늘에 짙은 마름모)
+  head: FUR + `
+    float fxWildH(vec2 p, float seed) {
+      vec3 f = fxFur(aHome.xy + p * aHome.z, 24., .8);
+      return smoothstep(0., .06, fxEdgeAt(p)) * (.008 + .007 * f.y + .003 * f.x);
+    }`,
+  height: 'fxWildH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec2 fxF = fxFace();
+    vec3 fxFr = fxFur(fxF, 24., .8);
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxCoat = fxBase;
+    float fxScaleMode = 0.;
+    if (uFace < .5) {
+      float s = sin(fxF.x * 10. + fxN2(fxF * 2.) * 4. + fxF.y * 1.5);
+      float taper = smoothstep(-.6, .6, sin(fxF.y * 4. + fxF.x * 2.));
+      fxCoat = mix(fxBase, vec3(.06, .05, .04), smoothstep(.55, .7, s) * taper);
+      fxCoat = mix(fxCoat, vec3(.97, .94, .88), (1. - smoothstep(-.9, -.6, fxF.y)) * .8);
+    } else if (uFace < 1.5) {
+      float s = sin(fxF.x * 9. + fxN2(fxF * 1.6) * 5. + sin(fxF.y * 3.) * 1.2);
+      fxCoat = mix(fxBase, vec3(.05), smoothstep(.0, .12, s));
+    } else if (uFace < 2.5) {
+      vec3 v = fxVoronoi(fxF * 6. + 2.);
+      float ring = (1. - smoothstep(.05, .12, abs(v.x - .2 - .05 * fxN2(fxF * 9.)))) * step(.15, v.z);
+      float spot = (1. - smoothstep(.05, .09, v.x)) * step(v.z, .15);
+      fxCoat = mix(fxBase, vec3(.7, .48, .2), (1. - smoothstep(.1, .2, v.x)) * .5);
+      fxCoat = mix(fxCoat, vec3(.08, .06, .04), max(ring, spot) * .9);
+    } else if (uFace < 3.5) {
+      vec3 v = fxVoronoi(fxF * 4. + (vec2(fxN2(fxF * 3.), fxN2(fxF * 3. + 4.)) - .5) * .5);
+      fxCoat = mix(fxBase * (.85 + .2 * v.z), vec3(.95, .9, .78), 1. - smoothstep(.06, .1, v.y));
+    } else if (uFace < 4.5) {
+      float blot = smoothstep(.56, .6, fxF2(fxF * 1.7 + 3.));
+      fxCoat = mix(fxBase, vec3(.95, .94, .92), blot);
+    } else {
+      fxScaleMode = 1.;
+      vec2 g = fxF * vec2(9., 12.);
+      g.x += mod(floor(g.y), 2.) * .5;
+      vec2 f = fract(g) - vec2(.5, .3);
+      float edge = smoothstep(.38, .6, length(f * vec2(1., 1.4)));
+      vec2 dm = abs(fract(fxF * vec2(2.5, 2.) + vec2(fxF.y * .5, 0.)) - .5);
+      float dia = 1. - smoothstep(.3, .34, dm.x + dm.y);
+      fxCoat = mix(fxBase, fxBase * .3, dia) * (1. - edge * .45);
+    }
+    vec3 fxC = fxScaleMode > .5 ? fxCoat : fxCoat * (.55 + .55 * fxFr.x) * (.8 + .3 * fxFr.y);
+    fxC = mix(fxC, fxC * 1.2 + .03, fxFr.z * .3 * (1. - fxScaleMode));
+    diffuseColor.rgb = fxC;`,
+  normal: 'normal = fxBump(normal, fxFr.x * .0012 + fxFr.y * .002);',
+  surface: 'roughnessFactor = mix(.72, .35, fxScaleMode);',
+  emissive: 'totalEmissiveRadiance = fxCoat * fxFresnel(normal, 1.4) * .5 * (1. - fxScaleMode) + diffuseColor.rgb * .04;',
+};
+B.wild = {
+  color: `diffuseColor.rgb *= .78 + .3 * fxN3(vLocal * 40. + vSeed);`,
+  surface: 'roughnessFactor = .7;',
+};
+
+S.peacock = {
+  // 공작 깃털. 칸마다 깃털 끝의 눈알 무늬 하나가 있다. 한가운데 짙은 남색 심장, 그 둘레 푸른 고리, 구릿빛 고리, 금빛 초록 고리,
+  // 그 바깥으로 깃가지가 깃대에서 비스듬히 갈라져 흩날린다. 보는 각도에 따라 구조색이 번쩍이며 바뀐다. 깃가지 빛이 곧 면 색
+  color: `
+    vec2 fxQp = fxRot((fxH1(vSeed * 3.) - .5) * .5) * fxQ();
+    vec2 fxE = (fxQp - vec2(0., .12)) / vec2(.36, .44);
+    float fxR = length(fxE);
+    float fxHeart = 1. - smoothstep(.36, .4, length((fxQp - vec2(0., .06)) / vec2(.36, .44) * vec2(1., 1.15)));
+    float fxBlue = 1. - smoothstep(.5, .54, fxR);
+    float fxBronze = 1. - smoothstep(.66, .7, fxR);
+    float fxGold = 1. - smoothstep(.95, 1.02, fxR);
+    float fxShaft = (1. - smoothstep(.012, .025, abs(fxQp.x))) * step(fxQp.y, -.25);
+    float fxBarbC = fxQp.y - abs(fxQp.x) * .9;
+    float fxBarb = .5 + .5 * sin(fxBarbC * 140. + fxN2(fxQp * 6.) * 3.);
+    float fxGap = smoothstep(.7, .95, fxN2(vec2(fxBarbC * 12., abs(fxQp.x) * 2.) + vSeed)) * (1. - fxGold);
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxBarbCol = fxBase * (.55 + .5 * fxBarb);
+    vec3 fxC = mix(fxBarbCol, vec3(.15, .12, .05), fxGap * .7);
+    fxC = mix(fxC, mix(vec3(.6, .7, .2), fxBase, .3), fxGold);
+    fxC = mix(fxC, vec3(.55, .32, .15), fxBronze);
+    fxC = mix(fxC, vec3(.1, .5, .75), fxBlue);
+    fxC = mix(fxC, vec3(.03, .05, .2), fxHeart);
+    fxC = mix(fxC, vec3(.85, .82, .7), fxShaft);
+    diffuseColor.rgb = fxC;`,
+  normal: 'normal = fxBump(normal, fxBarb * .0008 * (1. - fxGold));',
+  surface: 'roughnessFactor = .4;',
+  emissive: `
+    float fxFr = fxFresnel(normal, 1.3);
+    vec3 fxIr = .5 + .5 * cos(6.2832 * (fxFr * .8 + fxR * .4 + vec3(0., .33, .67)));
+    totalEmissiveRadiance = mix(diffuseColor.rgb, fxIr, .35) * (.18 + .5 * fxFr);`,
+};
+B.peacock = {
+  color: `diffuseColor.rgb *= .8 + .25 * fxN2(vec2(fxBodyUV().x * 4. + vSeed * 9., fxBodyUV().y * 60.));`,
+  surface: 'roughnessFactor = .4;',
+};
+S.clockwork = {
+  // 손목시계 무브먼트. 칸마다 둥근 물결 무늬(페를라주)로 다듬은 판 위에 놋쇠 큰 바퀴와 강철 작은 바퀴가 맞물려
+  // 서로 반대로 째깍째깍 돌고, 바퀴살 사이로 판이 비친다. 축엔 붉은 루비 베어링, 모서리엔 파랗게 달군 나사.
+  // 판 색이 곧 면 색이다
+  head: `
+    float fxSegC(vec2 p, vec2 a, vec2 b) { vec2 pa = p - a, ba = b - a; return length(pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0., 1.)); }
+    // 톱니바퀴: x 바퀴 몸, y 바퀴살 사이 구멍, z 루비 축
+    vec3 fxGear(vec2 q, vec2 c, float R, float n, float rot) {
+      vec2 d = q - c;
+      float r = length(d);
+      float a = atan(d.y, d.x) + rot;
+      float t = fract(a * n / 6.2832);
+      float tooth = smoothstep(.1, .25, t) * (1. - smoothstep(.5, .65, t));
+      float Re = R + R * .1 * tooth;
+      float body = 1. - smoothstep(Re - .01, Re, r);
+      float win = step(.34 * R, r) * step(r, .74 * R) * step(.16, fract(a * 5. / 6.2832)) * step(fract(a * 5. / 6.2832), .84);
+      float jewel = 1. - smoothstep(.08 * R, .1 * R, r);
+      return vec3(body, win * body, jewel * body);
+    }`,
+  color: `
+    vec2 fxQc = fxQ();
+    float fxT = uTime * .35 + vSeed * 6.;
+    vec2 fxC1 = vec2(-.22, -.18);
+    vec2 fxC2 = fxC1 + .82 * vec2(cos(.85), sin(.85));
+    vec3 fxG1 = fxGear(fxQc, fxC1, .54, 24., fxT);
+    vec3 fxG2 = fxGear(fxQc, fxC2, .27, 12., -fxT * 2. + .13);
+    vec2 fxPg = fract(fxQc * 4.5) - .5;
+    float fxPerl = .9 + .12 * sin(length(fxPg) * 60.);
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxC = fxBase * fxPerl;
+    vec2 fxSc = fxQc - vec2(.68, -.68);
+    float fxScrew = 1. - smoothstep(.07, .085, length(fxSc));
+    float fxSlot = fxScrew * (1. - smoothstep(.01, .02, abs(dot(fxSc, normalize(vec2(1., .4 + vSeed))))));
+    vec3 fxBrass = vec3(.82, .66, .3) * (.85 + .2 * sin(length(fxQc - fxC1) * 90.));
+    vec3 fxSteel = vec3(.78, .8, .84) * (.85 + .2 * sin(length(fxQc - fxC2) * 140.));
+    float fxG1m = fxG1.x * (1. - fxG1.y);
+    float fxG2m = fxG2.x * (1. - fxG2.y);
+    fxC = mix(fxC, fxC * .55, max(fxG1.y, fxG2.y));
+    fxC = mix(fxC, fxBrass, fxG1m);
+    fxC = mix(fxC, fxSteel, fxG2m);
+    float fxRuby = max(fxG1.z, fxG2.z);
+    fxC = mix(fxC, vec3(.7, .05, .1), fxRuby);
+    fxC = mix(fxC, mix(vec3(.15, .2, .55), vec3(.05), fxSlot), fxScrew);
+    float fxMetalM = max(max(fxG1m, fxG2m), fxScrew);
+    diffuseColor.rgb = fxC;`,
+  normal: 'normal = fxBump(normal, fxG1m * .003 + fxG2m * .004 + fxScrew * .003 - fxSlot * .002 + fxPerl * .0005);',
+  surface: 'roughnessFactor = mix(.32, .18, fxMetalM); metalnessFactor = mix(.55, 1., fxMetalM);',
+  emissive: 'totalEmissiveRadiance = vec3(1., .2, .3) * fxRuby * .4 + diffuseColor.rgb * .06;',
+};
+B.clockwork = {
+  surface: 'roughnessFactor = .25; metalnessFactor = 1.;',
+};
+
+S.carbon = {
+  // 탄소섬유. 다 맞추면 면 하나가 한 장의 2/2 능직 판이다. 섬유 다발이 둘씩 엇갈려 짜였고 그 위를 두꺼운 투명 코팅이 덮었다.
+  // 다발마다 섬유 결이 있어 빛과 결이 맞는 다발만 번쩍이므로, 큐브를 돌리면 체크 무늬 광택이 서로 자리를 바꾼다.
+  // 면마다 섬유 색이 다르다(검정, 빨강, 파랑, 노란 아라미드, 초록, 은색)
+  color: `
+    vec2 fxF = fxFace();
+    vec2 fxT = fxF * 7.;
+    vec2 fxCell = floor(fxT);
+    vec2 fxFr = fract(fxT);
+    float fxWarpTop = step(mod(fxCell.x + fxCell.y, 4.), 1.5);
+    float fxAcross = fxWarpTop > .5 ? fxFr.x : fxFr.y;
+    float fxAlong = fxWarpTop > .5 ? fxT.y : fxT.x;
+    float fxTow = sqrt(max(0., 1. - pow(fxAcross * 2. - 1., 2.)));
+    float fxGap = 1. - smoothstep(0., .08, min(fxAcross, 1. - fxAcross));
+    float fxFib = fxN2(vec2(fxAcross * 60. + fxCell.x * 7., fxAlong * 2.));
+    vec2 fxFiberDir = fxWarpTop > .5 ? vec2(0., 1.) : vec2(1., 0.);
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxC = fxBase * (.55 + .35 * fxTow) * (.9 + .15 * fxFib) * (1. - fxGap * .5);
+    diffuseColor.rgb = fxC;`,
+  normal: 'normal = fxBump(normal, fxTow * .0008 + fxFib * .0003);',
+  surface: 'roughnessFactor = .06;',
+  emissive: `
+    vec2 fxUp = -fxDown();
+    float fxSheen = pow(1. - abs(dot(fxFiberDir, fxUp)), 3.) * fxTow;
+    totalEmissiveRadiance = mix(fxBase, vec3(1.), .25) * fxSheen * .45 + fxBase * .03;`,
+};
+B.carbon = {
+  surface: 'roughnessFactor = .2; metalnessFactor = .4;',
+};
+
+S.calavera = {
+  // 죽은 자의 날의 설탕 해골. 칸마다 꽃으로 꾸민 하얀 해골이 하나씩 웃고 있다. 눈두덩엔 꽃잎 테, 이마엔 꽃,
+  // 광대를 따라 점박이 장식, 꿰맨 듯한 이, 거꾸로 된 하트 코. 바탕은 금잔화 잎이 흩날린 면 색 종이
+  head: `
+    float fxSdE(vec2 p, vec2 c, vec2 r) { return (length((p - c) / r) - 1.) * min(r.x, r.y); }
+    float fxSdB(vec2 p, vec2 c, vec2 b, float rr) { vec2 q = abs(p - c) - b + rr; return length(max(q, 0.)) + min(max(q.x, q.y), 0.) - rr; }`,
+  color: `
+    vec2 fxQs = fxQ() * 1.05;
+    vec3 fxBase = diffuseColor.rgb;
+    float fxHead = min(fxSdE(fxQs, vec2(0., .2), vec2(.56, .52)), fxSdB(fxQs, vec2(0., -.3), vec2(.34, .24), .14));
+    float fxSkull = 1. - smoothstep(-.005, .005, fxHead);
+    float fxLine = (1. - smoothstep(.0, .025, abs(fxHead))) ;
+    vec2 fxEa = vec2(abs(fxQs.x), fxQs.y) - vec2(.22, .03);
+    float fxEr = length(fxEa);
+    float fxEye = 1. - smoothstep(.14, .155, fxEr);
+    float fxPetal = (1. - smoothstep(.15, .16, fxEr - .07 * (.5 + .5 * cos(atan(fxEa.y, fxEa.x) * 8.)))) * (1. - fxEye);
+    float fxPupil = 1. - smoothstep(.035, .045, length(fxEa - vec2(.0, .01)));
+    vec2 fxNp = fxQs - vec2(0., -.17);
+    float fxNose = 1. - smoothstep(0., .01, max(abs(fxNp.x) * 1.4 - fxNp.y * .9 - .05, fxNp.y - .07));
+    float fxTeeth = 1. - smoothstep(-.004, .004, fxSdB(fxQs, vec2(0., -.39), vec2(.25, .07), .03));
+    float fxTGap = fxTeeth * max(1. - smoothstep(.006, .012, abs(fract(fxQs.x / .07 + .5) - .5) * .07), 1. - smoothstep(.004, .01, abs(fxQs.y + .39)));
+    vec2 fxFp = fxQs - vec2(0., .44);
+    float fxFr = length(fxFp);
+    float fxFlower = 1. - smoothstep(.09, .1, fxFr - .04 * cos(atan(fxFp.y, fxFp.x) * 5.));
+    float fxFcen = 1. - smoothstep(.03, .04, fxFr);
+    float fxDots = 0.;
+    for (int i = 0; i < 5; i++) {
+      float a = -2.4 + float(i) * .22;
+      vec2 dc = vec2(.22, .03) + .26 * vec2(cos(a), sin(a));
+      fxDots = max(fxDots, 1. - smoothstep(.022, .03, length(vec2(abs(fxQs.x), fxQs.y) - dc)));
+    }
+    vec3 fxAcc = mix(fxBase.gbr, vec3(1., .8, .2), .4);
+    vec3 fxPaper = fxBase * (.92 + .1 * fxN2(vLocal.xy * 60.));
+    vec3 fxMg = fxVoronoi(fxQs * 7. + vSeed * 5.);
+    fxPaper = mix(fxPaper, vec3(1., .65, .1), (1. - smoothstep(.06, .1, fxMg.x)) * step(.8, fxMg.z) * (1. - fxSkull));
+    vec3 fxC = mix(fxPaper, vec3(.97, .95, .9) * (.92 + .08 * fxN2(fxQs * 20.)), fxSkull);
+    fxC = mix(fxC, fxBase, fxPetal * fxSkull);
+    fxC = mix(fxC, vec3(.08, .06, .1), fxEye * fxSkull);
+    fxC = mix(fxC, fxAcc, fxPupil * fxSkull);
+    fxC = mix(fxC, vec3(.08, .06, .1), fxNose * fxSkull);
+    fxC = mix(fxC, vec3(.25, .2, .25), fxTGap * fxSkull);
+    fxC = mix(fxC, fxBase, fxFlower * fxSkull);
+    fxC = mix(fxC, fxAcc, fxFcen * fxSkull);
+    fxC = mix(fxC, fxAcc, fxDots * fxSkull);
+    fxC = mix(fxC, vec3(.1, .08, .12), fxLine);
+    diffuseColor.rgb = fxC;`,
+  normal: 'normal = fxBump(normal, fxSkull * .003 - fxEye * .002 + fxPetal * .001);',
+  surface: 'roughnessFactor = mix(.8, .45, fxSkull);',
+  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * .08;',
+};
+B.calavera = {
+  color: `diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 30. + vSeed);`,
+  surface: 'roughnessFactor = .7;',
+};
+
+S.cobweb = {
+  // 버려진 저택 구석. 칸마다 달빛이 스민 어둠에 거미줄이 걸렸다. 바큇살 같은 세로줄과 그 사이에 늘어져 처진 가로줄,
+  // 줄마다 이슬이 맺혀 반짝이고, 줄은 바람에 살짝 흔들린다. 몇 칸엔 가운데 거미가 웅크렸다. 스민 달빛이 곧 면 색
+  color: `
+    vec2 fxQw = fxQ();
+    vec2 fxC0 = (vec2(fxH1(vSeed * 3.), fxH1(vSeed * 7.)) - .5) * .5 + vec2(sin(uTime * .6 + vSeed * 9.), cos(uTime * .5)) * .015;
+    vec2 fxD = fxQw - fxC0;
+    float fxR = length(fxD);
+    float fxA = atan(fxD.y, fxD.x) + vSeed * 6.;
+    float fxN = 14.;
+    float fxK = fxA * fxN / 6.2832;
+    float fxSeg = fract(fxK);
+    float fxRad = (1. - smoothstep(.003, .008, fxR * sin(abs(fxSeg - .5) * 6.2832 / fxN))) * step(.04, fxR);
+    float fxSag = .35 * (1. - cos((fxSeg - .5) * 3.1416)) ;
+    float fxRing = (1. - smoothstep(.003, .008, abs(fract(fxR / .075 + fxSag * .3) - .5) * .075)) * step(.1, fxR) * step(fxR, .95);
+    float fxWeb = max(fxRad, fxRing * .85);
+    float fxDew = fxWeb * step(.82, fxH2(floor(vec2(fxK * 3., fxR / .025)) + vSeed)) ;
+    float fxSpider = step(.7, fxH1(vSeed * 13.));
+    float fxBody = (1. - smoothstep(.045, .055, length(fxD - vec2(0., .03)))) + (1. - smoothstep(.065, .075, length((fxD + vec2(0., .06)) / vec2(1., 1.2))));
+    float fxLegs = 0.;
+    for (int i = 0; i < 4; i++) {
+      float a = .5 + float(i) * .35;
+      vec2 knee = vec2(.12, .04 + (float(i) - 1.5) * .06);
+      vec2 tip = vec2(.2, -.06 + (float(i) - 1.5) * .09);
+      vec2 p = vec2(abs(fxD.x), fxD.y);
+      vec2 pa = p - vec2(.03, 0.), ba = knee - vec2(.03, 0.);
+      float d1 = length(pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0., 1.));
+      vec2 pb = p - knee, bb = tip - knee;
+      float d2 = length(pb - bb * clamp(dot(pb, bb) / dot(bb, bb), 0., 1.));
+      fxLegs = max(fxLegs, 1. - smoothstep(.006, .012, min(d1, d2)));
+    }
+    float fxSp = clamp(fxBody + fxLegs, 0., 1.) * fxSpider;
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxBg = fxBase * (.38 * (1. - .45 * smoothstep(.0, 1.4, length(fxQw - vec2(-.6, .6))))) + vec3(.02);
+    fxBg *= .85 + .2 * fxN2(vLocal.xy * 30.);
+    diffuseColor.rgb = mix(mix(fxBg, vec3(.85, .88, .92), fxWeb * .6), vec3(.02), fxSp);`,
+  surface: 'roughnessFactor = .7;',
+  emissive: `
+    totalEmissiveRadiance = mix(fxBase, vec3(1.), .6) * fxWeb * .45 * (1. - fxSp) + vec3(1.) * fxDew * fxGlint(fxQw * 30. + vSeed, .6, 1.5) * 1.2 + fxBase * .05;`,
+};
+B.cobweb = {
+  color: `diffuseColor.rgb *= .7 + .4 * fxN3(vLocal * 20. + vSeed);`,
+  surface: 'roughnessFactor = .85;',
+};
+
+S.slime = {
+  // 독성 슬라임 통. 칸마다 형광으로 빛나는 끈적한 슬라임이 실제로 울퉁불퉁 출렁이고, 속에서 거품이 부풀었다가 톡 터진다.
+  // 번들거리는 겉면에 빛이 맺히고, 깊은 곳은 짙게 가라앉았으며, 아래쪽으로 방울이 늘어져 맺힌다. 슬라임 빛이 곧 면 색
+  head: `
+    float fxSlimeH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float wob = fxN2(q * 2. + vec2(uTime * .25, -uTime * .2) + seed * 5.);
+      float lumps = fxN2(q * 4.5 + seed * 3. + uTime * .1);
+      return smoothstep(0., .06, fxEdgeAt(p)) * (.008 + .016 * wob + .008 * lumps);
+    }`,
+  height: 'fxSlimeH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec2 fxQl = fxQ();
+    float fxDeep = fxN2(fxQl * 2. + vec2(uTime * .25, -uTime * .2) + vSeed * 5.);
+    vec3 fxBv = fxVoronoi(fxQl * 3.5 + vSeed * 7.);
+    float fxCyc = fract(uTime * .18 + fxBv.z * 3.);
+    float fxBr = .05 + fxCyc * .28;
+    float fxBub = step(.55, fxBv.z) * (1. - smoothstep(fxBr - .02, fxBr, fxBv.x)) * (1. - smoothstep(.92, 1., fxCyc));
+    float fxBubRim = fxBub * smoothstep(fxBr - .05, fxBr - .01, fxBv.x);
+    vec2 fxDn = fxDown();
+    float fxLow = dot(fxQl, fxDn);
+    float fxDrip = (1. - smoothstep(.0, .05, abs(fract(dot(fxQl, vec2(-fxDn.y, fxDn.x)) * 2.5 + vSeed) - .5) * .4 - .02 * (fxLow - .6) * 10.)) * smoothstep(.6, .9, fxLow);
+    float fxSpeck = step(.97, fxH2(floor(fxQl * 40. + vec2(0., uTime * 2.))));
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxC = mix(fxBase * .35, fxBase * 1.1, fxDeep);
+    fxC = mix(fxC, mix(fxBase, vec3(1.), .5), fxBubRim);
+    diffuseColor.rgb = fxC * .5;`,
+  normal: 'normal = fxBump(normal, fxBub * .003 + fxSpeck * .0005);',
+  surface: 'roughnessFactor = .04;',
+  emissive: `
+    float fxFr = fxFresnel(normal, 2.);
+    totalEmissiveRadiance = fxC * (.6 + .5 * fxDeep) + mix(fxBase, vec3(1.), .5) * (fxFr * .5 + fxBubRim * .8 + fxDrip * .4) + vec3(1.) * fxSpeck * .3;`,
+};
+B.slime = {
+  // 녹슨 드럼통
+  color: `diffuseColor.rgb *= .7 + .4 * fxN3(vLocal * 30. + vSeed);`,
+  surface: 'roughnessFactor = .6; metalnessFactor = .5;',
+};
+
+S.magic = {
+  // 지하 제단의 마법진. 칸마다 검은 돌바닥에 빛나는 원이 새겨졌다. 겹 원 사이 띠엔 알 수 없는 문자가 빙 둘러 있고,
+  // 안쪽엔 두 삼각형이 엇갈린 육망성, 한가운데 눈 문양. 바깥 띠와 안쪽 별은 서로 반대로 천천히 돌며, 빛이 숨 쉬듯 일렁인다.
+  // 새겨진 빛이 곧 면 색
+  head: `
+    float fxSegM(vec2 p, vec2 a, vec2 b) { vec2 pa = p - a, ba = b - a; return length(pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0., 1.)); }`,
+  color: `
+    vec2 fxQm = fxQ();
+    float fxR = length(fxQm);
+    float fxT = uTime;
+    float fxA = atan(fxQm.y, fxQm.x);
+    float fxD = 9.;
+    fxD = min(fxD, abs(fxR - .86));
+    fxD = min(fxD, abs(fxR - .7));
+    fxD = min(fxD, abs(fxR - .3));
+    float fxAr = fxA + fxT * .15;
+    float fxCellA = fxAr * 24. / 6.2832;
+    float fxCi = floor(fxCellA);
+    vec2 fxG = vec2(fract(fxCellA), (fxR - .72) / .12);
+    float fxBits = fxH1(fxCi * 3.7 + vSeed);
+    float fxRune = 9.;
+    if (fxG.y > 0. && fxG.y < 1.) {
+      vec2 g = fxG;
+      if (fract(fxBits * 2.) > .5) fxRune = min(fxRune, abs(g.x - .5) * .1);
+      if (fract(fxBits * 4.) > .5) fxRune = min(fxRune, abs(g.y - .35) * .1);
+      if (fract(fxBits * 8.) > .5) fxRune = min(fxRune, abs(g.x - g.y) * .07);
+      if (fract(fxBits * 16.) > .5) fxRune = min(fxRune, abs(g.x + g.y - 1.) * .07);
+      if (fract(fxBits * 32.) > .5) fxRune = min(fxRune, abs(length(g - vec2(.5, .65)) - .2) * .1);
+      fxRune = max(fxRune, -min(min(g.x - .15, .85 - g.x), min(g.y - .12, .88 - g.y)) * .2);
+    }
+    fxD = min(fxD, fxRune);
+    vec2 fxSq = fxRot(-fxT * .22 + vSeed * 3.) * fxQm;
+    for (int i = 0; i < 6; i++) {
+      float a0 = float(i) * 1.0472;
+      vec2 p0 = .62 * vec2(cos(a0), sin(a0));
+      vec2 p2 = .62 * vec2(cos(a0 + 2.0944), sin(a0 + 2.0944));
+      fxD = min(fxD, fxSegM(fxSq, p0, p2));
+    }
+    vec2 fxEyeP = fxQm / vec2(.2, .1);
+    fxD = min(fxD, abs(length(fxEyeP) - 1.) * .1);
+    fxD = min(fxD, length(fxQm) - .035);
+    float fxLine = 1. - smoothstep(.006, .016, fxD);
+    float fxGlow = exp(-max(fxD, 0.) * 28.);
+    float fxPulse = .8 + .2 * sin(fxT * 1.6 + vSeed * 6.);
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxStone = vec3(.06, .055, .06) * (.7 + .6 * fxF2(vLocal.xy * 14. + vSeed * 9.));
+    vec3 fxCrack = fxVoronoi(vLocal.xy * 6. + vSeed * 2.);
+    fxStone *= 1. - (1. - smoothstep(0., .03, fxCrack.y)) * .5;
+    diffuseColor.rgb = fxStone + fxBase * fxGlow * .08;`,
+  normal: 'normal = fxBump(normal, -fxLine * .0015 + fxF2(vLocal.xy * 14. + vSeed * 9.) * .002);',
+  surface: 'roughnessFactor = .8;',
+  emissive: 'totalEmissiveRadiance = mix(fxBase, vec3(1.), .25) * (fxLine * 1.6 + fxGlow * .45) * fxPulse;',
+};
+B.magic = {
+  color: `diffuseColor.rgb *= .7 + .4 * fxF3(vLocal * 10. + vSeed);`,
+  surface: 'roughnessFactor = .85;',
+};
+S.piano = {
+  // 피아노 건반. 다 맞추면 면 하나가 건반 한 벌이다. 흰 건반은 면 색으로 칠한 반질한 래커, 그 위로 검은 건반이 실제로 솟았다.
+  // 여기저기서 건반이 하나씩 눌려 내려가며 그 자리에 불이 들어온다
+  head: `
+    // 건반 자리: x 건반 번호(흰 건반은 정수, 검은 건반은 .5), y 검은 건반 안, z 흰 건반 사이 틈
+    vec3 fxKeys(vec2 F) {
+      float u = (F.x + 1.) * 5.25;
+      float wi = floor(u);
+      float wf = fract(u);
+      float gap = 1. - smoothstep(0., .05, min(wf, 1. - wf));
+      float k = mod(wi, 7.);
+      float kl = mod(wi - 1., 7.);
+      float hasR = (k == 2. || k == 6.) ? 0. : 1.;
+      float hasL = (kl == 2. || kl == 6.) ? 0. : 1.;
+      float up = step(-.12, F.y);
+      float onR = hasR * step(.7, wf) * up;
+      float onL = hasL * step(wf, .3) * up;
+      float id = onR > .5 ? wi + .5 : onL > .5 ? wi - .5 : wi;
+      return vec3(id, max(onR, onL), gap);
+    }
+    float fxPressed(float id) { return step(.86, fract(uTime * .45 + fxH1(id * 3.17) * 7.)); }
+    float fxPianoH(vec2 p, float seed) {
+      vec3 k = fxKeys(aHome.xy + p * aHome.z);
+      float press = fxPressed(k.x);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.012 + k.y * .022 - k.z * .006 - press * .006);
+    }`,
+  height: 'fxPianoH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec2 fxF = fxFace();
+    vec3 fxK = fxKeys(fxF);
+    float fxPress = fxPressed(fxK.x);
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxWhite = fxBase * (.92 + .08 * smoothstep(-1., 1., fxF.y)) * (1. - fxPress * .12);
+    vec3 fxBlack = vec3(.04, .035, .04) * (1. + .5 * smoothstep(.3, 1., fxF.y));
+    vec3 fxC = mix(fxWhite, fxBlack, fxK.y);
+    fxC = mix(fxC, vec3(.1), fxK.z * (1. - fxK.y) * .8);
+    diffuseColor.rgb = fxC;`,
+  surface: 'roughnessFactor = .14;',
+  emissive: 'totalEmissiveRadiance = mix(fxBase, vec3(1.), .4) * fxPress * mix(.5, .9, fxK.y) + diffuseColor.rgb * .05;',
+};
+B.piano = {
+  // 검은 피아노 칠
+  surface: 'roughnessFactor = .1;',
+};
+
+S.speaker = {
+  // 오디오 스피커. 칸마다 우퍼 하나가 쿵쿵 박자에 맞춰 실제로 앞뒤로 들썩인다. 고운 동심원 결의 콘(면 색),
+  // 그 둘레의 고무 테, 가운데 볼록한 먼지 덮개, 검은 철판 틀과 모서리의 나사
+  head: `
+    float fxSpkH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float r = length(q);
+      float beat = fxBeat() * (.7 + .3 * fxH1(seed * 3.)) + uCharge * .4;
+      float cone = (1. - smoothstep(.7, .72, r)) * (-(.72 - r) * .045 + beat * .012);
+      float roll = step(.7, r) * step(r, .86) * .012 * sin((r - .7) / .16 * 3.1416);
+      float cap = (1. - smoothstep(.2, .22, r)) * .014 * sqrt(max(0., 1. - pow(r / .22, 2.)));
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.02 + cone + roll + cap);
+    }`,
+  height: 'fxSpkH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec2 fxQs = fxQ();
+    float fxR = length(fxQs);
+    float fxCone = 1. - smoothstep(.7, .72, fxR);
+    float fxRoll = step(.71, fxR) * (1. - step(.87, fxR));
+    float fxCap = 1. - smoothstep(.2, .22, fxR);
+    vec2 fxSc = abs(fxQs) - vec2(.8);
+    float fxScrew = 1. - smoothstep(.05, .065, length(fxSc));
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxC = vec3(.05, .05, .06) * (.8 + .4 * fxN2(vLocal.xy * 60.));
+    fxC = mix(fxC, vec3(.07, .07, .08) * (.8 + .4 * sin((fxR - .71) / .16 * 3.1416)), fxRoll);
+    fxC = mix(fxC, fxBase * (.75 + .2 * sin(fxR * 120.)) * (.8 + .3 * fxR), fxCone);
+    fxC = mix(fxC, fxBase * .6, fxCap);
+    fxC = mix(fxC, vec3(.55), fxScrew);
+    diffuseColor.rgb = fxC;`,
+  surface: 'roughnessFactor = mix(mix(.5, .35, fxCone), .15, fxCap); metalnessFactor = fxScrew;',
+  emissive: 'totalEmissiveRadiance = fxBase * fxCone * fxBeat() * .25 + diffuseColor.rgb * .04;',
+};
+B.speaker = {
+  surface: 'roughnessFactor = .7;',
+};
+
+S.cassette = {
+  // 카세트테이프. 칸마다 면 색 플라스틱 테이프가 하나씩 있다. 크림색 이름표엔 색 띠와 손글씨 줄, 가운데 창으로는
+  // 테이프가 감긴 릴 두 개가 돌아가고(한쪽은 많이, 한쪽은 적게 감겼다), 아래엔 헤드 구멍, 모서리엔 나사
+  color: `
+    vec2 fxQc = fxQ();
+    vec3 fxBase = diffuseColor.rgb;
+    float fxLabel = step(fxBox(fxQc - vec2(0., .22), vec2(.82, .46), .06), 0.);
+    float fxStripe = fxLabel * step(abs(fxQc.y - .5), .08);
+    float fxHand = fxLabel * (1. - smoothstep(.006, .016, abs(fxQc.y - .58 + (fxN2(vec2(fxQc.x * 14., vSeed)) - .5) * .05))) * step(abs(fxQc.x + .1), .55) * step(.3, fract(fxQc.x * 5. + vSeed));
+    float fxWin = step(fxBox(fxQc - vec2(0., .14), vec2(.46, .16), .06), 0.);
+    vec2 fxLc = fxQc - vec2(-.27, .14);
+    vec2 fxRc = fxQc - vec2(.27, .14);
+    float fxAmt = .5 + .5 * sin(uTime * .05 + vSeed * 6.);
+    float fxPackL = 1. - smoothstep(.12 + .1 * fxAmt, .13 + .1 * fxAmt, length(fxLc));
+    float fxPackR = 1. - smoothstep(.12 + .1 * (1. - fxAmt), .13 + .1 * (1. - fxAmt), length(fxRc));
+    float fxSpin = uTime * 2.;
+    float fxHub = 0.;
+    for (int i = 0; i < 2; i++) {
+      vec2 d = i == 0 ? fxLc : fxRc;
+      float r = length(d);
+      float a = atan(d.y, d.x) - fxSpin;
+      float teeth = step(.5, fract(a * 6. / 6.2832));
+      fxHub = max(fxHub, (1. - smoothstep(.075, .085, r)) * (1. - (1. - smoothstep(.04, .05, r)) * teeth));
+    }
+    float fxBottom = step(fxQc.y, -.42) * step(abs(fxQc.x), .62 - (-.42 - fxQc.y) * .5);
+    vec2 fxHoleP = vec2(abs(fxQc.x), fxQc.y) - vec2(.32, -.62);
+    float fxHole = fxBottom * (1. - smoothstep(.05, .06, length(fxHoleP)));
+    float fxScrew = 0.;
+    for (int i = 0; i < 4; i++) {
+      vec2 sp = vec2(i < 2 ? -.86 : .86, mod(float(i), 2.) < .5 ? .82 : -.82);
+      fxScrew = max(fxScrew, 1. - smoothstep(.035, .045, length(fxQc - sp)));
+    }
+    vec3 fxC = fxBase * (.88 + .12 * fxN2(vLocal.xy * 40.));
+    fxC = mix(fxC, vec3(.95, .92, .84), fxLabel);
+    fxC = mix(fxC, fxBase * 1.1, fxStripe);
+    fxC = mix(fxC, vec3(.15, .15, .3), fxHand);
+    fxC = mix(fxC, vec3(.08, .08, .1), fxWin);
+    fxC = mix(fxC, vec3(.28, .16, .1), max(fxPackL, fxPackR) * fxWin);
+    fxC = mix(fxC, vec3(.92), fxHub * fxWin);
+    fxC = mix(fxC, fxBase * .7, fxBottom * .5);
+    fxC = mix(fxC, vec3(.05), fxHole);
+    fxC = mix(fxC, vec3(.65), fxScrew);
+    diffuseColor.rgb = fxC;`,
+  normal: 'normal = fxBump(normal, -fxWin * .002 - fxHole * .002 + fxScrew * .001 + fxBottom * .001);',
+  surface: 'roughnessFactor = mix(mix(.3, .7, fxLabel), .08, fxWin);',
+  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * .05 + vec3(1.) * fxWin * fxFresnel(normal, 2.) * .15;',
+};
+B.cassette = {
+  surface: 'roughnessFactor = .35;',
+};
+
+S.guitar = {
+  // 통기타. 다 맞추면 면 하나가 기타 몸통 앞판이다. 가운데 둥근 울림구멍과 자개 로제트, 그 아래 거북등 픽가드,
+  // 면을 세로로 가로지르는 여섯 줄(굵기가 다르다)과 그 그림자, 아래쪽 브리지와 줄받침. 돌리면 줄이 떨린다.
+  // 몸통 칠이 곧 면 색(선버스트, 검정, 하양, 체리, 파랑, 원목)
+  color: `
+    vec2 fxF = fxFace();
+    vec3 fxBase = diffuseColor.rgb;
+    float fxR = length(fxF - vec2(0., .1));
+    float fxHole = 1. - smoothstep(.3, .31, fxR);
+    float fxRos = step(.33, fxR) * (1. - step(.42, fxR));
+    float fxRosPat = step(.5, fract(atan(fxF.y - .1, fxF.x) * 40. / 6.2832 + step(.375, fxR) * .5));
+    vec2 fxPg = (fxF - vec2(.32, -.18)) / vec2(.22, .3);
+    float fxGuard = (1. - smoothstep(.95, 1., length(fxPg))) * step(.42, fxR);
+    float fxGrain = fxN2(vec2(fxF.x * 30., fxF.y * 2.)) * .5 + fxN2(vec2(fxF.x * 90., fxF.y * 4.)) * .5;
+    float fxBurst = uFace < .5 ? smoothstep(.4, 1.3, length(fxF)) : 0.;
+    vec3 fxWood = fxBase * (.88 + .16 * fxGrain) * (1. - fxBurst * .7);
+    float fxBridge = step(abs(fxF.y + .72), .06) * step(abs(fxF.x), .4);
+    float fxStr = 0.;
+    float fxShadow = 0.;
+    for (int i = 0; i < 6; i++) {
+      float fi = float(i);
+      float x0 = -.2 + fi * .08;
+      float amp = (.004 + uCharge * .03) * sin(uTime * (60. + fi * 7.)) * cos((fxF.y + .72) / 1.72 * 1.5708);
+      float w = .004 + (5. - fi) * .0012;
+      fxStr = max(fxStr, 1. - smoothstep(w, w + .004, abs(fxF.x - x0 - amp)));
+      fxShadow = max(fxShadow, 1. - smoothstep(w, w + .02, abs(fxF.x - x0 - .03)));
+    }
+    fxStr *= step(-.78, fxF.y);
+    fxShadow *= step(-.78, fxF.y) * (1. - fxHole);
+    vec3 fxC = fxWood * (1. - fxShadow * .25);
+    fxC = mix(fxC, vec3(.42, .2, .08) * (.7 + .5 * fxN2(fxF * 18.)), fxGuard);
+    fxC = mix(fxC, mix(vec3(.15, .12, .1), vec3(.9, .85, .75), fxRosPat), fxRos);
+    fxC = mix(fxC, vec3(.03, .02, .02), fxHole);
+    fxC = mix(fxC, vec3(.12, .08, .05), fxBridge);
+    fxC = mix(fxC, vec3(.82, .78, .7), fxStr);
+    diffuseColor.rgb = fxC;`,
+  normal: 'normal = fxBump(normal, fxStr * .002 + fxBridge * .003 + fxGrain * .0004);',
+  surface: 'roughnessFactor = mix(.12, .3, fxStr); metalnessFactor = fxStr;',
+  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * .05 + vec3(.9, .85, .7) * fxRos * fxRosPat * fxFresnel(normal, 1.5) * .3;',
+};
+B.guitar = {
+  color: `diffuseColor.rgb *= .8 + .3 * fxN2(vec2(fxBodyUV().x * 4. + vSeed * 9., fxBodyUV().y * 60.));`,
+  surface: 'roughnessFactor = .2;',
+};
+
+S.drum = {
+  // 드럼 세트. 칸마다 북 하나를 위에서 본다. 면 색으로 물들인 북 가죽이 박자에 맞춰 둥둥 울리며 물결이 퍼지고,
+  // 가운데엔 두꺼운 점 패치, 크롬 테와 여덟 개의 조임 나사, 테 바깥엔 반짝이 랩을 두른 몸통
+  head: `
+    float fxDrumH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float r = length(q);
+      float hit = fxBeat() * (.6 + .4 * fxH1(seed * 5.)) + uCharge * .5;
+      float head = (1. - smoothstep(.76, .78, r)) * (hit * .006 * sin(r * 30. - uTime * 20.) * (1. - r));
+      float hoop = step(.77, r) * (1. - step(.86, r)) * .014;
+      float a = atan(q.y, q.x);
+      float lug = step(.86, r) * step(r, .97) * step(abs(fract(a * 8. / 6.2832) - .5), .06) * .016;
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.012 + head + hoop + lug);
+    }`,
+  height: 'fxDrumH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec2 fxQd = fxQ();
+    float fxR = length(fxQd);
+    float fxA = atan(fxQd.y, fxQd.x);
+    float fxHead = 1. - smoothstep(.76, .78, fxR);
+    float fxHoop = step(.77, fxR) * (1. - step(.86, fxR));
+    float fxLug = step(.86, fxR) * step(fxR, .97) * step(abs(fract(fxA * 8. / 6.2832) - .5), .06);
+    float fxDot = 1. - smoothstep(.18, .2, fxR);
+    vec3 fxBase = diffuseColor.rgb;
+    float fxCoat = fxN2(vLocal.xy * 150.) * .5 + fxN2(vLocal.xy * 40.) * .5;
+    vec3 fxSkin = mix(fxBase, vec3(1.), .38) * (.9 + .1 * fxCoat);
+    vec3 fxWrap = fxBase * .8 * (.8 + .4 * fxN2(vLocal.xy * 90.));
+    vec3 fxC = fxWrap;
+    fxC = mix(fxC, vec3(.78, .8, .84) * (.8 + .3 * sin(fxA * 3.)), max(fxHoop, fxLug));
+    fxC = mix(fxC, fxSkin, fxHead);
+    fxC = mix(fxC, fxSkin * .82, fxDot);
+    float fxChrome = max(fxHoop, fxLug);
+    float fxSpark = (1. - fxHead) * (1. - fxChrome);
+    diffuseColor.rgb = fxC;`,
+  normal: 'normal = fxBump(normal, fxCoat * .0008 * fxHead);',
+  surface: 'roughnessFactor = mix(mix(.4, .55, fxHead), .12, fxChrome); metalnessFactor = fxChrome;',
+  emissive: 'totalEmissiveRadiance = vec3(1.) * fxGlint(vLocal.xy * 60. + vSeed, .25, 2.) * fxSpark * .8 + diffuseColor.rgb * .05;',
+};
+B.drum = {
+  surface: 'roughnessFactor = .3; metalnessFactor = .5;',
+};
+
+S.arabesque = {
+  // 모로코 젤리주 타일. 다 맞추면 면 하나가 한 벽이다. 여덟 꼭지 별 타일(면 색)과 그 사이 십자 타일(하양)이 맞물리고,
+  // 별 둘레를 흰 띠가 감싸며 그 바깥은 짙은 줄눈. 손으로 깎아 구운 조각이라 조각마다 색과 면이 조금씩 다르고 유약에 잔금이 갔다
+  color: `
+    vec2 fxF = fxFace();
+    vec2 fxT = fract(fxF * 1.5 + .5) - .5;
+    vec2 fxR45 = fxRot(.785398) * fxT;
+    float fxSq1 = max(abs(fxT.x), abs(fxT.y));
+    float fxSq2 = max(abs(fxR45.x), abs(fxR45.y));
+    float fxStarD = min(fxSq1, fxSq2) - .3;
+    float fxStar = 1. - smoothstep(-.004, .004, fxStarD);
+    float fxStrap = 1. - smoothstep(.012, .02, abs(fxStarD - .045));
+    float fxGrout = 1. - smoothstep(.004, .01, abs(fxStarD - .02)) ;
+    float fxGrout2 = 1. - smoothstep(.004, .01, abs(fxStarD - .07));
+    vec3 fxChip = fxVoronoi(fxF * 14.);
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxCross = uFace > 1.5 && uFace < 2.5 ? vec3(.12, .3, .55) : vec3(.95, .93, .87);
+    vec3 fxC = mix(fxCross, fxBase, fxStar) * (.88 + .2 * fxChip.z);
+    fxC = mix(fxC, vec3(.96, .95, .9), fxStrap * (1. - fxStar));
+    fxC = mix(fxC, vec3(.2, .18, .16), max(fxGrout, fxGrout2) * .9);
+    float fxCrackle = 1. - smoothstep(0., .03, fxVoronoi(fxF * 40.).y);
+    fxC *= 1. - fxCrackle * .1;
+    diffuseColor.rgb = fxC;`,
+  normal: 'normal = fxBump(normal, fxChip.z * .002 - max(fxGrout, fxGrout2) * .002 + fxN2(fxF * 30.) * .001);',
+  surface: 'roughnessFactor = mix(.08, .8, max(fxGrout, fxGrout2));',
+  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * .05;',
+};
+B.arabesque = {
+  color: `diffuseColor.rgb *= .8 + .3 * fxN3(vLocal * 30. + vSeed);`,
+  surface: 'roughnessFactor = .8;',
+};
+
+S.artdeco = {
+  // 아르데코 칠기 판. 다 맞추면 면 하나가 부채꼴 비늘이 줄지은 한 장이다. 검은 옻칠 바탕에 금선으로 그은 부채,
+  // 부채마다 햇살처럼 뻗는 금빛 살과 겹겹 반원, 칸칸이 면 색 에나멜을 채웠다
+  color: `
+    vec2 fxF = fxFace();
+    vec2 fxG = fxF * vec2(2.4, 2.8) + vec2(0., 3.);
+    vec3 fxO = vec3(1.5, 0., 0.);
+    bool fxFound = false;
+    for (int j = 0; j <= 1; j++) {
+      float row = floor(fxG.y) - float(j);
+      float off = mod(row, 2.) * .5;
+      float cx = floor(fxG.x - off) + .5 + off;
+      for (int i = -1; i <= 1; i++) {
+        vec2 c = vec2(cx + float(i), row);
+        vec2 d = (fxG - c) / vec2(.5, 1.);
+        float r = length(d);
+        if (!fxFound && d.y >= 0. && r < 1.) { fxO = vec3(r, atan(d.y, d.x), fxH2(c)); fxFound = true; }
+      }
+    }
+    float fxRays = step(.5, fract(fxO.y * 18. / 3.1416));
+    float fxRayLine = 1. - smoothstep(0., .05, abs(fract(fxO.y * 18. / 3.1416) - .5) * 2. - .9);
+    float fxArc = max(max(1. - smoothstep(.0, .025, abs(fxO.x - .96)), 1. - smoothstep(.0, .02, abs(fxO.x - .7))), 1. - smoothstep(.0, .02, abs(fxO.x - .42)));
+    float fxGold = clamp(fxArc + fxRayLine * step(.42, fxO.x) * step(fxO.x, .96), 0., 1.);
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxLac = vec3(.03, .03, .035);
+    float fxBand = step(.7, fxO.x);
+    vec3 fxC = mix(fxLac, fxBase * (.85 + .15 * fxRays), fxBand + (1. - fxBand) * step(fxO.x, .42));
+    fxC = mix(fxC, vec3(.85, .66, .3), fxGold);
+    diffuseColor.rgb = fxC;`,
+  normal: 'normal = fxBump(normal, fxGold * .0015);',
+  surface: 'roughnessFactor = mix(.12, .25, fxGold); metalnessFactor = fxGold;',
+  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * .05;',
+};
+B.artdeco = {
+  color: `float fxRim = smoothstep(.9, .95, fxBodyRim());`,
+  surface: 'roughnessFactor = .15; metalnessFactor = .3;',
+};
+
+S.celtic = {
+  // 켈트 매듭. 다 맞추면 면 하나가 끊이지 않고 엮인 매듭 무늬 한 장이다. 띠가 비스듬히 두 방향으로 달리며
+  // 만나는 곳마다 위아래가 번갈아 엇갈리고, 아래로 들어가는 띠는 그늘이 진다. 띠엔 금빛 테두리, 바탕은 짙은 양피지
+  color: `
+    vec2 fxF = fxFace();
+    vec2 fxUv = fxRot(.785398) * fxF * 3.2;
+    vec2 fxCell = floor(fxUv);
+    vec2 fxFr = fract(fxUv) - .5;
+    float fxW = .2;
+    float fxDA = abs(fxFr.y);
+    float fxDB = abs(fxFr.x);
+    float fxInA = 1. - smoothstep(fxW - .015, fxW, fxDA);
+    float fxInB = 1. - smoothstep(fxW - .015, fxW, fxDB);
+    float fxOver = mod(fxCell.x + fxCell.y, 2.);
+    float fxTopA = fxOver > .5 ? fxInA : fxInA * (1. - fxInB);
+    float fxTopB = fxOver > .5 ? fxInB * (1. - fxInA) : fxInB;
+    float fxEdgeA = fxTopA * smoothstep(fxW - .07, fxW - .03, fxDA);
+    float fxEdgeB = fxTopB * smoothstep(fxW - .07, fxW - .03, fxDB);
+    float fxShadeA = fxTopA * (fxOver < .5 ? (1. - smoothstep(fxW, fxW + .12, fxDB)) : 0.);
+    float fxShadeB = fxTopB * (fxOver > .5 ? (1. - smoothstep(fxW, fxW + .12, fxDA)) : 0.);
+    float fxBand = clamp(fxTopA + fxTopB, 0., 1.);
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxParch = vec3(.16, .12, .09) * (.8 + .4 * fxF2(fxF * 6.));
+    vec3 fxC = mix(fxParch, fxBase * (.85 + .2 * fxN2(fxF * 20.)), fxBand);
+    fxC *= 1. - (fxShadeA + fxShadeB) * .45;
+    fxC = mix(fxC, vec3(.85, .65, .25), max(fxEdgeA, fxEdgeB));
+    diffuseColor.rgb = fxC;`,
+  normal: 'normal = fxBump(normal, fxBand * .002 - (fxShadeA + fxShadeB) * .001);',
+  surface: 'roughnessFactor = mix(.85, .4, fxBand); metalnessFactor = max(fxEdgeA, fxEdgeB) * .6;',
+  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * .05;',
+};
+B.celtic = {
+  color: `diffuseColor.rgb *= .75 + .35 * fxF3(vLocal * 10. + vSeed);`,
+  surface: 'roughnessFactor = .85;',
+};
+
+S.aztec = {
+  // 중남미 직물. 다 맞추면 면 하나가 한 장의 천이다. 겹겹이 계단진 마름모와 갈고리 계단 무늬, 지그재그 띠를
+  // 면 색을 바탕으로 검정, 하양, 테라코타, 청록 실로 짜 넣었다. 굵은 털실 씨실이 촘촘하다
+  color: `
+    vec2 fxF = fxFace();
+    vec3 fxBase = diffuseColor.rgb;
+    vec2 fxPx = floor(fxF * 28.) / 28.;
+    vec2 fxT = fract(fxPx * 1.5 + .5) - .5;
+    float fxD = abs(fxT.x) + abs(fxT.y);
+    float fxRing = mod(floor(fxD * 14.), 3.);
+    float fxBandY = abs(fract(fxPx.y * 1.5) - .5);
+    float fxZig = step(abs(fract(fxPx.x * 6. + floor(fxPx.y * 12.) * .25) - .5), .22) * step(.42, fxBandY);
+    vec3 fxBlack = vec3(.07, .06, .06), fxWhite = vec3(.93, .9, .82), fxTerra = vec3(.72, .32, .18), fxTurq = vec3(.18, .6, .6);
+    vec3 fxAcc = (uFace > 1.5 && uFace < 2.5) ? fxTurq : fxTerra;
+    vec3 fxC = fxBase;
+    if (fxD < .44) fxC = fxRing < .5 ? fxBlack : fxRing < 1.5 ? fxWhite : fxAcc;
+    if (fxD < .1) fxC = fxBase;
+    fxC = mix(fxC, fxBlack, fxZig);
+    vec2 fxW = vLocal.xy * vec2(60., 240.);
+    float fxWeft = .5 + .5 * sin(fxW.y);
+    float fxYarn = fxN2(vLocal.xy * 300.);
+    fxC *= (.85 + .15 * fxWeft) * (.92 + .1 * fxYarn);
+    diffuseColor.rgb = fxC;`,
+  normal: 'normal = fxBump(normal, fxWeft * .0008 + fxYarn * .0005);',
+  surface: 'roughnessFactor = .92;',
+  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * fxFresnel(normal, 1.5) * .25;',
+};
+B.aztec = {
+  color: `diffuseColor.rgb *= .8 + .3 * fxN3(vLocal * 60. + vSeed);`,
+  surface: 'roughnessFactor = .9;',
+};
+
+S.paisley = {
+  // 페이즐리 반다나. 칸마다 면 색 천 위에 끝이 말린 눈물방울 무늬 하나가 놓였다. 검은 테와 흰 테, 안쪽엔 작은 페이즐리와
+  // 점과 꽃잎, 바깥 테두리엔 하얀 물방울 장식. 바탕엔 흰 점이 고르게 찍혔다. 칸마다 무늬 방향이 조금씩 다르다
+  head: `
+    // 페이즐리 모양의 거리(안쪽이 음수)
+    float fxPais(vec2 p) {
+      float head = length(p - vec2(0., -.18)) - .34;
+      float y = p.y + .18;
+      float cx = .55 * y * y;
+      float w = .34 * (1. - clamp(y / .72, 0., 1.));
+      float tail = (abs(p.x - cx) - w) * step(0., y) + 9. * step(y, 0.) + step(.72, y) * 9.;
+      return min(head, tail);
+    }`,
+  color: `
+    vec2 fxQp = fxRot((fxH1(vSeed * 4.) - .5) * 1.2) * fxQ() * 1.15;
+    vec3 fxBase = diffuseColor.rgb;
+    float fxD = fxPais(fxQp);
+    float fxD2 = fxPais(fxQp * 1.6 + vec2(.04, .12));
+    float fxIn = 1. - smoothstep(-.005, .005, fxD);
+    float fxBlack = 1. - smoothstep(.012, .022, abs(fxD));
+    float fxWhiteL = 1. - smoothstep(.01, .018, abs(fxD + .05));
+    float fxInner = 1. - smoothstep(-.005, .005, fxD2);
+    float fxInnerL = 1. - smoothstep(.008, .016, abs(fxD2));
+    vec2 fxDg = fract(fxQp * 9.) - .5;
+    float fxInDots = (1. - smoothstep(.12, .2, length(fxDg))) * fxIn * (1. - fxInner);
+    float fxScal = (1. - smoothstep(.03, .045, abs(fxD - .06))) * step(.5, fract(atan(fxQp.y + .18, fxQp.x) * 7. + fxQp.y * 6.));
+    vec2 fxBg = fract(fxQ() * 6. + .5) - .5;
+    float fxBgDot = (1. - smoothstep(.06, .1, length(fxBg))) * (1. - smoothstep(-.1, .1, -fxD + .1));
+    vec3 fxBlackC = vec3(.06, .05, .06);
+    vec3 fxWhiteC = vec3(.96, .95, .92);
+    vec3 fxC = fxBase * (.9 + .1 * fxN2(vLocal.xy * 120.));
+    fxC = mix(fxC, fxWhiteC, fxBgDot);
+    fxC = mix(fxC, fxBase * .75, fxIn);
+    fxC = mix(fxC, fxWhiteC, fxInDots);
+    fxC = mix(fxC, fxBlackC, fxInner * .85);
+    fxC = mix(fxC, fxWhiteC, fxInnerL);
+    fxC = mix(fxC, fxWhiteC, max(fxWhiteL, fxScal));
+    fxC = mix(fxC, fxBlackC, fxBlack);
+    vec2 fxW = vLocal.xy * 260.;
+    fxC *= .92 + .08 * (.5 + .5 * sin(fxW.x)) * (.5 + .5 * sin(fxW.y));
+    diffuseColor.rgb = fxC;`,
+  surface: 'roughnessFactor = .9;',
+  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * .05;',
+};
+B.paisley = {
+  color: `diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 60. + vSeed);`,
+  surface: 'roughnessFactor = .9;',
+};
+
 export const SURFACES = Object.keys(S);
 
 /** 이 질감은 시간에 따라 움직이는가. 움직이면 계속 그려야 한다. */
@@ -3427,8 +4275,9 @@ export const MOVING = new Set([
   'stained', 'najeon', 'rain', 'mercury', 'gauge', 'honey', 'clay',
   'holo', 'jelly', 'planet', 'disco',
   'fossil', 'doodle', 'ink', 'lavalamp', 'glass', 'fruit',
-  'skin', 'bubblewrap', 'thermal', 'vinyl', 'kaleido', 'flip',
+  'bubblewrap', 'thermal', 'vinyl', 'kaleido', 'flip',
   'blackhole', 'opal', 'dragon',
+  'nebula', 'star', 'galaxy', 'clockwork', 'cobweb', 'slime', 'magic', 'piano', 'speaker', 'cassette', 'guitar', 'drum',
   'hamster',
 ]);
 
