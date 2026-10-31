@@ -131,7 +131,7 @@ test('테마마다 소리 묶음이 있고 그 소리 파일이 모두 있다', 
     assert.ok(KITS.includes(t.sound), `${t.name}: 소리 묶음 '${t.sound}'이 없다`);
   }
   for (const kit of KITS) {
-    for (const name of [`${kit}-1`, `${kit}-2`, `${kit}-3`, `${kit}-solve`]) {
+    for (const name of [`${kit}-1`, `${kit}-2`, `${kit}-3`]) {
       assert.ok(existsSync(new URL(`../public/sounds/${name}.mp3`, import.meta.url)), `${name}.mp3가 없다`);
     }
   }

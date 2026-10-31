@@ -439,7 +439,34 @@ export const THEMES = [
     motion: 'snap',
     ambient: { mode: 'float', shape: 'glow', colors: ['#BFE3FF', '#7FB8FF', '#FFFFFF'], count: 50, size: 0.06, speed: 1.4, opacity: 0.8, additive: true },
     burst: { shape: 'streak', colors: ['#FFFFFF', '#9FD4FF', '#5C9DFF'], size: 0.1, speed: 5, gravity: 0, drag: 4.5, life: 0.4, additive: true },
+  },  {
+    // 고전압 실험실. 다 맞추면 면 하나가 테슬라 코일 2차 권선의 한 토막이다. 에나멜 입힌 구리선이 촘촘히 감겨 한 가닥씩 솟았고,
+    // 이따금 보랏빛 번개가 면 위로 탁 튀어 갈라지며 지나간 자리의 선이 달아오른다. 가장자리엔 코로나. 에나멜 빛깔이 곧 면 색
+    id: 'tesla',
+    name: '테슬라 코일',
+    bg: '#07060C',
+    ink: '#E8E4FF',
+    backdrop: [
+      'radial-gradient(40% 30% at 50% 50%, rgba(140,110,255,.18), transparent 70%)',
+      'repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 6px)',
+      'radial-gradient(80% 65% at 50% 45%, #15122A, #030206)',
+    ].join(', '),
+    form: { bevel: 0.06, size: 0.95, radius: 0.06, grid: 56 },
+    body: { color: '#1A1820', roughness: 0.35, metalness: 0.5 },
+    faces: ['#C87533', '#B83226', '#2E8A4A', '#2E58B0', '#D8B13A', '#B8BCC4'],
+    lights: {
+      sky: '#e8e4ff', ground: '#100818', hemi: 0.8,
+      key: ['#ffffff', 2.0, [-4, 6, 5]], fill: ['#9a80ff', 0.5, [6, 0, 3]], rim: ['#c0a8ff', 1.2, [2, 4, -6]],
+    },
+    env: 0.9,
+    flicker: 'lightning',
+    ambient: { mode: 'float', shape: 'glow', colors: ['#B8A0FF', '#FFFFFF'], count: 20, size: 0.03, speed: 0.3, opacity: 0.6, additive: true },
+    burst: { shape: 'streak', colors: ['#E0D0FF', '#FFFFFF', '#9A7CFF'], size: 0.14, speed: 3, gravity: 0, drag: 2.6, life: 0.5, additive: true },
+    surface: 'tesla',
+    sound: 'electric',
+    motion: 'snap',
   },
+
   {
     // 정육점 갈고리에 걸린 덩어리처럼, 그런데 아직 살아 있다. 울퉁불퉁 솟은 생살, 고름 주머니,
     // 멍과 마블링, 번들거리는 겉. 심장처럼 뛰고 가끔 움찔한다. 파리가 꼬이고 피가 맺혀 떨어진다
@@ -1848,31 +1875,33 @@ export const THEMES = [
     motion: 'snap',
   },
   {
-    // 도살장 뒤편. 다 맞추면 면 하나가 머리뼈 한 판이다. 피가 고인 톱니 봉합선, 들러붙은 살점과 힘줄, 번진 핏자국,
-    // 쩍 갈라진 틈으로 드러난 골수. 면마다 뼈가 겪은 일이 달라 빛깔이 다르다(갓 마른 뼈, 황토, 구리, 그을림, 하얗게 탄 뼈, 늪).
-    // 몸통은 골수가 찬 해면뼈. 붉은 백열등 아래
+    // 옛 선술집 노름판. 칸마다 소뼈를 깎아 갈아 낸 주사위의 한 면이다. 면마다 눈 개수가 다르고(하나~여섯) 고리-점 눈엔
+    // 먹물이 뱄다. 우윳빛~꿀빛으로 묵은 겉에 뼈 속 잔 관이 검은 점과 줄로 비치고, 골수 쪽 칸엔 해면뼈 구멍.
+    // 면마다 물들인 빛깔이 다르다(상아, 꼭두서니, 구리, 그을림, 하얗게 구운 뼈, 꿀빛). 몸통은 해면뼈. 촛불 아래 나무 탁자
     id: 'bone',
     name: '뼈',
-    bg: '#120807',
-    ink: '#EEDFD6',
+    bg: '#16100A',
+    ink: '#F0E4CC',
     backdrop: [
-      'radial-gradient(40% 30% at 50% 18%, rgba(255,200,170,.2), transparent 70%)',
-      'radial-gradient(90% 60% at 50% 110%, rgba(110,12,10,.4), transparent 70%)',
-      'radial-gradient(80% 65% at 50% 40%, #2A1A16, #080404)',
+      'radial-gradient(45% 35% at 50% 28%, rgba(255,200,130,.2), transparent 70%)',
+      'repeating-linear-gradient(90deg, rgba(0,0,0,.18) 0 2px, transparent 2px 80px)',
+      'radial-gradient(80% 65% at 50% 45%, #3A2616, #0C0805)',
     ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 44 },
+    form: { bevel: 0.1, size: 0.94, radius: 0.12, grid: 48 },
     body: { color: '#5E3A2A', roughness: 0.75 },
     faces: ['#E4D6B8', '#A9472E', '#4E8C6E', '#2C2420', '#8D9BB0', '#93683A'],
     lights: {
-      sky: '#fff0e6', ground: '#2a1010', hemi: 0.9,
-      key: ['#ffe8d8', 2.4, [-4, 6, 5]], fill: ['#ff9a80', 0.35, [6, 0, 3]], rim: ['#ffffff', 0.9, [2, 4, -6]],
+      sky: '#fff0dc', ground: '#2a1a10', hemi: 0.9,
+      key: ['#ffe2c0', 2.4, [-4, 6, 5]], fill: ['#c8d0e0', 0.3, [6, 0, 3]], rim: ['#ffd8a0', 1.0, [2, 4, -6]],
     },
+    flicker: 'candle',
     ambient: { mode: 'float', shape: 'dot', colors: ['#E8DCC0'], count: 20, size: 0.02, speed: 0.12, opacity: 0.3 },
-    burst: { shape: 'drip', colors: ['#8A0A10', '#5A0608'], size: 0.09, speed: 1.6, gravity: 3, drag: 1.2, life: 1.2 },
+    burst: { shape: 'dot', colors: ['#E8DCC0', '#C8B898'], size: 0.05, speed: 1.6, gravity: 2, drag: 1.2, life: 1.1 },
     surface: 'bone',
-    sound: 'bone',
+    sound: 'dice',
     motion: 'heavy',
   },
+
   {
     // 눈알 무더기. 칸마다 사람 눈 하나가 짓무른 눈꺼풀 사이로 불룩 솟아 손끝을 따라 굴러간다. 핏발 선 흰자,
     // 크게 열린 홍채(면 색)의 결과 굴, 번들거리는 눈물막. 가끔 깜빡이고, 잡으면 일제히 질끈 감았다 동공을 키운다. 붉은 어둠
@@ -2254,7 +2283,7 @@ export const themeById = (id) => THEMES.find((t) => t.id === id);
 export const GROUPS = [
   { name: '기본', themes: ['classic', 'candy', 'brick', 'dice', 'jelly', 'clay', 'bubblewrap', 'paper', 'doodle', 'slime'] },
   { name: '자연', themes: ['forest', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert', 'honey', 'fruit'] },
-  { name: '빛·불', themes: ['neon', 'lava', 'electric', 'disco', 'lavalamp', 'kaleido', 'magic'] },
+  { name: '빛·불', themes: ['neon', 'lava', 'electric', 'tesla', 'disco', 'lavalamp', 'kaleido', 'magic'] },
   { name: '우주', themes: ['space', 'planet', 'blackhole', 'nebula', 'star', 'galaxy'] },
   { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'fossil', 'bismuth', 'banded'] },
   { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'tartan', 'camo'] },

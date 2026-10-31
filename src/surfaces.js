@@ -558,6 +558,75 @@ B.electric = {
   emissive: 'totalEmissiveRadiance = uBodyGlow * fxArc * (2.5 + uCharge * 2.);',
 };
 
+S.tesla = {
+  // 테슬라 코일. 다 맞추면 면 하나가 코일 2차 권선의 한 토막이다. 에나멜을 입힌 가는 구리선이 면을 가로질러 촘촘하게 감겼고
+  // (선 한 가닥 한 가닥이 둥글게 솟았다), 선 사이 골엔 절연 니스가 군데군데 고였다. 이따금 면 위로 보랏빛 번개가 탁 튀어
+  // 구불구불 갈라지며 지나가고, 번개가 스친 선은 잠깐 달아오른다. 가장자리엔 코로나가 희미하게 일렁인다.
+  // 에나멜 빛깔이 곧 면 색(맨 구리, 빨강, 초록, 파랑, 금빛, 은 도금)
+  head: `
+    // 권선: x 선 단면(0 골 ~ 1 선 꼭대기), y 선 번호
+    vec2 fxWind(vec2 F) {
+      float t = F.y * 46. + F.x * .2;
+      return vec2(sin(3.1416 * fract(t)), floor(t));
+    }
+    float fxTeslaH(vec2 p, float seed) {
+      vec2 w = fxWind(aHome.xy + p * aHome.z);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.01 + .002 * w.x);
+    }
+    // 번개 가닥 하나: x 밝은 심, y 둘레 빛. 가닥마다 제 박자로 탁 튀었다 사라진다
+    vec2 fxBolt(vec2 F, float k) {
+      float period = .8 + fxH1(k * 7. + uFace) * 1.2;
+      float tt = uTime / period + fxH1(k * 3. + uFace * 5.);
+      float n = floor(tt);
+      float live = step(fract(tt), .22) * (.55 + .45 * step(.4, fxH1(floor(uTime * 40.) + k * 13.)));
+      if (live <= 0.) return vec2(0.);
+      vec2 a = (vec2(fxH1(n * 1.3 + k + uFace), fxH1(n * 2.7 + k + 5.)) - .5) * 1.9;
+      vec2 b = (vec2(fxH1(n * 3.1 + k + 9.), fxH1(n * 4.3 + k + 2. + uFace)) - .5) * 1.9;
+      vec2 ab = b - a;
+      float len = max(length(ab), .3);
+      vec2 dir = ab / len;
+      vec2 r = F - a;
+      float s = dot(r, dir) / len;
+      float perp = dot(r, vec2(-dir.y, dir.x));
+      float sc = clamp(s, 0., 1.);
+      float off = (fxF2(vec2(sc * 7. * len, n * 3. + k * 11.)) - .5) * .45 * len * sin(3.1416 * sc)
+        + (fxN2(vec2(sc * 40. * len, n + k)) - .5) * .05;
+      float d = abs(perp - off) + max(0., abs(s - .5) - .5) * len;
+      return vec2(exp(-d * d / .0001), exp(-d * 12.)) * live;
+    }`,
+  height: 'fxTeslaH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec2 fxF = fxFace();
+    vec2 fxW = fxWind(fxF);
+    vec3 fxBase = diffuseColor.rgb;
+    float fxGap = 1. - smoothstep(0., .35, fxW.x);
+    float fxLine = fxH1(fxW.y * 1.7 + uFace * 3.);
+    vec3 fxC = fxBase * (.55 + .55 * fxW.x) * (.92 + .1 * fxLine);
+    float fxVarn = smoothstep(.6, .8, fxF2(fxF * 3. + uFace)) * fxGap;
+    fxC = mix(fxC, vec3(.35, .2, .05), fxVarn * .6);
+    fxC = mix(fxC, vec3(.06, .04, .03), fxGap * .6);
+    float fxArc = 0.;
+    float fxGlowA = 0.;
+    for (int i = 0; i < 3; i++) {
+      vec2 bolt = fxBolt(fxF, float(i));
+      fxArc = max(fxArc, bolt.x);
+      fxGlowA = max(fxGlowA, bolt.y);
+    }
+    diffuseColor.rgb = fxC;`,
+  normal: 'normal = fxBump(normal, sqrt(fxW.x) * .0012 + fxLine * .0003);',
+  surface: 'roughnessFactor = mix(.18, .5, fxGap); metalnessFactor = mix(.85, .3, fxGap);',
+  emissive: `
+    float fxCorona = (1. - smoothstep(0., .12, fxEdge() / uSticker.x)) * (.5 + .5 * sin(uTime * 9. + fxF.x * 20.)) * .15;
+    totalEmissiveRadiance = vec3(.85, .75, 1.) * fxArc * 3. + vec3(.55, .35, 1.) * fxGlowA * .9
+      + vec3(1., .45, .15) * fxGlowA * fxW.x * .5 + vec3(.5, .4, 1.) * fxCorona + fxBase * .03;`,
+};
+B.tesla = {
+  color: `float fxRim = smoothstep(.9, .96, fxBodyRim());`,
+  surface: 'roughnessFactor = .35; metalnessFactor = .5;',
+  emissive: 'totalEmissiveRadiance = vec3(.5, .4, 1.) * fxRim * (.1 + .1 * sin(uTime * 11. + vSeed * 9.));',
+};
+
 S.flesh = {
   // 생고기 덩어리. 울퉁불퉁한 혹과 도드라진 핏줄, 고름 주머니가 실제로 솟아 있고
   // 심장 박동에 맞춰 부풀었다 꺼진다. 가끔 혼자 움찔한다
@@ -3399,99 +3468,114 @@ B.carbon = {
 };
 
 S.bone = {
-  // 도살장 뼈. 다 맞추면 면 하나가 머리뼈 한 판이다. 겉뼈가 완만하게 부풀고, 뼈판끼리 만나는 자리엔 톱니처럼 맞물린
-  // 봉합선이 실제로 패여 구불구불 달리며 그 홈엔 피가 고였다. 다 발라내지 못한 살점과 힘줄이 군데군데 들러붙어 번들거리고
-  // 그 둘레로 피가 번졌다. 뼈가 쩍 갈라진 틈으론 검붉은 골수와 해면뼈가 드러났다. 영양공, 결 따라 난 금, 얼룩과 잔구멍.
-  // 면마다 뼈가 겪은 일이 다르다: 갓 마른 뼈(상아), 붉은 황토에 묻힌 뼈, 구리에 물든 뼈(초록), 불에 그을린 뼈(검정),
-  // 하얗게 탄 뼈(청회색), 늪에서 나온 뼈(갈색)
+  // 뼈 주사위. 칸마다 소뼈를 네모나게 잘라 갈아 낸 주사위의 한 면이다. 면마다 눈 개수가 달라(하나~여섯) 고리-점 눈을
+  // 실제로 파냈다: 송곳으로 뚫은 가운데 구멍과 그 둘레에 새긴 고리, 안엔 먹물이 배었다. 갈아 낸 겉은 반들거리는
+  // 우윳빛~꿀빛이고, 뼈 속 잔 관(하버스관)이 가는 검은 점과 줄로 비친다. 결을 따라 자른 칸엔 줄이, 결을 가로질러 자른 칸엔
+  // 점과 둥근 층이 보이고, 골수 쪽으로 깎은 칸엔 해면뼈 구멍이 숭숭 드러났다. 손으로 깎아 면이 조금씩 기울었고
+  // 줄질 자국, 작은 패임, 마른 잔금, 가장자리로 짙어지는 묵은 색. 면마다 물들인 빛깔이 다르다
+  // (상아, 꼭두서니 물, 구리 물, 그을려 검은 뼈(눈은 희게 메웠다), 하얗게 구운 뼈, 꿀빛으로 묵은 뼈)
   head: `
-    // 뼈 겉: x 부풂(0~1), y 봉합선 홈(1이 한가운데), z 봉합선까지 거리
-    vec3 fxBone(vec2 F) {
-      float o = uFace * 1.7;
-      float d1 = F.y - (.32 * sin(F.x * 2.1 + o) + .22 * (fxN2(F * 1.4 + o) - .5));
-      d1 += .05 * sin(F.x * 34. + 7. * fxN2(F * 5. + o)) * (.4 + .6 * fxN2(F * 2.3 + 3.));
-      d1 += .018 * sin(F.x * 97. + 4. * fxN2(F * 13.));
-      float d2 = F.x - (.28 * cos(F.y * 1.7 + o * 1.3) + .2 * (fxN2(F.yx * 1.6 + o + 5.) - .5) + .15 * sin(o));
-      d2 += .045 * sin(F.y * 31. + 7. * fxN2(F * 4.6 + o + 9.)) * (.4 + .6 * fxN2(F * 2.1 + 7.));
-      d2 += .016 * sin(F.y * 89. + 4. * fxN2(F * 12. + 2.));
-      float d = d1 > 0. ? min(abs(d1), abs(d2)) : abs(d1);
-      float groove = 1. - smoothstep(0., .03, d);
-      float swell = fxF2(F * 1.3 + o) + .3 * fxN2(F * 6. + o) + .12 * fxN2(F * 14. + o);
-      return vec3(swell, groove, d);
+    // 고리-점 눈: x 가운데 구멍(1이 한가운데), y 둘레 고리 홈
+    vec2 fxPips(vec2 q, float n) {
+      float hole = 0.;
+      float ring = 0.;
+      for (int i = 0; i < 9; i++) {
+        vec2 c = vec2(float(i - (i / 3) * 3) - 1., float(i / 3) - 1.) * .5;
+        bool on;
+        if (n < 1.5) on = i == 4;
+        else if (n < 2.5) on = i == 0 || i == 8;
+        else if (n < 3.5) on = i == 0 || i == 4 || i == 8;
+        else if (n < 4.5) on = i == 0 || i == 2 || i == 6 || i == 8;
+        else if (n < 5.5) on = i == 0 || i == 2 || i == 4 || i == 6 || i == 8;
+        else on = i == 0 || i == 2 || i == 3 || i == 5 || i == 6 || i == 8;
+        if (!on) continue;
+        float r = length(q - c);
+        hole = max(hole, 1. - smoothstep(.05, .075, r));
+        ring = max(ring, 1. - smoothstep(.012, .03, abs(r - .155)));
+      }
+      return vec2(hole, ring);
     }
-    // 살점·골절: x 들러붙은 살점, y 골절(1이 틈 한가운데), z 번진 핏자국
-    vec3 fxGore(vec2 F) {
-      float m = fxF2(F * 2.6 + uFace * 5.3) + .08 * fxN2(F * 30.);
-      float meat = smoothstep(.6, .66, m);
-      vec3 fr = fxVoronoi(F * 2.8 + uFace * 11.);
-      float w = .02 + .025 * fxN2(F * 9. + uFace);
-      float frac = (1. - smoothstep(w * .4, w, fr.y)) * step(.5, fr.z);
-      return vec3(meat, frac, smoothstep(.5, .6, m) * (1. - meat));
+    // 뼈 결: x 잔 관(어두운 점·줄), y 해면뼈 구멍, z 층 무늬, w 해면뼈가 드러난 정도
+    vec4 fxGrain(vec2 q, float seed) {
+      float ang = fxH1(seed * 5.) * 3.1416;
+      vec2 d = vec2(cos(ang), sin(ang));
+      vec2 g = vec2(dot(q, d), dot(q, vec2(-d.y, d.x)));
+      float canal;
+      float layer;
+      if (fxH1(seed * 7.) < .33) {
+        // 결을 가로질러 자른 칸: 관이 점으로, 뼈 한가운데(칸 밖)를 도는 둥근 층
+        vec3 v = fxVoronoi(q * 9. + seed * 13.);
+        canal = (1. - smoothstep(.04, .09, v.x)) * step(.35, v.z);
+        vec2 oc = vec2(fxH1(seed * 3.), fxH1(seed * 9.)) * 4. - 2.;
+        layer = .5 + .5 * sin(length(q - oc) * 40. + fxN2(q * 3.) * 3.);
+      } else {
+        // 결을 따라 자른 칸: 관이 가늘고 긴 줄로
+        canal = smoothstep(.74, .86, fxN2(vec2(g.x * 9., g.y * 70.) + seed * 7.)) * smoothstep(.35, .65, fxN2(vec2(g.x * 6., g.y * 10.) + seed));
+        layer = .5 + .5 * sin(g.y * 26. + fxN2(g * vec2(1.5, 4.)) * 4.);
+      }
+      float reach = 0.;
+      float pore = 0.;
+      if (fxH1(seed * 11.) < .3) {
+        vec2 sc = normalize(vec2(fxH1(seed * 2.) - .5, fxH1(seed * 4.) - .5) + .001) * 1.25;
+        reach = 1. - smoothstep(.55, .95, length(q - sc) + (fxN2(q * 5. + seed) - .5) * .35);
+        vec3 sv = fxVoronoi(q * 7. + seed * 3.);
+        pore = reach * smoothstep(.05, .2, sv.y) * smoothstep(.15, .35, reach);
+      }
+      return vec4(canal, pore, layer, reach);
     }
     float fxBoneH(vec2 p, float seed) {
-      vec2 F = aHome.xy + p * aHome.z;
-      vec3 b = fxBone(F);
-      vec3 g = fxGore(F);
-      return smoothstep(0., .06, fxEdgeAt(p)) * (.006 + .018 * b.x - .009 * b.y + .008 * g.x - .012 * g.y);
+      vec2 q = p / uSticker.x;
+      vec2 pp = fxPips(q, uFace + 1.);
+      vec4 g = fxGrain(q, seed);
+      vec2 tilt = (vec2(fxH1(seed * 17.), fxH1(seed * 23.)) - .5) * .008;
+      float h = .012 + .005 * (1. - dot(q, q) * .5) + dot(q, tilt) - pp.x * .012 - pp.y * .004 - g.y * .007;
+      return smoothstep(0., .06, fxEdgeAt(p)) * h;
     }`,
   height: 'fxBoneH',
   color: `
     if (fxEdge() < 0.) discard;
-    vec2 fxF = fxFace();
-    vec3 fxB = fxBone(fxF);
-    vec3 fxGo = fxGore(fxF);
+    vec2 fxQb = fxQ();
+    vec2 fxPp = fxPips(fxQb, uFace + 1.);
+    vec4 fxGr = fxGrain(fxQb, vSeed);
     vec3 fxBase = diffuseColor.rgb;
-    float fxAng = uFace * 1.1;
-    vec2 fxDir = vec2(cos(fxAng), sin(fxAng));
-    vec2 fxG = vec2(dot(fxF, fxDir), dot(fxF, vec2(-fxDir.y, fxDir.x)));
-    float fxFib = fxN2(vec2(fxG.x * 5., fxG.y * 140.)) * .6 + fxN2(vec2(fxG.x * 12., fxG.y * 320.)) * .4;
-    float fxMot = fxF2(fxF * 3. + uFace * 4.);
-    float fxStain = smoothstep(.45, .75, fxF2(fxF * 1.6 + uFace * 9.));
-    float fxYel = smoothstep(.4, .8, fxF2(fxF * 2.2 + uFace * 5. + 20.));
-    vec3 fxPo = fxVoronoi(vec2(fxG.x * 9., fxG.y * 20.) + uFace * 7.);
-    float fxPore = (1. - smoothstep(.04, .07 + .05 * fxPo.z, fxPo.x)) * step(.55, fxPo.z);
-    float fxPit = smoothstep(.66, .8, fxN2(fxF * 170. + uFace * 3.)) * (.6 + .4 * fxN2(fxF * 9.));
-    vec3 fxCk = fxVoronoi(vec2(fxG.x * 2.2, fxG.y * 11.) + uFace * 3.);
-    float fxCrack = (1. - smoothstep(0., .035, fxCk.y)) * smoothstep(.55, .7, fxF2(fxF * 2. + 13.));
-    // 불에 탄 뼈(그을림, 하얗게 탄 뼈)엔 열에 갈라진 그물 금이 간다
-    float fxBurnt = uFace > 2.5 && uFace < 4.5 ? 1. : 0.;
-    float fxHeat = fxBurnt * (1. - smoothstep(0., .03, fxVoronoi(fxF * 5.5 + uFace).y));
-    float fxSut = 1. - smoothstep(.004, .011, fxB.z);
-    float fxDirt = exp(-fxB.z * 30.);
-    vec3 fxC = fxBase * (.7 + .45 * fxMot) * (.92 + .12 * fxFib);
-    fxC = mix(fxC, fxC * vec3(1., .86, .62), fxYel * .55 * (1. - fxBurnt));
-    fxC = mix(fxC, fxBase * vec3(.55, .45, .34), fxStain * .5);
-    fxC *= 1. - fxDirt * .4;
-    fxC = mix(fxC, vec3(.3, .03, .03), fxPore * .9);
-    fxC *= 1. - fxPit * .3;
-    fxC = mix(fxC, fxBase * .3, max(fxCrack * .6, fxHeat * .8));
-    // 홈에 고인 피와 번진 핏자국
-    fxC = mix(fxC, vec3(.28, .02, .02), fxSut);
-    fxC = mix(fxC, vec3(.38, .05, .04) * (.7 + .4 * fxN2(fxF * 40.)), fxGo.z * .75);
-    // 갈라진 틈의 골수와 해면뼈
-    vec3 fxSp = fxVoronoi(fxF * 70. + uFace);
-    vec3 fxMarrow = mix(vec3(.12, .01, .01), vec3(.5, .08, .07), smoothstep(0., .18, fxSp.y));
-    fxC = mix(fxC, fxMarrow, fxGo.y);
-    // 들러붙은 살점과 힘줄
-    float fxSinew = fxN2(vec2(fxG.x * 4., fxG.y * 70.)) * .7 + fxN2(fxF * 25.) * .3;
-    vec3 fxMeatC = mix(vec3(.45, .04, .05), vec3(.86, .62, .56), fxSinew * .45) * (.7 + .45 * fxN2(fxF * 50.));
-    fxC = mix(fxC, fxMeatC, fxGo.x);
-    float fxWet = max(fxGo.x, max(fxGo.z * .7, max(fxSut, fxGo.y)));
+    float fxLum = dot(fxBase, vec3(.3, .59, .11));
+    // 묵은 색: 가장자리로 갈수록 짙고 가운데는 손때로 밝다
+    float fxE = fxEdge() / uSticker.x;
+    float fxPatina = (1. - smoothstep(0., .25, fxE)) * .25 + fxF2(fxQb * 2.5 + vSeed * 9.) * .2;
+    vec3 fxC = fxBase * (1.05 - fxPatina) * (.975 + .04 * fxGr.z);
+    fxC = mix(fxC, fxC * vec3(1., .88, .68), smoothstep(.45, .8, fxF2(fxQb * 1.8 + vSeed * 3.)) * .35);
+    vec3 fxDarkB = mix(fxBase * vec3(.35, .27, .2), vec3(.25, .18, .12), .5);
+    fxC = mix(fxC, fxDarkB, fxGr.x * .45);
+    // 작은 패임과 마른 잔금
+    float fxPit = smoothstep(.72, .85, fxN2(fxQb * 30. + vSeed * 7.)) * smoothstep(.4, .7, fxN2(fxQb * 4. + vSeed));
+    vec3 fxCk = fxVoronoi(fxQb * vec2(1.4, 4.) + vSeed * 5.);
+    float fxCrack = (1. - smoothstep(0., .02, fxCk.y)) * step(.7, fxH1(vSeed * 19.)) * smoothstep(.5, .7, fxN2(fxQb * 2. + vSeed));
+    fxC = mix(fxC, fxDarkB * .8, max(fxPit * .6, fxCrack * .7));
+    // 해면뼈: 기둥은 거칠고 누렇고 구멍은 어둡다
+    fxC = mix(fxC, fxC * vec3(.95, .85, .7), fxGr.w * .4);
+    fxC = mix(fxC, vec3(.12, .08, .05), fxGr.y * .9);
+    // 줄질 자국
+    float fxFile = .5 + .5 * sin(dot(fxQb, vec2(.6, .8)) * 220. + fxN2(fxQb * 8.) * 3.);
+    fxC *= .97 + .03 * fxFile;
+    // 고리-점 눈: 먹물이 밴 홈(검게 그을린 면은 희게 메웠다)
+    vec3 fxInk = fxLum < .03 ? vec3(.85, .8, .7) : vec3(.07, .045, .03);
+    fxC = mix(fxC, fxInk, max(fxPp.x, fxPp.y * .9));
     diffuseColor.rgb = fxC;`,
-  normal: 'normal = fxBump(normal, fxFib * .0005 - fxPore * .002 - fxPit * .0007 - (fxCrack + fxHeat) * .0008 - fxSut * .001 + fxMot * .0018 + fxGo.x * fxSinew * .0015 - fxGo.y * fxSp.y * .002);',
-  surface: 'roughnessFactor = mix(mix(.6, .82, fxStain) + fxPore * .15 - fxBurnt * .1, .14, fxWet);',
-  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * (.03 + .06 * fxFresnel(normal, 2.)) + vec3(.9, .5, .5) * fxGo.x * fxFresnel(normal, 3.) * .12;',
+  normal: 'normal = fxBump(normal, fxGr.z * .0003 - fxGr.x * .0006 - fxPit * .0012 - fxCrack * .001 - fxGr.y * .002 - fxPp.y * .0015 + fxFile * .00015);',
+  surface: 'roughnessFactor = mix(.3, .72, max(fxGr.w, fxPatina)) + fxPp.x * .3;',
+  // 뼈는 빛이 살짝 스며 가장자리가 은은하다
+  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * (.04 + .08 * fxFresnel(normal, 2.));',
 };
 B.bone = {
-  // 몸통은 뼈 속 해면뼈. 가는 뼈기둥이 그물처럼 얽혔고 그 사이 구멍엔 검붉은 골수가 찼다
+  // 몸통은 주사위 속 해면뼈. 가는 뼈기둥이 그물처럼 얽혔고 그 사이 구멍은 짙게 비었다
   color: `
     vec2 fxP = fxBodyUV();
     vec3 fxV = fxVoronoi(fxP * 26. + vSeed * 7.);
     vec3 fxV2 = fxVoronoi(fxP * 61. + vSeed * 3.);
     float fxStrut = 1. - smoothstep(.04, .16, min(fxV.y, fxV2.y * 1.6));
-    diffuseColor.rgb = mix(vec3(.18, .02, .02), diffuseColor.rgb * 1.9 * vec3(1., .95, .85), fxStrut);`,
+    diffuseColor.rgb = mix(diffuseColor.rgb * .3, vec3(.8, .72, .56), fxStrut);`,
   normal: 'normal = fxBump(normal, fxStrut * .002);',
-  surface: 'roughnessFactor = mix(.2, .75, fxStrut);',
+  surface: 'roughnessFactor = .75;',
 };
 
 S.eyeball = {
@@ -4447,7 +4531,7 @@ export const MOVING = new Set([
   'fossil', 'doodle', 'ink', 'lavalamp', 'glass', 'fruit',
   'bubblewrap', 'thermal', 'kaleido', 'flip',
   'blackhole', 'opal', 'dragon',
-  'nebula', 'star', 'galaxy', 'slime', 'magic', 'lantern', 'eyeball', 'viscera', 'brain',
+  'nebula', 'star', 'galaxy', 'slime', 'magic', 'lantern', 'eyeball', 'viscera', 'brain', 'tesla',
   'hamster',
 ]);
 

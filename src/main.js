@@ -48,7 +48,6 @@ const view = new CubeView($('stage'), {
         saveBest();
       }
       view.celebrate();
-      sound.solve();
     }
     refresh();
   },
@@ -128,10 +127,7 @@ $('solve').addEventListener('click', async () => {
   timer.reset();
   const moves = simplify(invert(history), size);
   await play(moves, Math.max(55, Math.min(170, 5000 / moves.length)));
-  if (history.length === 0) {
-    view.celebrate(0.5);
-    sound.solve();
-  }
+  if (history.length === 0) view.celebrate(0.5);
 });
 
 // ---- 타이머 ----

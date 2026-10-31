@@ -1,5 +1,5 @@
 // 테마마다 다른 소리. 모두 CC0(퍼블릭 도메인) 녹음을 다듬은 것이고, 출처는 public/sounds/CREDITS.md에 있다.
-// 묶음마다 돌릴 때 소리 셋(돌아가며 고른다)과 다 맞췄을 때 소리 하나가 있다.
+// 묶음마다 돌릴 때 소리가 셋 있고, 돌아가며 고른다.
 // 브라우저는 사람이 한 번 건드리기 전엔 소리를 못 내게 막아 두므로, 첫 터치·클릭·키 입력 때 오디오를 깨운다.
 
 const BASE = `${import.meta.env?.BASE_URL ?? './'}sounds/`;
@@ -9,7 +9,7 @@ const LEVEL = {
   cube: 1, candy: 0.7, dice: 0.7, squish: 0.8, molten: 0.8, pop: 0.8, paper: 0.9, nature: 0.8, water: 0.7,
   glass: 0.6, crystal: 0.5, stone: 0.9, ceramic: 0.7, wood: 0.9, metal: 0.6, mech: 0.8, cloth: 1, leather: 1,
   scale: 0.7, electric: 0.45, disco: 0.5, glitch: 0.45, pixel: 0.4, flip: 0.9, space: 0.8, fruit: 0.9,
-  flesh: 0.9, eldritch: 0.8, bone: 0.8, eye: 0.8,
+  flesh: 0.9, eldritch: 0.8, eye: 0.8,
 };
 
 export const KITS = Object.keys(LEVEL);
@@ -48,7 +48,7 @@ export class Sound {
   }
 
   load(kit) {
-    for (const name of [`${kit}-1`, `${kit}-2`, `${kit}-3`, `${kit}-solve`]) {
+    for (const name of [`${kit}-1`, `${kit}-2`, `${kit}-3`]) {
       if (this.buffers.has(name)) continue;
       const job = fetch(`${BASE}${name}.mp3`)
         .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(r.statusText))))
@@ -79,10 +79,6 @@ export class Sound {
     this.last = now;
     const i = 1 + Math.floor(Math.random() * 3);
     this.play(`${this.kit}-${i}`, { gain: quick ? 0.55 : 1, rate: 0.94 + Math.random() * 0.12 + (quick ? 0.08 : 0) });
-  }
-
-  solve() {
-    this.play(`${this.kit}-solve`, { gain: 0.9 });
   }
 
   toggle() {
