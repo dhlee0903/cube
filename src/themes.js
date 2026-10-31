@@ -973,34 +973,6 @@ export const THEMES = [
     burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: -1, drag: 2.6, life: 1.4 },
   },
   {
-    // 제도판 위 기술 도면. 굵은 외곽선, 일점쇄선 중심선, 점선 숨은선, 화살표 치수선, 표제란.
-    // 면마다 인화지와 부품이 다르다(청사진 톱니바퀴, 세피아 플랜지, 흰 도면 브래킷,
-    // 노란 트레이싱지 축, 녹색 공학지 스프링, 연어색 교정지 너트). 고르면 선이 그려져 나간다
-    id: 'blueprint',
-    name: '설계도',
-    bg: '#1E4E8C',
-    ink: '#F0F6FF',
-    backdrop: [
-      `${svg(100, 100, "<g fill='none' stroke='rgba(255,255,255,.22)' stroke-width='.3'><circle cx='18' cy='22' r='12'/><circle cx='18' cy='22' r='7'/><path d='M4 22 H32 M18 8 V36'/><circle cx='84' cy='78' r='10'/><path d='M70 78 H98 M84 64 V92'/><path d='M60 10 H96 M60 8 V12 M96 8 V12'/><path d='M6 90 L30 66 M6 86 L26 66'/></g>", 'xMidYMid slice')} center / cover no-repeat`,
-      'linear-gradient(rgba(255,255,255,.12) 1px, transparent 1px) 0 0 / 60px 60px',
-      'linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px) 0 0 / 60px 60px',
-      'linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px) 0 0 / 12px 12px',
-      'linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px) 0 0 / 12px 12px',
-      'radial-gradient(70% 60% at 50% 40%, #2A62A8, #1A447C)',
-    ].join(', '),
-    form: { bevel: 0.02, size: 0.88, radius: 0.02, depth: 0 },
-    body: { color: '#13294A', roughness: 0.9 },
-    faces: ['#1F4E8C', '#7A5230', '#F4F1E8', '#F2DE84', '#8CC09A', '#E8A08C'],
-    lights: {
-      sky: '#ffffff', ground: '#304870', hemi: 2.3,
-      key: ['#ffffff', 1.4, [-4, 6, 5]], fill: ['#d8e8ff', 0.4, [6, 0, 3]], rim: ['#ffffff', 0.6, [2, 4, -6]],
-    },
-    surface: 'blueprint',
-    motion: 'mechanical',
-    ambient: { mode: 'float', shape: 'dot', colors: ['#FFFFFF'], count: 14, size: 0.03, speed: 0.12, opacity: 0.4 },
-    burst: { shape: 'streak', colors: ['#FFFFFF', '#CFE0FF'], size: 0.1, speed: 1.6, gravity: -2, drag: 2.4, life: 1.1 },
-  },
-  {
     // 자연사 박물관 진열장. 화석이 실제로 도드라진 돌판. 면마다 돌과 화석이 다르다: 봉합선이 고사리잎처럼 주름진
     // 암모나이트와 조각조각 비치는 암몰라이트(셰일), 미간 돌기와 겹눈, 볼가시, 마디가 또렷한 삼엽충(석회암),
     // 깃이 엇갈린 탄화된 고사리(청회색 셰일), 뼈마디가 보이는 작은 청어(크림빛 석회암과 검은 수지상 무늬),
@@ -1625,58 +1597,6 @@ export const THEMES = [
     burst: { shape: 'leaf', colors: ['#4A7A3A', '#6A5A32', '#2A3A1E'], size: 0.15, speed: 1.6, gravity: -1.2, drag: 2.2, life: 1.4 },
   },
   {
-    // 대장간 작업대 위 다마스커스 티타늄. 여러 겹 비틀어 두드린 물결 결이 면 전체로 이어지고, 겹마다 산화막이 달라
-    // 두 빛깔이 엇갈린다(금빛과 청동, 청동과 보라, 보라와 파랑, 파랑과 청록, 청록과 금빛, 은빛과 하늘빛). 결 따라 갈린 자국
-    id: 'titanium',
-    name: '티타늄',
-    bg: '#121418',
-    ink: '#E8ECF2',
-    backdrop: [
-      'radial-gradient(30% 22% at 50% 92%, rgba(255,140,50,.18), transparent 70%)',
-      'radial-gradient(50% 40% at 50% 35%, rgba(200,220,255,.1), transparent 70%)',
-      'linear-gradient(180deg, #1C1F25, #08090B)',
-    ].join(', '),
-    form: { bevel: 0.05, size: 0.94, radius: 0.04 },
-    body: { color: '#2A2C30', roughness: 0.3, metalness: 1 },
-    faces: ['#D8B040', '#B0602A', '#7A3AB0', '#2A5AC8', '#2AA0A0', '#B8BCC4'],
-    lights: {
-      sky: '#e8f0ff', ground: '#100c08', hemi: 0.8,
-      key: ['#ffffff', 2.4, [-4, 6, 5]], fill: ['#ffb070', 0.5, [6, -2, 3]], rim: ['#cfe0ff', 1.6, [0, 4, -6]],
-    },
-    env: 1.4,
-    surface: 'titanium',
-    motion: 'mechanical',
-    burst: { shape: 'streak', colors: ['#FFD08A', '#FF9A3A', '#FFFFFF'], size: 0.08, speed: 3.4, gravity: -6, drag: 1.4, life: 0.7, additive: true },
-  },
-  {
-    // 한밤의 도심. 다 맞추면 면 하나가 고층 빌딩 한 채의 벽이다. 창마다 불이 켜졌다 꺼지고, 블라인드와 사람 그림자,
-    // 불 꺼진 방의 텔레비전 빛, 옥상의 빨간 경고등. 창 불빛이 곧 면 색. 뒤로는 먼 빌딩 숲과 달
-    id: 'skyline',
-    name: '야경',
-    bg: '#0A0E1A',
-    ink: '#E8EEFF',
-    backdrop: [
-      'radial-gradient(4vmin 4vmin at 80% 18%, rgba(255,250,230,.9) 60%, transparent 100%)',
-      'linear-gradient(0deg, #05070D 0 18%, transparent 18%)',
-      'linear-gradient(90deg, transparent 0 6%, #0A0D16 6% 14%, transparent 14% 22%, #080B13 22% 27%, transparent 27% 70%, #0A0D16 70% 78%, transparent 78% 85%, #080B13 85% 93%, transparent 93%) 0 100% / 100% 34% no-repeat',
-      'repeating-linear-gradient(90deg, rgba(255,210,120,.18) 0 2px, transparent 2px 9px) 0 100% / 100% 28% no-repeat',
-      stars(60, 13),
-      'linear-gradient(180deg, #0A1024, #1A2240 70%, #2A2440)',
-    ].join(', '),
-    form: { bevel: 0.04, size: 0.95, radius: 0.03 },
-    body: { color: '#14161C', roughness: 0.4, metalness: 0.5 },
-    faces: ['#FFC84A', '#E8F0FF', '#3AD0E8', '#FF4AA0', '#FF8A3A', '#5AE07A'],
-    lights: {
-      sky: '#3a4a7a', ground: '#0a0a10', hemi: 0.6,
-      key: ['#c8d8ff', 0.9, [-4, 6, 5]], fill: ['#ffb070', 0.4, [6, -2, 3]], rim: ['#8aa8ff', 1, [0, 4, -6]],
-    },
-    env: 0.6,
-    surface: 'skyline',
-    motion: 'smooth',
-    ambient: { mode: 'float', shape: 'glow', colors: ['#FFD08A', '#A8C8FF'], count: 26, size: 0.04, speed: 0.3, opacity: 0.5, additive: true },
-    burst: { shape: 'square', colors: 'faces', size: 0.07, speed: 2.4, gravity: 0, drag: 2.6, life: 0.8, additive: true },
-  },
-  {
     // 오두막 벽난로 앞 모직 담요. 다 맞추면 면 하나가 한 장의 타탄 천. 날실과 씨실 줄무늬가 엇갈려 체크를 이루고
     // 2/2 능직의 비스듬한 결, 보풀. 면마다 바탕과 짙은 띠, 가는 줄 색이 다르다. 가죽 덧댐 몸통
     id: 'tartan',
@@ -1699,30 +1619,6 @@ export const THEMES = [
     motion: 'bouncy',
     ambient: { mode: 'float', shape: 'dot', colors: ['#FFE8D0', '#FFFFFF'], count: 24, size: 0.03, speed: 0.15, opacity: 0.5 },
     burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: -1, drag: 2.6, life: 1.4 },
-  },
-  {
-    // 실험 책상의 자석. 칸마다 색 판 가운데 검고 번들거리는 자성 유체가 고여 있고, 밑의 자석이 숨 쉬듯 세졌다 약해질 때마다
-    // 뾰족한 가시가 솟았다 가라앉는다. 돌리거나 잡으면 가시가 확 선다. 판 위의 쇳가루 자국, 말랑하게 돈다
-    id: 'ferro',
-    name: '자석',
-    bg: '#1A1C22',
-    ink: '#EEF0F4',
-    backdrop: [
-      'repeating-radial-gradient(ellipse at 50% 50%, rgba(255,255,255,.035) 0 1px, transparent 1px 26px)',
-      'radial-gradient(45% 35% at 50% 38%, rgba(255,255,255,.1), transparent 70%)',
-      'linear-gradient(180deg, #24272E, #0E0F12)',
-    ].join(', '),
-    form: { bevel: 0.06, size: 0.94, radius: 0.08, grid: 56 },
-    body: { color: '#202226', roughness: 0.35, metalness: 0.7 },
-    faces: ['#E8343A', '#2A62D8', '#F2F0EA', '#F6C82A', '#2AAA5A', '#F27A1E'],
-    lights: {
-      sky: '#ffffff', ground: '#101012', hemi: 1.1,
-      key: ['#ffffff', 2.4, [-4, 6, 5]], fill: ['#d0e0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.6, [0, 4, -6]],
-    },
-    env: 1.4,
-    surface: 'ferro',
-    motion: 'squish',
-    burst: { shape: 'dot', colors: ['#111111', '#2A2A2A'], size: 0.07, speed: 2.4, gravity: -6, drag: 1, life: 1 },
   },
   {
     // 불 꺼진 동굴 속 잠든 용. 다 맞추면 면 하나가 비늘 덮인 살갗 한 장. 아래로 겹친 비늘이 도톰하고 가운데 등줄이 서며,
@@ -1752,29 +1648,137 @@ export const THEMES = [
     burst: { shape: 'glow', colors: ['#FFD08A', '#FF8A2A', '#FF4A1A'], size: 0.1, speed: 2.6, gravity: 1.4, drag: 1.6, life: 1, additive: true },
   },
   {
-    // 놀이방 책상 위 키네틱 샌드. 다 맞추면 면 하나가 꾹꾹 다진 모래 한 판. 고운 알갱이가 반짝이고, 칼로 그은 곧은 홈이
-    // 면을 가로지르며 그중 한 줄은 지금 칼이 지나가며 그어지고 있다. 말랑하게 돌고, 돌리면 모래가 부스스 떨어진다
-    id: 'sand',
-    name: '키네틱 샌드',
-    bg: '#F4EEE6',
-    ink: '#3A2E28',
+    // 봄날 목장. 막 깎은 양털 뭉치를 씌운 큐브. 꼬불꼬불 주름진 털 다발이 볼록볼록 솟고 다발 사이 골은 깊다.
+    // 하얀 양, 검은 양, 그리고 붉게, 파랗게, 노랗게, 초록으로 물들인 털. 나무 울타리 몸통, 말랑하게 돈다
+    id: 'wool',
+    name: '양털',
+    bg: '#9CC27A',
+    ink: '#1E2A14',
     backdrop: [
-      'radial-gradient(circle at 50% 50%, rgba(255,255,255,.6) 0 14%, transparent 16%) 0 0 / 52px 52px',
-      'radial-gradient(70% 55% at 50% 42%, #FBF6EE, #E8DCCC)',
+      'radial-gradient(18% 9% at 22% 20%, rgba(255,255,255,.9) 60%, transparent 70%)',
+      'radial-gradient(14% 7% at 30% 17%, rgba(255,255,255,.9) 60%, transparent 70%)',
+      'radial-gradient(16% 8% at 76% 28%, rgba(255,255,255,.85) 60%, transparent 70%)',
+      'radial-gradient(120% 40% at 30% 100%, #7FAE5A 0 60%, transparent 61%)',
+      'radial-gradient(120% 45% at 85% 105%, #6C9E4C 0 60%, transparent 61%)',
+      'linear-gradient(180deg, #8EC8F0 0 55%, #A8D290 55%)',
     ].join(', '),
-    form: { bevel: 0.1, size: 0.94, radius: 0.12, depth: 0.03 },
-    body: { color: '#5A6A7A', roughness: 0.5 },
-    faces: ['#F08AB0', '#7AB0F0', '#F2D86A', '#7AD8B0', '#B08AE0', '#F2A060'],
+    form: { bevel: 0.12, size: 0.94, radius: 0.16, grid: 48 },
+    body: { color: '#8A6A48', roughness: 0.8 },
+    faces: ['#F2EEE2', '#2A2624', '#C83A3A', '#3A5AB8', '#E8C040', '#4A9A50'],
     lights: {
-      sky: '#ffffff', ground: '#d8c8b8', hemi: 1.9,
-      key: ['#fff8f0', 1.8, [-4, 6, 5]], fill: ['#ffe8f0', 0.5, [6, 0, 3]], rim: ['#ffffff', 0.8, [0, 4, -6]],
+      sky: '#e8f4ff', ground: '#6a8a4a', hemi: 1.8,
+      key: ['#fff6e0', 2.2, [-4, 7, 5]], fill: ['#d8ecff', 0.5, [6, 0, 3]], rim: ['#fff8e8', 1.4, [2, 4, -6]],
     },
-    haloMode: 'shadow',
-    halo: 0.15,
-    surface: 'sand',
+    surface: 'wool',
     motion: 'squish',
-    burst: { shape: 'dot', colors: 'faces', size: 0.04, speed: 1.2, gravity: -6, drag: 1.2, life: 1.2 },
+    ambient: { mode: 'float', shape: 'glow', colors: ['#FFFFFF', '#F4EEE0'], count: 22, size: 0.05, speed: 0.2, opacity: 0.6 },
+    burst: { shape: 'glow', colors: 'faces', size: 0.09, speed: 1.6, gravity: -1, drag: 2.4, life: 1.2, opacity: 0.85 },
+  },
+  {
+    // 햇볕 드는 창가. 고양이 털을 두른 큐브. 다 맞추면 면 하나가 고양이 한 마리의 등이다. 짧고 촘촘한 털이 결 따라 눕고
+    // 털끝이 빛을 받아 번진다. 치즈, 턱시도, 삼색, 러시안 블루, 고등어 태비, 벵갈. 말랑하게 돌고, 돌리면 털이 날린다
+    id: 'cat',
+    name: '고양이',
+    bg: '#E8DCCC',
+    ink: '#2A2018',
+    backdrop: [
+      'linear-gradient(115deg, transparent 0 30%, rgba(255,240,200,.45) 30% 42%, transparent 42% 46%, rgba(255,240,200,.45) 46% 58%, transparent 58%)',
+      'radial-gradient(70% 55% at 50% 45%, #F2E8DA, #D2C2AC)',
+    ].join(', '),
+    form: { bevel: 0.14, size: 0.94, radius: 0.2, grid: 40 },
+    body: { color: '#6A4A7A', roughness: 0.9 },
+    faces: ['#E8923A', '#222024', '#F4F0EA', '#7A8AA0', '#8A7A68', '#E2C890'],
+    lights: {
+      sky: '#fff4e4', ground: '#a08a70', hemi: 1.6,
+      key: ['#ffe8c8', 2.4, [-5, 6, 4]], fill: ['#e0e8ff', 0.4, [6, 0, 3]], rim: ['#fff0d8', 1.6, [2, 4, -6]],
+    },
+    surface: 'cat',
+    motion: 'squish',
+    ambient: { mode: 'float', shape: 'dot', colors: ['#FFFFFF', '#F2E2CC'], count: 26, size: 0.03, speed: 0.2, opacity: 0.6 },
+    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: -0.8, drag: 2.6, life: 1.4 },
+  },
+  {
+    // 거실 러그 위 강아지 방석. 강아지 털을 두른 큐브. 다 맞추면 면 하나가 강아지 한 마리의 등이다.
+    // 골든 리트리버, 블랙 래브라도, 달마시안, 비글, 허스키, 시바. 신나게 통통 튀며 돈다
+    id: 'dog',
+    name: '강아지',
+    bg: '#D8C8B0',
+    ink: '#2A1E16',
+    backdrop: [
+      'repeating-linear-gradient(0deg, rgba(150,90,60,.14) 0 10px, transparent 10px 22px, rgba(60,90,120,.1) 22px 26px, transparent 26px 40px)',
+      'radial-gradient(70% 55% at 50% 45%, #E6D8C2, #BCA88C)',
+    ].join(', '),
+    form: { bevel: 0.14, size: 0.94, radius: 0.2, grid: 40 },
+    body: { color: '#3A5A8A', roughness: 0.9 },
+    faces: ['#E8C070', '#1E1C1E', '#F2F0EA', '#8A4A22', '#8A929A', '#D8783A'],
+    lights: {
+      sky: '#fff6ea', ground: '#a08a70', hemi: 1.6,
+      key: ['#fff0dc', 2.3, [-4, 6, 5]], fill: ['#e0e8ff', 0.4, [6, 0, 3]], rim: ['#fff4e0', 1.5, [2, 4, -6]],
+    },
+    surface: 'dog',
+    motion: 'bouncy',
+    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.6, gravity: -1, drag: 2.4, life: 1.3 },
+  },
+  {
+    // 톱밥 깔린 햄스터 집. 조각마다 햄스터처럼 동그랗게 부풀어 숨 쉬듯 들썩이고, 아주 가늘고 보송한 털이 덮였다.
+    // 다 맞추면 면마다 한 마리의 등이다. 골든, 정글리안, 펄, 블랙, 푸딩, 사파이어. 돌리면 해바라기씨가 튄다
+    id: 'hamster',
+    name: '햄스터',
+    bg: '#EADCC0',
+    ink: '#2E2418',
+    backdrop: [
+      'repeating-linear-gradient(35deg, rgba(200,160,100,.18) 0 3px, transparent 3px 11px)',
+      'repeating-linear-gradient(-50deg, rgba(240,220,180,.4) 0 2px, transparent 2px 9px)',
+      'radial-gradient(70% 55% at 50% 45%, #F4EAD6, #D8C4A0)',
+    ].join(', '),
+    form: { bevel: 0.16, size: 0.94, radius: 0.3, grid: 40 },
+    body: { color: '#5A8A6A', roughness: 0.4 },
+    faces: ['#D88A40', '#8A7058', '#F4F0EC', '#262426', '#F2CC68', '#7A8698'],
+    lights: {
+      sky: '#fff8ee', ground: '#b8a080', hemi: 1.7,
+      key: ['#fff2e0', 2.2, [-4, 6, 5]], fill: ['#ffe8d8', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.6, [2, 4, -6]],
+    },
+    surface: 'hamster',
+    motion: 'squish',
+    burst: { shape: 'streak', colors: ['#3A3430', '#F2EEE6', '#5A524A'], size: 0.09, speed: 1.8, gravity: -6, drag: 1, life: 1.1, turns: true },
+  },
+  {
+    // 셀 애니메이션 속 하늘. 빛을 두 단으로 끊어 칠하고 그늘엔 보랏빛이 돈다. 밝은 쪽 가장자리엔 림 라이트,
+    // 매끈한 하이라이트 한 점, 면 색보다 짙은 같은 색 윤곽선. 몸통 실루엣엔 먹선. 뭉게구름과 반짝이, 통통 튀며 돈다
+    id: 'toon',
+    name: '카툰',
+    bg: '#8EC8FF',
+    ink: '#1A2440',
+    backdrop: [
+      'radial-gradient(14% 8% at 20% 26%, #FFFFFF 70%, transparent 72%)',
+      'radial-gradient(10% 7% at 27% 22%, #FFFFFF 70%, transparent 72%)',
+      'radial-gradient(12% 7% at 14% 24%, #FFFFFF 70%, transparent 72%)',
+      'radial-gradient(16% 9% at 80% 70%, #FFFFFF 70%, transparent 72%)',
+      'radial-gradient(11% 7% at 88% 66%, #FFFFFF 70%, transparent 72%)',
+      'linear-gradient(180deg, #5AA8FF, #A8D8FF 70%, #D8F0FF)',
+    ].join(', '),
+    form: { bevel: 0.1, size: 0.9, radius: 0.14 },
+    body: { color: '#2A2A4A', roughness: 1 },
+    faces: ['#FF5A6E', '#4A7AF0', '#FFF6E8', '#FFD23A', '#3AD07A', '#B06AF0'],
+    surface: 'toon',
+    motion: 'bouncy',
+    ambient: { mode: 'float', shape: 'star', colors: ['#FFFFFF', '#FFF2A8'], count: 24, size: 0.08, speed: 0.4, opacity: 0.9 },
+    burst: { shape: 'star', colors: 'faces', size: 0.2, speed: 2.6, gravity: -1, drag: 2.4, life: 0.8 },
   },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
+
+// 테마 고르는 목록에서 묶어 보여 주는 무리. 테마는 모두 한 무리에만 들어간다(테스트가 본다)
+export const GROUPS = [
+  { name: '기본', themes: ['classic', 'candy', 'brick', 'dice', 'jelly', 'clay', 'bubblewrap', 'paper', 'doodle'] },
+  { name: '자연', themes: ['forest', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert', 'honey', 'fruit'] },
+  { name: '빛·불', themes: ['neon', 'lava', 'electric', 'disco', 'lavalamp', 'pumpkin', 'kaleido'] },
+  { name: '우주', themes: ['space', 'planet', 'blackhole'] },
+  { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'fossil'] },
+  { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'embroidery', 'knit', 'tartan', 'camo'] },
+  { name: '동물', themes: ['wool', 'cat', 'dog', 'hamster', 'dragon'] },
+  { name: '금속·기계', themes: ['metal', 'gauge', 'rust', 'mercury', 'circuit'] },
+  { name: '디지털·레트로', themes: ['glitch', 'pixel', 'holo', 'thermal', 'flip', 'vinyl', 'comic', 'toon'] },
+  { name: '기묘', themes: ['flesh', 'eldritch', 'skin'] },
+];

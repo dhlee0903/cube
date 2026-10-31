@@ -158,10 +158,18 @@ body::before {
 .actions {
   display: flex;
   align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 62%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ink) 10%, transparent);
 }
 
-.actions {
-  gap: 2px;
+.size button,
+.actions button {
+  border-radius: 999px;
 }
 
 button {
@@ -213,15 +221,6 @@ button:disabled {
 
 /* ---- 색 고르기 ---- */
 
-.dot {
-  display: block;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: var(--swatch);
-  box-shadow: 0 0 0 2px var(--rim), 0 0 0 3px color-mix(in srgb, var(--ink) 18%, transparent);
-}
-
 .theme-button {
   position: absolute;
   z-index: 2;
@@ -229,62 +228,137 @@ button:disabled {
   right: max(10px, env(safe-area-inset-right, 0px));
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   padding: 0;
   border-radius: 50%;
+  background: color-mix(in srgb, var(--bg) 62%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+.dot {
+  display: block;
+  width: 28px;
+  height: 30px;
+}
+
+.dot svg,
+.tile svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .palette {
   position: absolute;
   z-index: 2;
-  top: calc(58px + env(safe-area-inset-top, 0px));
+  top: calc(64px + env(safe-area-inset-top, 0px));
   right: max(10px, env(safe-area-inset-right, 0px));
-  display: grid;
-  grid-template-columns: repeat(4, 64px);
-  gap: 6px 4px;
-  max-height: calc(100% - 68px - env(safe-area-inset-top, 0px));
+  width: min(calc(100vw - 20px), 452px);
+  max-height: calc(100% - 74px - env(safe-area-inset-top, 0px));
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 10px;
-  border-radius: 14px;
+  padding: 0 10px 12px;
+  border-radius: 18px;
   background: var(--bg);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ink) 12%, transparent), 0 12px 32px rgb(0 0 0 / 0.22);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ink) 12%, transparent), 0 16px 40px rgb(0 0 0 / 0.28);
+  scrollbar-width: thin;
 }
 
 .palette[hidden] {
   display: none;
 }
 
-@media (min-width: 560px) {
-  .palette {
-    grid-template-columns: repeat(6, 64px);
-  }
+/* 위에 붙어 있는 무리 칩. 누르면 그 무리로 내려간다 */
+.chips {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  gap: 4px;
+  margin: 0 -10px;
+  padding: 10px 10px 8px;
+  overflow-x: auto;
+  background: var(--bg);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--ink) 8%, transparent);
+  scrollbar-width: none;
 }
 
-.palette button {
+.chips::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  flex: none;
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
+}
+
+/* 마우스를 올려도 켜진 칩은 그대로(button:hover보다 앞서게 선택자를 하나 더 붙인다) */
+.palette .chip.on {
+  background: var(--ink);
+  color: var(--bg);
+}
+
+.group h3 {
+  margin: 14px 4px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  opacity: 0.5;
+}
+
+.group .grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(66px, 1fr));
+  gap: 2px;
+}
+
+.palette .pick {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  padding: 6px 0 7px;
-  font-size: 12px;
+  padding: 6px 0 8px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  line-height: 1.15;
+  text-align: center;
 }
 
 .palette .tile {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 54px;
+  height: 54px;
+  padding: 8px;
+  border-radius: 15px;
   background: var(--tile);
-  box-shadow: inset 0 0 0 1px rgb(127 127 127 / 0.25);
+  background-size: cover;
+  background-position: center;
+  box-shadow: inset 0 0 0 1px rgb(127 127 127 / 0.22);
 }
 
-.palette button[aria-checked="true"] .tile {
-  box-shadow: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--ink);
+.palette .tile svg {
+  filter: drop-shadow(0 2px 3px rgb(0 0 0 / 0.35));
+  transition: transform 0.2s;
 }
 
-.palette button[aria-checked="true"] {
+@media (hover: hover) {
+  .palette .pick:hover .tile svg {
+    transform: translateY(-1px) rotate(-4deg);
+  }
+}
+
+.palette .pick[aria-checked="true"] .tile {
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--ink);
+}
+
+.palette .pick[aria-checked="true"] {
   font-weight: 700;
 }

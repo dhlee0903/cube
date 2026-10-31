@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { THEMES, themeById } from '../src/themes.js';
+import { GROUPS, THEMES, themeById } from '../src/themes.js';
 import { Timer, formatTime } from '../src/timer.js';
 
 // sRGB hex → CIE Lab
@@ -29,6 +29,13 @@ test('테마마다 면 색 여섯 개, 이름과 id는 겹치지 않는다', () 
     for (const c of [...t.faces, t.bg, t.ink, t.body.color]) assert.match(c, /^#[0-9A-F]{6}$/i, `${t.id} ${c}`);
     assert.equal(themeById(t.id), t);
   }
+});
+
+test('테마는 모두 한 무리에만 들어간다', () => {
+  const listed = GROUPS.flatMap((g) => g.themes);
+  assert.equal(new Set(listed).size, listed.length, '두 무리에 든 테마가 있다');
+  for (const id of listed) assert.ok(themeById(id), `없는 테마 ${id}`);
+  for (const t of THEMES) assert.ok(listed.includes(t.id), `무리에 없는 테마 ${t.name}`);
 });
 
 test('한 테마 안의 면 색은 서로 헷갈리지 않는다', () => {

@@ -2,7 +2,7 @@ import './style.css';
 import {
   MAX_SIZE, MIN_SIZE, applyMove, createCube, invert, isSolved, scramble, simplify, steps,
 } from './cube.js';
-import { THEMES, themeById } from './themes.js';
+import { GROUPS, themeById } from './themes.js';
 import { CubeView } from './view.js';
 import { Timer, formatTime } from './timer.js';
 
@@ -158,33 +158,104 @@ function tickTimer() {
 
 // ---- 색 ----
 
-const swatchOrder = [2, 4, 0, 3, 5, 1]; // 위-앞-오른쪽-아래-뒤-왼쪽 순으로 둘러 칠한다
-
-function paintSwatch(el, theme) {
-  const stops = swatchOrder.map((f, i) => `${theme.faces[f]} ${i * 60}deg ${(i + 1) * 60}deg`);
-  el.style.setProperty('--swatch', `conic-gradient(${stops.join(', ')})`);
-  el.style.setProperty('--rim', theme.body.color);
+// 테마 색으로 그린 작은 큐브. 위, 앞, 오른쪽 세 면이 보이고 몸통 색이 틈으로 비친다
+function cubeIcon(theme) {
+  const top = [[20, 3], [36, 12], [20, 21], [4, 12]];
+  const front = [[4, 12], [20, 21], [20, 39], [4, 30]];
+  const right = [[20, 21], [36, 12], [36, 30], [20, 39]];
+  const lerp = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+  const at = ([p0, p1, p2, p3], u, v) => lerp(lerp(p0, p1, u), lerp(p3, p2, u), v);
+  const pts = (list) => list.map((p) => p.map((x) => x.toFixed(2)).join(',')).join(' ');
+  const face = (quad, color, shade) => {
+    let cells = '';
+    const g = 0.09;
+    for (let i = 0; i < 3; i++) {
+      for (let j = 0; j < 3; j++) {
+        const [u0, u1, v0, v1] = [(i + g) / 3, (i + 1 - g) / 3, (j + g) / 3, (j + 1 - g) / 3];
+        cells += `<polygon points="${pts([at(quad, u0, v0), at(quad, u1, v0), at(quad, u1, v1), at(quad, u0, v1)])}" fill="${color}"/>`;
+      }
+    }
+    return `<polygon points="${pts(quad)}" fill="${theme.body.color}"/>${cells}`
+      + (shade ? `<polygon points="${pts(quad)}" fill="#000" opacity="${shade}"/>` : '');
+  };
+  return `<svg viewBox="0 0 40 42" aria-hidden="true">${face(top, theme.faces[2], 0)}${face(front, theme.faces[4], 0.12)}${face(right, theme.faces[0], 0.28)}</svg>`;
 }
 
 const palette = $('themes');
 const themeButton = $('theme');
+const chips = document.createElement('div');
+chips.className = 'chips';
+palette.append(chips);
 
-const choices = THEMES.map((theme) => {
-  const b = document.createElement('button');
-  b.type = 'button';
-  b.setAttribute('role', 'radio');
-  b.innerHTML = '<span class="tile"><span class="dot"></span></span><span class="name"></span>';
-  b.querySelector('.name').textContent = theme.name;
-  b.querySelector('.tile').style.setProperty('--tile', theme.tile ?? theme.backdrop ?? theme.bg);
-  paintSwatch(b, theme);
-  b.addEventListener('click', () => useTheme(theme));
-  palette.append(b);
-  return { theme, b };
-});
+const choices = [];
+const sections = [];
+// 칩을 눌러 내려간 무리. 목록 끝 쪽 무리는 맨 위까지 올라오지 못하니, 손으로 넘기기 전까지 그 칩을 켜 둔다
+let pinned = null;
+for (const group of GROUPS) {
+  const section = document.createElement('section');
+  section.className = 'group';
+  section.setAttribute('role', 'group');
+  section.setAttribute('aria-label', group.name);
+  section.innerHTML = '<h3></h3><div class="grid"></div>';
+  section.querySelector('h3').textContent = group.name;
+  const grid = section.querySelector('.grid');
+  for (const id of group.themes) {
+    const theme = themeById(id);
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'pick';
+    b.setAttribute('role', 'radio');
+    b.innerHTML = `<span class="tile">${cubeIcon(theme)}</span><span class="name"></span>`;
+    b.querySelector('.name').textContent = theme.name;
+    b.querySelector('.tile').style.setProperty('--tile', theme.tile ?? theme.backdrop ?? theme.bg);
+    b.addEventListener('click', () => useTheme(theme));
+    grid.append(b);
+    choices.push({ theme, b });
+  }
+  const chip = document.createElement('button');
+  chip.type = 'button';
+  chip.className = 'chip';
+  chip.textContent = group.name;
+  chip.addEventListener('click', () => {
+    pinned = sections.find((x) => x.chip === chip);
+    palette.scrollTo({ top: section.offsetTop - chips.offsetHeight, behavior: 'smooth' });
+    markChip();
+  });
+  chips.append(chip);
+  palette.append(section);
+  sections.push({ section, chip });
+}
+
+// 목록을 내리면 지금 보이는 무리의 칩이 켜진다
+function markChip() {
+  const y = palette.scrollTop + chips.offsetHeight + 12;
+  let on = sections[0];
+  for (const s of sections) if (s.section.offsetTop <= y) on = s;
+  if (pinned) on = pinned;
+  for (const s of sections) s.chip.classList.toggle('on', s === on);
+  // scrollIntoView는 목록 전체도 움직여 칩을 눌러 내려가던 것을 끊어 버린다. 칩 줄만 옆으로 민다
+  const c = on.chip;
+  if (c.offsetLeft < chips.scrollLeft || c.offsetLeft + c.offsetWidth > chips.scrollLeft + chips.clientWidth) {
+    chips.scrollTo({ left: c.offsetLeft - chips.clientWidth / 2 + c.offsetWidth / 2, behavior: 'smooth' });
+  }
+}
+palette.addEventListener('scroll', markChip, { passive: true });
+for (const type of ['wheel', 'touchstart', 'keydown']) {
+  palette.addEventListener(type, () => { pinned = null; }, { passive: true });
+}
 
 function openPalette(open) {
   palette.hidden = !open;
   themeButton.setAttribute('aria-expanded', String(open));
+  if (!open) return;
+  pinned = null;
+  // 열면 지금 테마가 보이게
+  const current = choices.find(({ b }) => b.getAttribute('aria-checked') === 'true');
+  if (current) {
+    const section = current.b.closest('.group');
+    palette.scrollTop = Math.max(0, section.offsetTop - chips.offsetHeight);
+  }
+  markChip();
 }
 
 themeButton.addEventListener('click', () => openPalette(palette.hidden));
@@ -213,7 +284,7 @@ function useTheme(theme) {
   root.style.colorScheme = isDark(theme.bg) ? 'dark' : 'light';
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme.bg);
   for (const { theme: t, b } of choices) b.setAttribute('aria-checked', String(t === theme));
-  paintSwatch(themeButton, theme);
+  themeButton.querySelector('.dot').innerHTML = cubeIcon(theme);
   view.setTheme(theme);
   store.set('cube.theme', theme.id);
 }
