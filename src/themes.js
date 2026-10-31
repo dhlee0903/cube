@@ -649,39 +649,7 @@ export const THEMES = [
     ambient: { mode: 'float', shape: 'dot', colors: ['#FFF6E0'], count: 36, size: 0.03, speed: 0.15, opacity: 0.55 },
     burst: { shape: 'dot', colors: ['#F1EFEA', '#CFCAC0', '#9E978A'], size: 0.05, speed: 1.4, gravity: -2.5, drag: 2.5, life: 1.1 },
   },
-  {
-    // 할로윈 밤. 언덕 위 앙상한 나무와 둥근 달, 박쥐가 날고, 칸마다 다른 표정의 호박등이 촛불에 일렁인다
-    id: 'pumpkin',
-    name: '호박',
-    bg: '#140B16',
-    ink: '#FFE8CC',
-    backdrop: [
-      `${svg(100, 50, "<g fill='#07030A'><path d='M0 44 Q30 37 60 43 T100 40 V50 H0Z'/><path d='M12 44 v-4 a2 2 0 0 1 4 0 v4z M22 45 v-3 a1.6 1.6 0 0 1 3.2 0 v3z'/></g><path d='M80 44 L80 29 L72 17 M80 29 L88 19 M80 35 L70 31 M76 23 L70 21 M84 24 L92 23 M88 19 L90 14 M72 17 L70 12' stroke='#07030A' stroke-width='1.6' fill='none' stroke-linecap='round'/>")} bottom / 100% 50% no-repeat`,
-      'radial-gradient(circle at 50% 50%, #FFF6DA 0%, #F2E2B0 55%, rgba(242,226,176,0) 58%) 80% 14% / 16vmin 16vmin no-repeat',
-      'radial-gradient(30% 22% at 80% 15%, rgba(255,240,200,.18), transparent 70%)',
-      'linear-gradient(#2E1A44 0%, #1E1028 55%, #120A12 100%)',
-    ].join(', '),
-    drift: [
-      'radial-gradient(60% 25% at 50% 100%, rgba(255,120,20,.25), transparent 70%)',
-      'linear-gradient(transparent 70%, rgba(180,160,200,.08) 85%, transparent)',
-    ].join(', '),
-    form: { bevel: 0.12, size: 0.82, radius: 0.2, depth: 0.02 },
-    body: { color: '#1C1410', roughness: 0.85 },
-    faces: ['#B3122E', '#7B3FA8', '#F2EDE4', '#FFD447', '#7BC43A', '#F07F13'],
-    lights: {
-      sky: '#2a1a40', ground: '#ff7a1a', hemi: 1.1,
-      key: ['#ff9a3c', 1.9, [0, -4, 5]], fill: ['#7a8cff', 0.5, [-6, 4, 2]], rim: ['#c7d4ff', 1.1, [4, 5, -6]],
-    },
-    light: 0.85,
-    flicker: 'candle',
-    surface: 'pumpkin',
-    motion: 'smooth',
-    ambient: [
-      { mode: 'wind', shape: 'bat', colors: ['#07030A'], count: 8, size: 0.36, speed: 0.45, opacity: 1 },
-      { mode: 'float', shape: 'glow', colors: ['#FF9A2E', '#FFD447'], count: 18, size: 0.1, speed: 0.3, opacity: 0.8, additive: true },
-    ],
-    burst: { shape: 'streak', colors: ['#F07F13', '#7B3FA8', '#7BC43A', '#FFD447'], size: 0.13, speed: 2.2, gravity: -4, drag: 1.4, life: 1.1 },
-  },
+
   {
     // 산사 처마 밑. 서까래 끝마다 단청이 둘러 있고, 큐브는 머리초를 그려 넣은 나무다.
     // 면 색은 단청 안료에서: 주홍, 군청, 호분(흰색), 석황, 하엽(녹색), 장단(주황)
@@ -1865,7 +1833,7 @@ export const THEMES = [
       'radial-gradient(55% 45% at 50% 40%, rgba(80,200,160,.14), transparent 70%)',
       'linear-gradient(180deg, #24382C, #0C140F)',
     ].join(', '),
-    form: { bevel: 0.07, size: 0.92, radius: 0.12 },
+    form: { bevel: 0.07, size: 0.92, radius: 0.12, grid: 44 },
     body: { color: '#2A2018', roughness: 0.4 },
     faces: ['#2A5AC8', '#2A9A6A', '#D8A83A', '#F0F0EA', '#7A3AA0', '#C8302A'],
     lights: {
@@ -1877,29 +1845,7 @@ export const THEMES = [
     surface: 'peacock',
     motion: 'fluid',
   },
-  {
-    // 시계 장인의 작업대. 칸마다 둥근 물결 무늬로 다듬은 판 위에 놋쇠 큰 바퀴와 강철 작은 바퀴가 맞물려 서로 반대로 돌고,
-    // 축엔 루비, 모서리엔 파랗게 달군 나사. 판 색이 곧 면 색. 째깍째깍 끊어 돈다
-    id: 'clockwork',
-    name: '시계태엽',
-    bg: '#1A1612',
-    ink: '#F2E6D0',
-    backdrop: [
-      'radial-gradient(40% 32% at 50% 30%, rgba(255,230,180,.18), transparent 70%)',
-      'linear-gradient(180deg, #2A221A, #0E0B08)',
-    ].join(', '),
-    form: { bevel: 0.05, size: 0.94, radius: 0.08 },
-    body: { color: '#8A6A30', roughness: 0.3, metalness: 1 },
-    faces: ['#C8A040', '#A8ACB4', '#D88A7A', '#3A5AA8', '#2A2A2E', '#3A8A5A'],
-    lights: {
-      sky: '#fff4e4', ground: '#3a2a1a', hemi: 1.2,
-      key: ['#fff0dc', 2.2, [-4, 6, 5]], fill: ['#ffc890', 0.4, [6, 0, 3]], rim: ['#ffffff', 1.2, [2, 4, -6]],
-    },
-    env: 1.3,
-    burst: { shape: 'star', colors: ['#FFE08A', '#FFFFFF'], size: 0.1, speed: 2, gravity: -2, drag: 2, life: 0.8, additive: true },
-    surface: 'clockwork',
-    motion: 'stop',
-  },
+
   {
     // 레이싱카 정비소. 다 맞추면 면 하나가 한 장의 2/2 능직 탄소섬유 판이다. 다발마다 섬유 결이 있어 빛과 결이 맞는 다발만 번쩍이고,
     // 돌리면 체크 광택이 서로 자리를 바꾼다. 두꺼운 투명 코팅, 면마다 섬유 색이 다르다
@@ -1925,54 +1871,32 @@ export const THEMES = [
     motion: 'snap',
   },
   {
-    // 죽은 자의 날 밤. 칸마다 꽃으로 꾸민 하얀 설탕 해골이 웃고 있다. 꽃잎 눈테, 이마의 꽃, 점박이 광대, 꿰맨 듯한 이.
-    // 바탕은 금잔화 잎이 흩날린 면 색 종이. 촛불이 일렁인다
-    id: 'calavera',
-    name: '해골',
-    bg: '#1A0E20',
-    ink: '#FFE8F0',
+    // 자연사 박물관 뼈 수장고. 다 맞추면 면 하나가 머리뼈 한 판이다. 실제로 패인 톱니 봉합선, 영양공, 결 따라 난 금,
+    // 오래 묻혀 밴 얼룩. 면마다 뼈가 겪은 일이 달라 빛깔이 다르다(갓 마른 뼈, 황토, 구리, 그을림, 하얗게 탄 뼈, 늪).
+    // 몸통은 뼈 속 해면뼈. 어둑한 진열장 위로 스포트라이트
+    id: 'bone',
+    name: '뼈',
+    bg: '#14120F',
+    ink: '#EAE2D2',
     backdrop: [
-      'radial-gradient(18% 12% at 15% 85%, rgba(255,170,60,.35), transparent 70%)',
-      'radial-gradient(18% 12% at 85% 85%, rgba(255,170,60,.3), transparent 70%)',
-      'repeating-linear-gradient(90deg, rgba(255,80,160,.18) 0 18px, rgba(80,200,255,.14) 18px 36px, rgba(255,210,60,.16) 36px 54px) 0 0 / 100% 9% no-repeat',
-      'radial-gradient(80% 60% at 50% 40%, #2A1830, #0E0612)',
+      'radial-gradient(40% 30% at 50% 18%, rgba(255,240,215,.22), transparent 70%)',
+      'radial-gradient(90% 60% at 50% 110%, rgba(90,70,50,.35), transparent 70%)',
+      'radial-gradient(80% 65% at 50% 40%, #26221D, #0A0908)',
     ].join(', '),
-    form: { bevel: 0.07, size: 0.92, radius: 0.12 },
-    body: { color: '#2A1A2E', roughness: 0.7 },
-    faces: ['#E83A8A', '#2A8AE0', '#F2C83A', '#3AB06A', '#F07A2A', '#8A4AD0'],
+    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 44 },
+    body: { color: '#5E3A2A', roughness: 0.75 },
+    faces: ['#E4D6B8', '#A9472E', '#4E8C6E', '#2C2420', '#8D9BB0', '#93683A'],
     lights: {
-      sky: '#fff4e4', ground: '#3a2a1a', hemi: 1.2,
-      key: ['#fff0dc', 2.2, [-4, 6, 5]], fill: ['#ffc890', 0.4, [6, 0, 3]], rim: ['#ffffff', 1.2, [2, 4, -6]],
+      sky: '#fff4e6', ground: '#2a2018', hemi: 0.9,
+      key: ['#fff2dc', 2.4, [-4, 6, 5]], fill: ['#c8d0e0', 0.35, [6, 0, 3]], rim: ['#ffffff', 0.9, [2, 4, -6]],
     },
-    flicker: 'candle',
-    ambient: { mode: 'fall', shape: 'petal', colors: ['#FFA41A', '#FF7A1A'], count: 30, size: 0.08, speed: 0.4, opacity: 0.9 },
-    burst: { shape: 'petal', colors: ['#FFA41A', '#FF5AA0', '#FFD84A'], size: 0.12, speed: 2, gravity: -1.4, drag: 2, life: 1.4 },
-    surface: 'calavera',
-    motion: 'bouncy',
+    ambient: { mode: 'float', shape: 'dot', colors: ['#E8DCC0'], count: 24, size: 0.02, speed: 0.12, opacity: 0.35 },
+    burst: { shape: 'dot', colors: ['#E8DCC0', '#C8B898'], size: 0.05, speed: 1.6, gravity: 2, drag: 1.2, life: 1.2 },
+    surface: 'bone',
+    motion: 'heavy',
   },
-  {
-    // 버려진 저택 구석. 칸마다 달빛 스민 어둠에 거미줄이 걸렸다. 바큇살 세로줄과 늘어진 가로줄, 이슬방울의 반짝임,
-    // 바람에 살짝 흔들리고, 몇 칸엔 거미가 웅크렸다. 스민 달빛이 곧 면 색
-    id: 'cobweb',
-    name: '거미줄',
-    bg: '#08070C',
-    ink: '#E8E4F0',
-    backdrop: [
-      'radial-gradient(14% 14% at 82% 16%, rgba(230,230,255,.6) 40%, rgba(180,180,255,.12) 60%, transparent 75%)',
-      'radial-gradient(80% 60% at 50% 45%, #18141E, #050407)',
-    ].join(', '),
-    form: { bevel: 0.06, size: 0.92, radius: 0.08 },
-    body: { color: '#1A1820', roughness: 0.85 },
-    faces: ['#8A6AE0', '#3AA0A0', '#E0A040', '#A0B8E0', '#C04A4A', '#6AA04A'],
-    lights: {
-      sky: '#40304a', ground: '#000000', hemi: 0.4,
-      key: ['#ffffff', 0.8, [-4, 5, 5]], fill: ['#8a6aff', 0.3, [6, 0, 3]], rim: ['#c0a8ff', 0.9, [0, 4, -6]],
-    },
-    ambient: { mode: 'float', shape: 'dot', colors: ['#C8C0D8'], count: 40, size: 0.02, speed: 0.15, opacity: 0.5 },
-    burst: { shape: 'bat', colors: ['#100A14'], size: 0.16, speed: 2, gravity: 0.6, drag: 1.4, life: 1.6 },
-    surface: 'cobweb',
-    motion: 'smooth',
-  },
+
+
   {
     // 폐공장의 독성 슬라임 통. 칸마다 형광으로 빛나는 끈적한 슬라임이 울퉁불퉁 출렁이고 거품이 부풀었다 톡 터지며,
     // 아래로 방울이 늘어진다. 슬라임 빛이 곧 면 색. 말랑하게 출렁이며 돈다
@@ -1998,8 +1922,8 @@ export const THEMES = [
     motion: 'squish',
   },
   {
-    // 지하 제단. 칸마다 검은 돌바닥에 빛나는 마법진이 새겨졌다. 겹 원 사이의 알 수 없는 문자 띠, 엇갈린 두 삼각형, 가운데 눈 문양.
-    // 바깥 띠와 안쪽 별이 서로 반대로 돌고, 빛이 숨 쉬듯 일렁인다. 새겨진 빛이 곧 면 색
+    // 지하 제단. 칸마다 검은 돌판에 마법진을 끌로 깊이 새겼다. 겹 원 사이의 알 수 없는 문자 띠, 엇갈린 두 삼각형, 가운데 눈 문양.
+    // 패인 홈 바닥에서 빛이 스며 나와 물결치듯 일렁인다. 홈의 빛이 곧 면 색
     id: 'magic',
     name: '마법진',
     bg: '#060508',
@@ -2008,7 +1932,7 @@ export const THEMES = [
       'radial-gradient(40% 32% at 50% 50%, rgba(160,80,255,.14), transparent 70%)',
       'radial-gradient(80% 60% at 50% 45%, #14101A, #030204)',
     ].join(', '),
-    form: { bevel: 0.05, size: 0.94, radius: 0.05 },
+    form: { bevel: 0.05, size: 0.94, radius: 0.05, grid: 56 },
     body: { color: '#1A161E', roughness: 0.85 },
     faces: ['#FF3A3A', '#A04AFF', '#3AE0F0', '#FFC83A', '#3AF07A', '#F0F0FF'],
     lights: {
@@ -2077,7 +2001,7 @@ export const THEMES = [
       'repeating-linear-gradient(90deg, rgba(120,80,40,.08) 0 2px, transparent 2px 23px)',
       'radial-gradient(70% 55% at 50% 45%, #F2E8D6, #D2C2A6)',
     ].join(', '),
-    form: { bevel: 0.05, size: 0.94, radius: 0.08 },
+    form: { bevel: 0.05, size: 0.94, radius: 0.08, grid: 44 },
     body: { color: '#2A2A2E', roughness: 0.35 },
     faces: ['#E0402A', '#2A5AD0', '#F2F0EA', '#F2C42A', '#2AA05A', '#E070B0'],
     lights: {
@@ -2100,7 +2024,7 @@ export const THEMES = [
       'repeating-linear-gradient(90deg, rgba(0,0,0,.2) 0 3px, transparent 3px 52px)',
       'linear-gradient(180deg, #3A2A1E, #160F0A)',
     ].join(', '),
-    form: { bevel: 0.06, size: 0.95, radius: 0.06 },
+    form: { bevel: 0.06, size: 0.95, radius: 0.06, grid: 48 },
     body: { color: '#5A3A24', roughness: 0.3 },
     faces: ['#E0802A', '#1E1E22', '#F2EEE6', '#B82A3A', '#2A5AB0', '#E8C890'],
     lights: {
@@ -2146,7 +2070,7 @@ export const THEMES = [
       'radial-gradient(60% 45% at 50% 35%, rgba(255,250,235,.6), transparent 70%)',
       'linear-gradient(180deg, #F2E6D0, #D6C2A0)',
     ].join(', '),
-    form: { bevel: 0.05, size: 0.95, radius: 0.04 },
+    form: { bevel: 0.05, size: 0.95, radius: 0.04, grid: 48 },
     body: { color: '#3A3530', roughness: 0.8 },
     faces: ['#1E4AA8', '#1EA0A0', '#F2F0E6', '#E8A82A', '#2A8A4A', '#C8502A'],
     lights: {
@@ -2158,8 +2082,8 @@ export const THEMES = [
     motion: 'heavy',
   },
   {
-    // 1920년대 호텔 로비. 다 맞추면 면 하나가 부채꼴 비늘이 줄지은 칠기 판이다. 검은 옻칠에 금선 부채,
-    // 햇살처럼 뻗는 금빛 살과 겹겹 반원, 칸칸이 면 색 에나멜. 금빛 햇살 무늬 벽
+    // 1920년대 호텔 로비. 다 맞추면 면 하나가 부채꼴 비늘이 줄지은 황동 판이다. 솟은 황동 테와 겹 반원,
+    // 그 사이 움푹한 칸에 녹여 채운 에나멜(면 색과 검정에 금빛 살), 햇살 결을 새긴 황동 해. 금빛 햇살 무늬 벽
     id: 'artdeco',
     name: '아르데코',
     bg: '#0E0E10',
@@ -2168,7 +2092,7 @@ export const THEMES = [
       'repeating-conic-gradient(from 180deg at 50% 100%, rgba(220,180,90,.14) 0deg 4deg, transparent 4deg 12deg)',
       'linear-gradient(180deg, #16161A, #060607)',
     ].join(', '),
-    form: { bevel: 0.04, size: 0.95, radius: 0.03 },
+    form: { bevel: 0.04, size: 0.95, radius: 0.03, grid: 48 },
     body: { color: '#0A0A0C', roughness: 0.15, metalness: 0.3 },
     faces: ['#1E8A5A', '#1E4AA8', '#F2EEE2', '#B82A3A', '#E8B83A', '#6A2A8A'],
     lights: {
@@ -2181,8 +2105,8 @@ export const THEMES = [
     motion: 'mechanical',
   },
   {
-    // 수도원 필사본. 다 맞추면 면 하나가 끊이지 않고 엮인 매듭 무늬다. 두 방향으로 달리는 띠가 만나는 곳마다 위아래가 번갈아 엇갈리고,
-    // 아래로 들어가는 띠엔 그늘. 금빛 테두리, 짙은 양피지 바탕
+    // 수도원 뜰의 돌 십자가. 다 맞추면 면 하나가 돌을 깊이 파서 새긴 매듭 한 판이다. 띠가 만나는 곳마다 위 띠는 솟아 넘어가고
+    // 아래 띠는 내려앉아 밑으로 들어간다. 띠엔 면 색 안료를 칠했고 닳은 데는 돌이 드러났다. 촛불
     id: 'celtic',
     name: '켈트 매듭',
     bg: '#1E1812',
@@ -2191,7 +2115,7 @@ export const THEMES = [
       PAPER_GRAIN,
       'radial-gradient(70% 55% at 50% 45%, #2E2418, #0E0A06)',
     ].join(', '),
-    form: { bevel: 0.05, size: 0.95, radius: 0.04 },
+    form: { bevel: 0.05, size: 0.95, radius: 0.04, grid: 48 },
     body: { color: '#2A2018', roughness: 0.85 },
     faces: ['#1E7A3A', '#C8302A', '#1E4AA8', '#E8C040', '#F0EADA', '#A03A8A'],
     lights: {
@@ -2204,19 +2128,20 @@ export const THEMES = [
     motion: 'heavy',
   },
   {
-    // 흙벽 집의 직물. 다 맞추면 면 하나가 한 장의 천이다. 겹겹이 계단진 마름모와 지그재그 띠를 면 색 바탕에 검정, 하양,
-    // 테라코타, 청록 실로 짜 넣었다. 굵은 털실 씨실
+    // 밀림 속 신전 벽. 칸마다 돌을 깎아 낸 계단 피라미드가 층층이 솟았고, 층마다 면 색과 검정 안료를 번갈아 칠했는데
+    // 군데군데 벗겨져 돌이 드러났다. 칸 둘레엔 솟은 돌 테. 한낮 햇빛
     id: 'aztec',
     name: '아즈텍',
-    bg: '#E8D4B0',
-    ink: '#2A1A10',
+    bg: '#B8A27C',
+    ink: '#1E140C',
     backdrop: [
-      'repeating-linear-gradient(0deg, rgba(150,90,40,.08) 0 3px, transparent 3px 9px)',
-      'radial-gradient(70% 55% at 50% 45%, #F2E2C4, #D2B88C)',
+      'radial-gradient(60% 40% at 30% 12%, rgba(255,245,210,.5), transparent 70%)',
+      'repeating-linear-gradient(0deg, rgba(60,40,20,.12) 0 2px, transparent 2px 46px)',
+      'radial-gradient(80% 65% at 50% 45%, #C9B48E, #7A6648)',
     ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.08 },
+    form: { bevel: 0.08, size: 0.94, radius: 0.08, grid: 44 },
     body: { color: '#5A3A24', roughness: 0.9 },
-    faces: ['#C8402A', '#2A8A8A', '#E8B83A', '#1E1C1E', '#F0E8D8', '#5A8A3A'],
+    faces: ['#C8402A', '#2A8A8A', '#E8B83A', '#1E1C1E', '#3A6AB8', '#5A8A3A'],
     lights: {
       sky: '#ffffff', ground: '#a09080', hemi: 1.8,
       key: ['#fff6e8', 2, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1, [0, 4, -6]],
@@ -2226,25 +2151,25 @@ export const THEMES = [
     motion: 'mechanical',
   },
   {
-    // 청재킷 주머니의 반다나. 칸마다 면 색 천 위에 끝이 말린 눈물방울 무늬 하나. 검은 테와 흰 테, 안쪽의 작은 페이즐리와 점,
-    // 바깥의 흰 물방울 장식, 바탕의 흰 점. 칸마다 무늬 방향이 조금씩 다르다
+    // 가죽 공방 작업대. 칸마다 면 색으로 물들인 두꺼운 가죽에 페이즐리 하나를 칼로 긋고 도구로 눌러 새겼다.
+    // 무늬는 도톰하게 솟고 바탕은 내려앉았다. 패인 데마다 짙은 안티크 물감, 솟은 데는 반들. 칸마다 무늬 방향이 조금씩 다르다
     id: 'paisley',
     name: '페이즐리',
-    bg: '#2E3E5A',
-    ink: '#F0EEE8',
+    bg: '#3A2618',
+    ink: '#F2E6D6',
     backdrop: [
-      'repeating-linear-gradient(45deg, rgba(255,255,255,.04) 0 2px, transparent 2px 5px)',
-      'repeating-linear-gradient(-45deg, rgba(0,0,0,.08) 0 2px, transparent 2px 5px)',
-      'radial-gradient(70% 55% at 50% 45%, #3A4E70, #1A2436)',
+      'repeating-linear-gradient(90deg, rgba(0,0,0,.14) 0 2px, transparent 2px 64px)',
+      'repeating-linear-gradient(0deg, rgba(255,220,170,.04) 0 1px, transparent 1px 7px)',
+      'radial-gradient(70% 55% at 50% 40%, #5A3C26, #24160C)',
     ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.08 },
-    body: { color: '#4A6A9A', roughness: 0.9 },
-    faces: ['#C82A2A', '#1E3A7A', '#2A2A2A', '#E8B83A', '#2A8A4A', '#8A3A9A'],
+    form: { bevel: 0.08, size: 0.94, radius: 0.08, grid: 48 },
+    body: { color: '#7A5234', roughness: 0.7 },
+    faces: ['#8A2A22', '#1E3A6A', '#2A2624', '#C08A3A', '#2E6A3A', '#6A3A7A'],
     lights: {
       sky: '#ffffff', ground: '#a09080', hemi: 1.8,
       key: ['#fff6e8', 2, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1, [0, 4, -6]],
     },
-    burst: { shape: 'petal', colors: 'faces', size: 0.12, speed: 1.6, gravity: -1.2, drag: 2.2, life: 1.4 },
+    burst: { shape: 'dot', colors: ['#C8A070', '#8A6040'], size: 0.05, speed: 1.6, gravity: 2, drag: 1.4, life: 1 },
     surface: 'paisley',
     motion: 'bouncy',
   },
@@ -2256,14 +2181,14 @@ export const themeById = (id) => THEMES.find((t) => t.id === id);
 export const GROUPS = [
   { name: '기본', themes: ['classic', 'candy', 'brick', 'dice', 'jelly', 'clay', 'bubblewrap', 'paper', 'doodle'] },
   { name: '자연', themes: ['forest', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert', 'honey', 'fruit'] },
-  { name: '빛·불', themes: ['neon', 'lava', 'electric', 'disco', 'lavalamp', 'pumpkin', 'kaleido'] },
+  { name: '빛·불', themes: ['neon', 'lava', 'electric', 'disco', 'lavalamp', 'kaleido'] },
   { name: '우주', themes: ['space', 'planet', 'blackhole', 'nebula', 'star', 'galaxy'] },
   { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'fossil', 'bismuth', 'banded'] },
   { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'tartan', 'camo'] },
   { name: '문양', themes: ['arabesque', 'artdeco', 'celtic', 'aztec', 'paisley'] },
   { name: '동물', themes: ['wool', 'cat', 'dog', 'hamster', 'wild', 'peacock', 'dragon'] },
-  { name: '금속·기계', themes: ['metal', 'gauge', 'rust', 'mercury', 'circuit', 'clockwork', 'carbon'] },
+  { name: '금속·기계', themes: ['metal', 'gauge', 'rust', 'mercury', 'circuit', 'carbon'] },
   { name: '음악', themes: ['vinyl', 'piano', 'speaker', 'cassette', 'guitar', 'drum'] },
   { name: '디지털·레트로', themes: ['glitch', 'pixel', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
-  { name: '기묘', themes: ['flesh', 'eldritch', 'calavera', 'cobweb', 'slime', 'magic'] },
+  { name: '기묘', themes: ['flesh', 'eldritch', 'bone', 'slime', 'magic'] },
 ];
