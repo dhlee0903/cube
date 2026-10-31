@@ -118,7 +118,7 @@ export class CubeView {
       uFlash: { value: 0 },
       uCharge: { value: 0 },
       uBlink: { value: 0 },
-      uPointer: { value: new Vector3(0, 0, -20) },
+      uPointer: { value: new Vector3(0, 0, 0) }, // 시점 공간. 0이면 카메라, 곧 보는 사람
       uBodyGlow: { value: new Color(0, 0, 0) },
       uSticker: { value: new Vector2(0.4, 0.09) },
     };
@@ -164,6 +164,13 @@ export class CubeView {
     this.listen();
   }
 
+  /** 잘게 쪼갠 스티커 면. 큰 큐브일수록 덜 쪼갠다. */
+  grid(f, n) {
+    this.gridFor = n;
+    const seg = Math.max(10, Math.round(f.grid * Math.min(1, 3.5 / n)));
+    return new PlaneGeometry(f.size, f.size, seg, seg);
+  }
+
   /** 조각 모양을 만든다. 테마마다 몸통 모서리, 스티커 크기·둥글기·두께가 다르다. */
   shape(form, haloMode) {
     const f = { ...FORM, ...form };
@@ -173,9 +180,14 @@ export class CubeView {
     for (const g of [this.bodyGeo, this.stickerGeo, this.haloGeo]) g?.dispose();
     this.haloTex?.dispose();
 
+    this.form = f;
     this.bodyGeo = new RoundedBoxGeometry(BODY, BODY, BODY, 3, f.bevel);
     let lift = 0.002;
-    if (f.depth > 0) {
+    if (f.grid) {
+      // 겉이 실제로 솟는 질감용. 둥근 모서리는 셰이더가 잘라 낸다
+      this.stickerGeo = this.grid(f, this.cube?.n ?? 3);
+      lift += 0.12;
+    } else if (f.depth > 0) {
       // 솟아오른 타일: 모서리를 깎은 만큼 바닥 모양을 줄여서 겉에서 본 크기가 size가 되게
       const bevel = Math.min(f.depth * 0.8, f.size * 0.08);
       this.stickerGeo = new ExtrudeGeometry(roundedSquare(f.size - bevel * 2, Math.max(0.005, f.radius - bevel)), {
@@ -225,6 +237,10 @@ export class CubeView {
     }
     this.cube = cube;
     this.breathe(performance.now() / 1000);
+    if (this.form?.grid && this.gridFor !== cube.n) {
+      this.stickerGeo.dispose();
+      this.stickerGeo = this.grid(this.form, cube.n);
+    }
 
     // 조각마다 난수를 하나씩 줘서 무늬가 똑같이 반복되지 않게
     const seeded = (geometry, count) => {
@@ -570,11 +586,30 @@ export class CubeView {
     const bursting = this.burst.update(dt);
     this.lit(now / 1000, dt);
     this.breathe(now / 1000);
+    // 손을 떼고 잠시 지나면 시선이 다시 보는 사람에게 돌아온다
+    if (now - (this.lookedAt ?? 0) > 2500) u.uPointer.value.multiplyScalar(Math.exp(-dt * 2));
 
     this.renderer.render(this.scene, this.camera);
+    this.pace(dt);
     if (this.tweens.length || this.moving || bursting || settling) this.invalidate();
     else this.last = 0;
     for (const t of finished) t.resolve();
+  }
+
+  /**
+   * 기기가 버거워하면 내부 해상도를 한 단계씩 낮춘다(2 → 1.75 → … → 1).
+   * 계속 그리는 중일 때 1.5초쯤 평균 45fps가 안 나오면 내린다. 다시 올리지는 않는다.
+   */
+  pace(dt) {
+    if (!dt) return;
+    this.frameTime = (this.frameTime ?? 1 / 60) * 0.95 + dt * 0.05;
+    this.paced = (this.paced ?? 0) + 1;
+    const ratio = this.renderer.getPixelRatio();
+    if (this.paced > 90 && this.frameTime > 1 / 45 && ratio > 1) {
+      this.renderer.setPixelRatio(Math.max(1, ratio - 0.25));
+      this.paced = 0;
+      this.resize();
+    }
   }
 
   resize() {
@@ -628,6 +663,7 @@ export class CubeView {
     const t = (2 - this.camera.position.z) / dir.z;
     const p = this.camera.position.clone().addScaledVector(dir, t);
     this.uniforms.uPointer.value.copy(p.applyMatrix4(this.camera.matrixWorldInverse));
+    this.lookedAt = performance.now();
   }
 
   point(e) {

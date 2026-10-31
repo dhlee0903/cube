@@ -7,7 +7,8 @@
 // bg        단색 바탕. 주소창 색과 글자 대비를 정할 때 쓴다
 // backdrop  배경 장면(CSS background, 움직이지 않음)
 // drift     그 위에 천천히 흐르는 빛(CSS background)
-// form      조각 모양 { bevel 몸통 모서리, size 스티커 한 변, radius 스티커 모서리, depth 스티커 두께 }
+// form      조각 모양 { bevel 몸통 모서리, size 스티커 한 변, radius 스티커 모서리, depth 스티커 두께,
+//           grid 겉이 실제로 솟는 질감용으로 스티커를 몇 칸으로 쪼갤지 }
 // body      몸통 { color, roughness, metalness, glow(몸통 무늬가 내는 빛 색) }
 // sticker   스티커 재질 { roughness, metalness }
 // glow      스티커가 스스로 내는 빛. 숫자 하나 또는 면마다
@@ -404,57 +405,63 @@ export const THEMES = [
     burst: { shape: 'streak', colors: ['#FFFFFF', '#9FD4FF', '#5C9DFF'], size: 0.1, speed: 5, gravity: 0, drag: 4.5, life: 0.4, additive: true },
   },
   {
-    // 살아 있는 살덩이. 마블링 진 근육, 젖은 겉, 박동에 맞춰 뛰는 핏줄. 돌리면 출렁인다
+    // 정육점 갈고리에 걸린 덩어리처럼, 그런데 아직 살아 있다. 울퉁불퉁 솟은 생살, 고름 주머니,
+    // 멍과 마블링, 번들거리는 겉. 심장처럼 뛰고 가끔 움찔한다. 파리가 꼬이고 피가 맺혀 떨어진다
     id: 'flesh',
     name: '살점',
-    bg: '#170708',
-    ink: '#FFE1DC',
+    bg: '#1E0809',
+    ink: '#FFE4DE',
     backdrop: [
-      `${svg(100, 100, "<g fill='none' stroke='#300508' stroke-linecap='round'><path d='M-5 20 C20 25 30 5 55 12 S90 30 105 18' stroke-width='1.6'/><path d='M30 12 C35 25 25 35 32 48' stroke-width='.9'/><path d='M-5 70 C15 60 35 80 60 72 S95 60 105 75' stroke-width='1.8'/><path d='M60 72 C62 85 75 90 78 105' stroke-width='1.1'/><path d='M80 -5 C75 15 90 25 84 45 S92 60 88 72' stroke-width='1.2'/></g>", 'xMidYMid slice')} center / cover no-repeat`,
-      'radial-gradient(70% 55% at 50% 45%, #45121A 0%, #1E0709 60%, #0E0304 100%)',
+      `${svg(100, 100, "<g fill='none' stroke='#4A0B12' stroke-linecap='round'><path d='M-5 20 C20 25 30 5 55 12 S90 30 105 18' stroke-width='1.8'/><path d='M30 12 C35 25 25 35 32 48' stroke-width='1'/><path d='M-5 70 C15 60 35 80 60 72 S95 60 105 75' stroke-width='2'/><path d='M60 72 C62 85 75 90 78 105' stroke-width='1.2'/><path d='M80 -5 C75 15 90 25 84 45 S92 60 88 72' stroke-width='1.3'/><path d='M8 40 C14 48 10 58 18 64' stroke-width='.8'/></g>", 'xMidYMid slice')} center / cover no-repeat`,
+      'radial-gradient(48% 42% at 50% 45%, #7A222A 0%, #4A1218 45%, #260A0D 75%, #120405 100%)',
     ].join(', '),
-    drift: 'radial-gradient(45% 40% at 50% 45%, rgba(200,20,40,.18), transparent 70%)',
-    form: { bevel: 0.22, size: 0.82, radius: 0.3, depth: 0.04 },
-    body: { color: '#3A1013', roughness: 0.15 },
-    faces: ['#C4253A', '#4A64A8', '#F6E7C8', '#A9AE3C', '#E8949A', '#5E2A5E'],
+    drift: 'radial-gradient(40% 36% at 50% 45%, rgba(255,70,80,.16), transparent 70%)',
+    form: { bevel: 0.2, size: 0.92, radius: 0.3, grid: 40 },
+    body: { color: '#4A0E14', roughness: 0.08 },
+    faces: ['#B8202C', '#5B6EA6', '#EBD2B4', '#C9A93A', '#E07A84', '#74284F'],
+    env: 0.55,
     lights: {
-      sky: '#ff9a8a', ground: '#2a0508', hemi: 1.5,
-      key: ['#ffd8cc', 2, [-3, 6, 5]], fill: ['#ff3a4a', 0.6, [6, -1, 4]], rim: ['#ff6a6a', 1.1, [0, 3, -6]],
+      sky: '#ffc4b4', ground: '#3a0a0e', hemi: 1.9,
+      key: ['#fff2ea', 2.7, [-3, 6, 5]], fill: ['#ff6070', 0.9, [6, -1, 4]], rim: ['#ffa090', 1.8, [0, 3, -6]],
     },
-    light: 0.9,
     surface: 'flesh',
     motion: 'squish',
     pulse: true,
-    ambient: { mode: 'fall', shape: 'dot', colors: ['#8E0E1C', '#B0182A'], count: 30, size: 0.045, speed: 0.55, opacity: 0.85 },
-    burst: { shape: 'dot', colors: ['#8E0E1C', '#C4253A', '#5A0A12'], size: 0.07, speed: 2.6, gravity: -8, drag: 0.8, life: 1.1 },
+    ambient: [
+      { mode: 'fall', shape: 'drip', colors: ['#7A0712', '#A0101E'], count: 22, size: 0.09, speed: 0.6, opacity: 0.95 },
+      { mode: 'buzz', shape: 'fly', colors: ['#0B0907'], count: 6, size: 0.14, speed: 1.6, opacity: 1 },
+    ],
+    burst: { shape: 'drip', colors: ['#7A0712', '#B0182A', '#5A0A12'], size: 0.09, speed: 2.8, gravity: -8, drag: 0.8, life: 1.2 },
   },
   {
-    // 심해에서 끌어올린 것. 점액이 꿈틀거리고, 눈들이 당신 손끝을 따라 쳐다본다. 잡으면 일제히 질끈
+    // 심해에서 끌어올린 것. 칸마다 진짜로 솟은 눈알이 하나, 셋, 또는 촉수 빨판.
+    // 두툼한 눈꺼풀이 덮였다 열리고, 동공이 구면 위를 굴러 보는 사람을 쳐다본다. 잡으면 일제히 질끈
     id: 'eldritch',
     name: '크툴루',
-    bg: '#040A08',
-    ink: '#D5F0DE',
+    bg: '#06100D',
+    ink: '#D8F4E2',
     backdrop: [
-      `${svg(100, 70, "<g fill='#081c16'><path d='M6 70 C10 52 0 40 9 26 C13 19 20 21 17 28 C13 37 19 52 15 70Z'/><path d='M84 70 C80 55 92 44 86 30 C83 23 90 18 93 25 C97 36 89 52 93 70Z'/><path d='M30 70 C33 62 26 56 31 50 C34 47 37 49 35 53 C33 58 37 64 36 70Z'/><path d='M64 70 C62 61 70 57 66 49 C64 45 68 43 70 47 C73 54 67 61 70 70Z'/></g>")} bottom / 100% 70% no-repeat`,
+      `${svg(100, 70, "<g fill='#0A231B'><path d='M6 70 C10 52 0 40 9 26 C13 19 20 21 17 28 C13 37 19 52 15 70Z'/><path d='M84 70 C80 55 92 44 86 30 C83 23 90 18 93 25 C97 36 89 52 93 70Z'/><path d='M30 70 C33 62 26 56 31 50 C34 47 37 49 35 53 C33 58 37 64 36 70Z'/><path d='M64 70 C62 61 70 57 66 49 C64 45 68 43 70 47 C73 54 67 61 70 70Z'/></g><g fill='#0F2E24'><circle cx='12.5' cy='40' r='1'/><circle cx='13.5' cy='47' r='.9'/><circle cx='88' cy='38' r='1'/><circle cx='87.5' cy='45' r='.9'/></g>")} bottom / 100% 70% no-repeat`,
+      'radial-gradient(50% 42% at 50% 44%, #1B3A33 0%, #0C1F1A 50%, transparent 80%)',
       'radial-gradient(70% 50% at 50% 110%, rgba(40,160,110,.35), transparent 70%)',
-      'linear-gradient(#06110E, #020504)',
+      'linear-gradient(#081612, #020504)',
     ].join(', '),
     drift: [
-      'radial-gradient(45% 35% at 50% 40%, rgba(70,30,110,.3), transparent 70%)',
-      'radial-gradient(30% 20% at 50% 100%, rgba(60,255,160,.12), transparent 70%)',
+      'radial-gradient(45% 35% at 50% 40%, rgba(90,40,140,.28), transparent 70%)',
+      'radial-gradient(30% 20% at 50% 100%, rgba(60,255,160,.14), transparent 70%)',
     ].join(', '),
-    form: { bevel: 0.18, size: 0.82, radius: 0.28, depth: 0.02 },
-    body: { color: '#0E1A16', roughness: 0.1, glow: '#39FF9C' },
-    faces: ['#6FBF4A', '#1F7A73', '#D8D0A8', '#6A3D8F', '#B3542A', '#3A78C2'],
+    form: { bevel: 0.16, size: 0.92, radius: 0.26, grid: 44 },
+    body: { color: '#13241E', roughness: 0.1, glow: '#39FF9C' },
+    faces: ['#7CD04E', '#22A39A', '#E0789C', '#8B52C0', '#D2652E', '#4A8AE0'],
+    env: 0.6,
     lights: {
-      sky: '#1f4a3a', ground: '#02100a', hemi: 1,
-      key: ['#7dffb8', 1.1, [0, -5, 4]], fill: ['#7a4dff', 0.5, [6, 2, 3]], rim: ['#3dff9a', 1.5, [0, 4, -6]],
+      sky: '#7fc0a4', ground: '#05140e', hemi: 1.6,
+      key: ['#d4ffe6', 2, [-2, -3, 6]], fill: ['#a888ff', 0.9, [6, 3, 3]], rim: ['#3dff9a', 1.9, [0, 4, -6]],
     },
-    light: 0.85,
     surface: 'eldritch',
     motion: 'fluid',
     ambient: { mode: 'rise', shape: 'glow', colors: ['#6CFFB0', '#3DD68C', '#9C7BFF'], count: 60, size: 0.07, speed: 0.28, opacity: 0.7, additive: true },
-    burst: { shape: 'glow', colors: ['#3DFF9A', '#1F7A73', '#9C7BFF'], size: 0.09, speed: 2.2, gravity: -4, drag: 1.2, life: 1.2, additive: true },
+    burst: { shape: 'drip', colors: ['#3DFF9A', '#22A39A', '#9C7BFF'], size: 0.09, speed: 2.2, gravity: -4, drag: 1.2, life: 1.2 },
   },
   {
     // 벨벳 위 보석함. 금판에 박힌 원석이 솟아 있고, 깎인 면마다 빛이 갈라지며 무지갯빛이 튄다

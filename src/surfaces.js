@@ -15,7 +15,7 @@
 //   normal    normal(시점 공간)
 //   emissive  totalEmissiveRadiance(스스로 내는 빛)
 
-const COMMON = /* glsl */ `
+const UNIFORMS = /* glsl */ `
 uniform float uTime;
 uniform float uIntro;
 uniform float uFlash;
@@ -25,11 +25,18 @@ uniform vec3 uPointer;
 uniform vec3 uBodyGlow;
 uniform vec2 uSticker;
 uniform float uFace;
+`;
+
+const VARYINGS = /* glsl */ `
 varying float vSeed;
 varying vec3 vLocal;
 varying vec3 vTx;
 varying vec3 vTy;
+varying vec3 vTz;
+`;
 
+// 정점·조각 셰이더 양쪽에서 쓰는 것
+const NOISE = /* glsl */ `
 float fxH1(float p) { p = fract(p * .1031); p *= p + 33.33; p *= p + p; return fract(p); }
 float fxH2(vec2 p) { vec3 q = fract(vec3(p.xyx) * .1031); q += dot(q, q.yzx + 33.33); return fract((q.x + q.y) * q.z); }
 float fxH3(vec3 q) { q = fract(q * .1031); q += dot(q, q.zyx + 31.32); return fract((q.x + q.y) * q.z); }
@@ -66,11 +73,36 @@ float fxBox(vec2 p, vec2 b, float r) {
   return length(max(q, 0.)) + min(max(q.x, q.y), 0.) - r;
 }
 
+// 스티커 평면 위 점 p가 가장자리에서 안쪽으로 얼마나 들어왔는지(0이 가장자리)
+float fxEdgeAt(vec2 p) { return -fxBox(p, vec2(uSticker.x), uSticker.y); }
+
+float fxBeat() {
+  float t = fract(uTime * 1.15);
+  return exp(-pow((t - .08) / .035, 2.)) + .6 * exp(-pow((t - .26) / .045, 2.));
+}
+`;
+
+// 조각 셰이더에서만 쓰는 것
+const FRAG = /* glsl */ `
+
 // 스티커 안 좌표. fxQ는 -1~1, fxUV는 0~1
 vec2 fxQ() { return vLocal.xy / uSticker.x; }
 vec2 fxUV() { return vLocal.xy / (2. * uSticker.x) + .5; }
 // 스티커 가장자리에서 안쪽으로 얼마나 들어왔는지(0이 가장자리)
-float fxEdge() { return -fxBox(vLocal.xy, vec2(uSticker.x), uSticker.y); }
+float fxEdge() { return fxEdgeAt(vLocal.xy); }
+
+// 높이 h만큼 겉이 솟았다고 치고 법선을 기울인다(화면 미분으로 잔결을 살린다)
+vec3 fxBump(vec3 n, float h) {
+  vec3 dpx = dFdx(-vViewPosition);
+  vec3 dpy = dFdy(-vViewPosition);
+  float dhx = dFdx(h);
+  float dhy = dFdy(h);
+  vec3 r1 = cross(dpy, n);
+  vec3 r2 = cross(n, dpx);
+  float det = dot(dpx, r1);
+  vec3 grad = sign(det) * (dhx * r1 + dhy * r2);
+  return normalize(abs(det) * n - grad);
+}
 
 // 몸통 면 위의 2차원 좌표와, 모서리 쪽으로 얼마나 붙었는지
 vec2 fxBodyUV() {
@@ -100,11 +132,6 @@ float fxGlint(vec2 p, float density, float speed) {
   vec2 o = vec2(fxH2(cell + 7.1), fxH2(cell + 3.7)) - .5;
   float d = length(fract(p) - .5 - o * .5);
   return step(1. - density, h) * (1. - smoothstep(0., .22, d)) * pow(max(0., sin(uTime * speed * (1. + h * 2.) + h * 60.)), 10.);
-}
-
-float fxBeat() {
-  float t = fract(uTime * 1.15);
-  return exp(-pow((t - .08) / .035, 2.)) + .6 * exp(-pow((t - .26) / .045, 2.));
 }
 
 float fxFresnel(vec3 n, float k) { return pow(1. - abs(dot(n, normalize(vViewPosition))), k); }
@@ -487,66 +514,240 @@ B.electric = {
 };
 
 S.flesh = {
-  // 근섬유 결, 마블링 같은 기름 줄, 도드라진 핏줄, 울퉁불퉁 젖은 겉. 박동에 맞춰 붉어진다
+  // 생고기 덩어리. 울퉁불퉁한 혹과 도드라진 핏줄, 고름 주머니가 실제로 솟아 있고
+  // 심장 박동에 맞춰 부풀었다 꺼진다. 가끔 혼자 움찔한다
+  head: `
+    float fxFleshH(vec2 p, float seed) {
+      float dome = smoothstep(0., .15, fxEdgeAt(p));
+      vec2 q = p * 5. + seed * 23.;
+      float lump = fxF2(q * .4 + 4.);
+      lump = lump * lump * 1.6;
+      float vein = 1. - smoothstep(0., .06, abs(fxF2(q * .8 + 5.) - .5));
+      vec2 pc = floor(q * .55);
+      vec2 po = (vec2(fxH2(pc + 1.3), fxH2(pc + 7.7)) - .5) * .5;
+      float pus = step(.76, fxH2(pc + seed * 3.)) * (1. - smoothstep(0., .3, length(fract(q * .55) - .5 - po)));
+      float twitch = 1. + .25 * sin(uTime * 31. + seed * 40.) * step(.985, fxH1(floor(uTime * 3.) + seed * 17.));
+      return dome * ((.03 + .1 * lump) * (1. + fxBeat() * .3) * twitch + .02 * vein + .035 * pus * pus);
+    }`,
+  height: 'fxFleshH',
   color: `
-    vec2 fxP = vLocal.xy * 5. + vSeed * 23.;
-    float fxN = fxF2(fxP);
-    vec2 fxWp = fxP + vec2(fxF2(fxP * .7 + 3.), fxF2(fxP * .7 + 9.)) * 1.5;
-    float fxFat = smoothstep(.6, .68, fxF2(fxWp * 1.2));
-    float fxFib = .5 + .5 * sin((vLocal.x * .4 + vLocal.y) * 70. + fxN * 8.);
-    float fxVein = 1. - smoothstep(0., .045, abs(fxF2(fxP * .8 + 5.) - .5));
+    // 칼로 찢어 낸 듯 들쭉날쭉한 가장자리
+    float fxTear = fxF2(vLocal.xy * 14. + vSeed * 5.) * .06;
+    float fxEd = fxEdge() - fxTear;
+    if (fxEd < 0.) discard;
+    vec2 fxP = vLocal.xy;
     float fxB = fxBeat();
-    diffuseColor.rgb *= .7 + .18 * fxFib + .25 * fxN;
-    diffuseColor.rgb = mix(diffuseColor.rgb, mix(diffuseColor.rgb, vec3(1., .93, .86), .65), fxFat);
-    diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.3, .02, .1), fxVein * .8);`,
+    vec2 fxQ5 = fxP * 5. + vSeed * 23.;
+    float fxN = fxF2(fxQ5);
+    float fxLump = fxF2(fxQ5 * .4 + 4.);
+    fxLump = fxLump * fxLump * 1.6;
+    float fxVein = 1. - smoothstep(0., .06, abs(fxF2(fxQ5 * .8 + 5.) - .5));
+    float fxHt = smoothstep(0., .15, fxEdgeAt(fxP)) * (.03 + .1 * fxLump);
+    float fxSilver = smoothstep(.62, .7, fxN2(vec2(fxP.x * 3. + vSeed * 9., fxP.y * 12.) + fxN * 2.));
+    float fxCut = 1. - smoothstep(0., .05, fxEd);
+    float fxA = vSeed * 6.2832;
+    vec2 fxFq = mat2(cos(fxA), -sin(fxA), sin(fxA), cos(fxA)) * fxP;
+    float fxFib = .5 + .5 * sin(fxFq.y * 95. + fxN2(fxFq * 9.) * 6.);
+    float fxFib2 = fxN2(vec2(fxFq.x * 8., fxFq.y * 170.));
+    vec2 fxWp = fxQ5 + vec2(fxN2(fxQ5 * .7 + 3.), fxN2(fxQ5 * .7 + 9.)) * 1.5;
+    float fxFat = smoothstep(.63, .7, fxF2(fxWp * 1.2));
+    float fxCap = 1. - smoothstep(0., .022, abs(fxF2(fxQ5 * 2.1 + 11.) - .5));
+    vec2 fxPc = floor(fxQ5 * .55);
+    vec2 fxPo = (vec2(fxH2(fxPc + 1.3), fxH2(fxPc + 7.7)) - .5) * .5;
+    float fxPd = length(fract(fxQ5 * .55) - .5 - fxPo);
+    float fxHas = step(.76, fxH2(fxPc + vSeed * 3.));
+    float fxPus = fxHas * (1. - smoothstep(.08, .2, fxPd));
+    float fxInfl = fxHas * (1. - smoothstep(.14, .4, fxPd));
+    float fxBruise = smoothstep(.6, .8, fxN2(fxQ5 * .45 + 31.));
+    float fxCav = smoothstep(.0, .07, fxHt);
+    vec3 fxC = diffuseColor.rgb;
+    fxC *= .55 + .32 * fxFib + .14 * fxFib2 + .22 * fxN;
+    fxC = mix(fxC, fxC * vec3(.6, .38, .7), fxBruise * .55);
+    fxC = mix(fxC, mix(fxC, vec3(1., .93, .84), .72), fxFat);
+    fxC = mix(fxC, vec3(.78, .06, .1), fxInfl * .55);
+    fxC = mix(fxC, vec3(.97, .87, .42), fxPus);
+    fxC = mix(fxC, vec3(.2, .02, .12), fxVein * .85);
+    fxC = mix(fxC, vec3(.5, .02, .07), fxCap * .45);
+    fxC *= mix(.3, 1., fxCav);
+    fxC = mix(fxC, vec3(.3, 0., .02), (1. - fxCav) * .55);
+    fxC = mix(fxC, vec3(.42, .02, .05), fxCut * .85);
+    fxC = mix(fxC, vec3(.88, .86, .92), fxSilver * .3 * (1. - fxCut));
+    diffuseColor.rgb = fxC;`,
   normal: `
-    float fxNa = fxF2(fxP + vec2(.06, 0.));
-    float fxNb = fxF2(fxP + vec2(0., .06));
-    normal = normalize(normal - (vTx * (fxNa - fxN) + vTy * (fxNb - fxN)) * 5.);`,
-  surface: 'roughnessFactor = mix(.08, .4, fxN);',
-  emissive: 'totalEmissiveRadiance = diffuse * fxB * .3 + vec3(.8, .03, .1) * fxVein * fxB * .9;',
+    normal = fxBump(normal, fxFib * .006 + fxFib2 * .002 + fxVein * .01 + fxCap * .004 - fxPus * .004);`,
+  surface: 'roughnessFactor = mix(.03, .34, fxN) * (1. - fxPus * .6) * (.6 + .4 * fxCav) * (1. - fxSilver * .7) * (1. - fxCut * .6);',
+  emissive: `
+    totalEmissiveRadiance = diffuse * vec3(1., .32, .26) * (.12 + .28 * fxB) * fxCav
+      + diffuse * vec3(1., .45, .4) * fxFresnel(normal, 2.) * .35
+      + vec3(.95, .03, .08) * (fxVein + fxInfl * .6 + fxCap * .3) * fxB * .9;`,
 };
 B.flesh = {
-  // 젖은 막. 핏줄이 박동에 맞춰 붉게 뛴다
+  // 덩어리 사이의 젖은 막. 핏줄이 박동에 맞춰 붉게 뛴다
   color: `
     float fxV = fxF3(vLocal * 5. + vSeed * 7.);
     float fxVein = 1. - smoothstep(0., .035, abs(fxV - .5));
     float fxB = fxBeat();
-    diffuseColor.rgb *= .8 + .4 * fxF3(vLocal * 18. + vSeed);
-    diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.35, .02, .1), fxVein * .8);`,
-  surface: 'roughnessFactor = .14;',
-  emissive: 'totalEmissiveRadiance = vec3(.6, .02, .07) * (fxVein * 1.1 + .12) * fxB;',
+    float fxM = fxF3(vLocal * 18. + vSeed);
+    diffuseColor.rgb *= .75 + .5 * fxM;
+    diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.3, .02, .1), fxVein * .8);`,
+  normal: 'normal = fxBump(normal, fxM * .01 + fxVein * .006);',
+  surface: 'roughnessFactor = .08 + .15 * fxM;',
+  emissive: 'totalEmissiveRadiance = vec3(.65, .03, .08) * (fxVein * 1.1 + .15) * fxB + diffuseColor.rgb * fxFresnel(normal, 2.) * .3;',
 };
 
 S.eldritch = {
-  // 꿈틀거리는 점액 무늬. 절반쯤의 칸에 눈이 있어 손가락을 따라 쳐다보고,
-  // 이따금 깜빡이며, 큐브를 잡으면 일제히 질끈 감는다
+  // 심해의 것. 칸마다 눈이 하나, 셋, 또는 없이 빨판만.
+  // 눈은 진짜로 솟은 안구다. 두툼한 눈꺼풀이 그 위로 덮였다 열리고, 구면 위로 홍채와 세로 동공이
+  // 굴러가며 손끝을(기본은 보는 사람을) 쳐다본다. 이따금 휙 시선을 옮기고, 큐브를 잡으면 질끈 감는다
+  head: `
+    int fxEyeCount(float seed) {
+      float k = fxH1(seed * 91.7);
+      return k < .28 ? 0 : (k < .7 ? 1 : 3);
+    }
+    void fxEyeAt(float seed, int i, int count, out vec2 c, out float r, out float ang) {
+      float s = uSticker.x;
+      if (count == 1) {
+        c = (vec2(fxH1(seed * 7.), fxH1(seed * 11.)) - .5) * .08 * s;
+        r = .7 * s;
+      } else {
+        c = i == 0 ? vec2(-.44, .4) : (i == 1 ? vec2(.46, .3) : vec2(.02, -.42));
+        c *= s;
+        r = (.34 + .07 * fxH1(seed * 13. + float(i))) * s;
+      }
+      ang = (fxH1(seed * 17. + float(i)) - .5) * .7;
+    }
+    float fxEyeOpen(float seed, float i) {
+      float ph = fract(uTime * (.1 + fxH1(seed * 3. + i) * .08) + fxH1(seed * 5. + i));
+      return min(smoothstep(0., .035, abs(ph - .035)), 1. - uBlink * .97);
+    }
+    // 눈꺼풀이 열린 아몬드 모양까지의 거리(안쪽이 음수)
+    float fxAlmond(vec2 q, float a, float b) {
+      float t = clamp(q.x / a, -1., 1.);
+      return max(abs(q.y) - b * (1. - t * t), abs(q.x) - a);
+    }
+    float fxEldH(vec2 p, float seed) {
+      float s = uSticker.x;
+      float dome = smoothstep(0., .14, fxEdgeAt(p));
+      float ridge = 1. - abs(fxF2(p * 9.7 + seed * 13.) * 2. - 1.);
+      float h = dome * (.02 + .014 * ridge * ridge);
+      int count = fxEyeCount(seed);
+      if (count == 0) {
+        // 촉수 빨판
+        vec2 g = p / (s * .36) + seed * 3.;
+        g.x += .5 * mod(floor(g.y), 2.);
+        float d = length(fract(g) - .5);
+        return h + dome * (.024 * exp(-pow((d - .3) / .07, 2.)) - .018 * (1. - smoothstep(.05, .27, d)));
+      }
+      for (int i = 0; i < 3; i++) {
+        if (i >= count) break;
+        vec2 c; float r; float ang;
+        fxEyeAt(seed, i, count, c, r, ang);
+        vec2 d = p - c;
+        float rr = length(d);
+        if (rr > r * 1.4) continue;
+        vec2 ql = mat2(cos(ang), sin(ang), -sin(ang), cos(ang)) * d;
+        float sd = fxAlmond(ql, r * 1.1, r * .78 * fxEyeOpen(seed, float(i)));
+        float ball = sqrt(max(r * r - rr * rr, 0.)) * .6;
+        float inside = 1. - smoothstep(-.006, .006, sd);
+        float lid = ball + .014;
+        float rim = .024 * exp(-pow(sd / .03, 2.)) * (1. - smoothstep(r * .9, r * 1.3, rr));
+        h += (mix(lid, ball, inside) + rim) * (1. - smoothstep(r * .95, r * 1.35, rr));
+      }
+      return h;
+    }`,
+  height: 'fxEldH',
   color: `
-    vec2 fxP = vLocal.xy * 4. + vSeed * 13.;
-    vec2 fxW = vec2(fxF2(fxP + uTime * .08), fxF2(fxP - uTime * .07 + 5.2));
-    float fxRidge = 1. - abs(fxF2(fxP + fxW * 2.) * 2. - 1.);
-    vec3 fxBase = diffuseColor.rgb * (.28 + .55 * pow(fxRidge, 3.));
-    float fxHas = step(.5, fxH1(vSeed * 91.7));
-    float fxPh = fract(uTime * (.13 + fxH1(vSeed * 3.) * .1) + fxH1(vSeed * 5.));
-    float fxOpen = min(smoothstep(0., .03, abs(fxPh - .03)), 1. - uBlink * .97);
-    vec2 fxQe = fxQ() / vec2(.86, 1.);
-    float fxLid = .6 * fxOpen * (1. - fxQe.x * fxQe.x);
-    float fxIn = (1. - smoothstep(-.04, .02, abs(fxQe.y) - fxLid)) * step(abs(fxQe.x), 1.) * fxHas;
-    vec3 fxTo = uPointer + vViewPosition;
-    vec2 fxLook = vec2(dot(fxTo, vTx), dot(fxTo, vTy));
-    fxLook = fxLook / (length(fxLook) + 2.) * .5;
-    fxLook += vec2(sin(uTime * .7 + vSeed * 20.), cos(uTime * .53 + vSeed * 11.)) * .04;
-    vec2 fxI = fxQe - fxLook * vec2(1., .45);
-    float fxIris = 1. - smoothstep(.34, .38, length(fxI));
-    float fxRing = smoothstep(.2, .34, length(fxI)) * fxIris;
-    float fxPupil = 1. - smoothstep(.05, .09, length(fxI * vec2(1., .3)));
-    vec3 fxEye = mix(vec3(.82, .8, .6), diffuseColor.rgb * 1.25 + .06, fxIris);
-    fxEye *= 1. - fxRing * .35;
-    fxEye *= .55 + .45 * smoothstep(0., .22, fxLid - abs(fxQe.y));
-    fxEye = mix(fxEye, vec3(.01), fxPupil * fxIris);
-    diffuseColor.rgb = mix(fxBase, fxEye, fxIn);`,
-  surface: 'roughnessFactor = .12;',
-  emissive: 'totalEmissiveRadiance = diffuse * (fxIris * (1. - fxPupil) * fxIn * .8 + pow(fxRidge, 6.) * .25 * (1. - fxIn));',
+    if (fxEdge() < 0.) discard;
+    vec2 fxP = vLocal.xy;
+    float fxS = uSticker.x;
+    vec3 fxTint = diffuseColor.rgb;
+    vec2 fxW = vec2(fxN2(fxP * 6. + uTime * .08), fxN2(fxP * 6. - uTime * .07 + 5.2));
+    float fxRidge = 1. - abs(fxF2(fxP * 9.7 + vSeed * 13. + fxW * .6) * 2. - 1.);
+    vec3 fxCol = fxTint * (.5 + .6 * pow(fxRidge, 2.));
+    float fxWet = smoothstep(.55, .85, fxRidge);
+    float fxRelief = fxRidge * .006;
+    int fxCount = fxEyeCount(vSeed);
+    float fxEyeIn = 0.;
+    vec3 fxNl = vec3(0., 0., 1.);
+    float fxIrisM = 0.;
+    float fxPupM = 0.;
+    float fxAO = 1.;
+    float fxCup = 0.;
+    if (fxCount == 0) {
+      vec2 g = fxP / (fxS * .36) + vSeed * 3.;
+      g.x += .5 * mod(floor(g.y), 2.);
+      float d = length(fract(g) - .5);
+      float ring = exp(-pow((d - .3) / .07, 2.));
+      fxCup = 1. - smoothstep(.05, .27, d);
+      fxCol = mix(fxCol, fxTint * 1.35 + .08, ring * .6);
+      fxCol = mix(fxCol, fxTint * .25 + vec3(.25, .05, .12), fxCup * .8);
+      fxRelief += ring * .004;
+    }
+    for (int i = 0; i < 3; i++) {
+      if (i >= fxCount) break;
+      vec2 c; float r; float ang;
+      fxEyeAt(vSeed, i, fxCount, c, r, ang);
+      vec2 d = fxP - c;
+      float rr = length(d);
+      if (rr > r * 1.4) continue;
+      vec2 ql = mat2(cos(ang), sin(ang), -sin(ang), cos(ang)) * d;
+      float sd = fxAlmond(ql, r * 1.1, r * .78 * fxEyeOpen(vSeed, float(i)));
+      float near = 1. - smoothstep(r * .95, r * 1.35, rr);
+      // 눈꺼풀 주름과 짙은 테두리
+      float fold = .5 + .5 * sin(sd * 170.);
+      fxCol = mix(fxCol, fxCol * (.7 + .35 * fold), step(0., sd) * exp(-sd * 22.) * near);
+      fxRelief += fold * .003 * step(0., sd) * exp(-sd * 22.) * near;
+      fxAO = min(fxAO, mix(1., .3, exp(-pow(sd / .014, 2.)) * near));
+      if (sd < 0.) {
+        fxEyeIn = 1.;
+        vec3 n = normalize(vec3(d, sqrt(max(r * r - rr * rr, 1e-5))));
+        fxNl = n;
+        // 시선: 가리키는 곳을 이 스티커의 좌표로 옮긴다. 가끔 휙 옮겨 간다
+        vec3 to = uPointer + vViewPosition;
+        vec3 gz = vec3(dot(to, vTx), dot(to, vTy), dot(to, vTz));
+        gz = normalize(gz);
+        // 눈꺼풀 밑으로 숨지 않게 시선이 돌아가는 폭을 줄인다
+        gz.xy *= .5;
+        float sac = floor(uTime * 1.2 + vSeed * 7. + float(i) * 3.);
+        gz.xy += (vec2(fxH1(sac + vSeed), fxH1(sac * 1.7 + vSeed)) - .5) * .16;
+        gz.z = max(gz.z, .8);
+        gz = normalize(gz);
+        float ca = dot(n, gz);
+        vec3 u = n - gz * ca;
+        vec3 up = vec3(-sin(ang), cos(ang), 0.);
+        vec3 ey = normalize(up - gz * dot(up, gz));
+        vec3 ex = cross(ey, gz);
+        vec2 iu = vec2(dot(u, ex), dot(u, ey)) / .56;
+        float ir = length(iu);
+        float iris = (1. - smoothstep(.93, 1., ir)) * step(0., ca);
+        float dil = .16 + .1 * (1. - uCharge) + .03 * sin(uTime * .6 + vSeed * 9.);
+        float slit = abs(iu.x) - dil * sqrt(max(0., 1. - iu.y * iu.y / .72));
+        float pupil = (1. - smoothstep(-.02, .02, slit)) * iris;
+        float phi = atan(iu.y, iu.x);
+        float fib = .5 + .5 * sin(phi * 46. + fxF2(iu * 5. + vSeed * 3.) * 9.);
+        float limb = smoothstep(.68, 1., ir);
+        float collar = exp(-pow((ir - .4) / .08, 2.));
+        vec3 irisCol = mix(fxTint, vec3(1., .86, .3), .1) * (1.1 + .7 * fib) * (1. - .88 * limb) + vec3(1., .9, .45) * collar * .3;
+        float cap = 1. - smoothstep(0., .03, abs(fxF2(d / r * 3.2 + vSeed * 9.) - .5));
+        vec3 sclera = mix(vec3(.84, .8, .46), fxTint, .1);
+        sclera = mix(sclera, vec3(.62, .05, .05), cap * .8 * smoothstep(.1, .95, rr / r));
+        sclera *= .5 + .5 * smoothstep(0., .07, -sd);
+        vec3 eye = mix(sclera, irisCol, iris);
+        eye = mix(eye, vec3(.006), pupil);
+        fxCol = eye;
+        fxIrisM = iris * (1. - pupil);
+        fxPupM = pupil;
+        fxRelief = 0.;
+      }
+    }
+    diffuseColor.rgb = fxCol * fxAO;`,
+  normal: `
+    if (fxEyeIn > .5) normal = normalize(vTx * fxNl.x + vTy * fxNl.y + vTz * fxNl.z);
+    else normal = fxBump(normal, fxRelief);`,
+  surface: 'roughnessFactor = fxEyeIn > .5 ? .03 : mix(.3, .06, fxWet);',
+  emissive: `
+    totalEmissiveRadiance = diffuseColor.rgb * fxIrisM * .9 + diffuse * (pow(fxRidge, 6.) * .3 * (1. - fxEyeIn) + fxCup * .25)
+      + diffuse * fxFresnel(normal, 2.5) * .3 * (1. - fxEyeIn);`,
 };
 B.eldritch = {
   // 끈적한 몸통. 능선을 따라 희미하게 빛나는 핏줄이 천천히 기어다닌다
@@ -554,7 +755,8 @@ B.eldritch = {
     vec3 fxP = vLocal * 5. + vSeed * 9.;
     float fxR = 1. - abs(fxF3(fxP + vec3(0., uTime * .1, 0.)) * 2. - 1.);
     diffuseColor.rgb *= .7 + .5 * fxR;`,
-  surface: 'roughnessFactor = .1;',
+  normal: 'normal = fxBump(normal, fxR * .008);',
+  surface: 'roughnessFactor = .08;',
   emissive: 'totalEmissiveRadiance = uBodyGlow * pow(fxR, 10.) * (.6 + .4 * sin(uTime * 1.5 + vSeed * 6.));',
 };
 
@@ -767,16 +969,27 @@ export function wear(material, part, uniforms, face = -1) {
   material.onBeforeCompile = (shader) => {
     const table = part === 'body' ? B : S;
     const fx = table[material.userData.surface] ?? table.plain;
+    const head = fx.head ?? '';
+    // 높이 함수가 있는 질감은 스티커 겉을 실제로 솟게 하고, 그 기울기로 법선을 다시 잡는다
+    const lift = fx.height
+      ? `
+        float fxHd = ${fx.height}(position.xy, aSeed);
+        float fxHx = ${fx.height}(position.xy + vec2(.004, 0.), aSeed);
+        float fxHy = ${fx.height}(position.xy + vec2(0., .004), aSeed);
+        objectNormal = normalize(vec3(-(fxHx - fxHd) / .004, -(fxHy - fxHd) / .004, 1.));`
+      : '';
     Object.assign(shader.uniforms, uniforms, { uFace: { value: face } });
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', `#include <common>
+        ${UNIFORMS}
         attribute float aSeed;
-        varying float vSeed;
-        varying vec3 vLocal;
-        varying vec3 vTx;
-        varying vec3 vTy;`)
-      .replace('#include <begin_vertex>', `#include <begin_vertex>
+        ${VARYINGS}
+        ${NOISE}
+        ${head}`)
+      .replace('#include <beginnormal_vertex>', `#include <beginnormal_vertex>
         vSeed = aSeed;
+        ${lift}`)
+      .replace('#include <begin_vertex>', `#include <begin_vertex>
         vLocal = position;
         #ifdef USE_INSTANCING
           mat3 fxIm = mat3(instanceMatrix);
@@ -784,9 +997,16 @@ export function wear(material, part, uniforms, face = -1) {
           mat3 fxIm = mat3(1.);
         #endif
         vTx = normalize(normalMatrix * (fxIm * vec3(1., 0., 0.)));
-        vTy = normalize(normalMatrix * (fxIm * vec3(0., 1., 0.)));`);
+        vTy = normalize(normalMatrix * (fxIm * vec3(0., 1., 0.)));
+        vTz = normalize(normalMatrix * (fxIm * vec3(0., 0., 1.)));
+        ${fx.height ? 'transformed.z += fxHd;' : ''}`);
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', `#include <common>\n${COMMON}`)
+      .replace('#include <common>', `#include <common>
+        ${UNIFORMS}
+        ${VARYINGS}
+        ${NOISE}
+        ${FRAG}
+        ${head}`)
       .replace('#include <color_fragment>', `#include <color_fragment>\n${fx.color ?? ''}`)
       .replace('#include <metalnessmap_fragment>', `#include <metalnessmap_fragment>\n${fx.surface ?? ''}`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>\n${fx.normal ?? ''}`)
@@ -794,3 +1014,6 @@ export function wear(material, part, uniforms, face = -1) {
         totalEmissiveRadiance += diffuseColor.rgb * uFlash;`);
   };
 }
+
+/** 겉을 실제로 솟게 하는 질감. 이 테마들은 스티커를 잘게 쪼갠 면으로 만든다. */
+export const RAISED = new Set(Object.keys(S).filter((k) => S[k].height));
