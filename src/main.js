@@ -35,10 +35,14 @@ const view = new CubeView($('stage'), {
     }
   },
   onMove(move) {
+    const before = history.length;
     commit(move);
-    if (timer.state === 'running' && history.length === 0) {
-      timer.stop();
-      saveBest();
+    if (before && history.length === 0) {
+      if (timer.state === 'running') {
+        timer.stop();
+        saveBest();
+      }
+      view.celebrate();
     }
     refresh();
   },
@@ -112,11 +116,12 @@ $('hint').addEventListener('click', () => {
   view.nudge(next);
 });
 
-$('solve').addEventListener('click', () => {
+$('solve').addEventListener('click', async () => {
   if (busy() || history.length === 0) return;
   timer.reset();
   const moves = simplify(invert(history), size);
-  play(moves, Math.max(55, Math.min(170, 5000 / moves.length)));
+  await play(moves, Math.max(55, Math.min(170, 5000 / moves.length)));
+  if (history.length === 0) view.celebrate(0.5);
 });
 
 // ---- 타이머 ----
