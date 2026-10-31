@@ -175,7 +175,7 @@ const choices = THEMES.map((theme) => {
   b.setAttribute('role', 'radio');
   b.innerHTML = '<span class="tile"><span class="dot"></span></span><span class="name"></span>';
   b.querySelector('.name').textContent = theme.name;
-  b.querySelector('.tile').style.setProperty('--tile', theme.backdrop ?? theme.bg);
+  b.querySelector('.tile').style.setProperty('--tile', theme.tile ?? theme.backdrop ?? theme.bg);
   paintSwatch(b, theme);
   b.addEventListener('click', () => useTheme(theme));
   palette.append(b);
@@ -208,8 +208,8 @@ function useTheme(theme) {
   root.style.setProperty('--bg', theme.bg);
   root.style.setProperty('--ink', theme.ink);
   root.style.setProperty('--backdrop', theme.backdrop ?? theme.bg);
+  root.style.setProperty('--glow', theme.drift ?? 'none');
   root.style.colorScheme = isDark(theme.bg) ? 'dark' : 'light';
-  document.body.classList.toggle('drift', Boolean(theme.drift));
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme.bg);
   for (const { theme: t, b } of choices) b.setAttribute('aria-checked', String(t === theme));
   paintSwatch(themeButton, theme);

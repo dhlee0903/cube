@@ -46,21 +46,34 @@ body {
   -webkit-touch-callout: none;
 }
 
-/* 배경이 아주 천천히 흐르는 테마 */
-body.drift {
-  background-size: 150% 150%;
-  animation: drift 28s ease-in-out infinite alternate;
+/* 배경은 두 겹. 아래는 그 테마의 장면(--backdrop), 위는 천천히 흐르는 빛(--glow) */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -12%;
+  background: var(--glow, none);
+  pointer-events: none;
+  animation: drift 26s ease-in-out infinite alternate;
 }
 
 @keyframes drift {
-  from { background-position: 0% 0%; }
-  to { background-position: 100% 100%; }
+  from { transform: translate3d(-4%, -2%, 0) scale(1); }
+  to { transform: translate3d(4%, 3%, 0) scale(1.08); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body.drift {
+  body::before {
     animation: none;
   }
+}
+
+.stage,
+.bar {
+  z-index: 1;
+}
+
+.bar {
+  position: relative;
 }
 
 .stage {

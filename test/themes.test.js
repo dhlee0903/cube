@@ -85,3 +85,34 @@ test('시간 표시', () => {
   assert.equal(formatTime(65320), '1:05.32');
   assert.equal(formatTime(3725999), '62:05.99');
 });
+
+test('테마가 쓰는 질감·움직임·입자 이름은 모두 실제로 있다', async () => {
+  const { SURFACES } = await import('../src/surfaces.js');
+  const { MOTIONS } = await import('../src/motions.js');
+  const { SHAPES, MODES } = await import('../src/particles.js');
+  const flickers = new Set(['candle', 'lava', 'lightning', 'aurora']);
+  for (const t of THEMES) {
+    if (t.surface) assert.ok(SURFACES.includes(t.surface), `${t.name}: 질감 ${t.surface}`);
+    if (t.motion) assert.ok(t.motion in MOTIONS, `${t.name}: 움직임 ${t.motion}`);
+    if (t.flicker) assert.ok(flickers.has(t.flicker), `${t.name}: 조명 ${t.flicker}`);
+    for (const a of [].concat(t.ambient ?? [])) {
+      assert.ok(a.mode in MODES, `${t.name}: 떠다니는 방식 ${a.mode}`);
+      assert.ok(a.shape in SHAPES, `${t.name}: 입자 모양 ${a.shape}`);
+    }
+    if (t.burst) assert.ok(t.burst.shape in SHAPES, `${t.name}: 튀는 입자 모양 ${t.burst.shape}`);
+    // 스티커 빛 세기(glow)와 흐르는 배경(drift)은 다른 것이다. 한때 이름이 겹쳐 스티커가 까맣게 나왔다
+    if (t.glow !== undefined) assert.ok(typeof t.glow === 'number' || (Array.isArray(t.glow) && t.glow.length === 6), `${t.name}: glow`);
+    if (t.drift !== undefined) assert.equal(typeof t.drift, 'string', `${t.name}: drift`);
+    const f = t.form ?? {};
+    if (f.radius !== undefined) assert.ok(f.radius <= f.size / 2 + 1e-9, `${t.name}: 스티커 모서리가 너무 둥글다`);
+  }
+});
+
+test('돌아가는 곡선은 0에서 시작해 정확히 1에서 끝난다', async () => {
+  const { MOTIONS } = await import('../src/motions.js');
+  for (const [name, { ease, time }] of Object.entries(MOTIONS)) {
+    assert.ok(Math.abs(ease(0)) < 0.02, `${name}(0) = ${ease(0)}`);
+    assert.equal(ease(1), 1, `${name}(1)`);
+    assert.ok(time > 0);
+  }
+});

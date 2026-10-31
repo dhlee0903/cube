@@ -1,29 +1,45 @@
 import {
-  AdditiveBlending, Box3, CanvasTexture, Color, DirectionalLight, DynamicDrawUsage, Euler, HemisphereLight, Group,
-  InstancedBufferAttribute, InstancedMesh, Matrix4, MeshBasicMaterial, MeshStandardMaterial, PMREMGenerator,
-  PerspectiveCamera, PlaneGeometry, Quaternion, Raycaster, Scene, Shape, ShapeGeometry, Vector2, Vector3,
-  WebGLRenderer,
+  AdditiveBlending, Box3, CanvasTexture, Color, DirectionalLight, DynamicDrawUsage, Euler, ExtrudeGeometry,
+  HemisphereLight, Group, InstancedBufferAttribute, InstancedMesh, Matrix4, MeshBasicMaterial, MeshStandardMaterial,
+  NormalBlending, PMREMGenerator, PerspectiveCamera, PlaneGeometry, Quaternion, Raycaster, Scene, Shape,
+  ShapeGeometry, Vector2, Vector3, WebGLRenderer,
 } from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { FACES, layerOf } from './cube.js';
 import { MOVING, wear } from './surfaces.js';
 import { Ambient, Burst } from './particles.js';
+import { MOTIONS } from './motions.js';
 
 const BODY = 0.96;
-const STICKER = 0.8;
-const HALO = STICKER * 1.5;
 const SIZE = 3; // 몇 칸이든 화면에서는 같은 크기로 보이게
 const FOV = 30;
 const QUARTER = Math.PI / 2;
 const AXES = [new Vector3(1, 0, 0), new Vector3(0, 1, 0), new Vector3(0, 0, 1)];
 const ONE = new Vector3(1, 1, 1);
 
-const easeInOut = (k) => (k < 0.5 ? 4 * k * k * k : 1 - (-2 * k + 2) ** 3 / 2);
+// 조각 모양. 테마가 form으로 덮어쓴다.
+//   bevel   몸통 모서리 둥글기
+//   size    스티커 한 변
+//   radius  스티커 모서리 둥글기(size/2면 동그라미)
+//   depth   스티커 두께. 0이면 납작한 스티커, 크면 솟아오른 타일
+const FORM = { bevel: 0.08, size: 0.8, radius: 0.09, depth: 0 };
+
+// 조명. 테마가 lights로 덮어쓴다. [색, 세기, 위치]
+const LIGHTS = {
+  sky: '#ffffff',
+  ground: '#888888',
+  hemi: 2.3,
+  key: ['#ffffff', 1.9, [-3, 6, 5]],
+  fill: ['#ffffff', 0.45, [5, -2, 4]],
+  rim: ['#ffffff', 0, [2, 3, -6]],
+};
+
 const easeOut = (k) => 1 - (1 - k) ** 3;
 
 function roundedSquare(size, r) {
   const h = size / 2;
+  r = Math.min(r, h - 1e-4);
   const s = new Shape();
   s.moveTo(-h + r, -h);
   s.lineTo(h - r, -h);
@@ -34,26 +50,27 @@ function roundedSquare(size, r) {
   s.absarc(-h + r, h - r, r, QUARTER, Math.PI);
   s.lineTo(-h, -h + r);
   s.absarc(-h + r, -h + r, r, Math.PI, Math.PI * 1.5);
-  return new ShapeGeometry(s, 6);
+  return s;
 }
 
-/** 스티커 둘레로 번지는 빛. 흰색 알파만 그려 두고 색은 재질이 입힌다. */
-function haloTexture() {
-  const size = 128;
+/** 스티커 둘레로 번지는 빛(또는 그림자). 흰색 알파만 그려 두고 색은 재질이 입힌다. */
+function haloTexture(size, radius, shadow) {
+  const px = 128;
   const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = size;
+  canvas.width = canvas.height = px;
   const ctx = canvas.getContext('2d');
-  const img = ctx.createImageData(size, size);
-  const half = HALO / 2;
-  const b = STICKER / 2;
-  const r = 0.09;
-  for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-      const px = Math.abs(((x + 0.5) / size) * 2 - 1) * half - b + r;
-      const py = Math.abs(((y + 0.5) / size) * 2 - 1) * half - b + r;
-      const sd = Math.hypot(Math.max(px, 0), Math.max(py, 0)) + Math.min(Math.max(px, py), 0) - r;
-      const a = sd > 0 ? Math.exp(-sd / 0.07) * 0.8 : 0.22 + 0.58 * Math.exp(sd / 0.045);
-      const i = (y * size + x) * 4;
+  const img = ctx.createImageData(px, px);
+  const half = (size * 1.5) / 2;
+  const b = size / 2;
+  for (let y = 0; y < px; y++) {
+    for (let x = 0; x < px; x++) {
+      const qx = Math.abs(((x + 0.5) / px) * 2 - 1) * half - b + radius;
+      const qy = Math.abs(((y + 0.5) / px) * 2 - 1) * half - b + radius;
+      const sd = Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - radius;
+      const a = shadow
+        ? (sd > 0 ? Math.exp(-sd / 0.03) * 0.9 : 0.9)
+        : (sd > 0 ? Math.exp(-sd / 0.07) * 0.8 : 0.22 + 0.58 * Math.exp(sd / 0.045));
+      const i = (y * px + x) * 4;
       img.data[i] = img.data[i + 1] = img.data[i + 2] = 255;
       img.data[i + 3] = Math.round(a * 255);
     }
@@ -85,61 +102,53 @@ export class CubeView {
     this.root.quaternion.setFromEuler(new Euler(this.pitch, this.yaw, 0));
     this.scene.add(this.root);
 
-    this.hemi = new HemisphereLight(0xffffff, 0x888888, 2.3);
-    this.key = new DirectionalLight(0xffffff, 1.9);
-    this.key.position.set(-3, 6, 5);
-    this.fill = new DirectionalLight(0xffffff, 0.45);
-    this.fill.position.set(5, -2, 4);
-    this.scene.add(this.hemi, this.key, this.fill);
+    this.hemi = new HemisphereLight();
+    this.key = new DirectionalLight();
+    this.fill = new DirectionalLight();
+    this.rim = new DirectionalLight();
+    this.scene.add(this.hemi, this.key, this.fill, this.rim);
+    this.lightBase = { hemi: 0, key: 0, fill: 0, rim: 0 };
+    this.flicker = null;
+    this.strike = 0;
 
     // 질감 셰이더가 같이 쓰는 값
     this.uniforms = {
       uTime: { value: 0 },
+      uIntro: { value: 10 },
       uFlash: { value: 0 },
+      uCharge: { value: 0 },
+      uBlink: { value: 0 },
+      uPointer: { value: new Vector3(0, 0, -20) },
       uBodyGlow: { value: new Color(0, 0, 0) },
+      uSticker: { value: new Vector2(0.4, 0.09) },
     };
+    this.themeAt = 0;
 
-    this.bodyGeo = new RoundedBoxGeometry(BODY, BODY, BODY, 3, 0.08);
-    this.stickerGeo = roundedSquare(STICKER, 0.09);
-    this.haloGeo = new PlaneGeometry(HALO, HALO);
     this.bodyMat = new MeshStandardMaterial({ roughness: 0.55 });
     wear(this.bodyMat, 'body', this.uniforms);
-    this.faceMats = FACES.map(() => {
+    this.faceMats = FACES.map((_, s) => {
       const m = new MeshStandardMaterial({
         roughness: 0.32,
         polygonOffset: true,
         polygonOffsetFactor: -1,
         polygonOffsetUnits: -1,
       });
-      wear(m, 'sticker', this.uniforms);
+      wear(m, 'sticker', this.uniforms, s);
       return m;
     });
-    const halo = haloTexture();
-    this.haloMats = FACES.map(() => new MeshBasicMaterial({
-      map: halo,
-      transparent: true,
-      blending: AdditiveBlending,
-      depthWrite: false,
-    }));
+    this.haloMats = FACES.map(() => new MeshBasicMaterial({ transparent: true, depthWrite: false }));
+    this.shape(FORM, 'glow');
 
-    // 조각 기준으로 스티커와 빛번짐이 놓이는 자리
-    const at = (s, lift) => {
-      const normal = new Vector3(...FACES[s]);
-      const q = new Quaternion().setFromUnitVectors(AXES[2], normal);
-      return new Matrix4().compose(normal.multiplyScalar(BODY / 2 + lift), q, ONE);
-    };
-    this.stickerAt = FACES.map((_, s) => at(s, 0.002));
-    this.haloAt = FACES.map((_, s) => at(s, 0.006));
-
-    this.ambient = new Ambient(this.uniforms.uTime);
+    this.ambients = [new Ambient(this.uniforms.uTime), new Ambient(this.uniforms.uTime)];
     this.burst = new Burst();
-    this.scene.add(this.ambient.points, this.burst.points);
+    this.scene.add(...this.ambients.map((a) => a.points), this.burst.points);
 
     this.meshes = [];
     this.tweens = [];
     this.frame = 0;
     this.last = 0;
     this.moving = false;
+    this.motion = MOTIONS.smooth;
     this.swell = 0; // 다 맞췄을 때 한 번 부푸는 정도
     this.pulse = false; // 심장처럼 뛰는 테마
     this.jitter = false; // 가끔 화면이 튀는 테마
@@ -153,6 +162,57 @@ export class CubeView {
     new ResizeObserver(() => this.resize()).observe(host);
     this.resize();
     this.listen();
+  }
+
+  /** 조각 모양을 만든다. 테마마다 몸통 모서리, 스티커 크기·둥글기·두께가 다르다. */
+  shape(form, haloMode) {
+    const f = { ...FORM, ...form };
+    const key = JSON.stringify([f, haloMode]);
+    if (key === this.formKey) return false;
+    this.formKey = key;
+    for (const g of [this.bodyGeo, this.stickerGeo, this.haloGeo]) g?.dispose();
+    this.haloTex?.dispose();
+
+    this.bodyGeo = new RoundedBoxGeometry(BODY, BODY, BODY, 3, f.bevel);
+    let lift = 0.002;
+    if (f.depth > 0) {
+      // 솟아오른 타일: 모서리를 깎은 만큼 바닥 모양을 줄여서 겉에서 본 크기가 size가 되게
+      const bevel = Math.min(f.depth * 0.8, f.size * 0.08);
+      this.stickerGeo = new ExtrudeGeometry(roundedSquare(f.size - bevel * 2, Math.max(0.005, f.radius - bevel)), {
+        depth: f.depth,
+        bevelEnabled: true,
+        bevelThickness: bevel,
+        bevelSize: bevel,
+        bevelSegments: 4,
+        curveSegments: 10,
+      });
+      this.stickerGeo.translate(0, 0, bevel);
+      lift += f.depth + bevel * 2;
+    } else {
+      this.stickerGeo = new ShapeGeometry(roundedSquare(f.size, f.radius), 8);
+      lift += 0;
+    }
+    this.uniforms.uSticker.value.set(f.size / 2, Math.min(f.radius, f.size / 2));
+    this.haloGeo = new PlaneGeometry(f.size * 1.5, f.size * 1.5);
+    const shadow = haloMode === 'shadow';
+    this.haloTex = haloTexture(f.size, f.radius, shadow);
+    for (const m of this.haloMats) {
+      m.map = this.haloTex;
+      m.blending = shadow ? NormalBlending : AdditiveBlending;
+      m.needsUpdate = true;
+    }
+
+    // 조각 기준으로 스티커와 빛번짐이 놓이는 자리. 그림자는 스티커 밑, 빛은 스티커 위
+    const at = (s, offset, slide = 0) => {
+      const normal = new Vector3(...FACES[s]);
+      const q = new Quaternion().setFromUnitVectors(AXES[2], normal);
+      const p = normal.clone().multiplyScalar(BODY / 2 + offset);
+      if (slide) p.add(new Vector3(0.025, -0.035, 0).applyQuaternion(q));
+      return new Matrix4().compose(p, q, ONE);
+    };
+    this.stickerAt = FACES.map((_, s) => at(s, f.depth > 0 ? 0.001 : 0.002));
+    this.haloAt = FACES.map((_, s) => (shadow ? at(s, 0.0012, 1) : at(s, lift + 0.004)));
+    return true;
   }
 
   // ---- 조각 ----
@@ -262,8 +322,9 @@ export class CubeView {
     }
     const angles = target.slice();
     const { axis } = step[0];
-    return this.tween(longest === 2 ? ms * 1.5 : ms, (k) => {
-      const e = easeInOut(k);
+    const { ease, time } = this.motion;
+    return this.tween((longest === 2 ? ms * 1.5 : ms) * time, (k) => {
+      const e = ease(k);
       for (let i = 0; i < target.length; i++) angles[i] = target[i] * e;
       this.pose(axis, angles);
     }).then(() => {
@@ -290,12 +351,15 @@ export class CubeView {
   setTheme(theme) {
     const { body, sticker = {}, glow = 0, light = 1, halo = 0 } = theme;
     const surface = theme.surface ?? 'plain';
+    if (this.shape(theme.form, theme.haloMode) && this.cube) this.setCube(this.cube);
+
     this.bodyMat.color.set(body.color);
     this.bodyMat.roughness = body.roughness ?? 0.55;
     this.bodyMat.metalness = body.metalness ?? 0;
     this.uniforms.uBodyGlow.value.set(body.glow ?? '#000000');
     const glows = theme.faces.map((_, i) => (Array.isArray(glow) ? glow[i] : glow));
     const brightest = Math.max(...glows) || 1;
+    const shadow = theme.haloMode === 'shadow';
     theme.faces.forEach((c, i) => {
       const m = this.faceMats[i];
       m.color.set(c);
@@ -303,7 +367,7 @@ export class CubeView {
       m.emissiveIntensity = glows[i];
       m.roughness = sticker.roughness ?? 0.32;
       m.metalness = sticker.metalness ?? 0;
-      this.haloMats[i].color.set(c);
+      this.haloMats[i].color.set(shadow ? '#000000' : c);
       this.haloMats[i].opacity = Array.isArray(glow) ? (halo * glows[i]) / brightest : halo;
     });
     for (const m of [this.bodyMat, ...this.faceMats]) {
@@ -314,20 +378,68 @@ export class CubeView {
     this.haloOn = halo > 0;
     for (const mesh of this.haloMeshes ?? []) mesh.visible = this.haloOn;
 
-    this.hemi.intensity = 2.3 * light;
-    this.key.intensity = 1.9 * light;
-    this.fill.intensity = 0.45 * light;
+    // 조명
+    const L = { ...LIGHTS, ...theme.lights };
+    this.hemi.color.set(L.sky);
+    this.hemi.groundColor.set(L.ground);
+    this.lightBase.hemi = L.hemi * light;
+    for (const name of ['key', 'fill', 'rim']) {
+      const [color, intensity, pos] = L[name];
+      this[name].color.set(color);
+      this[name].position.set(...pos);
+      this.lightBase[name] = intensity * light;
+    }
+    this.flicker = this.still ? null : theme.flicker ?? null;
+    this.lit(0);
     this.scene.environment = theme.env ? this.room() : null;
     this.scene.environmentIntensity = theme.env ?? 0;
 
+    this.motion = MOTIONS[theme.motion] ?? MOTIONS.smooth;
     this.pulse = !this.still && Boolean(theme.pulse);
     this.jitter = !this.still && Boolean(theme.jitter);
     this.root.position.set(0, 0, 0);
-    this.ambient.set(this.still ? null : theme.ambient, theme.faces);
+    const ambient = [].concat(theme.ambient ?? []);
+    this.ambients.forEach((a, i) => a.set(this.still ? null : ambient[i], theme.faces));
     this.burst.set(this.still ? null : theme.burst, theme.faces);
-    this.moving = !this.still && (MOVING.has(surface) || Boolean(theme.ambient));
+    this.moving = !this.still && (MOVING.has(surface) || ambient.length > 0 || Boolean(this.flicker));
+    this.themeAt = performance.now();
     if (this.cube) this.place();
     this.invalidate();
+  }
+
+  /** 조명 세기. 촛불, 번개, 용암처럼 일렁이는 테마는 매 프레임 바뀐다. */
+  lit(seconds, dt = 0) {
+    const b = this.lightBase;
+    let key = 1;
+    let rim = 1;
+    let hemi = 1;
+    switch (this.flicker) {
+      case 'candle':
+        key = 0.72 + 0.2 * Math.sin(seconds * 9.3) * Math.sin(seconds * 5.1 + 1) + 0.1 * Math.sin(seconds * 23.7);
+        break;
+      case 'lava':
+        key = 0.82 + 0.18 * Math.sin(seconds * 1.4) + 0.06 * Math.sin(seconds * 4.3);
+        hemi = 0.9 + 0.1 * Math.sin(seconds * 1.1);
+        break;
+      case 'lightning':
+        // 가끔 번쩍. 두세 번 연달아 치고 빠르게 꺼진다
+        if (Math.random() < dt * 0.35) this.strike = 1;
+        this.strike = Math.max(0, this.strike - dt * 3.2);
+        rim = 1 + this.strike * (6 + 4 * Math.sin(seconds * 70));
+        key = 1 + this.strike * 2;
+        this.uniforms.uCharge.value = Math.max(this.uniforms.uCharge.value, this.strike);
+        break;
+      case 'aurora':
+        this.rim.color.setHSL(0.42 + 0.18 * (0.5 + 0.5 * Math.sin(seconds * 0.25)), 0.9, 0.6);
+        rim = 0.8 + 0.4 * Math.sin(seconds * 0.6);
+        break;
+      default:
+        break;
+    }
+    this.hemi.intensity = b.hemi * hemi;
+    this.key.intensity = b.key * key;
+    this.fill.intensity = b.fill;
+    this.rim.intensity = b.rim * rim;
   }
 
   /** 금속이나 얼음처럼 비치는 재질이 반사할 방. 처음 쓸 때 한 번만 만든다. */
@@ -351,7 +463,9 @@ export class CubeView {
 
   /** 방금 돈 층의 바깥 네 면에서 튀긴다. */
   spray(axis, layer, count, power = 1) {
-    if (!this.burst.config) return;
+    this.uniforms.uCharge.value = Math.min(1, this.uniforms.uCharge.value + 0.45 * power);
+    this.invalidate();
+    if (!this.burst.config || this.burst.config.turns === false) return;
     this.root.updateMatrixWorld();
     const { n } = this.cube;
     const h = n / 2 + 0.03;
@@ -447,13 +561,18 @@ export class CubeView {
       finished.push(t);
       return false;
     });
-    const flash = this.uniforms.uFlash;
-    if (flash.value > 0) flash.value = Math.max(0, flash.value - dt * 1.4);
+    const u = this.uniforms;
+    u.uIntro.value = (now - this.themeAt) / 1000;
+    if (u.uFlash.value > 0) u.uFlash.value = Math.max(0, u.uFlash.value - dt * 1.4);
+    if (u.uCharge.value > 0) u.uCharge.value = Math.max(0, u.uCharge.value - dt * 0.9);
+    if (u.uBlink.value > 0) u.uBlink.value = Math.max(0, u.uBlink.value - dt * 2.2);
+    const settling = u.uFlash.value > 0 || u.uCharge.value > 0 || u.uBlink.value > 0;
     const bursting = this.burst.update(dt);
+    this.lit(now / 1000, dt);
     this.breathe(now / 1000);
 
     this.renderer.render(this.scene, this.camera);
-    if (this.tweens.length || this.moving || bursting || flash.value > 0) this.invalidate();
+    if (this.tweens.length || this.moving || bursting || settling) this.invalidate();
     else this.last = 0;
     for (const t of finished) t.resolve();
   }
@@ -476,10 +595,12 @@ export class CubeView {
 
     // 입자 크기(월드 단위)를 화면 픽셀로 바꾸는 비율, 입자가 떠다닐 범위
     const scale = (h * this.renderer.getPixelRatio()) / (2 * Math.tan(v / 2));
-    this.ambient.material.uniforms.uScale.value = scale;
     this.burst.setScale(scale);
     const halfH = distance * Math.tan(v / 2);
-    this.ambient.setSpan(halfH * this.camera.aspect * 1.05, halfH * 1.05);
+    for (const a of this.ambients) {
+      a.material.uniforms.uScale.value = scale;
+      a.setSpan(halfH * this.camera.aspect * 1.05, halfH * 1.05);
+    }
     this.invalidate();
   }
 
@@ -492,6 +613,21 @@ export class CubeView {
     el.addEventListener('pointerup', (e) => this.up(e));
     el.addEventListener('pointercancel', (e) => this.up(e));
     el.addEventListener('contextmenu', (e) => e.preventDefault());
+    // 눈 달린 테마가 손가락·마우스를 쳐다볼 수 있게, 가리키는 곳을 시점 공간으로 넘긴다
+    window.addEventListener('pointermove', (e) => this.look(e), { passive: true });
+    window.addEventListener('pointerdown', (e) => this.look(e), { passive: true });
+  }
+
+  look(e) {
+    const r = this.renderer.domElement.getBoundingClientRect();
+    if (!r.width) return;
+    const ndc = new Vector3(((e.clientX - r.left) / r.width) * 2 - 1, 1 - ((e.clientY - r.top) / r.height) * 2, 0.5);
+    ndc.unproject(this.camera);
+    const dir = ndc.sub(this.camera.position).normalize();
+    // 큐브 앞쪽(z = 2) 평면과 만나는 점
+    const t = (2 - this.camera.position.z) / dir.z;
+    const p = this.camera.position.clone().addScaledVector(dir, t);
+    this.uniforms.uPointer.value.copy(p.applyMatrix4(this.camera.matrixWorldInverse));
   }
 
   point(e) {
@@ -590,6 +726,7 @@ export class CubeView {
       samples: [],
     });
     this.turning = true;
+    this.uniforms.uBlink.value = 1;
     this.onGrab?.();
   }
 
@@ -601,7 +738,8 @@ export class CubeView {
     d.samples.push([time, d.angle]);
     if (d.samples.length > 5) d.samples.shift();
     const angles = [];
-    angles[d.layer] = d.angle;
+    // 8비트 테마는 끌 때도 칸칸이 끊어서 움직인다
+    angles[d.layer] = this.motion === MOTIONS.stepped ? Math.round(d.angle / (QUARTER / 4)) * (QUARTER / 4) : d.angle;
     this.pose(d.axis, angles);
   }
 
@@ -619,9 +757,11 @@ export class CubeView {
     const from = d.angle;
     const to = quarters * QUARTER;
     const angles = [];
-    const ms = 70 + 170 * Math.min(1, Math.abs(to - from) / QUARTER);
+    const { ease, time: scale } = this.motion;
+    const ms = (70 + 170 * Math.min(1, Math.abs(to - from) / QUARTER)) * Math.max(0.8, scale);
+    const curve = this.motion === MOTIONS.smooth ? easeOut : ease;
     this.tween(ms, (k) => {
-      angles[d.layer] = from + (to - from) * easeOut(k);
+      angles[d.layer] = from + (to - from) * curve(k);
       this.pose(d.axis, angles);
     }).then(() => {
       this.turning = false;

@@ -9,7 +9,12 @@ import {
 //   dot     또렷한 점(눈, 모래, 물방울, 잉크)
 //   streak  길쭉한 조각이 돌면서(색종이, 스프링클, 나뭇잎)
 //   square  네모난 픽셀
-const SHAPES = { glow: 0, bubble: 1, dot: 2, streak: 3, square: 4 };
+//   star    네 갈래 반짝임
+//   flake   눈송이
+//   leaf    나뭇잎(돌면서)
+//   bat     박쥐(날갯짓)
+//   bird    새(날갯짓)
+export const SHAPES = { glow: 0, bubble: 1, dot: 2, streak: 3, square: 4, star: 5, flake: 6, leaf: 7, bat: 8, bird: 9 };
 
 const SHAPE_FRAGMENT = /* glsl */ `
 uniform float uOpacity;
@@ -17,9 +22,12 @@ varying vec3 vColor;
 varying float vAlpha;
 varying float vSpin;
 
+mat2 rot(float a) { return mat2(cos(a), -sin(a), sin(a), cos(a)); }
+
 void main() {
-  vec2 c = gl_PointCoord - .5;
+  vec2 c = vec2(gl_PointCoord.x - .5, .5 - gl_PointCoord.y);
   float r = length(c);
+  float flap = sin(vSpin * 5.);
 #if SHAPE == 0
   float a = pow(1. - smoothstep(0., .5, r), 1.6);
 #elif SHAPE == 1
@@ -28,10 +36,40 @@ void main() {
 #elif SHAPE == 2
   float a = 1. - smoothstep(.3, .5, r);
 #elif SHAPE == 3
-  vec2 q = mat2(cos(vSpin), -sin(vSpin), sin(vSpin), cos(vSpin)) * c;
+  vec2 q = rot(vSpin) * c;
   float a = 1. - smoothstep(.3, .45, length(q * vec2(1., 3.2)));
-#else
+#elif SHAPE == 4
   float a = 1. - step(.36, max(abs(c.x), abs(c.y)));
+#elif SHAPE == 5
+  vec2 q = rot(.3 * sin(vSpin)) * c;
+  float arm = max(exp(-abs(q.x) * 38.) * (1. - smoothstep(0., .5, abs(q.y))), exp(-abs(q.y) * 38.) * (1. - smoothstep(0., .5, abs(q.x))));
+  float a = arm + pow(1. - smoothstep(0., .16, r), 2.);
+#elif SHAPE == 6
+  vec2 q = rot(vSpin * .3) * c;
+  float d = 1.;
+  for (int k = 0; k < 3; k++) {
+    float an = float(k) * 1.0472;
+    d = min(d, abs(dot(q, vec2(-sin(an), cos(an)))));
+  }
+  float a = (1. - smoothstep(.025, .05, d)) * (1. - smoothstep(.36, .44, r));
+  a = max(a, 1. - smoothstep(.06, .09, r));
+#elif SHAPE == 7
+  vec2 q = rot(vSpin) * c;
+  float lens = max(length(q - vec2(0., -.22)), length(q - vec2(0., .22))) - .42;
+  float a = 1. - smoothstep(-.02, .01, lens);
+  a *= 1. - .35 * (1. - smoothstep(.0, .02, abs(q.x)));
+#elif SHAPE == 8
+  float ax = abs(c.x);
+  float top = .06 + flap * ax * .7 - ax * .12;
+  float bottom = top - .17 + .06 * abs(sin(ax * 24.));
+  float wing = step(.03, ax) * step(ax, .46) * step(bottom, c.y) * step(c.y, top);
+  float body = 1. - smoothstep(.07, .09, length(c * vec2(1.4, 1.)));
+  float ears = step(abs(abs(c.x) - .04), .02) * step(.05, c.y) * step(c.y, .12);
+  float a = max(max(wing, body), ears);
+#else
+  float ax = abs(c.x);
+  float curve = flap * ax * .55 - ax * ax * .5 + .05;
+  float a = (1. - smoothstep(.025, .045, abs(c.y - curve))) * step(ax, .44);
 #endif
   a *= vAlpha * uOpacity;
   if (a < .01) discard;
@@ -40,7 +78,7 @@ void main() {
 }
 `;
 
-const MODES = { rise: 0, fall: 1, float: 2, wind: 3, orbit: 4 };
+export const MODES = { rise: 0, fall: 1, float: 2, wind: 3, orbit: 4 };
 
 const AMBIENT_VERTEX = /* glsl */ `
 uniform float uTime;
