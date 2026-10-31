@@ -179,6 +179,9 @@ float fxFresnel(vec3 n, float k) { return pow(1. - abs(dot(n, normalize(vViewPos
 
 float fxLine(float d, float w) { return 1. - smoothstep(w - .025, w, d); }
 
+// 멀리서 실이 픽셀보다 작아지면 실 무늬 대신 섞인 색으로 바꿀 정도(물결무늬가 끼지 않게). n은 면 폭당 실 수
+float fxClothAA(vec2 F, float n) { return smoothstep(.7, 1.6, max(fwidth(F.x * n * .5), fwidth(F.y * n * .5))); }
+
 // 사막 타일에 새긴 그림. 면마다 다르다(해, 눈, 물결, 피라미드, 앙크, 깃털)
 float fxGlyph(vec2 q) {
   float w = .075;
@@ -219,6 +222,54 @@ float fxGlyph(vec2 q) {
 
 const S = {}; // 스티커
 const B = {}; // 몸통
+
+// 직물 짜임. 실 하나하나가 날실·씨실 중 어느 쪽이 위로 올라왔는지 계산해서 무늬가 짜임에서 그대로 나오게 한다
+const WEAVE = /* glsl */ `
+  // x 올라온 실이 날실(1)인지 씨실(0)인지, y 날실 번호, z 씨실 번호, w 실 단면(0 가장자리 ~ 1 가운데)
+  // kind 0 평직, 1 2/2 능직, 2 헤링본(능직 방향이 여덟 올마다 뒤집힌다)
+  vec4 fxWeave(vec2 F, float n, float kind) {
+    vec2 T = (F + 1.) * n * .5;
+    vec2 c = floor(T);
+    vec2 f = fract(T);
+    float top;
+    if (kind < .5) top = mod(c.x + c.y, 2.);
+    else if (kind < 1.5) top = step(mod(c.x + c.y, 4.), 1.5);
+    else top = step(mod(c.x + (mod(floor(c.x / 8.), 2.) > .5 ? c.y : 3. * c.y), 4.), 1.5);
+    return vec4(top, c.x, c.y, sin(3.1416 * (top > .5 ? f.x : f.y)));
+  }
+  // 실결: 꼬인 올이 비스듬히 비친다
+  float fxPly(vec2 F, float n, vec4 w) {
+    vec2 T = (F + 1.) * n * .5;
+    return .5 + .5 * sin((w.x > .5 ? T.y : T.x) * 9. + (w.x > .5 ? fract(T.x) : fract(T.y)) * 5.);
+  }
+  // 실의 밝기: 단면이 둥근 실, 꼬인 올, 잔털. 멀리서는 고르게
+  float fxYarn(vec4 w, float ply, float fuzz, float aa) {
+    return (.55 + .5 * mix(w.w, .64, aa)) * (.88 + .14 * mix(ply, .5, aa)) * (.92 + .1 * fuzz);
+  }
+  // 천을 씌운 쿠션처럼 칸 가운데가 도톰하다
+  float fxPillowH(vec2 p, float seed) {
+    return smoothstep(0., .06, fxEdgeAt(p)) * (.004 + .014 * smoothstep(0., .45, fxEdgeAt(p) / uSticker.x));
+  }
+`;
+
+// 니트 코. 다 맞추면 면 하나가 한 판으로 떠진 니트 무늬용
+const KNIT = /* glsl */ `
+  // 코 하나 안에서: x 실 두께(0~1), y 꼬인 올 결, z 실 방향 좌표
+  vec3 fxStitch(vec2 c) {
+    vec2 l = vec2(abs(c.x), c.y);
+    vec2 q = fxRot(-.6) * (l - vec2(.21, .04));
+    float d = length(q * vec2(2.1, 1.));
+    float yarn = 1. - smoothstep(.3, .46, d);
+    float ply = pow(.5 + .5 * sin(q.y * 50. + q.x * 26.), .7);
+    return vec3(yarn * (1. - d / .46), ply, q.y);
+  }
+  float fxKnitFaceH(vec2 p, float seed) {
+    vec2 g = (aHome.xy + p * aHome.z + 1.) * .5 * vec2(42., 54.);
+    vec3 st = fxStitch(fract(g) - .5);
+    return smoothstep(0., .08, fxEdgeAt(p)) * (.01 + .012 * pow(max(st.x, 0.), .6));
+  }
+`;
+
 
 S.plain = {};
 B.plain = {};
@@ -2984,6 +3035,236 @@ B.tartan = {
   surface: 'roughnessFactor = .55;',
 };
 
+S.houndstooth = {
+  // 하운드투스(사냥개 이빨). 다 맞추면 면 하나가 한 폭의 모직이다. 짙은 실 넷·면 색 실 넷을 번갈아 날실과 씨실로 걸고
+  // 2/2 능직으로 짜면 저절로 뾰족한 이빨 무늬가 나온다(무늬를 그린 게 아니라 짜임을 그대로 계산했다). 실마다 꼬인 올이
+  // 비스듬히 보이고 털이 살짝 일었다. 칸은 천을 씌운 쿠션처럼 도톰하다
+  head: WEAVE,
+  height: 'fxPillowH',
+  color: `
+    vec2 fxF = fxFace();
+    float fxN = 72.;
+    vec4 fxW = fxWeave(fxF, fxN, 1.);
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxDark = vec3(.035, .03, .03);
+    vec3 fxWarp = mod(fxW.y, 8.) < 4. ? fxDark : fxBase;
+    vec3 fxWeft = mod(fxW.z, 8.) < 4. ? fxDark : fxBase;
+    vec3 fxY = mix(fxW.x > .5 ? fxWarp : fxWeft, mix(fxDark, fxBase, .5), fxClothAA(fxF, fxN));
+    float fxPl = fxPly(fxF, fxN, fxW);
+    float fxFuzz = fxN2(vLocal.xy * 300. + vSeed);
+    diffuseColor.rgb = fxY * fxYarn(fxW, fxPl, fxFuzz, fxClothAA(fxF, fxN));`,
+  normal: 'normal = fxBump(normal, (fxW.w * .0009 + fxPl * .0003) * (1. - fxClothAA(fxF, fxN)) + fxFuzz * .0003);',
+  surface: 'roughnessFactor = .92;',
+  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * fxFresnel(normal, 1.5) * .3;',
+};
+
+B.houndstooth = {
+  color: `diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 80. + vSeed);`,
+  surface: 'roughnessFactor = .9;',
+};
+
+S.glencheck = {
+  // 글렌체크(프린스 오브 웨일스). 다 맞추면 면 하나가 한 폭의 양복감이다. 짙은 실과 옅은 실을 넷씩 번갈아 건 굵은 칸과
+  // 둘씩 번갈아 건 잔 칸이 2/2 능직으로 짜여 큰 체크 안에 잔 하운드투스와 줄이 생기고, 그 위로 가는 색실(오버체크)이
+  // 지나간다. 실 빛깔은 면 색을 짙게·옅게 물들인 것
+  head: WEAVE + `
+    // 이 실이 짙은 실인지(1)
+    float fxGlen(float i) {
+      float s = mod(i, 32.);
+      return s < 16. ? step(mod(s, 8.), 3.5) : step(mod(s, 4.), 1.5);
+    }`,
+  height: 'fxPillowH',
+  color: `
+    vec2 fxF = fxFace();
+    float fxN = 96.;
+    vec4 fxW = fxWeave(fxF, fxN, 1.);
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxD = mix(fxBase, vec3(.02), .62);
+    vec3 fxL = mix(fxBase, vec3(.95, .93, .88), .55);
+    vec3 fxOver = fxBase.b > fxBase.r * 1.3 ? vec3(.7, .12, .1) : vec3(.12, .3, .75);
+    vec3 fxWarp = mix(fxL, fxD, fxGlen(fxW.y));
+    vec3 fxWeft = mix(fxL, fxD, fxGlen(fxW.z));
+    if (mod(fxW.y, 64.) == 40.) fxWarp = fxOver;
+    if (mod(fxW.z, 64.) == 40.) fxWeft = fxOver;
+    vec3 fxY = mix(fxW.x > .5 ? fxWarp : fxWeft, mix(fxD, fxL, .5), fxClothAA(fxF, fxN));
+    float fxPl = fxPly(fxF, fxN, fxW);
+    float fxFuzz = fxN2(vLocal.xy * 300. + vSeed);
+    diffuseColor.rgb = fxY * fxYarn(fxW, fxPl, fxFuzz, fxClothAA(fxF, fxN));`,
+  normal: 'normal = fxBump(normal, (fxW.w * .0008 + fxPl * .0003) * (1. - fxClothAA(fxF, fxN)) + fxFuzz * .0003);',
+  surface: 'roughnessFactor = .9;',
+  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * fxFresnel(normal, 1.5) * .25;',
+};
+
+B.glencheck = {
+  color: `diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 80. + vSeed);`,
+  surface: 'roughnessFactor = .9;',
+};
+
+S.herringbone = {
+  // 헤링본 트위드. 다 맞추면 면 하나가 한 폭의 트위드다. 면 색 날실과 크림색 씨실을 능직으로 짜되 여덟 올마다 사선 방향을
+  // 뒤집어 청어 뼈 같은 V자 줄이 생긴다. 굵고 거친 모사라 실마다 굵기가 고르지 않고, 군데군데 다른 색 털 뭉치(넵)가 박혔다
+  head: WEAVE,
+  height: 'fxPillowH',
+  color: `
+    vec2 fxF = fxFace();
+    float fxN = 80.;
+    vec4 fxW = fxWeave(fxF, fxN, 2.);
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxWarp = fxBase * (.75 + .3 * fxH1(fxW.y * 1.3 + uFace));
+    vec3 fxWeft = vec3(.86, .8, .7) * (.85 + .2 * fxH1(fxW.z * 2.1 + uFace));
+    vec3 fxY = mix(fxW.x > .5 ? fxWarp : fxWeft, mix(fxBase * .9, vec3(.86, .8, .7), .5), fxClothAA(fxF, fxN));
+    vec2 fxNg = floor((fxF + 1.) * 160.);
+    float fxNep = step(.992, fxH2(fxNg + uFace * 17.));
+    vec3 fxNepC = .5 + .5 * cos(6.2832 * (fxH2(fxNg + 3.) + vec3(0., .33, .67)));
+    fxY = mix(fxY, fxNepC, fxNep * .8);
+    float fxPl = fxPly(fxF, fxN, fxW);
+    float fxFuzz = fxN2(vLocal.xy * 260. + vSeed);
+    diffuseColor.rgb = fxY * fxYarn(fxW, fxPl, fxFuzz, fxClothAA(fxF, fxN));`,
+  normal: 'normal = fxBump(normal, (fxW.w * .0011 + fxPl * .0004) * (1. - fxClothAA(fxF, fxN)) + fxFuzz * .0005);',
+  surface: 'roughnessFactor = .95;',
+  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * fxFresnel(normal, 1.5) * .3;',
+};
+
+B.herringbone = {
+  color: `diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 80. + vSeed);`,
+  surface: 'roughnessFactor = .9;',
+};
+
+S.gingham = {
+  // 깅엄. 다 맞추면 면 하나가 한 폭의 면직이다. 면 색 실과 흰 실을 여섯 올씩 번갈아 날실과 씨실로 걸어 평직으로 짜면,
+  // 둘 다 색실인 칸은 진하게, 하나만 색실인 칸은 반쯤 옅게, 둘 다 흰 칸은 하얗게 나와 바둑판이 된다. 가까이 보면 올이
+  // 하나 걸러 하나씩 엇갈려 있다
+  head: WEAVE,
+  height: 'fxPillowH',
+  color: `
+    vec2 fxF = fxFace();
+    float fxN = 120.;
+    vec4 fxW = fxWeave(fxF, fxN, 0.);
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxWhite = vec3(.95, .94, .92);
+    vec3 fxWarp = mod(fxW.y, 12.) < 6. ? fxBase : fxWhite;
+    vec3 fxWeft = mod(fxW.z, 12.) < 6. ? fxBase : fxWhite;
+    vec3 fxY = mix(fxW.x > .5 ? fxWarp : fxWeft, (fxWarp + fxWeft) * .5, fxClothAA(fxF, fxN));
+    float fxPl = fxPly(fxF, fxN, fxW);
+    float fxFuzz = fxN2(vLocal.xy * 400. + vSeed);
+    diffuseColor.rgb = fxY * fxYarn(fxW, fxPl, fxFuzz, fxClothAA(fxF, fxN));`,
+  normal: 'normal = fxBump(normal, (fxW.w * .0007 + fxPl * .0002) * (1. - fxClothAA(fxF, fxN)) + fxFuzz * .0002);',
+  surface: 'roughnessFactor = .85;',
+  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * fxFresnel(normal, 1.5) * .2;',
+};
+
+B.gingham = {
+  color: `diffuseColor.rgb *= .9 + .12 * fxN3(vLocal * 80. + vSeed);`,
+  surface: 'roughnessFactor = .85;',
+};
+
+S.argyle = {
+  // 아가일 니트. 다 맞추면 면 하나가 스웨터 앞판이다. 길쭉한 마름모가 면 색과 짙은 색으로 번갈아 떠졌고, 마름모 한가운데를
+  // 비스듬히 가로지르는 가는 겹줄(오버체크)이 크림색으로 지나간다. 무늬가 코 단위로 떠져 가장자리가 잘게 계단지고,
+  // 코마다 V자 두 가닥이 도톰하게 솟았다
+  head: KNIT + `
+    // 아가일 색 번호: 0 면 색 마름모, 1 짙은 마름모, 2 겹줄
+    float fxArgyle(vec2 F) {
+      vec2 u = vec2((F.x + 1.) * 1.5, (F.y + 1.) * 1.);
+      vec2 f = fract(u) - .5;
+      float inD = step(abs(f.x) + abs(f.y), .5);
+      float line = max(abs(fract(u.x + u.y) - .5), abs(fract(u.x - u.y) - .5));
+      if (line > .47) return 2.;
+      return inD > .5 ? 0. : 1.;
+    }`,
+  height: 'fxKnitFaceH',
+  color: `
+    vec2 fxF = fxFace();
+    vec2 fxG = (fxF + 1.) * .5 * vec2(42., 54.);
+    vec2 fxCell = floor(fxG);
+    vec3 fxSt = fxStitch(fract(fxG) - .5);
+    float fxK = fxArgyle((fxCell + .5) / vec2(42., 54.) * 2. - 1.);
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxY = fxK < .5 ? fxBase : (fxK < 1.5 ? mix(fxBase, vec3(.02), .6) : vec3(.92, .88, .8));
+    float fxFuzz = fxN2(vLocal.xy * 260. + vSeed);
+    fxY *= .92 + .14 * fxH2(fxCell + vSeed * 9.);
+    diffuseColor.rgb = fxY * (.32 + .68 * smoothstep(0., .5, fxSt.x)) * (.8 + .28 * fxSt.y) * (.92 + .1 * fxFuzz);`,
+  normal: 'normal = fxBump(normal, fxSt.y * .0012 * step(.05, fxSt.x) + fxFuzz * .0006);',
+  surface: 'roughnessFactor = .95;',
+  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * fxFresnel(normal, 1.4) * .4;',
+};
+
+B.argyle = {
+  color: `diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 60. + vSeed);`,
+  surface: 'roughnessFactor = .95;',
+};
+
+S.swissdot = {
+  // 스위스 도트. 다 맞추면 면 하나가 한 폭의 얇은 면 보일이다. 면 색으로 물들인 성근 평직 위에 하얀 실 뭉치를 엇갈린 줄로
+  // 짜 넣고 잘라 내 도톰한 물방울이 실제로 솟았다(인쇄가 아니라 실이다). 물방울은 올이 사방으로 뻗친 보송한 술이고,
+  // 바탕은 얇아 살짝 비친다
+  head: WEAVE + `
+    // 가장 가까운 물방울: x 중심까지 거리(물방울 반지름 1)
+    float fxDot(vec2 F) {
+      vec2 g = (F + 1.) * 4.5;
+      g.x += .5 * mod(floor(g.y), 2.);
+      vec2 f = fract(g) - .5;
+      return length(f) / .17;
+    }
+    float fxDotH(vec2 p, float seed) {
+      float d = fxDot(aHome.xy + p * aHome.z);
+      float tuft = 1. - smoothstep(.7, 1.1, d);
+      return smoothstep(0., .08, fxEdgeAt(p)) * (.006 + .004 * smoothstep(0., .25, fxEdgeAt(p)) + .012 * tuft * sqrt(max(0., 1. - d * d * .8)));
+    }`,
+  height: 'fxDotH',
+  color: `
+    vec2 fxF = fxFace();
+    float fxN = 150.;
+    vec4 fxW = fxWeave(fxF, fxN, 0.);
+    vec3 fxBase = diffuseColor.rgb;
+    float fxD = fxDot(fxF);
+    float fxTuft = 1. - smoothstep(.85, 1.05, fxD + (fxN2(fxF * 90.) - .5) * .25);
+    float fxFib = .5 + .5 * sin(atan(fract((fxF.y + 1.) * 4.5) - .5, fract((fxF.x + 1.) * 4.5 + .5 * mod(floor((fxF.y + 1.) * 4.5), 2.)) - .5) * 40. + fxD * 6.);
+    float fxPl = fxPly(fxF, fxN, fxW);
+    float fxAA = fxClothAA(fxF, fxN);
+    vec3 fxGround = fxBase * fxYarn(fxW, fxPl, 0.5, fxAA) * (1. - .25 * (1. - fxW.w) * (1. - fxAA));
+    vec3 fxDotC = vec3(.97, .96, .94) * (.82 + .18 * fxFib) * (.85 + .15 * (1. - fxD));
+    diffuseColor.rgb = mix(fxGround, fxDotC, fxTuft);`,
+  normal: 'normal = fxBump(normal, (fxW.w * .0006 * (1. - fxAA)) * (1. - fxTuft) + fxFib * fxTuft * .0012);',
+  surface: 'roughnessFactor = mix(.8, .98, fxTuft);',
+  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * (fxFresnel(normal, 1.5) * .25 + fxTuft * .05);',
+};
+
+B.swissdot = {
+  color: `diffuseColor.rgb *= .92 + .1 * fxN3(vLocal * 80. + vSeed);`,
+  surface: 'roughnessFactor = .85;',
+};
+
+S.chevron = {
+  // 셰브론 니트. 다 맞추면 면 하나가 지그재그 줄무늬 스웨터다(이탈리아 니트 공방 식). 면 색, 크림, 짙은 색, 반쯤 옅은 면 색 줄이
+  // 산 모양으로 오르내리며 번갈아 떠졌고, 무늬가 코 단위라 비탈이 잘게 계단진다. 코마다 V자 두 가닥이 도톰하다
+  head: KNIT + `
+    float fxChev(vec2 F) {
+      float z = abs(fract((F.x + 1.) * 2.5) - .5) * .5;
+      return mod(floor((F.y + 1. + z) * 6.), 5.);
+    }`,
+  height: 'fxKnitFaceH',
+  color: `
+    vec2 fxF = fxFace();
+    vec2 fxG = (fxF + 1.) * .5 * vec2(42., 54.);
+    vec2 fxCell = floor(fxG);
+    vec3 fxSt = fxStitch(fract(fxG) - .5);
+    float fxK = fxChev((fxCell + .5) / vec2(42., 54.) * 2. - 1.);
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxY = fxK < .5 ? fxBase : (fxK < 1.5 ? vec3(.93, .89, .8) : (fxK < 2.5 ? mix(fxBase, vec3(.02), .65) : (fxK < 3.5 ? fxBase : mix(fxBase, vec3(.95), .45))));
+    float fxFuzz = fxN2(vLocal.xy * 260. + vSeed);
+    fxY *= .92 + .14 * fxH2(fxCell + vSeed * 9.);
+    diffuseColor.rgb = fxY * (.32 + .68 * smoothstep(0., .5, fxSt.x)) * (.8 + .28 * fxSt.y) * (.92 + .1 * fxFuzz);`,
+  normal: 'normal = fxBump(normal, fxSt.y * .0012 * step(.05, fxSt.x) + fxFuzz * .0006);',
+  surface: 'roughnessFactor = .95;',
+  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * fxFresnel(normal, 1.4) * .4;',
+};
+
+B.chevron = {
+  color: `diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 60. + vSeed);`,
+  surface: 'roughnessFactor = .95;',
+};
+
 S.dragon = {
   // 용의 비늘. 다 맞추면 면 하나가 비늘 덮인 살갗 한 장이다. 아래로 겹친 비늘이 실제로 도톰하고 가운데 등줄이 섰으며,
   // 가장자리는 짙고 보는 각도에 따라 빛깔이 돈다. 비늘 틈 사이로 몸속 불씨가 숨 쉬듯 빛난다. 비늘 색이 곧 면 색
@@ -3468,106 +3749,101 @@ B.carbon = {
 };
 
 S.bone = {
-  // 뼈 주사위. 칸마다 소뼈를 네모나게 잘라 갈아 낸 주사위의 한 면이다. 면마다 눈 개수가 달라(하나~여섯) 고리-점 눈을
-  // 실제로 파냈다: 송곳으로 뚫은 가운데 구멍과 그 둘레에 새긴 고리, 안엔 먹물이 배었다. 갈아 낸 겉은 반들거리는
-  // 우윳빛~꿀빛이고, 뼈 속 잔 관(하버스관)이 가는 검은 점과 줄로 비친다. 결을 따라 자른 칸엔 줄이, 결을 가로질러 자른 칸엔
-  // 점과 둥근 층이 보이고, 골수 쪽으로 깎은 칸엔 해면뼈 구멍이 숭숭 드러났다. 손으로 깎아 면이 조금씩 기울었고
-  // 줄질 자국, 작은 패임, 마른 잔금, 가장자리로 짙어지는 묵은 색. 면마다 물들인 빛깔이 다르다
-  // (상아, 꼭두서니 물, 구리 물, 그을려 검은 뼈(눈은 희게 메웠다), 하얗게 구운 뼈, 꿀빛으로 묵은 뼈)
+  // 해골 큐브. 게임 속 해골 블록·납골당 벽처럼, 칸마다 뼈를 깎아 낸 해골 하나가 실제로 솟아 있다. 둥근 머리뼈와 눈썹뼈,
+  // 깊이 팬 눈구멍과 뒤집힌 하트 모양 코구멍, 광대와 관자놀이의 굴곡, 위아래 두 줄 이와 그 틈. 몇 칸은 해골 대신
+  // 뼈를 다발로 쌓은 단면(마인크래프트 뼈 블록처럼)이라 둥근 뼈 끝과 그 속 해면뼈가 보인다. 살점은 없고 갈아 낸 뼈뿐이다:
+  // 우윳빛~꿀빛 묵은 겉, 뼈 속 잔 관이 비치는 가는 점과 줄, 작은 패임과 마른 잔금. 면마다 묵힌 빛깔이 다르다
+  // (상아, 붉은 흙, 구리 물, 그을린 검정, 하얗게 구운 뼈, 꿀빛)
   head: `
-    // 고리-점 눈: x 가운데 구멍(1이 한가운데), y 둘레 고리 홈
-    vec2 fxPips(vec2 q, float n) {
-      float hole = 0.;
-      float ring = 0.;
-      for (int i = 0; i < 9; i++) {
-        vec2 c = vec2(float(i - (i / 3) * 3) - 1., float(i / 3) - 1.) * .5;
-        bool on;
-        if (n < 1.5) on = i == 4;
-        else if (n < 2.5) on = i == 0 || i == 8;
-        else if (n < 3.5) on = i == 0 || i == 4 || i == 8;
-        else if (n < 4.5) on = i == 0 || i == 2 || i == 6 || i == 8;
-        else if (n < 5.5) on = i == 0 || i == 2 || i == 4 || i == 6 || i == 8;
-        else on = i == 0 || i == 2 || i == 3 || i == 5 || i == 6 || i == 8;
-        if (!on) continue;
-        float r = length(q - c);
-        hole = max(hole, 1. - smoothstep(.05, .075, r));
-        ring = max(ring, 1. - smoothstep(.012, .03, abs(r - .155)));
-      }
-      return vec2(hole, ring);
+    float fxSdE(vec2 p, vec2 c, vec2 r) { return (length((p - c) / r) - 1.) * min(r.x, r.y); }
+    // 해골 앞모습: x 높이, y 구멍(눈·코·이 틈, 1이 가장 깊다), z 해골 안인지
+    vec3 fxSkull(vec2 q) {
+      q.x = abs(q.x);
+      float cran = fxSdE(q, vec2(0., .2), vec2(.66, .64));
+      float jaw = fxBox(q - vec2(0., -.44), vec2(.36, .24), .14);
+      float cheek = fxSdE(q, vec2(.38, -.12), vec2(.2, .14));
+      float skull = min(min(cran, jaw), cheek);
+      float inside = 1. - smoothstep(-.02, .01, skull);
+      vec2 dq = (q - vec2(0., .1)) / vec2(.75, .85);
+      float dome = sqrt(max(0., 1. - dot(dq, dq)));
+      float h = inside * (.45 + .55 * dome);
+      h += exp(-pow((q.y - .2 - .05 * cos(q.x * 6.)) / .05, 2.)) * step(q.x, .45) * inside * .12;
+      float eye = fxSdE(q, vec2(.24, .04), vec2(.17, .15));
+      float eyeIn = 1. - smoothstep(-.03, .01, eye);
+      float eyeDeep = 1. - smoothstep(-.12, 0., eye);
+      h -= eyeIn * (.55 + .3 * eyeDeep);
+      float tn = (q.y + .3) / .22;
+      float nose = max(q.x - (.1 * (1. - tn) + .015), max(-tn, tn - 1.) * .22);
+      float noseIn = 1. - smoothstep(-.02, .01, nose);
+      h -= noseIn * .55;
+      float teethZ = step(abs(q.y + .44), .1) * step(q.x, .26);
+      float gapV = 1. - smoothstep(.006, .016, abs(fract(q.x / .075 + .5) - .5) * .075);
+      float gapH = 1. - smoothstep(.006, .016, abs(q.y + .44));
+      float teethGap = teethZ * max(gapV, gapH);
+      h -= teethGap * .25;
+      h -= exp(-pow((q.x - .58) / .08, 2.)) * exp(-pow((q.y - .02) / .15, 2.)) * .12 * inside;
+      float hole = clamp(max(max(eyeIn * (.6 + .4 * eyeDeep), noseIn), teethGap * .8), 0., 1.);
+      return vec3(h, hole, inside);
     }
-    // 뼈 결: x 잔 관(어두운 점·줄), y 해면뼈 구멍, z 층 무늬, w 해면뼈가 드러난 정도
-    vec4 fxGrain(vec2 q, float seed) {
+    // 뼈 다발 단면: x 높이, y 구멍(뼈 사이 틈과 골수), z 뼈 끝 안인지
+    vec3 fxEnds(vec2 q, float seed) {
+      vec3 v = fxVoronoi(q * 2.3 + seed * 7.);
+      float rad = .36 + .08 * v.z;
+      float disc = 1. - smoothstep(rad - .04, rad, v.x);
+      float marrow = 1. - smoothstep(rad * .45, rad * .55, v.x);
+      float h = disc * (.75 + .25 * sqrt(max(0., 1. - v.x * v.x / (rad * rad)))) - marrow * .35;
+      return vec3(h, marrow * disc * .7 + (1. - disc) * .8, disc);
+    }
+    // 뼈 결: x 잔 관(어두운 점·줄), y 해면뼈 구멍, z 층 무늬
+    vec3 fxGrain(vec2 q, float seed) {
       float ang = fxH1(seed * 5.) * 3.1416;
       vec2 d = vec2(cos(ang), sin(ang));
       vec2 g = vec2(dot(q, d), dot(q, vec2(-d.y, d.x)));
-      float canal;
-      float layer;
-      if (fxH1(seed * 7.) < .33) {
-        // 결을 가로질러 자른 칸: 관이 점으로, 뼈 한가운데(칸 밖)를 도는 둥근 층
-        vec3 v = fxVoronoi(q * 9. + seed * 13.);
-        canal = (1. - smoothstep(.04, .09, v.x)) * step(.35, v.z);
-        vec2 oc = vec2(fxH1(seed * 3.), fxH1(seed * 9.)) * 4. - 2.;
-        layer = .5 + .5 * sin(length(q - oc) * 40. + fxN2(q * 3.) * 3.);
-      } else {
-        // 결을 따라 자른 칸: 관이 가늘고 긴 줄로
-        canal = smoothstep(.74, .86, fxN2(vec2(g.x * 9., g.y * 70.) + seed * 7.)) * smoothstep(.35, .65, fxN2(vec2(g.x * 6., g.y * 10.) + seed));
-        layer = .5 + .5 * sin(g.y * 26. + fxN2(g * vec2(1.5, 4.)) * 4.);
-      }
-      float reach = 0.;
-      float pore = 0.;
-      if (fxH1(seed * 11.) < .3) {
-        vec2 sc = normalize(vec2(fxH1(seed * 2.) - .5, fxH1(seed * 4.) - .5) + .001) * 1.25;
-        reach = 1. - smoothstep(.55, .95, length(q - sc) + (fxN2(q * 5. + seed) - .5) * .35);
-        vec3 sv = fxVoronoi(q * 7. + seed * 3.);
-        pore = reach * smoothstep(.05, .2, sv.y) * smoothstep(.15, .35, reach);
-      }
-      return vec4(canal, pore, layer, reach);
+      float canal = smoothstep(.74, .86, fxN2(vec2(g.x * 9., g.y * 70.) + seed * 7.)) * smoothstep(.35, .65, fxN2(vec2(g.x * 6., g.y * 10.) + seed));
+      vec3 v = fxVoronoi(q * 14. + seed * 13.);
+      canal = max(canal, (1. - smoothstep(.04, .09, v.x)) * step(.75, v.z) * .7);
+      float layer = .5 + .5 * sin(g.y * 26. + fxN2(g * vec2(1.5, 4.)) * 4.);
+      vec3 sv = fxVoronoi(q * 16. + seed * 3.);
+      return vec3(canal, smoothstep(.05, .2, sv.y), layer);
     }
     float fxBoneH(vec2 p, float seed) {
       vec2 q = p / uSticker.x;
-      vec2 pp = fxPips(q, uFace + 1.);
-      vec4 g = fxGrain(q, seed);
-      vec2 tilt = (vec2(fxH1(seed * 17.), fxH1(seed * 23.)) - .5) * .008;
-      float h = .012 + .005 * (1. - dot(q, q) * .5) + dot(q, tilt) - pp.x * .012 - pp.y * .004 - g.y * .007;
-      return smoothstep(0., .06, fxEdgeAt(p)) * h;
+      vec3 s = fxH1(seed * 31.) < .3 ? fxEnds(q, seed) : fxSkull(q * 1.08);
+      return smoothstep(0., .06, fxEdgeAt(p)) * (.006 + .026 * s.x);
     }`,
   height: 'fxBoneH',
   color: `
     if (fxEdge() < 0.) discard;
     vec2 fxQb = fxQ();
-    vec2 fxPp = fxPips(fxQb, uFace + 1.);
-    vec4 fxGr = fxGrain(fxQb, vSeed);
+    bool fxIsEnds = fxH1(vSeed * 31.) < .3;
+    vec3 fxS = fxIsEnds ? fxEnds(fxQb, vSeed) : fxSkull(fxQb * 1.08);
+    vec3 fxGr = fxGrain(fxQb, vSeed);
     vec3 fxBase = diffuseColor.rgb;
-    float fxLum = dot(fxBase, vec3(.3, .59, .11));
-    // 묵은 색: 가장자리로 갈수록 짙고 가운데는 손때로 밝다
     float fxE = fxEdge() / uSticker.x;
-    float fxPatina = (1. - smoothstep(0., .25, fxE)) * .25 + fxF2(fxQb * 2.5 + vSeed * 9.) * .2;
+    float fxPatina = (1. - smoothstep(0., .25, fxE)) * .2 + fxF2(fxQb * 2.5 + vSeed * 9.) * .22;
     vec3 fxC = fxBase * (1.05 - fxPatina) * (.975 + .04 * fxGr.z);
     fxC = mix(fxC, fxC * vec3(1., .88, .68), smoothstep(.45, .8, fxF2(fxQb * 1.8 + vSeed * 3.)) * .35);
     vec3 fxDarkB = mix(fxBase * vec3(.35, .27, .2), vec3(.25, .18, .12), .5);
     fxC = mix(fxC, fxDarkB, fxGr.x * .45);
-    // 작은 패임과 마른 잔금
     float fxPit = smoothstep(.72, .85, fxN2(fxQb * 30. + vSeed * 7.)) * smoothstep(.4, .7, fxN2(fxQb * 4. + vSeed));
     vec3 fxCk = fxVoronoi(fxQb * vec2(1.4, 4.) + vSeed * 5.);
-    float fxCrack = (1. - smoothstep(0., .02, fxCk.y)) * step(.7, fxH1(vSeed * 19.)) * smoothstep(.5, .7, fxN2(fxQb * 2. + vSeed));
+    float fxCrack = (1. - smoothstep(0., .02, fxCk.y)) * step(.6, fxH1(vSeed * 19.)) * smoothstep(.5, .7, fxN2(fxQb * 2. + vSeed));
     fxC = mix(fxC, fxDarkB * .8, max(fxPit * .6, fxCrack * .7));
-    // 해면뼈: 기둥은 거칠고 누렇고 구멍은 어둡다
-    fxC = mix(fxC, fxC * vec3(.95, .85, .7), fxGr.w * .4);
-    fxC = mix(fxC, vec3(.12, .08, .05), fxGr.y * .9);
-    // 줄질 자국
-    float fxFile = .5 + .5 * sin(dot(fxQb, vec2(.6, .8)) * 220. + fxN2(fxQb * 8.) * 3.);
-    fxC *= .97 + .03 * fxFile;
-    // 고리-점 눈: 먹물이 밴 홈(검게 그을린 면은 희게 메웠다)
-    vec3 fxInk = fxLum < .03 ? vec3(.85, .8, .7) : vec3(.07, .045, .03);
-    fxC = mix(fxC, fxInk, max(fxPp.x, fxPp.y * .9));
+    // 뼈 끝 가운데(골수 자리)는 해면뼈
+    float fxSpongy = fxIsEnds ? step(.3, fxS.y) * fxS.z : 0.;
+    fxC = mix(fxC, mix(vec3(.1, .07, .04), fxC * .9, fxGr.y), fxSpongy);
+    // 구멍 속과 해골 바깥 틈은 짙은 그늘
+    float fxDeep = fxIsEnds ? (1. - fxS.z) : fxS.y;
+    fxC = mix(fxC, fxC * .1 + vec3(.015, .01, .008), fxDeep * .92);
+    if (!fxIsEnds) fxC = mix(fxC * (.28 + .2 * fxN2(fxQb * 14. + vSeed)), fxC, fxS.z);
     diffuseColor.rgb = fxC;`,
-  normal: 'normal = fxBump(normal, fxGr.z * .0003 - fxGr.x * .0006 - fxPit * .0012 - fxCrack * .001 - fxGr.y * .002 - fxPp.y * .0015 + fxFile * .00015);',
-  surface: 'roughnessFactor = mix(.3, .72, max(fxGr.w, fxPatina)) + fxPp.x * .3;',
+  normal: 'normal = fxBump(normal, fxGr.z * .0003 - fxGr.x * .0006 - fxPit * .0012 - fxCrack * .001 - (1. - fxGr.y) * fxSpongy * .002);',
+  surface: 'roughnessFactor = mix(.32, .75, max(fxPatina, fxDeep));',
   // 뼈는 빛이 살짝 스며 가장자리가 은은하다
-  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * (.04 + .08 * fxFresnel(normal, 2.));',
+  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * (.04 + .08 * fxFresnel(normal, 2.)) * (1. - fxDeep);',
 };
 B.bone = {
-  // 몸통은 주사위 속 해면뼈. 가는 뼈기둥이 그물처럼 얽혔고 그 사이 구멍은 짙게 비었다
+  // 몸통은 해면뼈. 가는 뼈기둥이 그물처럼 얽혔고 그 사이 구멍은 짙게 비었다
   color: `
     vec2 fxP = fxBodyUV();
     vec3 fxV = fxVoronoi(fxP * 26. + vSeed * 7.);

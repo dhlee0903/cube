@@ -1594,7 +1594,168 @@ export const THEMES = [
     motion: 'bouncy',
     ambient: { mode: 'float', shape: 'dot', colors: ['#FFE8D0', '#FFFFFF'], count: 24, size: 0.03, speed: 0.15, opacity: 0.5 },
     burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: -1, drag: 2.6, life: 1.4 },
+  },  {
+    // 양복점 재단대. 다 맞추면 면 하나가 한 폭의 모직이다. 짙은 실 넷·면 색 실 넷을 번갈아 걸고 2/2 능직으로 짜
+    // 저절로 사냥개 이빨 무늬가 나온다. 꼬인 올과 잔털, 쿠션처럼 도톰한 칸
+    id: 'houndstooth',
+    name: '하운드투스',
+    bg: '#E6DED0',
+    ink: '#2A2218',
+    backdrop: [
+      'repeating-linear-gradient(90deg, rgba(120,90,60,.06) 0 1px, transparent 1px 12px)',
+      'radial-gradient(70% 55% at 50% 40%, #EFE8DC, #CFC2AE)',
+    ].join(', '),
+    form: { bevel: 0.12, size: 0.94, radius: 0.14, grid: 24 },
+    body: { color: '#2A2628', roughness: 0.9 },
+    faces: ['#C83A3A', '#2E5AA8', '#E8E2D2', '#3A8A4A', '#E8B83A', '#8A4AA0'],
+    lights: {
+      sky: '#ffffff', ground: '#a09080', hemi: 1.5,
+      key: ['#fff6ec', 2.1, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.0, [0, 4, -6]],
+    },
+    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: -1, drag: 2.6, life: 1.4 },
+    surface: 'houndstooth',
+    sound: 'cloth',
+    motion: 'squish',
   },
+  {
+    // 양복점 재단대. 다 맞추면 면 하나가 한 폭의 양복감이다. 넷씩 번갈아 건 굵은 칸과 둘씩 번갈아 건 잔 칸이
+    // 능직으로 짜여 큰 체크 안에 잔 무늬가 생기고, 그 위로 가는 색실이 지나간다. 실 빛깔은 면 색을 짙게·옅게 물들인 것
+    id: 'glencheck',
+    name: '글렌체크',
+    bg: '#E6DED0',
+    ink: '#2A2218',
+    backdrop: [
+      'repeating-linear-gradient(90deg, rgba(120,90,60,.06) 0 1px, transparent 1px 12px)',
+      'radial-gradient(70% 55% at 50% 40%, #EFE8DC, #CFC2AE)',
+    ].join(', '),
+    form: { bevel: 0.12, size: 0.94, radius: 0.14, grid: 24 },
+    body: { color: '#2A2628', roughness: 0.9 },
+    faces: ['#8A8F98', '#7A5A3A', '#3A5A8A', '#5A7A3A', '#9A3A3A', '#C8B890'],
+    lights: {
+      sky: '#ffffff', ground: '#a09080', hemi: 1.5,
+      key: ['#fff6ec', 2.1, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.0, [0, 4, -6]],
+    },
+    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: -1, drag: 2.6, life: 1.4 },
+    surface: 'glencheck',
+    sound: 'cloth',
+    motion: 'squish',
+  },
+  {
+    // 산장 벽난로 앞. 다 맞추면 면 하나가 한 폭의 트위드다. 면 색 날실과 크림색 씨실을 능직으로 짜되 여덟 올마다
+    // 사선을 뒤집어 청어 뼈 V자가 생긴다. 굵고 거친 모사와 군데군데 박힌 색 털 뭉치
+    id: 'herringbone',
+    name: '헤링본',
+    bg: '#2A2018',
+    ink: '#F0E4D0',
+    backdrop: [
+      'radial-gradient(40% 30% at 50% 85%, rgba(255,150,60,.25), transparent 70%)',
+      'radial-gradient(80% 65% at 50% 40%, #4A3424, #160E08)',
+    ].join(', '),
+    form: { bevel: 0.12, size: 0.94, radius: 0.14, grid: 24 },
+    body: { color: '#1A1410', roughness: 0.9 },
+    faces: ['#4A4E58', '#7A5232', '#24427A', '#4E6A3A', '#8A2E2E', '#B8A07A'],
+    lights: {
+      sky: '#ffffff', ground: '#a09080', hemi: 1.5,
+      key: ['#fff6ec', 2.1, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.0, [0, 4, -6]],
+    },
+    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: -1, drag: 2.6, life: 1.4 },
+    surface: 'herringbone',
+    sound: 'cloth',
+    motion: 'squish',
+  },
+  {
+    // 소풍 돗자리. 다 맞추면 면 하나가 한 폭의 면직이다. 면 색 실과 흰 실을 여섯 올씩 번갈아 걸어 평직으로 짜면
+    // 둘 다 색실인 칸은 진하게, 하나만 색실인 칸은 반쯤 옅게, 둘 다 흰 칸은 하얗게 나와 바둑판이 된다
+    id: 'gingham',
+    name: '깅엄',
+    bg: '#CFE6B8',
+    ink: '#203018',
+    backdrop: [
+      'radial-gradient(60% 45% at 50% 20%, rgba(255,255,240,.6), transparent 70%)',
+      'radial-gradient(80% 65% at 50% 45%, #D8EEC0, #9CC488)',
+    ].join(', '),
+    form: { bevel: 0.12, size: 0.94, radius: 0.14, grid: 24 },
+    body: { color: '#E8E2D8', roughness: 0.9 },
+    faces: ['#D83A3A', '#2E6AD0', '#E8D040', '#2E9A5A', '#E07AB0', '#202020'],
+    lights: {
+      sky: '#ffffff', ground: '#a09080', hemi: 1.5,
+      key: ['#fff6ec', 2.1, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.0, [0, 4, -6]],
+    },
+    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: -1, drag: 2.6, life: 1.4 },
+    surface: 'gingham',
+    sound: 'cloth',
+    motion: 'squish',
+  },
+  {
+    // 겨울 골프장. 다 맞추면 면 하나가 스웨터 앞판이다. 면 색과 짙은 색 마름모가 번갈아 떠졌고, 크림색 겹줄이
+    // 마름모를 비스듬히 가로지른다. 코 단위로 계단진 가장자리, 도톰한 V자 코
+    id: 'argyle',
+    name: '아가일',
+    bg: '#DDE6E8',
+    ink: '#1A2428',
+    backdrop: [
+      'radial-gradient(60% 45% at 50% 25%, rgba(255,255,255,.6), transparent 70%)',
+      'radial-gradient(80% 65% at 50% 45%, #E8F0F2, #AFC2C8)',
+    ].join(', '),
+    form: { bevel: 0.12, size: 0.94, radius: 0.14, grid: 56 },
+    body: { color: '#2A2628', roughness: 0.9 },
+    faces: ['#2E4A8A', '#B83A3A', '#3A7A4A', '#E8B83A', '#6A3A8A', '#E8E2D4'],
+    lights: {
+      sky: '#ffffff', ground: '#a09080', hemi: 1.5,
+      key: ['#fff6ec', 2.1, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.0, [0, 4, -6]],
+    },
+    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: -1, drag: 2.6, life: 1.4 },
+    surface: 'argyle',
+    sound: 'cloth',
+    motion: 'squish',
+  },
+  {
+    // 여름 창가 커튼. 다 맞추면 면 하나가 한 폭의 얇은 면 보일이다. 면 색 성근 평직 위에 하얀 실 뭉치를 짜 넣고 잘라
+    // 보송한 물방울이 실제로 솟았다. 바탕은 얇아 살짝 비친다
+    id: 'swissdot',
+    name: '스위스 도트',
+    bg: '#F6F0E8',
+    ink: '#3A2A28',
+    backdrop: [
+      'radial-gradient(60% 45% at 50% 25%, rgba(255,255,255,.7), transparent 70%)',
+      'radial-gradient(80% 65% at 50% 45%, #FFF8F0, #E8D8C8)',
+    ].join(', '),
+    form: { bevel: 0.12, size: 0.94, radius: 0.14, grid: 48 },
+    body: { color: '#F4F0EA', roughness: 0.9 },
+    faces: ['#E88AA0', '#6AA8E0', '#F2D060', '#7AC08A', '#B080E0', '#F0A060'],
+    lights: {
+      sky: '#ffffff', ground: '#a09080', hemi: 1.5,
+      key: ['#fff6ec', 2.1, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.0, [0, 4, -6]],
+    },
+    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: -1, drag: 2.6, life: 1.4 },
+    surface: 'swissdot',
+    sound: 'cloth',
+    motion: 'squish',
+  },
+  {
+    // 이탈리아 니트 공방. 다 맞추면 면 하나가 지그재그 줄무늬 스웨터다. 면 색, 크림, 짙은 색, 옅은 면 색 줄이
+    // 산 모양으로 오르내리며 번갈아 떠졌고, 비탈이 코 단위로 잘게 계단진다
+    id: 'chevron',
+    name: '셰브론',
+    bg: '#2A2420',
+    ink: '#F2E8DC',
+    backdrop: [
+      'repeating-linear-gradient(135deg, rgba(255,255,255,.03) 0 6px, transparent 6px 14px)',
+      'radial-gradient(80% 65% at 50% 45%, #4A3A34, #1A1210)',
+    ].join(', '),
+    form: { bevel: 0.12, size: 0.94, radius: 0.14, grid: 56 },
+    body: { color: '#C8BEB0', roughness: 0.9 },
+    faces: ['#E05A3A', '#2E7AB8', '#E8C040', '#3A9A6A', '#C04A8A', '#3A3A48'],
+    lights: {
+      sky: '#ffffff', ground: '#a09080', hemi: 1.5,
+      key: ['#fff6ec', 2.1, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.0, [0, 4, -6]],
+    },
+    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: -1, drag: 2.6, life: 1.4 },
+    surface: 'chevron',
+    sound: 'cloth',
+    motion: 'squish',
+  },
+
   {
     // 불 꺼진 동굴 속 잠든 용. 다 맞추면 면 하나가 비늘 덮인 살갗 한 장. 아래로 겹친 비늘이 도톰하고 가운데 등줄이 서며,
     // 보는 각도에 따라 빛깔이 돈다. 비늘 틈으로 몸속 불씨가 숨 쉬듯 빛나고, 묵직하게 돈다
@@ -1875,24 +2036,24 @@ export const THEMES = [
     motion: 'snap',
   },
   {
-    // 옛 선술집 노름판. 칸마다 소뼈를 깎아 갈아 낸 주사위의 한 면이다. 면마다 눈 개수가 다르고(하나~여섯) 고리-점 눈엔
-    // 먹물이 뱄다. 우윳빛~꿀빛으로 묵은 겉에 뼈 속 잔 관이 검은 점과 줄로 비치고, 골수 쪽 칸엔 해면뼈 구멍.
-    // 면마다 물들인 빛깔이 다르다(상아, 꼭두서니, 구리, 그을림, 하얗게 구운 뼈, 꿀빛). 몸통은 해면뼈. 촛불 아래 나무 탁자
+    // 지하 납골당. 칸마다 뼈를 깎아 낸 해골 하나가 실제로 솟아 있고(게임 속 해골 블록처럼), 몇 칸은 뼈를 다발로 쌓은 단면이다.
+    // 깊은 눈구멍과 코구멍, 이 사이 틈엔 짙은 그늘. 살점 없이 갈아 낸 뼈뿐: 우윳빛~꿀빛 묵은 겉, 잔 관이 비치는 점과 줄, 패임과 잔금.
+    // 면마다 묵힌 빛깔이 다르다(상아, 붉은 흙, 구리 물, 그을린 검정, 하얗게 구운 뼈, 꿀빛). 몸통은 해면뼈. 촛불 아래 돌벽
     id: 'bone',
-    name: '뼈',
-    bg: '#16100A',
-    ink: '#F0E4CC',
+    name: '해골',
+    bg: '#100C09',
+    ink: '#EEE2CC',
     backdrop: [
-      'radial-gradient(45% 35% at 50% 28%, rgba(255,200,130,.2), transparent 70%)',
-      'repeating-linear-gradient(90deg, rgba(0,0,0,.18) 0 2px, transparent 2px 80px)',
-      'radial-gradient(80% 65% at 50% 45%, #3A2616, #0C0805)',
+      'radial-gradient(40% 32% at 50% 30%, rgba(255,190,120,.18), transparent 70%)',
+      'repeating-linear-gradient(0deg, rgba(0,0,0,.25) 0 2px, transparent 2px 38px)',
+      'radial-gradient(80% 65% at 50% 45%, #2A2018, #060403)',
     ].join(', '),
-    form: { bevel: 0.1, size: 0.94, radius: 0.12, grid: 48 },
+    form: { bevel: 0.1, size: 0.94, radius: 0.12, grid: 52 },
     body: { color: '#5E3A2A', roughness: 0.75 },
     faces: ['#E4D6B8', '#A9472E', '#4E8C6E', '#2C2420', '#8D9BB0', '#93683A'],
     lights: {
-      sky: '#fff0dc', ground: '#2a1a10', hemi: 0.9,
-      key: ['#ffe2c0', 2.4, [-4, 6, 5]], fill: ['#c8d0e0', 0.3, [6, 0, 3]], rim: ['#ffd8a0', 1.0, [2, 4, -6]],
+      sky: '#fff0dc', ground: '#2a1a10', hemi: 0.85,
+      key: ['#ffe2c0', 2.5, [-4, 6, 5]], fill: ['#c8d0e0', 0.3, [6, 0, 3]], rim: ['#ffd8a0', 1.0, [2, 4, -6]],
     },
     flicker: 'candle',
     ambient: { mode: 'float', shape: 'dot', colors: ['#E8DCC0'], count: 20, size: 0.02, speed: 0.12, opacity: 0.3 },
@@ -1901,6 +2062,7 @@ export const THEMES = [
     sound: 'dice',
     motion: 'heavy',
   },
+
 
   {
     // 눈알 무더기. 칸마다 사람 눈 하나가 짓무른 눈꺼풀 사이로 불룩 솟아 손끝을 따라 굴러간다. 핏발 선 흰자,
@@ -2286,8 +2448,9 @@ export const GROUPS = [
   { name: '빛·불', themes: ['neon', 'lava', 'electric', 'tesla', 'disco', 'lavalamp', 'kaleido', 'magic'] },
   { name: '우주', themes: ['space', 'planet', 'blackhole', 'nebula', 'star', 'galaxy'] },
   { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'fossil', 'bismuth', 'banded'] },
-  { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'tartan', 'camo'] },
+  { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'camo'] },
   { name: '문양', themes: ['arabesque', 'artdeco', 'celtic', 'aztec', 'paisley', 'kkotsal', 'guilloche', 'quilt', 'lantern', 'carpet'] },
+  { name: '패턴', themes: ['houndstooth', 'glencheck', 'herringbone', 'gingham', 'argyle', 'swissdot', 'chevron', 'tartan'] },
   { name: '동물', themes: ['wool', 'hamster', 'wild', 'dragon'] },
   { name: '금속·기계', themes: ['metal', 'gauge', 'rust', 'mercury', 'circuit', 'carbon'] },
   { name: '디지털·레트로', themes: ['glitch', 'pixel', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
