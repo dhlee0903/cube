@@ -1248,34 +1248,6 @@ export const THEMES = [
     burst: { shape: 'square', colors: ['#F2C45A', '#FFE6A0', '#2A4AA8', '#A82A2A'], size: 0.08, speed: 2.4, gravity: -4, drag: 1.2, life: 1.2 },
   },
   {
-    // 수틀에 끼운 리넨 위 꽃자수. 칸마다 꽃 한 송이, 면마다 꽃이 다르다(장미, 수레국화, 해바라기, 수국, 라벤더, 튤립).
-    // 도톰하게 솟은 공단수 꽃잎이 밑동에서 끝으로 색이 번지고, 실결 따라 광택이 흐른다. 엇갈린 잎, 꼰 줄기, 매듭 꽃술
-    id: 'embroidery',
-    name: '자수',
-    bg: '#E9E1D2',
-    ink: '#3A2A24',
-    backdrop: [
-      PAPER_GRAIN,
-      'repeating-linear-gradient(0deg, rgba(120,100,70,.06) 0 1px, transparent 1px 3px)',
-      'repeating-linear-gradient(90deg, rgba(120,100,70,.06) 0 1px, transparent 1px 3px)',
-      'radial-gradient(70% 55% at 50% 42%, #F2ECE0, #D8CCB6)',
-    ].join(', '),
-    form: { bevel: 0.07, size: 0.9, radius: 0.1, grid: 48 },
-    body: { color: '#C49A64', roughness: 0.5 },
-    sticker: { roughness: 0.6 },
-    faces: ['#D8283A', '#2E5AC8', '#F4C430', '#1E9A8A', '#8A4AC0', '#F07A2A'],
-    lights: {
-      sky: '#fff8ee', ground: '#b0a088', hemi: 2,
-      key: ['#fff4e0', 1.8, [-5, 5, 4]], fill: ['#ffffff', 0.5, [6, 0, 3]], rim: ['#ffffff', 0.8, [0, 4, -6]],
-    },
-    haloMode: 'shadow',
-    halo: 0.15,
-    surface: 'embroidery',
-    motion: 'fluid',
-    ambient: { mode: 'float', shape: 'dot', colors: ['#FFFFFF', '#E8DCC8'], count: 24, size: 0.03, speed: 0.25, opacity: 0.6 },
-    burst: { shape: 'streak', colors: 'faces', size: 0.14, speed: 1.6, gravity: -1.4, drag: 2.2, life: 1.4 },
-  },
-  {
     // 사랑방 문갑 위 한지. 먹과 전통 안료(먹, 주홍, 쪽빛, 송화색, 녹색, 자주) 방울이 떨어져 번지고,
     // 번지는 끝에 먹이 고여 테가 진다. 붓처럼 천천히 돈다
     id: 'ink',
@@ -1776,7 +1748,7 @@ export const GROUPS = [
   { name: '빛·불', themes: ['neon', 'lava', 'electric', 'disco', 'lavalamp', 'pumpkin', 'kaleido'] },
   { name: '우주', themes: ['space', 'planet', 'blackhole'] },
   { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'fossil'] },
-  { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'embroidery', 'knit', 'tartan', 'camo'] },
+  { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'tartan', 'camo'] },
   { name: '동물', themes: ['wool', 'cat', 'dog', 'hamster', 'dragon'] },
   { name: '금속·기계', themes: ['metal', 'gauge', 'rust', 'mercury', 'circuit'] },
   { name: '디지털·레트로', themes: ['glitch', 'pixel', 'holo', 'thermal', 'flip', 'vinyl', 'comic', 'toon'] },
