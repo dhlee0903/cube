@@ -16,7 +16,13 @@ import {
 //   bird    새(날갯짓)
 //   drip    맺혀 떨어지는 방울
 //   fly     파리(날개가 떨린다)
-export const SHAPES = { glow: 0, bubble: 1, dot: 2, streak: 3, square: 4, star: 5, flake: 6, leaf: 7, bat: 8, bird: 9, drip: 10, fly: 11 };
+//   rain    세로로 긴 빗줄기
+//   petal   끝이 살짝 파인 꽃잎(돌면서)
+//   bee     줄무늬 꿀벌(날개가 떨린다)
+export const SHAPES = {
+  glow: 0, bubble: 1, dot: 2, streak: 3, square: 4, star: 5, flake: 6, leaf: 7, bat: 8, bird: 9, drip: 10, fly: 11,
+  rain: 12, petal: 13, bee: 14,
+};
 
 const SHAPE_FRAGMENT = /* glsl */ `
 uniform float uOpacity;
@@ -30,6 +36,7 @@ void main() {
   vec2 c = vec2(gl_PointCoord.x - .5, .5 - gl_PointCoord.y);
   float r = length(c);
   float flap = sin(vSpin * 5.);
+  vec3 col = vColor;
 #if SHAPE == 0
   float a = pow(1. - smoothstep(0., .5, r), 1.6);
 #elif SHAPE == 1
@@ -79,17 +86,34 @@ void main() {
   float d = min(ball, max(tip, -q.y));
   float a = 1. - smoothstep(-.01, .02, d);
   a *= 1. - .5 * (1. - smoothstep(0., .06, length(q - vec2(-.07, .06))));
-#else
+#elif SHAPE == 11
   float body = 1. - smoothstep(.09, .12, length(c * vec2(1.7, 1.)));
   float head = 1. - smoothstep(.055, .075, length(c - vec2(0., .14)));
   float wa = .55 + .45 * sin(vSpin * 50.);
   float wings = (1. - smoothstep(.1, .14, length((c - vec2(-.15, .06)) * vec2(1., 1.8 / wa))))
     + (1. - smoothstep(.1, .14, length((c - vec2(.15, .06)) * vec2(1., 1.8 / wa))));
   float a = max(max(body, head), min(1., wings) * .38);
+#elif SHAPE == 12
+  float a = (1. - smoothstep(.012, .035, abs(c.x))) * (1. - smoothstep(.3, .5, abs(c.y))) * (.35 + .65 * (.5 - c.y));
+#elif SHAPE == 13
+  vec2 q = rot(vSpin) * c;
+  float petal = length(q * vec2(1.55, 1.)) - .36;
+  float notch = .09 - length(q - vec2(0., .37));
+  float a = 1. - smoothstep(-.02, .01, max(petal, notch));
+  col *= .85 + .3 * (.5 - q.y);
+#else
+  float body = length(c * vec2(1.25, 1.9)) - .2;
+  float stripe = step(.5, fract(c.x * 9. + .25));
+  float wa = .55 + .45 * sin(vSpin * 60.);
+  float wings = (1. - smoothstep(.09, .13, length((c - vec2(-.06, .15)) * vec2(1.6, 1. / wa))))
+    + (1. - smoothstep(.09, .13, length((c - vec2(.08, .15)) * vec2(1.6, 1. / wa))));
+  float inBody = 1. - smoothstep(-.01, .015, body);
+  float a = max(inBody, min(1., wings) * .5);
+  col = mix(vec3(.95, .97, 1.), mix(vColor, vec3(.06, .04, .02), stripe * step(-.16, c.x)), inBody);
 #endif
   a *= vAlpha * uOpacity;
   if (a < .01) discard;
-  gl_FragColor = vec4(vColor, a);
+  gl_FragColor = vec4(col, a);
   #include <colorspace_fragment>
 }
 `;

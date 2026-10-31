@@ -16,6 +16,8 @@ export const MOTIONS = {
   squish: { ease: (k) => 1 - (1 - k) ** 2 * Math.cos(k * 9), time: 1.35 },
   // 8비트 게임처럼 네 번에 끊어서
   stepped: { ease: (k) => Math.min(1, Math.floor(k * 4 + 0.001) / 4 + (k >= 1 ? 1 : 0)), time: 1 },
+  // 스톱모션: 한 칸을 여섯 컷에 나눠서
+  stop: { ease: (k) => (k >= 1 ? 1 : Math.floor(k * 6 + 0.001) / 6), time: 1.25 },
   // 버벅이다 건너뛴다
   stutter: {
     ease: (k) => {

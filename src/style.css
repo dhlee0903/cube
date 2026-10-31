@@ -97,7 +97,7 @@ body::before {
 .timer {
   position: absolute;
   z-index: 1;
-  top: calc(18px + env(safe-area-inset-top, 0px));
+  top: calc(var(--timer-top, 18px) + env(safe-area-inset-top, 0px));
   left: 50%;
   transform: translateX(-50%);
   display: flex;

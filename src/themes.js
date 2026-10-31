@@ -20,6 +20,7 @@
 // surface   겉면 질감. surfaces.js
 // motion    돌아가는 맛. motions.js
 // pulse     큐브가 심장처럼 뛴다     jitter  가끔 화면이 튄다
+// timerTop  배경 장면에 가리지 않게 타이머를 내릴 높이(px)
 // ambient   늘 떠 있는 입자(하나 또는 둘). particles.js
 //           mode: rise 위로, fall 아래로, float 떠다님, wind 옆으로, orbit 큐브 둘레를 돎
 // burst     돌릴 때와 다 맞췄을 때 튀는 입자. turns: false면 다 맞췄을 때만
@@ -41,6 +42,25 @@ function stars(count, seed = 7) {
     const r = next() < 0.2 ? 1.6 : 1;
     const a = (0.35 + next() * 0.55).toFixed(2);
     out.push(`radial-gradient(${r}px ${r}px at ${x}% ${y}%, rgba(255,255,255,${a}) 99%, transparent)`);
+  }
+  return out.join(', ');
+}
+
+// 초점이 나간 도시 불빛
+function bokeh(count, seed = 23) {
+  const next = () => {
+    seed = (seed * 16807) % 2147483647;
+    return seed / 2147483647;
+  };
+  const colors = ['255,170,90', '255,90,120', '120,170,255', '255,220,140', '150,120,255'];
+  const out = [];
+  for (let i = 0; i < count; i++) {
+    const x = (next() * 100).toFixed(1);
+    const y = (30 + next() * 70).toFixed(1);
+    const r = (2 + next() * 6).toFixed(1);
+    const c = colors[Math.floor(next() * colors.length)];
+    const a = (0.12 + next() * 0.25).toFixed(2);
+    out.push(`radial-gradient(${r}vmin ${r}vmin at ${x}% ${y}%, rgba(${c},${a}) 0%, rgba(${c},${a}) 55%, transparent 72%)`);
   }
   return out.join(', ');
 }
@@ -655,6 +675,267 @@ export const THEMES = [
       { mode: 'float', shape: 'glow', colors: ['#FF9A2E', '#FFD447'], count: 18, size: 0.1, speed: 0.3, opacity: 0.8, additive: true },
     ],
     burst: { shape: 'streak', colors: ['#F07F13', '#7B3FA8', '#7BC43A', '#FFD447'], size: 0.13, speed: 2.2, gravity: -4, drag: 1.4, life: 1.1 },
+  },
+  {
+    // 산사 처마 밑. 서까래 끝마다 단청이 둘러 있고, 큐브는 머리초를 그려 넣은 나무다.
+    // 면 색은 단청 안료에서: 주홍, 군청, 호분(흰색), 석황, 하엽(녹색), 장단(주황)
+    id: 'dancheong',
+    name: '단청',
+    timerTop: 50,
+    bg: '#9FC6E4',
+    ink: '#16202A',
+    backdrop: [
+      `${svg(64, 64, "<rect width='64' height='64' fill='#5E8F78'/><circle cx='32' cy='32' r='27' fill='#14110F'/><circle cx='32' cy='32' r='24' fill='#F1ECDD'/><circle cx='32' cy='32' r='20' fill='#C42F2B'/><circle cx='32' cy='32' r='15' fill='#2B3F9A'/><circle cx='32' cy='32' r='10' fill='#F1ECDD'/><circle cx='32' cy='32' r='6' fill='#E7B432'/>", 'xMidYMid meet')} 0 0 / 34px 34px repeat-x`,
+      'linear-gradient(#5E8F78 0 34px, #14110F 34px 37px, #C42F2B 37px 40px, #2B3F9A 40px 43px, transparent 43px)',
+      'radial-gradient(60% 40% at 50% 100%, rgba(255,255,255,.4), transparent 70%)',
+      'linear-gradient(#7FB2DA 0%, #A9CDE8 55%, #DDEAF2 100%)',
+    ].join(', '),
+    drift: 'radial-gradient(30% 22% at 30% 40%, rgba(255,250,230,.25), transparent 70%)',
+    form: { bevel: 0.04, size: 0.86, radius: 0.04, depth: 0.012 },
+    body: { color: '#5E8F78', roughness: 0.8 },
+    faces: ['#C42F2B', '#2B3F9A', '#F1ECDD', '#E7B432', '#2E7040', '#EE7A2C'],
+    lights: {
+      sky: '#e6f2ff', ground: '#8a7a5a', hemi: 2.1,
+      key: ['#fff4e0', 2.4, [-4, 7, 4]], fill: ['#b0d0ff', 0.5, [6, 0, 4]], rim: ['#ffffff', 0.8, [2, 4, -6]],
+    },
+    surface: 'dancheong',
+    motion: 'smooth',
+    ambient: [
+      { mode: 'fall', shape: 'leaf', colors: ['#E8B832', '#F2C94C', '#D9A21E'], count: 14, size: 0.2, speed: 0.22, opacity: 0.95 },
+      { mode: 'float', shape: 'glow', colors: ['#FF9AA8', '#FFC27A', '#FFE08A'], count: 10, size: 0.22, speed: 0.18, opacity: 0.55, additive: true },
+    ],
+    burst: { shape: 'streak', colors: ['#C42F2B', '#2B3F9A', '#E7B432', '#2E7040', '#F1ECDD'], size: 0.13, speed: 2.2, gravity: -3, drag: 1.6, life: 1.3 },
+  },
+  {
+    // 성당 창. 납선으로 이은 색유리 너머로 해가 들어 큐브가 안에서 빛나고, 빛줄기 속에 먼지가 떠다닌다
+    id: 'stained',
+    name: '스테인드글라스',
+    bg: '#14110F',
+    ink: '#F1E6D0',
+    backdrop: [
+      `${svg(120, 60, "<rect width='120' height='60' fill='#1c1814'/><g fill='#262019' stroke='#120f0c' stroke-width='1.5'><rect x='1' y='1' width='58' height='28'/><rect x='61' y='1' width='58' height='28'/><rect x='-29' y='31' width='58' height='28'/><rect x='31' y='31' width='58' height='28'/><rect x='91' y='31' width='58' height='28'/></g>")} 0 0 / 180px 90px`,
+      'radial-gradient(45% 50% at 50% 42%, rgba(255,220,160,.18), transparent 70%)',
+      '#14110F',
+    ].join(', '),
+    drift: [
+      'repeating-linear-gradient(115deg, transparent 0 6%, rgba(255,230,180,.07) 7% 9%, transparent 10% 16%)',
+      'radial-gradient(35% 25% at 30% 85%, rgba(200,40,60,.12), transparent 70%)',
+      'radial-gradient(35% 25% at 70% 88%, rgba(40,80,200,.12), transparent 70%)',
+    ].join(', '),
+    form: { bevel: 0.03, size: 0.9, radius: 0.02, depth: 0 },
+    body: { color: '#2A2A2E', roughness: 0.4, metalness: 0.6 },
+    faces: ['#C8102E', '#1F4FB8', '#EDE6C8', '#F2A81D', '#138A4A', '#7B34B0'],
+    halo: 0.3,
+    lights: {
+      sky: '#fff0d8', ground: '#2a2018', hemi: 1.1,
+      key: ['#ffe8c0', 1.6, [-3, 6, 5]], fill: ['#a0b8ff', 0.4, [6, 0, 3]], rim: ['#ffd8a0', 1.2, [0, 4, -6]],
+    },
+    surface: 'stained',
+    motion: 'heavy',
+    ambient: { mode: 'float', shape: 'dot', colors: ['#FFF2D0'], count: 50, size: 0.03, speed: 0.12, opacity: 0.6, additive: true },
+    burst: { shape: 'star', colors: 'faces', size: 0.14, speed: 2.2, gravity: -2, drag: 1.4, life: 1, additive: true },
+  },
+  {
+    // 나전칠기 함. 검게 옻칠한 몸통에 전복 껍데기를 잘라 박았다. 보는 각도에 따라 자개가 무지갯빛으로 바뀐다
+    id: 'najeon',
+    name: '자개',
+    bg: '#120606',
+    ink: '#F4E6DA',
+    backdrop: [
+      'linear-gradient(transparent 76%, rgba(255,220,200,.06) 77%, transparent 79%)',
+      'radial-gradient(70% 55% at 50% 42%, #3A120E 0%, #1E0807 55%, #0A0303 100%)',
+    ].join(', '),
+    drift: 'radial-gradient(28% 20% at 35% 30%, rgba(255,240,230,.08), transparent 70%)',
+    form: { bevel: 0.06, size: 0.8, radius: 0.1, depth: 0 },
+    body: { color: '#0C0808', roughness: 0.04 },
+    faces: ['#E89AB8', '#4FB8C8', '#F2EEE6', '#E8C27A', '#7FD0A0', '#9A88E0'],
+    env: 1.1,
+    lights: {
+      sky: '#fff0e8', ground: '#2a0e0a', hemi: 1.2,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#ffd0c0', 0.5, [6, 0, 4]], rim: ['#ffffff', 1.6, [3, 4, -6]],
+    },
+    surface: 'najeon',
+    motion: 'smooth',
+    ambient: { mode: 'float', shape: 'star', colors: ['#FFFFFF', '#BFEFFF', '#FFD6F0'], count: 28, size: 0.12, speed: 0.4, opacity: 0.85, additive: true },
+    burst: { shape: 'star', colors: 'faces', size: 0.15, speed: 2.2, gravity: -2, drag: 1.5, life: 1, additive: true },
+  },
+  {
+    // 비 오는 밤 유리창. 김 서린 유리에 물방울이 맺혔다 사라지고, 흘러내린 자리로 뒤편 도시 불빛이 번져 보인다
+    id: 'rain',
+    name: '빗방울',
+    bg: '#0B1020',
+    ink: '#E6ECF8',
+    backdrop: [
+      bokeh(26),
+      'linear-gradient(#141A33, #0B1020 60%, #070A14)',
+    ].join(', '),
+    drift: 'radial-gradient(40% 30% at 50% 70%, rgba(255,160,90,.12), transparent 70%)',
+    form: { bevel: 0.1, size: 0.86, radius: 0.1, depth: 0 },
+    body: { color: '#12141C', roughness: 0.12, metalness: 0.5 },
+    faces: ['#E8475F', '#8A6BFF', '#E9EEF5', '#F2B33D', '#3FC59A', '#3D8BFF'],
+    env: 0.6,
+    lights: {
+      sky: '#8090c0', ground: '#0a0c14', hemi: 1.2,
+      key: ['#ffd8b0', 1.4, [-4, 5, 5]], fill: ['#6a8cff', 0.7, [6, 0, 3]], rim: ['#ff6a8a', 1.2, [0, 3, -6]],
+    },
+    surface: 'rain',
+    motion: 'fluid',
+    ambient: { mode: 'fall', shape: 'rain', colors: ['#BFD8FF'], count: 140, size: 0.25, speed: 2.4, opacity: 0.4 },
+    burst: { shape: 'dot', colors: ['#DDEBFF', '#9FC0FF'], size: 0.06, speed: 2.4, gravity: -7, drag: 0.8, life: 0.9, opacity: 0.9 },
+  },
+  {
+    // 액체 금속. 웅덩이마다 겉이 실제로 출렁이고, 돌리면 가운데서 물결이 퍼진다. 어두운 촬영장의 띠 조명
+    id: 'mercury',
+    name: '수은',
+    bg: '#0E0F12',
+    ink: '#EDEEF2',
+    backdrop: [
+      'linear-gradient(90deg, transparent 12%, rgba(255,255,255,.07) 14%, transparent 17%, transparent 83%, rgba(255,255,255,.07) 86%, transparent 88%)',
+      'radial-gradient(60% 18% at 50% 92%, rgba(255,255,255,.08), transparent 70%)',
+      'radial-gradient(60% 50% at 50% 42%, #24262C, #0E0F12 75%)',
+    ].join(', '),
+    drift: 'radial-gradient(25% 40% at 30% 40%, rgba(255,255,255,.05), transparent 70%)',
+    form: { bevel: 0.14, size: 0.9, radius: 0.3, grid: 40 },
+    body: { color: '#2A2C31', roughness: 0.08, metalness: 1 },
+    sticker: { roughness: 0.04, metalness: 1 },
+    faces: ['#D0283E', '#3C6FD8', '#DADDE2', '#E8C35A', '#3FB58A', '#E07A9A'],
+    env: 1.7,
+    lights: {
+      sky: '#ffffff', ground: '#202226', hemi: 0.7,
+      key: ['#ffffff', 1.8, [-4, 6, 5]], fill: ['#cfd8ff', 0.5, [6, -1, 3]], rim: ['#ffffff', 2.4, [3, 3, -6]],
+    },
+    light: 0.7,
+    surface: 'mercury',
+    motion: 'fluid',
+    burst: { shape: 'dot', colors: ['#E8EAF0', '#B8BCC8'], size: 0.07, speed: 2.4, gravity: -6, drag: 0.8, life: 1 },
+  },
+  {
+    // 증기 기관실. 리벳 박은 놋쇠 몸통에 칸마다 압력계가 달려 바늘이 떨리고, 돌리면 압력이 치솟고 증기가 뿜어진다
+    id: 'gauge',
+    name: '스팀펑크',
+    bg: '#1A110A',
+    ink: '#F4E2C4',
+    backdrop: [
+      `${svg(100, 100, "<g stroke-linecap='round' fill='none'><path d='M-5 18 H40 Q48 18 48 26 V110' stroke='#5A3A1E' stroke-width='5'/><path d='M-5 18 H40 Q48 18 48 26 V110' stroke='#8A5A2A' stroke-width='2'/><path d='M105 72 H70 Q62 72 62 64 V-5' stroke='#5A3A1E' stroke-width='4'/><path d='M105 72 H70 Q62 72 62 64 V-5' stroke='#9A6A34' stroke-width='1.6'/></g><g fill='#B07A3A'><rect x='20' y='14' width='4' height='8' rx='1'/><rect x='46' y='60' width='8' height='4' rx='1'/><rect x='80' y='68' width='4' height='8' rx='1'/></g>", 'xMidYMid slice')} center / cover no-repeat`,
+      'radial-gradient(45% 40% at 50% 40%, rgba(255,180,90,.2), transparent 70%)',
+      'repeating-linear-gradient(90deg, #24170D 0 46px, #1E130A 46px 48px)',
+    ].join(', '),
+    drift: 'radial-gradient(35% 30% at 50% 30%, rgba(255,200,120,.12), transparent 70%)',
+    form: { bevel: 0.05, size: 0.86, radius: 0.43, depth: 0.035 },
+    body: { color: '#8A6A32', roughness: 0.35, metalness: 0.8 },
+    faces: ['#C8432E', '#2E5E8C', '#F2E6CC', '#E2B04A', '#3E7A52', '#5A2E2A'],
+    env: 0.9,
+    lights: {
+      sky: '#ffd8a0', ground: '#2a1a0a', hemi: 1.4,
+      key: ['#ffcf8a', 2.4, [-4, 6, 5]], fill: ['#ff9a4a', 0.6, [6, -1, 3]], rim: ['#ffe0b0', 1.4, [2, 4, -6]],
+    },
+    light: 0.9,
+    flicker: 'candle',
+    surface: 'gauge',
+    motion: 'mechanical',
+    ambient: [
+      { mode: 'rise', shape: 'glow', colors: ['#FFFFFF'], count: 16, size: 0.6, speed: 0.22, opacity: 0.12 },
+      { mode: 'float', shape: 'glow', colors: ['#FFB45A', '#FFD08A'], count: 14, size: 0.05, speed: 0.5, opacity: 0.9, additive: true },
+    ],
+    burst: { shape: 'glow', colors: ['#FFFFFF', '#F2EEE6'], size: 0.42, speed: 1.4, gravity: 0.6, drag: 1.8, life: 1.3, opacity: 0.28 },
+  },
+  {
+    // 벌통 속. 칸마다 다른 꽃꿀(라벤더, 벚꽃, 아카시아, 오렌지꽃, 보리수, 블루베리)이 고여 빛나고,
+    // 몇 칸은 밀랍으로 덮였다. 벌이 큐브 둘레를 맴돈다. 꿀처럼 끈적하게 돈다
+    id: 'honey',
+    name: '벌집',
+    bg: '#2A1704',
+    ink: '#FFEFCF',
+    backdrop: [
+      `${svg(52, 90, "<g fill='none' stroke='rgba(255,200,90,.14)' stroke-width='2'><path d='M13 0 L26 7.5 L26 22.5 L13 30 L0 22.5 L0 7.5Z M39 22.5 L52 30 L52 45 L39 52.5 L26 45 L26 30Z M13 45 L26 52.5 L26 67.5 L13 75 L0 67.5 L0 52.5Z M39 67.5 L52 75 L52 90 M26 90 L26 75'/></g>", 'xMidYMid meet')} 0 0 / 52px 90px`,
+      'radial-gradient(55% 45% at 50% 42%, #7A4A0C 0%, #3E2306 60%, #1E1003 100%)',
+    ].join(', '),
+    drift: 'radial-gradient(40% 32% at 50% 42%, rgba(255,190,60,.18), transparent 70%)',
+    form: { bevel: 0.05, size: 0.88, radius: 0.05, depth: 0.015 },
+    body: { color: '#6A4420', roughness: 0.7 },
+    faces: ['#9B6BD6', '#D8405A', '#F3E6B0', '#F08A24', '#9CC23A', '#3E5FB8'],
+    lights: {
+      sky: '#ffe0a0', ground: '#3a2208', hemi: 1.8,
+      key: ['#fff0c8', 2.4, [-3, 6, 5]], fill: ['#ffb040', 0.6, [6, -1, 3]], rim: ['#ffd070', 1.4, [0, 3, -6]],
+    },
+    surface: 'honey',
+    motion: 'heavy',
+    ambient: [
+      { mode: 'buzz', shape: 'bee', colors: ['#F5C21B'], count: 7, size: 0.18, speed: 1.1, opacity: 1 },
+      { mode: 'float', shape: 'glow', colors: ['#FFD36A'], count: 20, size: 0.06, speed: 0.3, opacity: 0.5, additive: true },
+    ],
+    burst: { shape: 'drip', colors: ['#F5B21B', '#E89A10', '#FFD36A'], size: 0.09, speed: 1.8, gravity: -6, drag: 1.4, life: 1.3 },
+  },
+  {
+    // 클레이 애니메이션 촬영장. 찰흙을 꾹 눌러 만든 큐브라 지문과 문지른 자국이 남아 있고,
+    // 1초에 여덟 번 모양이 꿈틀거리며, 돌릴 때도 컷컷이 끊긴다
+    id: 'clay',
+    name: '점토',
+    bg: '#BFE0F0',
+    ink: '#20262C',
+    backdrop: [
+      `${svg(100, 40, "<g fill='#FFFFFF'><ellipse cx='18' cy='12' rx='10' ry='5'/><ellipse cx='26' cy='10' rx='8' ry='6'/><ellipse cx='12' cy='14' rx='6' ry='3.6'/><ellipse cx='76' cy='18' rx='9' ry='4.4'/><ellipse cx='83' cy='16' rx='6' ry='5'/></g>")} top / 100% 40% no-repeat`,
+      'linear-gradient(transparent 78%, #6FAF5A 78%, #5E9C4C 100%)',
+      'linear-gradient(#9CCFEA, #CDE7F2 78%)',
+    ].join(', '),
+    form: { bevel: 0.2, size: 0.86, radius: 0.32, grid: 28 },
+    body: { color: '#5A5650', roughness: 0.65 },
+    faces: ['#E0442E', '#2E6BD8', '#F4EFE4', '#F6C53A', '#3BA55C', '#8A4FC8'],
+    lights: {
+      sky: '#ffffff', ground: '#8aa070', hemi: 2,
+      key: ['#fff6e8', 2.2, [-4, 7, 5]], fill: ['#dfe8ff', 0.5, [6, 0, 4]], rim: ['#ffffff', 0.8, [2, 4, -6]],
+    },
+    surface: 'clay',
+    motion: 'stop',
+    burst: { shape: 'dot', colors: 'faces', size: 0.08, speed: 2.2, gravity: -7, drag: 1, life: 1 },
+  },
+  {
+    // 봄날 벚꽃 그늘. 벚꽃 가지를 그려 구운 도자기 타일, 꽃잎이 흩날린다
+    id: 'blossom',
+    name: '벚꽃',
+    bg: '#CFE6F5',
+    ink: '#2A2230',
+    backdrop: [
+      `${svg(100, 60, "<g stroke='#5A3A32' stroke-linecap='round' fill='none'><path d='M-4 6 C14 10 22 4 34 12' stroke-width='1.6'/><path d='M14 9 C18 16 16 20 22 24' stroke-width='.9'/><path d='M104 4 C88 10 80 6 68 14' stroke-width='1.6'/><path d='M86 8 C82 15 84 20 78 24' stroke-width='.9'/></g><g fill='#FFC6D6'><circle cx='32' cy='12' r='2.6'/><circle cx='26' cy='9' r='2.2'/><circle cx='21' cy='23' r='2.4'/><circle cx='18' cy='18' r='1.8'/><circle cx='70' cy='13' r='2.6'/><circle cx='76' cy='9' r='2'/><circle cx='79' cy='23' r='2.4'/><circle cx='83' cy='18' r='1.8'/><circle cx='9' cy='7' r='2'/><circle cx='92' cy='6' r='2.2'/></g>", 'xMidYMin meet')} top / 100% auto no-repeat`,
+      'radial-gradient(40% 30% at 50% 20%, rgba(255,255,255,.6), transparent 70%)',
+      'linear-gradient(#A9D2EE, #E6F1F8 70%, #F6EEF2)',
+    ].join(', '),
+    drift: 'radial-gradient(35% 25% at 70% 30%, rgba(255,220,235,.3), transparent 70%)',
+    form: { bevel: 0.06, size: 0.84, radius: 0.08, depth: 0.01 },
+    body: { color: '#A07850', roughness: 0.6 },
+    faces: ['#7FB8E8', '#8FD3B0', '#F5EEDC', '#B9A2E8', '#F4A87C', '#F2D46A'],
+    lights: {
+      sky: '#ffffff', ground: '#c8b8a8', hemi: 2.2,
+      key: ['#fff8f0', 2, [-3, 7, 5]], fill: ['#ffd8e8', 0.6, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
+    },
+    surface: 'blossom',
+    motion: 'smooth',
+    ambient: { mode: 'fall', shape: 'petal', colors: ['#FFC6D6', '#FFB0C8', '#FFE2EA'], count: 40, size: 0.14, speed: 0.25, opacity: 0.95 },
+    burst: { shape: 'petal', colors: ['#FFC6D6', '#FFB0C8', '#FFFFFF'], size: 0.16, speed: 1.8, gravity: -1.2, drag: 2.2, life: 1.8 },
+  },
+  {
+    // 버려진 공장. 칠이 바랜 철판에 녹이 슬고, 녹물이 흘러내렸다. 먼지바람, 삐걱이며 묵직하게 돈다
+    id: 'rust',
+    name: '녹',
+    bg: '#C9A27A',
+    ink: '#231A12',
+    backdrop: [
+      `${svg(100, 40, "<g fill='#A8825F'><path d='M0 40 V26 H8 V18 H14 V24 H20 V12 H24 V9 H27 V12 H30 V30 H38 V22 H46 V40Z'/><path d='M60 40 V20 L66 16 V28 H74 V14 H76 V10 H80 V14 H84 V24 H92 V18 H100 V40Z'/></g><g fill='#8E6C4E'><rect x='21' y='15' width='2' height='2'/><rect x='70' y='20' width='2' height='3'/></g>")} bottom / 100% 34% no-repeat`,
+      'radial-gradient(40% 30% at 70% 25%, rgba(255,230,190,.45), transparent 70%)',
+      'linear-gradient(#B89070 0%, #D2AE86 60%, #C49A70 100%)',
+    ].join(', '),
+    drift: 'linear-gradient(100deg, transparent 20%, rgba(230,200,160,.18) 45%, transparent 70%)',
+    form: { bevel: 0.04, size: 0.88, radius: 0.03, depth: 0.012 },
+    body: { color: '#3A2618', roughness: 0.9 },
+    faces: ['#B83A2A', '#3E6A8A', '#E4DCCB', '#D8A63A', '#5E7A4A', '#6E4C70'],
+    lights: {
+      sky: '#ffe6c8', ground: '#5a4030', hemi: 1.8,
+      key: ['#ffe8c8', 2.3, [-4, 6, 5]], fill: ['#c8a080', 0.4, [6, 0, 3]], rim: ['#ffd8a8', 0.9, [2, 4, -6]],
+    },
+    surface: 'rust',
+    motion: 'heavy',
+    ambient: { mode: 'wind', shape: 'dot', colors: ['#9A6A44', '#7A5034'], count: 120, size: 0.035, speed: 0.6, opacity: 0.5 },
+    burst: { shape: 'streak', colors: ['#8A4A20', '#6A3A1A', '#B86A30'], size: 0.1, speed: 1.8, gravity: -6, drag: 1.4, life: 1.1 },
   },
 ];
 
