@@ -9,8 +9,8 @@
 // drift     그 위에 천천히 흐르는 빛(CSS background)
 // form      조각 모양 { bevel 몸통 모서리, size 스티커 한 변, radius 스티커 모서리, depth 스티커 두께,
 //           grid 겉이 실제로 솟는 질감용으로 스티커를 몇 칸으로 쪼갤지 }
-// body      몸통 { color, roughness, metalness, glow(몸통 무늬가 내는 빛 색) }
-// sticker   스티커 재질 { roughness, metalness }
+// body      몸통 { color, roughness, metalness, glow(몸통 무늬가 내는 빛 색), opacity(1보다 작으면 비친다) }
+// sticker   스티커 재질 { roughness, metalness, opacity }
 // glow      스티커가 스스로 내는 빛. 숫자 하나 또는 면마다
 // halo      스티커 둘레로 번지는 빛의 세기. haloMode가 'shadow'면 스티커 밑 그림자
 // lights    조명 { sky, ground, hemi, key, fill, rim }. key 등은 [색, 세기, [x, y, z]]
@@ -840,8 +840,8 @@ export const THEMES = [
     burst: { shape: 'glow', colors: ['#FFFFFF', '#F2EEE6'], size: 0.42, speed: 1.4, gravity: 0.6, drag: 1.8, life: 1.3, opacity: 0.28 },
   },
   {
-    // 벌통 속. 칸마다 다른 꽃꿀(라벤더, 벚꽃, 아카시아, 오렌지꽃, 보리수, 블루베리)이 고여 빛나고,
-    // 몇 칸은 밀랍으로 덮였다. 벌이 큐브 둘레를 맴돈다. 꿀처럼 끈적하게 돈다
+    // 벌통에서 막 꺼낸 벌집. 칸이 실제로 패여 꽃꿀(라벤더, 벚꽃, 아카시아, 오렌지꽃, 보리수, 블루베리)이
+    // 고여 빛나고, 몇 칸은 밀랍 뚜껑, 넘친 꿀이 흘러내린다. 벌이 기어다니고 맴돈다. 꿀처럼 끈적하게 돈다
     id: 'honey',
     name: '벌집',
     bg: '#2A1704',
@@ -851,7 +851,7 @@ export const THEMES = [
       'radial-gradient(55% 45% at 50% 42%, #7A4A0C 0%, #3E2306 60%, #1E1003 100%)',
     ].join(', '),
     drift: 'radial-gradient(40% 32% at 50% 42%, rgba(255,190,60,.18), transparent 70%)',
-    form: { bevel: 0.05, size: 0.88, radius: 0.05, depth: 0.015 },
+    form: { bevel: 0.05, size: 0.92, radius: 0.05, grid: 48 },
     body: { color: '#6A4420', roughness: 0.7 },
     faces: ['#9B6BD6', '#D8405A', '#F3E6B0', '#F08A24', '#9CC23A', '#3E5FB8'],
     lights: {
@@ -941,7 +941,8 @@ export const THEMES = [
     burst: { shape: 'star', colors: ['#FF8AD0', '#8AE8FF', '#FFE58A', '#FFFFFF'], size: 0.16, speed: 2.6, gravity: -2, drag: 1.5, life: 1, additive: true },
   },
   {
-    // 거실 소파 위 털실 큐브. V자 코가 솟고 털실 가닥과 보풀이 보인다. 면마다 다른 페어아일 무늬
+    // 거실 소파 위 털실 큐브. 굵은 V자 코가 실제로 도톰하게 솟아 있고, 면마다 다른 페어아일 도안
+    // (하트, 눈송이, 나무, 마름모, 북유럽 십자, 모래시계)을 한 코씩 떠 넣었다
     id: 'knit',
     name: '니트',
     bg: '#E8D8C2',
@@ -952,8 +953,8 @@ export const THEMES = [
       'repeating-linear-gradient(-60deg, rgba(90,60,30,.05) 0 6px, transparent 6px 12px)',
       'linear-gradient(#EADCC8, #D9C5AA)',
     ].join(', '),
-    form: { bevel: 0.16, size: 0.86, radius: 0.16, depth: 0.02 },
-    body: { color: '#5A504A', roughness: 0.95 },
+    form: { bevel: 0.16, size: 0.92, radius: 0.12, grid: 44 },
+    body: { color: '#4A423C', roughness: 0.95 },
     faces: ['#C8362E', '#24407A', '#F1E8D6', '#D9A42A', '#3D6B3F', '#9A7BB0'],
     lights: {
       sky: '#fff6e8', ground: '#a08868', hemi: 2,
@@ -965,7 +966,9 @@ export const THEMES = [
     burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: -1, drag: 2.6, life: 1.4 },
   },
   {
-    // 제도판 위 기술 도면. 면마다 다른 인화지와 부품. 고르면 선이 그려져 나간다
+    // 제도판 위 기술 도면. 굵은 외곽선, 일점쇄선 중심선, 점선 숨은선, 화살표 치수선, 표제란.
+    // 면마다 인화지와 부품이 다르다(청사진 톱니바퀴, 세피아 플랜지, 흰 도면 브래킷,
+    // 노란 트레이싱지 축, 녹색 공학지 스프링, 연어색 교정지 너트). 고르면 선이 그려져 나간다
     id: 'blueprint',
     name: '설계도',
     bg: '#1E4E8C',
@@ -980,7 +983,7 @@ export const THEMES = [
     ].join(', '),
     form: { bevel: 0.02, size: 0.88, radius: 0.02, depth: 0 },
     body: { color: '#13294A', roughness: 0.9 },
-    faces: ['#2A5FA8', '#8A5A2E', '#F4F1E8', '#E8D46A', '#3E8A5A', '#E07A84'],
+    faces: ['#1F4E8C', '#7A5230', '#F4F1E8', '#F2DE84', '#8CC09A', '#E8A08C'],
     lights: {
       sky: '#ffffff', ground: '#304870', hemi: 2.3,
       key: ['#ffffff', 1.4, [-4, 6, 5]], fill: ['#d8e8ff', 0.4, [6, 0, 3]], rim: ['#ffffff', 0.6, [2, 4, -6]],
@@ -991,7 +994,9 @@ export const THEMES = [
     burst: { shape: 'streak', colors: ['#FFFFFF', '#CFE0FF'], size: 0.1, speed: 1.6, gravity: -2, drag: 2.4, life: 1.1 },
   },
   {
-    // 자연사 박물관 진열장. 면마다 다른 돌판에 박힌 화석. 위에서 비추는 진열장 조명
+    // 자연사 박물관 진열장. 화석이 실제로 도드라진 돌판. 면마다 돌과 화석이 다르다:
+    // 무지갯빛 암몰라이트(회색 셰일), 삼엽충(석회암), 고사리(청회색 셰일), 물고기(크림색 석회암),
+    // 성게(사문석), 움푹 팬 공룡 발자국(붉은 사암)
     id: 'fossil',
     name: '화석',
     bg: '#18221F',
@@ -1001,9 +1006,9 @@ export const THEMES = [
       'radial-gradient(34% 62% at 50% -4%, rgba(255,236,200,.4), rgba(255,236,200,.08) 55%, transparent 75%)',
       'linear-gradient(#22302B, #18221F 80%)',
     ].join(', '),
-    form: { bevel: 0.05, size: 0.88, radius: 0.05, depth: 0.012 },
-    body: { color: '#262628', roughness: 0.85 },
-    faces: ['#C8955A', '#5E7E9E', '#E6DCC4', '#B0503A', '#7A8A5A', '#8A5A7A'],
+    form: { bevel: 0.05, size: 0.9, radius: 0.05, grid: 44 },
+    body: { color: '#1E1E20', roughness: 0.85 },
+    faces: ['#5A524E', '#C8A878', '#8EA4BE', '#ECE2C8', '#7A9A7A', '#A8503A'],
     lights: {
       sky: '#fff2dc', ground: '#2a2a24', hemi: 1.6,
       key: ['#fff0d8', 3, [0, 9, 3]], fill: ['#c8d8ff', 0.3, [6, -1, 4]], rim: ['#ffffff', 0.9, [3, 3, -6]],
@@ -1037,7 +1042,7 @@ export const THEMES = [
     burst: { shape: 'drip', colors: 'faces', size: 0.09, speed: 2.2, gravity: -6, drag: 1.2, life: 1.1 },
   },
   {
-    // 칸마다 작은 행성이 솟아 자전하는 태양계 모형. 면마다 다른 행성, 가장자리엔 대기가 빛난다
+    // 칸마다 별이 보이는 둥근 창. 그 안에서 작은 행성이 솟아 자전하고, 고리 두른 행성도 있고 위성이 도는 행성도 있다
     id: 'planet',
     name: '행성',
     bg: '#04040C',
@@ -1049,8 +1054,8 @@ export const THEMES = [
       '#04040C',
     ].join(', '),
     drift: 'radial-gradient(30% 22% at 65% 70%, rgba(255,120,200,.1), transparent 70%)',
-    form: { bevel: 0.04, size: 0.9, radius: 0.45, grid: 36 },
-    body: { color: '#15161E', roughness: 0.5 },
+    form: { bevel: 0.05, size: 0.92, radius: 0.12, grid: 44 },
+    body: { color: '#2A2C36', roughness: 0.45, metalness: 0.6 },
     faces: ['#D89A5A', '#2A6AC8', '#E8EEF4', '#C8502A', '#3E8A3E', '#7A4AC8'],
     lights: {
       sky: '#3a3a6a', ground: '#000000', hemi: 0.35,
@@ -1062,7 +1067,8 @@ export const THEMES = [
     burst: { shape: 'star', colors: ['#FFFFFF', '#FFD9A0', '#A8E8FF'], size: 0.13, speed: 1.4, gravity: 0, drag: 0.8, life: 1.5, additive: true },
   },
   {
-    // 체크무늬 식탁보 위 과일 바구니. 면마다 과일 껍질(딸기, 블루베리, 바나나, 귤, 수박, 자두)
+    // 체크무늬 식탁보 위 도마. 면마다 과일 단면(수박, 블루베리, 레몬, 오렌지, 키위, 용과).
+    // 두께가 있어 옆면엔 껍질이 보이고 과즙이 번들거린다
     id: 'fruit',
     name: '과일',
     bg: '#F6EFE6',
@@ -1072,9 +1078,9 @@ export const THEMES = [
       'repeating-linear-gradient(90deg, rgba(210,40,50,.28) 0 22px, transparent 22px 44px)',
       '#FBF6EE',
     ].join(', '),
-    form: { bevel: 0.14, size: 0.86, radius: 0.22, depth: 0.04 },
-    body: { color: '#B88A4A', roughness: 0.7 },
-    faces: ['#D8203A', '#3B4F9E', '#F2D84A', '#F28A1C', '#3E9A3E', '#6E2A6A'],
+    form: { bevel: 0.1, size: 0.9, radius: 0.45, depth: 0.05 },
+    body: { color: '#B07A44', roughness: 0.7 },
+    faces: ['#E8344A', '#3B4F9E', '#F6E27A', '#F28A1C', '#7DBE3A', '#C8207A'],
     lights: {
       sky: '#ffffff', ground: '#c8a888', hemi: 2.1,
       key: ['#fff6e8', 2.3, [-3, 7, 5]], fill: ['#ffe0d0', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
@@ -1130,6 +1136,293 @@ export const THEMES = [
     surface: 'comic',
     motion: 'bouncy',
     burst: { shape: 'star', colors: ['#FFFFFF', '#FFE04A', '#E8202A'], size: 0.22, speed: 2.8, gravity: -1, drag: 2.4, life: 0.8 },
+  },
+  {
+    // 유리 공방의 진열창. 몸통까지 맑은 유리라 안쪽 조각이 비쳐 보이고, 색유리 판은 모서리가 짙다.
+    // 기포, 비스듬히 볼수록 짙어지는 가장자리, 모서리에 걸리는 분광 무지개
+    id: 'glass',
+    name: '유리',
+    bg: '#0C1216',
+    ink: '#EAF4F8',
+    backdrop: [
+      'radial-gradient(60% 45% at 50% 40%, rgba(180,220,240,.16), transparent 70%)',
+      'linear-gradient(180deg, transparent 62%, rgba(200,230,255,.07) 62.4%, transparent 63%)',
+      'linear-gradient(180deg, #121C22, #070A0C)',
+    ].join(', '),
+    drift: 'radial-gradient(25% 18% at 70% 30%, rgba(255,255,255,.07), transparent 70%)',
+    form: { bevel: 0.1, size: 0.9, radius: 0.12, depth: 0.03 },
+    body: { color: '#6E8A96', roughness: 0.02, metalness: 0, opacity: 0.3 },
+    sticker: { roughness: 0.03, opacity: 0.9 },
+    faces: ['#E0304A', '#2A5AE0', '#E8F4FF', '#F2A830', '#20B070', '#B040D0'],
+    lights: {
+      sky: '#dff2ff', ground: '#101418', hemi: 1.1,
+      key: ['#ffffff', 2.6, [-5, 6, 5]], fill: ['#bfe4ff', 0.6, [6, -1, 3]], rim: ['#ffffff', 2.6, [2, 3, -7]],
+    },
+    env: 1.6,
+    surface: 'glass',
+    motion: 'smooth',
+    ambient: { mode: 'float', shape: 'star', colors: ['#FFFFFF', '#CFEFFF'], count: 26, size: 0.06, speed: 0.4, opacity: 0.8, additive: true },
+    burst: { shape: 'streak', colors: 'faces', size: 0.12, speed: 2.4, gravity: -5, drag: 1.2, life: 1.1, opacity: 0.75 },
+  },
+  {
+    // 놀이방 바닥의 조립 블록. 2×2 돌기가 실제로 솟은 반질한 플라스틱, 돌기판 바닥, 딸깍 끼우는 손맛
+    id: 'brick',
+    name: '블록',
+    bg: '#1C6A2A',
+    ink: '#FFFFFF',
+    backdrop: [
+      'radial-gradient(circle at 50% 50%, rgba(255,255,255,.13) 0 26%, rgba(0,0,0,.2) 31%, transparent 36%) 0 0 / 30px 30px',
+      'radial-gradient(80% 60% at 50% 40%, #23802F, #144E1E)',
+    ].join(', '),
+    form: { bevel: 0.04, size: 0.96, radius: 0.03, grid: 40 },
+    body: { color: '#2B2D33', roughness: 0.3 },
+    sticker: { roughness: 0.22 },
+    faces: ['#D0202A', '#1E5AC8', '#F4F4F0', '#F8C81E', '#2AA040', '#F07A1E'],
+    lights: {
+      sky: '#ffffff', ground: '#2a5a30', hemi: 1.8,
+      key: ['#ffffff', 2.2, [-4, 6, 5]], fill: ['#fff4e0', 0.6, [6, 0, 3]], rim: ['#ffffff', 1, [0, 4, -6]],
+    },
+    surface: 'brick',
+    motion: 'snap',
+    burst: { shape: 'square', colors: 'faces', size: 0.13, speed: 2.4, gravity: -6, drag: 1, life: 1.1 },
+  },
+  {
+    // 공책 귀퉁이 낙서. 줄 공책 위에 마커로 그린 별, 하트, 웃는 얼굴, 나선, 번개, 꽃이
+    // 손그림 애니메이션처럼 1초에 여섯 번 꿈틀거린다. 돌아갈 때도 컷컷이 끊긴다
+    id: 'doodle',
+    name: '낙서',
+    bg: '#F6F2E6',
+    ink: '#1E2A4A',
+    backdrop: [
+      PAPER_GRAIN,
+      'linear-gradient(90deg, transparent 9vw, rgba(220,60,60,.45) 9vw, rgba(220,60,60,.45) calc(9vw + 2px), transparent calc(9vw + 2px))',
+      'repeating-linear-gradient(180deg, transparent 0 31px, rgba(90,140,210,.35) 31px 32px)',
+      '#F6F2E6',
+    ].join(', '),
+    form: { bevel: 0.06, size: 0.9, radius: 0.06 },
+    body: { color: '#C8B48A', roughness: 0.9 },
+    faces: ['#E8343A', '#E0408A', '#2A6AE0', '#20A060', '#F0A020', '#7A40C8'],
+    lights: {
+      sky: '#ffffff', ground: '#c8c0b0', hemi: 2.4,
+      key: ['#ffffff', 1.2, [-3, 6, 5]], fill: ['#ffffff', 0.4, [6, 0, 3]], rim: ['#ffffff', 0.3, [0, 4, -6]],
+    },
+    haloMode: 'shadow',
+    halo: 0.18,
+    surface: 'doodle',
+    motion: 'stop',
+    burst: { shape: 'star', colors: 'faces', size: 0.17, speed: 2.2, gravity: -1, drag: 2.4, life: 0.8 },
+  },
+  {
+    // SF 영화의 조종석 화면. 어두운 유리판마다 다른 계기(레이더, 회전 고리, 막대그래프, 파형, 육각 스캔,
+    // 조준경)가 돌아가고, 주사선과 모서리 빛줄. 기계처럼 딱딱 돈다
+    id: 'hud',
+    name: 'HUD',
+    bg: '#03080C',
+    ink: '#9FF4FF',
+    backdrop: [
+      'repeating-linear-gradient(180deg, rgba(120,230,255,.035) 0 1px, transparent 1px 4px)',
+      'linear-gradient(rgba(80,200,255,.06) 1px, transparent 1px) 0 0 / 48px 48px',
+      'linear-gradient(90deg, rgba(80,200,255,.06) 1px, transparent 1px) 0 0 / 48px 48px',
+      'radial-gradient(60% 50% at 50% 45%, #0A2230, #03080C)',
+    ].join(', '),
+    drift: 'linear-gradient(180deg, transparent 45%, rgba(120,230,255,.06) 50%, transparent 55%)',
+    form: { bevel: 0.05, size: 0.92, radius: 0.05 },
+    body: { color: '#0E1A22', roughness: 0.35, metalness: 0.7 },
+    faces: ['#20E0F0', '#FFB020', '#FF3A8A', '#8AF03A', '#E8F4FF', '#8A6AFF'],
+    lights: {
+      sky: '#3a6a8a', ground: '#000000', hemi: 0.5,
+      key: ['#cfefff', 1.4, [-4, 5, 5]], fill: ['#2ab8ff', 0.5, [6, 0, 3]], rim: ['#6af0ff', 1.6, [0, 4, -6]],
+    },
+    surface: 'hud',
+    motion: 'mechanical',
+    ambient: { mode: 'rise', shape: 'square', colors: ['#6AF0FF', '#9FF4FF'], count: 40, size: 0.035, speed: 0.6, opacity: 0.6, additive: true },
+    burst: { shape: 'square', colors: 'faces', size: 0.09, speed: 3, gravity: 0, drag: 3, life: 0.6, additive: true },
+  },
+  {
+    // 카지노 초록 펠트 위 주사위. 칸마다 진짜 주사위 눈이 움푹 파여 있고, 마주 보는 면을 더하면 7.
+    // 놋쇠 몸통, 데굴 구르듯 튀며 돈다
+    id: 'dice',
+    name: '주사위',
+    bg: '#0C3E24',
+    ink: '#F4EAD0',
+    backdrop: [
+      'radial-gradient(55% 40% at 50% 38%, rgba(255,240,200,.16), transparent 70%)',
+      PAPER_GRAIN,
+      'radial-gradient(90% 70% at 50% 40%, #146036, #082A18)',
+    ].join(', '),
+    form: { bevel: 0.06, size: 0.94, radius: 0.16, grid: 36 },
+    body: { color: '#B8913A', roughness: 0.3, metalness: 1 },
+    sticker: { roughness: 0.25 },
+    faces: ['#C81E2A', '#1A1A1E', '#F4F0E6', '#1E50B8', '#1E9A50', '#F2C42A'],
+    lights: {
+      sky: '#fff4e0', ground: '#0c3e24', hemi: 1.2,
+      key: ['#fff1d8', 2.6, [-3, 7, 4]], fill: ['#ffffff', 0.4, [6, 0, 3]], rim: ['#ffe0a0', 1.2, [0, 4, -6]],
+    },
+    haloMode: 'shadow',
+    surface: 'dice',
+    motion: 'bouncy',
+    burst: { shape: 'square', colors: ['#F4F0E6', '#C81E2A', '#F2C42A'], size: 0.12, speed: 2.6, gravity: -6, drag: 1, life: 1 },
+  },
+  {
+    // 비잔틴 성당 천장. 줄마다 어긋나게 박은 돌 조각, 마름모 띠는 금 조각이라
+    // 촛불이 일렁일 때마다 조각마다 따로 반짝인다
+    id: 'mosaic',
+    name: '모자이크',
+    bg: '#1A1410',
+    ink: '#F2DDA8',
+    backdrop: [
+      'radial-gradient(45% 35% at 50% 30%, rgba(255,200,110,.2), transparent 70%)',
+      'repeating-linear-gradient(0deg, rgba(0,0,0,.25) 0 1px, transparent 1px 9px)',
+      'repeating-linear-gradient(90deg, rgba(0,0,0,.25) 0 1px, transparent 1px 9px)',
+      'linear-gradient(180deg, #3A2A18, #120D0A)',
+    ].join(', '),
+    form: { bevel: 0.05, size: 0.94, radius: 0.04 },
+    body: { color: '#9A8C78', roughness: 0.9 },
+    faces: ['#2A4AA8', '#A82A2A', '#2A8A5A', '#D89A2A', '#F0E8D8', '#D8788A'],
+    lights: {
+      sky: '#ffd8a0', ground: '#1a1008', hemi: 0.9,
+      key: ['#ffd9a0', 2.8, [-4, 6, 5]], fill: ['#ff9a4a', 0.5, [6, -1, 3]], rim: ['#ffe0a0', 1.4, [2, 3, -6]],
+    },
+    light: 0.95,
+    flicker: 'candle',
+    env: 1.4,
+    surface: 'mosaic',
+    motion: 'heavy',
+    ambient: { mode: 'float', shape: 'glow', colors: ['#FFD27A', '#FFB050'], count: 50, size: 0.04, speed: 0.3, opacity: 0.55, additive: true },
+    burst: { shape: 'square', colors: ['#F2C45A', '#FFE6A0', '#2A4AA8', '#A82A2A'], size: 0.08, speed: 2.4, gravity: -4, drag: 1.2, life: 1.2 },
+  },
+  {
+    // 리넨에 놓은 꽃자수. 꽃잎은 가운데서 밖으로 공단수를 놓아 실결 따라 광택이 흐르고,
+    // 꽃술은 매듭수로 도톰하다. 나무 수틀 몸통, 천처럼 사르르 돈다
+    id: 'embroidery',
+    name: '자수',
+    bg: '#E9E1D2',
+    ink: '#3A2A24',
+    backdrop: [
+      PAPER_GRAIN,
+      'repeating-linear-gradient(0deg, rgba(120,100,70,.06) 0 1px, transparent 1px 3px)',
+      'repeating-linear-gradient(90deg, rgba(120,100,70,.06) 0 1px, transparent 1px 3px)',
+      'radial-gradient(70% 55% at 50% 42%, #F2ECE0, #D8CCB6)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.9, radius: 0.1 },
+    body: { color: '#C49A64', roughness: 0.5 },
+    sticker: { roughness: 0.6 },
+    faces: ['#D8283A', '#2E5AC8', '#F4C430', '#1E9A8A', '#8A4AC0', '#F07A2A'],
+    lights: {
+      sky: '#fff8ee', ground: '#b0a088', hemi: 2,
+      key: ['#fff4e0', 1.8, [-5, 5, 4]], fill: ['#ffffff', 0.5, [6, 0, 3]], rim: ['#ffffff', 0.8, [0, 4, -6]],
+    },
+    haloMode: 'shadow',
+    halo: 0.15,
+    surface: 'embroidery',
+    motion: 'fluid',
+    ambient: { mode: 'float', shape: 'dot', colors: ['#FFFFFF', '#E8DCC8'], count: 24, size: 0.03, speed: 0.25, opacity: 0.6 },
+    burst: { shape: 'streak', colors: 'faces', size: 0.14, speed: 1.6, gravity: -1.4, drag: 2.2, life: 1.4 },
+  },
+  {
+    // 동네 도넛 가게 진열대. 칸마다 도넛이 실제로 솟아 있고, 면마다 다른 아이싱이 흘러내린 위로 스프링클.
+    // 초콜릿 몸통, 말랑하게 출렁이며 돈다
+    id: 'donut',
+    name: '도넛',
+    bg: '#F8D8DE',
+    ink: '#3A1E14',
+    backdrop: [
+      'radial-gradient(circle at 50% 50%, rgba(255,255,255,.55) 0 18%, transparent 20%) 0 0 / 46px 46px',
+      'radial-gradient(circle at 50% 50%, rgba(255,255,255,.55) 0 18%, transparent 20%) 23px 23px / 46px 46px',
+      'radial-gradient(70% 55% at 50% 42%, #FCE6EA, #F0B8C4)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.94, radius: 0.2, grid: 40 },
+    body: { color: '#3A2018', roughness: 0.35 },
+    sticker: { roughness: 0.4 },
+    faces: ['#F27AAE', '#FAF4E8', '#F6DA4A', '#8AC060', '#6A8AE8', '#D8892E'],
+    lights: {
+      sky: '#fff4f0', ground: '#a07060', hemi: 1.8,
+      key: ['#fff1e0', 2.2, [-4, 6, 5]], fill: ['#ffd0dc', 0.6, [6, 0, 3]], rim: ['#ffffff', 1, [0, 4, -6]],
+    },
+    surface: 'donut',
+    motion: 'squish',
+    ambient: { mode: 'fall', shape: 'streak', colors: ['#FF5A8A', '#5AC8FF', '#FFE05A', '#8AE05A', '#FFFFFF'], count: 40, size: 0.05, speed: 0.5, opacity: 0.9 },
+    burst: { shape: 'streak', colors: ['#FF5A8A', '#5AC8FF', '#FFE05A', '#8AE05A', '#FFFFFF'], size: 0.1, speed: 2.6, gravity: -5, drag: 1.2, life: 1.2 },
+  },
+  {
+    // 사랑방 문갑 위 한지. 먹과 전통 안료(먹, 주홍, 쪽빛, 송화색, 녹색, 자주) 방울이 떨어져 번지고,
+    // 번지는 끝에 먹이 고여 테가 진다. 붓처럼 천천히 돈다
+    id: 'ink',
+    name: '먹물',
+    bg: '#EDE6D6',
+    ink: '#1A1A1A',
+    backdrop: [
+      PAPER_GRAIN,
+      'radial-gradient(35% 28% at 82% 78%, rgba(30,30,34,.08), transparent 70%)',
+      'radial-gradient(18% 12% at 14% 22%, rgba(200,60,40,.06), transparent 70%)',
+      'radial-gradient(80% 60% at 50% 42%, #F4EEE0, #DCD2BE)',
+    ].join(', '),
+    form: { bevel: 0.06, size: 0.92, radius: 0.04 },
+    body: { color: '#C8AE82', roughness: 0.6 },
+    faces: ['#1E1E22', '#D8402A', '#1E4A8A', '#E8C23A', '#2E7A4A', '#8A2A5A'],
+    lights: {
+      sky: '#fffaf0', ground: '#b8a888', hemi: 1.5,
+      key: ['#fff6e8', 1.5, [-4, 6, 5]], fill: ['#ffffff', 0.4, [6, 0, 3]], rim: ['#ffffff', 0.5, [0, 4, -6]],
+    },
+    haloMode: 'shadow',
+    halo: 0.15,
+    surface: 'ink',
+    motion: 'fluid',
+    burst: { shape: 'dot', colors: 'faces', size: 0.08, speed: 1.8, gravity: -4, drag: 1.4, life: 1.2 },
+  },
+  {
+    // 공방 작업대 위 상감 함. 면마다 나무가 다르고(호두, 단풍, 체리, 흑단, 올리브, 퍼플하트) 네 조각의
+    // 결이 바람개비처럼 엇갈린다. 가운데엔 나침반 별을 박고 둘레와 테두리엔 밝은 나무 띠를 둘렀다
+    id: 'marquetry',
+    name: '목공예',
+    bg: '#22180F',
+    ink: '#F0DCC0',
+    backdrop: [
+      'radial-gradient(45% 35% at 50% 30%, rgba(255,210,150,.18), transparent 70%)',
+      'repeating-linear-gradient(92deg, rgba(0,0,0,.18) 0 2px, transparent 2px 7px, rgba(255,220,170,.03) 7px 9px, transparent 9px 16px)',
+      'linear-gradient(180deg, #3A2818, #160F09)',
+    ].join(', '),
+    form: { bevel: 0.05, size: 0.94, radius: 0.03 },
+    body: { color: '#8A7A6A', roughness: 0.35 },
+    sticker: { roughness: 0.3 },
+    faces: ['#5A3A24', '#E8D2A8', '#B0502E', '#1E1814', '#9A8A4A', '#7A3A6A'],
+    lights: {
+      sky: '#ffe8c8', ground: '#2a1a0c', hemi: 1.1,
+      key: ['#ffe2b8', 2.8, [-4, 6, 5]], fill: ['#ffb070', 0.5, [6, -1, 3]], rim: ['#ffe0b0', 1.4, [2, 3, -6]],
+    },
+    surface: 'marquetry',
+    motion: 'mechanical',
+    ambient: { mode: 'float', shape: 'dot', colors: ['#E8C890', '#C89A60'], count: 40, size: 0.025, speed: 0.25, opacity: 0.6 },
+    burst: { shape: 'streak', colors: ['#E8C890', '#C89A60', '#8A5A30'], size: 0.13, speed: 2, gravity: -4, drag: 1.4, life: 1.2 },
+  },
+  {
+    // 70년대 거실의 라바램프. 칸마다 아래서 데워진 밀랍 덩어리가 천천히 떠올랐다 가라앉으며
+    // 합쳐졌다 갈라진다. 크롬 받침, 방 안을 물들이는 빛, 끈적하게 돈다
+    id: 'lavalamp',
+    name: '라바램프',
+    bg: '#1A0E24',
+    ink: '#FFE6C8',
+    backdrop: [
+      'radial-gradient(50% 40% at 50% 45%, rgba(255,90,140,.22), transparent 70%)',
+      'radial-gradient(30% 25% at 18% 80%, rgba(255,170,40,.16), transparent 70%)',
+      'radial-gradient(30% 25% at 85% 20%, rgba(150,90,255,.18), transparent 70%)',
+      'repeating-radial-gradient(circle at 50% 120%, rgba(255,140,60,.05) 0 30px, transparent 30px 60px)',
+      '#1A0E24',
+    ].join(', '),
+    drift: 'radial-gradient(35% 28% at 40% 60%, rgba(255,80,160,.12), transparent 70%)',
+    form: { bevel: 0.07, size: 0.92, radius: 0.18 },
+    body: { color: '#B8BCC4', roughness: 0.18, metalness: 1 },
+    sticker: { roughness: 0.08 },
+    faces: ['#FF7A1E', '#FF3A8A', '#FFD83A', '#6AE03A', '#2AC8F0', '#9A5AFF'],
+    lights: {
+      sky: '#ff9ac8', ground: '#1a0820', hemi: 0.7,
+      key: ['#ffd0e0', 1.6, [-4, 5, 5]], fill: ['#ff8a3a', 0.8, [6, -2, 3]], rim: ['#b88aff', 1.6, [0, 4, -6]],
+    },
+    env: 1.3,
+    surface: 'lavalamp',
+    motion: 'heavy',
+    ambient: { mode: 'rise', shape: 'bubble', colors: ['#FFB0D0', '#FFD8A0'], count: 30, size: 0.07, speed: 0.25, opacity: 0.5 },
+    burst: { shape: 'glow', colors: 'faces', size: 0.16, speed: 1.4, gravity: 1.2, drag: 1.6, life: 1.6, additive: true },
   },
 ];
 

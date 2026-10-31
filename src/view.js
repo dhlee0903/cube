@@ -264,7 +264,11 @@ export class CubeView {
     cube.cubies.forEach((piece, i) => {
       for (const s of piece.stickers) this.slots[s].push(i);
     });
-    this.stickerMeshes = this.slots.map((list, s) => instanced(seeded(this.stickerGeo, list.length), this.faceMats[s], list.length));
+    this.stickerMeshes = this.slots.map((list, s) => {
+      const mesh = instanced(seeded(this.stickerGeo, list.length), this.faceMats[s], list.length);
+      mesh.renderOrder = 1;
+      return mesh;
+    });
     this.haloMeshes = this.slots.map((list, s) => {
       const mesh = instanced(this.haloGeo, this.haloMats[s], list.length);
       mesh.renderOrder = 1;
@@ -372,6 +376,17 @@ export class CubeView {
     this.bodyMat.color.set(body.color);
     this.bodyMat.roughness = body.roughness ?? 0.55;
     this.bodyMat.metalness = body.metalness ?? 0;
+    // 유리처럼 비치는 테마. 몸통은 깊이를 쓰지 않아 뒤쪽 스티커까지 비치고, 스티커는 깊이를 써서
+    // 앞면 스티커 뒤로 반대편 스티커가 겹쳐 보이지 않게 한다(그러면 어느 면인지 헷갈린다)
+    const see = (m, opacity, depth) => {
+      const clear = opacity < 1;
+      if (m.transparent !== clear) m.needsUpdate = true;
+      m.transparent = clear;
+      m.opacity = opacity;
+      m.depthWrite = depth || !clear;
+    };
+    see(this.bodyMat, body.opacity ?? 1, false);
+    this.faceMats.forEach((m) => see(m, sticker.opacity ?? 1, true));
     this.uniforms.uBodyGlow.value.set(body.glow ?? '#000000');
     const glows = theme.faces.map((_, i) => (Array.isArray(glow) ? glow[i] : glow));
     const brightest = Math.max(...glows) || 1;
