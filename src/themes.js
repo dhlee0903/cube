@@ -122,7 +122,8 @@ export const THEMES = [
     burst: { shape: 'glow', colors: 'faces', size: 0.12, speed: 3.6, gravity: 0, drag: 3, life: 0.55, additive: true },
   },
   {
-    // 굳어 가는 용암 덩어리. 아래에서 올라오는 붉은 빛, 묵직하게 구르고, 돌리면 달아오른다
+    // 화산 속 용암 호수. 검게 굳은 현무암 판이 녹은 용암 위를 떠다니고 판 사이 틈이 빛난다.
+    // 녹은 광물이 달라 면마다 불빛이 다르다(주황, 붉은 용암, 노란 유황, 파란 유황불, 초록 구리불, 하얀 쇳물)
     id: 'lava',
     name: '용암',
     bg: '#100504',
@@ -138,9 +139,9 @@ export const THEMES = [
     ].join(', '),
     form: { bevel: 0.14, size: 0.78, radius: 0.14, depth: 0 },
     body: { color: '#1B1311', roughness: 0.95, glow: '#FF4A06' },
-    faces: ['#E3250E', '#8F1212', '#FFF0A0', '#62524B', '#FF7A00', '#FFC21A'],
-    glow: [0.55, 0.45, 0.7, 0, 0.6, 0.6],
-    halo: 0.4,
+    faces: ['#FF6A10', '#D0142A', '#FFD21E', '#2A7AFF', '#22E07A', '#FFF2DC'],
+    glow: 0.6,
+    halo: 0.25,
     lights: {
       sky: '#2a0c06', ground: '#ff5a10', hemi: 2,
       key: ['#ff7a2a', 1.8, [0, -6, 3]], fill: ['#ffb27a', 0.3, [4, 5, 4]], rim: ['#ff3a00', 1.5, [0, -2, -6]],
@@ -152,7 +153,8 @@ export const THEMES = [
     burst: { shape: 'glow', colors: ['#FFD24A', '#FF8A1A', '#FF4010'], size: 0.1, speed: 2.6, gravity: 1.6, drag: 1.5, life: 1.1, additive: true },
   },
   {
-    // 물속에 잠긴 젤리 큐브. 위에서 빛줄기가 내리고, 느릿하게 미끄러지며, 돌리면 거품이 솟는다
+    // 물에 잠긴 타일 큐브. 칸마다 맑은 물 아래 수영장 타일이 깔려 일렁이고, 그 위로 빛그물이 춤춘다.
+    // 위에서 빛줄기가 내리고, 느릿하게 미끄러지며, 돌리면 거품이 솟는다
     id: 'water',
     name: '물',
     bg: '#06293B',
@@ -166,14 +168,14 @@ export const THEMES = [
       'radial-gradient(35% 22% at 30% 20%, rgba(170,240,255,.18), transparent 70%)',
       'radial-gradient(30% 20% at 70% 30%, rgba(120,220,255,.14), transparent 70%)',
     ].join(', '),
-    form: { bevel: 0.14, size: 0.8, radius: 0.22, depth: 0.03 },
-    body: { color: '#D8F2F7', roughness: 0.1 },
+    form: { bevel: 0.08, size: 0.9, radius: 0.1, depth: 0.02 },
+    body: { color: '#0A3A5A', roughness: 0.1 },
     sticker: { roughness: 0.1 },
-    faces: ['#FF7A6B', '#F7E3A1', '#2FE0D8', '#0E7C86', '#2A86FF', '#1C3A9E'],
+    faces: ['#FF6A5A', '#F4DC8A', '#2FE0D8', '#0E7C6A', '#2A6AE8', '#F2F8FA'],
     env: 0.35,
     lights: {
-      sky: '#bff4ff', ground: '#052a44', hemi: 2.1,
-      key: ['#d8fbff', 1.7, [0, 8, 3]], fill: ['#2a86ff', 0.5, [5, -2, 4]], rim: ['#7fe8ff', 1, [0, 3, -6]],
+      sky: '#bff4ff', ground: '#052a44', hemi: 1.1,
+      key: ['#d8fbff', 1.6, [0, 8, 3]], fill: ['#2a86ff', 0.5, [5, -2, 4]], rim: ['#7fe8ff', 1, [0, 3, -6]],
     },
     surface: 'water',
     motion: 'fluid',
@@ -393,7 +395,8 @@ export const THEMES = [
     burst: { shape: 'streak', colors: 'faces', size: 0.15, speed: 1.6, gravity: -1.6, drag: 2.4, life: 1.8 },
   },
   {
-    // 테슬라 코일 실험실. 판 위로 번개가 기어다니고, 가끔 방 전체가 번쩍인다
+    // 테슬라 코일 실험실. 칸마다 플라스마 구가 들어 있어 번개 가닥이 꿈틀거리고, 손가락을 대면 그쪽으로 몰려든다.
+    // 가끔 방 전체가 번쩍인다
     id: 'electric',
     name: '전기',
     bg: '#05070F',
@@ -510,7 +513,8 @@ export const THEMES = [
     burst: { shape: 'star', colors: 'faces', size: 0.18, speed: 2.6, gravity: -3, drag: 1.4, life: 1, additive: true },
   },
   {
-    // 고장 난 CRT 화면. 주사선, 어긋나는 색, 버벅이며 건너뛰는 회전, 가끔 화면째 튄다
+    // 고장 난 CRT 화면. 늘 어긋난 색과 주사선, 굴러가는 테이프 띠, 깨지는 덩어리와 흘러내리는 줄,
+    // 가끔 끊기는 신호. 버벅이며 건너뛰는 회전, 가끔 화면째 튄다
     id: 'glitch',
     name: '글리치',
     bg: '#0A0A0C',
@@ -536,7 +540,8 @@ export const THEMES = [
     burst: { shape: 'square', colors: 'faces', size: 0.08, speed: 3, gravity: 0, drag: 3.2, life: 0.5 },
   },
   {
-    // 8비트 게임 속 블록. 면마다 다른 타일(벽돌, 돌, 구름, 물음표, 풀, 물), 칸칸이 끊기는 움직임
+    // 8비트 게임 속 블록. 면마다 다른 16×16 타일(벽돌, 돌길, 흘러가는 구름, 깜빡이는 물음표, 흔들리는 풀과 꽃,
+    // 밀려가는 물결), 칸칸이 끊기는 움직임
     id: 'pixel',
     name: '픽셀',
     bg: '#5C94FC',
@@ -560,7 +565,8 @@ export const THEMES = [
     burst: { shape: 'square', colors: 'faces', size: 0.11, speed: 2.8, gravity: -8, drag: 0.5, life: 1 },
   },
   {
-    // 마더보드 위 부품. 배선과 납땜 패드, 가운데서 깜빡이는 LED. 돌리면 배선을 따라 전류가 몰려간다
+    // 인쇄 회로 기판. 면마다 솔더 마스크 색이 다르고, 45도로 꺾인 배선과 금도금 비아, 다리 달린 칩과 실크 인쇄,
+    // 모서리의 저항, 콘덴서, LED. 배선을 따라 신호가 흐르고, 돌리면 몰려간다
     id: 'circuit',
     name: '회로',
     bg: '#04140E',
@@ -573,7 +579,7 @@ export const THEMES = [
     drift: 'radial-gradient(35% 28% at 50% 45%, rgba(34,224,122,.12), transparent 70%)',
     form: { bevel: 0.04, size: 0.84, radius: 0.05, depth: 0.015 },
     body: { color: '#0B3B2A', roughness: 0.5 },
-    faces: ['#FF5A3C', '#A855F7', '#E8F1EC', '#FFD23F', '#22E07A', '#3CB4FF'],
+    faces: ['#C8302A', '#7A2A9A', '#ECEEEA', '#E8C02A', '#1E8A3A', '#1E4AB0'],
     env: 0.4,
     lights: {
       sky: '#bfffd8', ground: '#03140c', hemi: 1.3,
@@ -941,8 +947,9 @@ export const THEMES = [
     burst: { shape: 'star', colors: ['#FF8AD0', '#8AE8FF', '#FFE58A', '#FFFFFF'], size: 0.16, speed: 2.6, gravity: -2, drag: 1.5, life: 1, additive: true },
   },
   {
-    // 거실 소파 위 털실 큐브. 굵은 V자 코가 실제로 도톰하게 솟아 있고, 면마다 다른 페어아일 도안
-    // (하트, 눈송이, 나무, 마름모, 북유럽 십자, 모래시계)을 한 코씩 떠 넣었다
+    // 거실 소파 위 털실 큐브. 굵은 V자 코가 실제로 도톰하게 솟아 있고, 두 올이 꼬인 실결과 섞인 색 털, 잔털.
+    // 면마다 다른 페어아일 도안(하트, 눈송이, 나무, 마름모, 북유럽 십자, 모래시계)을 한 코씩 떠 넣었고
+    // 위아래 단엔 세 번째 색 잔무늬. 테마를 고르면 무늬가 아래 단부터 떠진다
     id: 'knit',
     name: '니트',
     bg: '#E8D8C2',
@@ -1042,7 +1049,8 @@ export const THEMES = [
     burst: { shape: 'drip', colors: 'faces', size: 0.09, speed: 2.2, gravity: -6, drag: 1.2, life: 1.1 },
   },
   {
-    // 칸마다 별이 보이는 둥근 창. 그 안에서 작은 행성이 솟아 자전하고, 고리 두른 행성도 있고 위성이 도는 행성도 있다
+    // 네모난 행성들. 조각 하나하나가 작은 정육면체 행성이라 칸마다 행성 겉이 꽉 찬다. 지표가 자전하고 구름이 흐르며,
+    // 낮밤 경계가 지나가면 밤쪽에 불빛이 켜진다. 테두리엔 대기가 빛나고, 몇 행성엔 고리가 가로지른다
     id: 'planet',
     name: '행성',
     bg: '#04040C',
@@ -1054,7 +1062,7 @@ export const THEMES = [
       '#04040C',
     ].join(', '),
     drift: 'radial-gradient(30% 22% at 65% 70%, rgba(255,120,200,.1), transparent 70%)',
-    form: { bevel: 0.05, size: 0.92, radius: 0.12, grid: 44 },
+    form: { bevel: 0.05, size: 0.94, radius: 0.06, grid: 32 },
     body: { color: '#2A2C36', roughness: 0.45, metalness: 0.6 },
     faces: ['#D89A5A', '#2A6AC8', '#E8EEF4', '#C8502A', '#3E8A3E', '#7A4AC8'],
     lights: {
@@ -1067,8 +1075,8 @@ export const THEMES = [
     burst: { shape: 'star', colors: ['#FFFFFF', '#FFD9A0', '#A8E8FF'], size: 0.13, speed: 1.4, gravity: 0, drag: 0.8, life: 1.5, additive: true },
   },
   {
-    // 체크무늬 식탁보 위 도마. 면마다 과일 단면(수박, 블루베리, 레몬, 오렌지, 키위, 용과).
-    // 두께가 있어 옆면엔 껍질이 보이고 과즙이 번들거린다
+    // 체크무늬 식탁보 위 도마. 과일을 깍둑썰기해 조각마다 네모난 과일 덩어리다(수박, 배, 파인애플, 망고, 키위, 용과).
+    // 과즙 알갱이가 번들거리고 씨가 박혀 있으며, 몇 조각엔 껍질이나 심이 붙어 있다
     id: 'fruit',
     name: '과일',
     bg: '#F6EFE6',
@@ -1078,9 +1086,9 @@ export const THEMES = [
       'repeating-linear-gradient(90deg, rgba(210,40,50,.28) 0 22px, transparent 22px 44px)',
       '#FBF6EE',
     ].join(', '),
-    form: { bevel: 0.1, size: 0.9, radius: 0.45, depth: 0.05 },
+    form: { bevel: 0.08, size: 0.92, radius: 0.08, depth: 0.05 },
     body: { color: '#B07A44', roughness: 0.7 },
-    faces: ['#E8344A', '#3B4F9E', '#F6E27A', '#F28A1C', '#7DBE3A', '#C8207A'],
+    faces: ['#E8344A', '#F2ECD8', '#F6D84A', '#F49A1C', '#7DBE3A', '#D0207A'],
     lights: {
       sky: '#ffffff', ground: '#c8a888', hemi: 2.1,
       key: ['#fff6e8', 2.3, [-3, 7, 5]], fill: ['#ffe0d0', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
@@ -1423,6 +1431,274 @@ export const THEMES = [
     motion: 'heavy',
     ambient: { mode: 'rise', shape: 'bubble', colors: ['#FFB0D0', '#FFD8A0'], count: 30, size: 0.07, speed: 0.25, opacity: 0.5 },
     burst: { shape: 'glow', colors: 'faces', size: 0.16, speed: 1.4, gravity: 1.2, drag: 1.6, life: 1.6, additive: true },
+  },
+  {
+    // 살아 있는 살갗 견본. 면마다 다른 생물의 피부다: 사람(땀구멍, 잔주름, 주근깨, 점, 솜털), 코끼리(깊은 주름),
+    // 독화살개구리(젖은 파랑에 검은 무늬), 문어(물결처럼 피었다 오므라드는 색소포), 청개구리(촉촉한 초록),
+    // 비단뱀(겹친 비늘과 얼룩). 숨 쉬듯 부풀었다 가라앉고, 잡으면 사람 피부에 소름이 돋는다. 돌리면 땀이 맺혀 떨어진다
+    id: 'skin',
+    name: '피부',
+    bg: '#1A1210',
+    ink: '#F2E2D8',
+    backdrop: [
+      'radial-gradient(55% 42% at 50% 40%, rgba(255,190,160,.16), transparent 70%)',
+      'radial-gradient(90% 70% at 50% 45%, #2A1C18, #0E0908)',
+    ].join(', '),
+    form: { bevel: 0.12, size: 0.9, radius: 0.14, grid: 44 },
+    body: { color: '#3A2420', roughness: 0.6 },
+    faces: ['#E8B49C', '#8C8A86', '#2A62D8', '#D8502A', '#6AB040', '#E2BE4A'],
+    lights: {
+      sky: '#ffe8dc', ground: '#2a1410', hemi: 1.4,
+      key: ['#fff0e4', 2.4, [-4, 6, 5]], fill: ['#ffb8a0', 0.5, [6, -1, 3]], rim: ['#ffd8c8', 1.2, [2, 3, -6]],
+    },
+    surface: 'skin',
+    motion: 'squish',
+    burst: { shape: 'drip', colors: ['#E8F6FF', '#FFFFFF'], size: 0.07, speed: 1.4, gravity: -6, drag: 1, life: 1.2, opacity: 0.85 },
+  },
+  {
+    // 택배 상자 속. 큐브를 뽁뽁이로 쌌다. 칸마다 공기 방울이 볼록 솟아 반질거리고, 하나씩 톡 터지며 반짝하고
+    // 납작하게 구겨졌다가 한참 지나면 다시 부푼다. 딸깍 끼우듯 돈다
+    id: 'bubblewrap',
+    name: '뽁뽁이',
+    bg: '#C9A273',
+    ink: '#2A1E12',
+    backdrop: [
+      'linear-gradient(90deg, transparent 38%, rgba(255,240,205,.32) 38%, rgba(255,240,205,.32) 60%, transparent 60%)',
+      'repeating-linear-gradient(90deg, rgba(0,0,0,.035) 0 3px, transparent 3px 9px)',
+      'radial-gradient(70% 55% at 50% 42%, #D8B585, #B08758)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 48 },
+    body: { color: '#2E3238', roughness: 0.35 },
+    faces: ['#E8343A', '#2A62D8', '#F4F4F0', '#F6D02A', '#2AAA4A', '#F27A1E'],
+    lights: {
+      sky: '#ffffff', ground: '#8a6a48', hemi: 1.1,
+      key: ['#ffffff', 1.8, [-4, 6, 5]], fill: ['#fff2e0', 0.4, [6, 0, 3]], rim: ['#ffffff', 1.4, [2, 4, -6]],
+    },
+    env: 0.5,
+    surface: 'bubblewrap',
+    motion: 'snap',
+    burst: { shape: 'star', colors: ['#FFFFFF', '#E8F4FF'], size: 0.16, speed: 2.6, gravity: 0, drag: 3, life: 0.6, additive: true },
+  },
+  {
+    // 열화상 카메라로 본 큐브. 면마다 온도가 달라 색이 다르고, 열이 아지랑이처럼 일렁인다.
+    // 손가락을 대면 그 자리가 데워지고, 돌리면 가장자리부터 마찰열이 오른다. 뷰파인더 표시와 센서 잡음
+    id: 'thermal',
+    name: '열화상',
+    bg: '#06040C',
+    ink: '#F4E8FF',
+    backdrop: [
+      'repeating-linear-gradient(180deg, rgba(255,255,255,.03) 0 1px, transparent 1px 3px)',
+      'radial-gradient(14% 26% at 14% 72%, rgba(255,150,40,.3), rgba(170,20,120,.18) 45%, transparent 70%)',
+      'radial-gradient(12% 22% at 86% 30%, rgba(255,220,90,.22), rgba(170,20,120,.14) 45%, transparent 70%)',
+      'radial-gradient(70% 55% at 50% 50%, #1A0A32, #06040C)',
+    ].join(', '),
+    form: { bevel: 0.05, size: 0.92, radius: 0.05 },
+    body: { color: '#120A24', roughness: 0.4 },
+    faces: ['#E86FA0', '#5D3093', '#FFFEF6', '#B843C2', '#FCA360', '#FFDE78'],
+    lights: {
+      sky: '#40305a', ground: '#000000', hemi: 0.4,
+      key: ['#ffffff', 0.6, [-4, 5, 5]], fill: ['#ff60a0', 0.2, [6, 0, 3]], rim: ['#ffb060', 0.6, [0, 4, -6]],
+    },
+    surface: 'thermal',
+    motion: 'smooth',
+    ambient: { mode: 'rise', shape: 'glow', colors: ['#FF9A3A', '#FFE07A', '#C83AA0'], count: 30, size: 0.08, speed: 0.4, opacity: 0.35, additive: true },
+    burst: { shape: 'glow', colors: ['#FFFFFF', '#FFE07A', '#FF9A3A'], size: 0.12, speed: 2.4, gravity: 1, drag: 2, life: 0.8, additive: true },
+  },
+  {
+    // 심해. 칸마다 빛나는 해파리가 우산을 오므렸다 펴며 떠 있고, 가장자리 빛 점과 방사관, 네 잎 생식소가 빛나며
+    // 긴 촉수가 흔들린다. 해파리 빛이 곧 면 색. 희미한 빛줄기와 바다 눈, 물처럼 느리게 돈다
+    id: 'jellyfish',
+    name: '해파리',
+    bg: '#020A18',
+    ink: '#CFF4FF',
+    backdrop: [
+      'linear-gradient(170deg, rgba(120,200,255,.1) 0 8%, transparent 30%)',
+      'linear-gradient(190deg, rgba(120,200,255,.07) 0 6%, transparent 26%)',
+      'radial-gradient(80% 60% at 50% 0%, #0A2A48, transparent 70%)',
+      'linear-gradient(180deg, #06223C, #01050C)',
+    ].join(', '),
+    drift: 'radial-gradient(30% 22% at 30% 70%, rgba(120,255,240,.06), transparent 70%)',
+    form: { bevel: 0.06, size: 0.92, radius: 0.1, depth: 0.02 },
+    body: { color: '#0A1426', roughness: 0.2 },
+    faces: ['#3AE0F0', '#FF5AB0', '#F4F0FF', '#9AF03A', '#FF9A3A', '#9A6AFF'],
+    lights: {
+      sky: '#2a5a8a', ground: '#000000', hemi: 0.5,
+      key: ['#9fd8ff', 0.9, [0, 7, 3]], fill: ['#3a6aff', 0.3, [6, -2, 3]], rim: ['#7fe8ff', 1, [0, 3, -6]],
+    },
+    surface: 'jellyfish',
+    motion: 'fluid',
+    ambient: { mode: 'fall', shape: 'dot', colors: ['#CFEFFF', '#FFFFFF'], count: 70, size: 0.025, speed: 0.12, opacity: 0.55 },
+    burst: { shape: 'glow', colors: 'faces', size: 0.12, speed: 1.4, gravity: 0.8, drag: 1.4, life: 1.6, additive: true },
+  },
+  {
+    // 자연사 박물관 곤충 표본 상자. 칸마다 솜종이 위에 핀으로 꽂은 보석풍뎅이. 볼록한 딱지날개가 금속처럼
+    // 반짝이고 보는 각도에 따라 빛이 바뀐다. 점줄, 다리 여섯과 더듬이, 진주 핀 머리, 손글씨 이름표
+    id: 'insect',
+    name: '곤충 표본',
+    bg: '#1C1712',
+    ink: '#EADFC8',
+    backdrop: [
+      'radial-gradient(45% 35% at 50% 30%, rgba(255,230,180,.18), transparent 70%)',
+      'linear-gradient(90deg, rgba(0,0,0,.3) 0 3%, transparent 3% 97%, rgba(0,0,0,.3) 97%)',
+      'repeating-linear-gradient(91deg, rgba(0,0,0,.14) 0 2px, transparent 2px 8px, rgba(255,220,170,.025) 8px 10px, transparent 10px 18px)',
+      'linear-gradient(180deg, #2E241A, #120E0A)',
+    ].join(', '),
+    form: { bevel: 0.05, size: 0.94, radius: 0.05, grid: 44 },
+    body: { color: '#2A2018', roughness: 0.45 },
+    faces: ['#1EA05A', '#2A50D0', '#E0B030', '#C02A3A', '#A03AB0', '#D07A3A'],
+    lights: {
+      sky: '#fff0d8', ground: '#2a1e12', hemi: 0.45,
+      key: ['#fff2dc', 1.5, [-3, 7, 5]], fill: ['#ffd8a0', 0.4, [6, 0, 3]], rim: ['#ffffff', 1.4, [2, 3, -6]],
+    },
+    env: 0.5,
+    surface: 'insect',
+    motion: 'heavy',
+    ambient: { mode: 'float', shape: 'dot', colors: ['#FFE8C0', '#FFFFFF'], count: 30, size: 0.025, speed: 0.15, opacity: 0.5 },
+    burst: { shape: 'star', colors: 'faces', size: 0.12, speed: 2, gravity: 0, drag: 2.6, life: 0.8, additive: true },
+  },
+  {
+    // 초밥집 카운터. 칸마다 위에서 내려다본 초밥 한 점(연어, 참치, 계란말이, 오징어, 장어, 아보카도)이
+    // 꽉 차게 놓여 있고, 가장자리로 밥알이 비친다. 검은 옻칠 접시 몸통, 노송나무 카운터
+    id: 'sushi',
+    name: '초밥',
+    bg: '#E8D4B0',
+    ink: '#2A1A10',
+    backdrop: [
+      'linear-gradient(180deg, transparent 0 82%, rgba(110,70,30,.16) 82% 83%, rgba(255,255,255,.12) 83% 84%, transparent 84%)',
+      'repeating-linear-gradient(90deg, rgba(150,110,60,.08) 0 2px, transparent 2px 13px, rgba(150,110,60,.05) 13px 14px, transparent 14px 31px)',
+      'radial-gradient(75% 60% at 50% 48%, #F2E2C4, #D8BE92)',
+    ].join(', '),
+    form: { bevel: 0.06, size: 0.94, radius: 0.16, grid: 36 },
+    body: { color: '#1E1A1A', roughness: 0.2 },
+    faces: ['#F28A50', '#B8202E', '#F4D040', '#F2F0EA', '#6A3A1E', '#8AB040'],
+    lights: {
+      sky: '#fff8ee', ground: '#a08060', hemi: 1.9,
+      key: ['#fff6e8', 2.3, [-3, 7, 5]], fill: ['#ffe8d0', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.1, [2, 4, -6]],
+    },
+    surface: 'sushi',
+    motion: 'smooth',
+    burst: { shape: 'dot', colors: ['#F4EAD0', '#2A2018'], size: 0.05, speed: 2, gravity: -5, drag: 1.4, life: 1 },
+  },
+  {
+    // 음악 감상실. 칸마다 색 레코드판이 33⅓회전으로 돌고, 촘촘한 소릿골이 나비 모양으로 번쩍이며,
+    // 이름표의 글자 줄이 돌아간다. 호두나무 턴테이블 몸통, 판이 꽂힌 선반 앞
+    id: 'vinyl',
+    name: '레코드',
+    bg: '#16110E',
+    ink: '#F0E2CC',
+    backdrop: [
+      'radial-gradient(45% 35% at 70% 25%, rgba(255,200,130,.18), transparent 70%)',
+      'linear-gradient(180deg, transparent 72%, rgba(0,0,0,.5) 72% 73%, transparent 73%)',
+      'repeating-linear-gradient(90deg, rgba(200,60,50,.22) 0 7px, rgba(30,30,30,.4) 7px 9px, rgba(60,90,160,.2) 9px 15px, rgba(30,30,30,.4) 15px 17px, rgba(220,170,60,.18) 17px 23px, rgba(30,30,30,.4) 23px 25px) 0 73% / 100% 27% no-repeat',
+      'linear-gradient(180deg, #241A14, #0E0A08)',
+    ].join(', '),
+    form: { bevel: 0.05, size: 0.94, radius: 0.04 },
+    body: { color: '#4A3020', roughness: 0.4 },
+    faces: ['#D02A3A', '#2A5AD0', '#F2C42A', '#2AA05A', '#F07A2A', '#E8E4DA'],
+    lights: {
+      sky: '#ffe0c0', ground: '#1a100a', hemi: 1.1,
+      key: ['#ffe8cc', 2.6, [-4, 6, 5]], fill: ['#ff9a5a', 0.4, [6, 0, 3]], rim: ['#ffd8a8', 1.2, [2, 3, -6]],
+    },
+    surface: 'vinyl',
+    motion: 'fluid',
+    ambient: { mode: 'float', shape: 'dot', colors: ['#FFE8C8'], count: 30, size: 0.025, speed: 0.15, opacity: 0.45 },
+    burst: { shape: 'glow', colors: 'faces', size: 0.12, speed: 2, gravity: 0, drag: 2, life: 0.9, additive: true },
+  },
+  {
+    // 만화경 속. 칸마다 거울 세 장이 비춘 색유리 조각이 천천히 돌며 무늬가 피었다 진다.
+    // 면 색 유리가 가장 많고 다른 색이 섞인다. 놋쇠 통 몸통, 흐릿한 빛망울 배경
+    id: 'kaleido',
+    name: '만화경',
+    bg: '#0A0810',
+    ink: '#F6EAFF',
+    backdrop: [
+      bokeh(26, 51),
+      'radial-gradient(70% 55% at 50% 45%, #1C1428, #06040A)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.92, radius: 0.08 },
+    body: { color: '#B08A40', roughness: 0.3, metalness: 1 },
+    faces: ['#E8287A', '#20C8E0', '#F4C020', '#20B060', '#8A40E0', '#F06A20'],
+    lights: {
+      sky: '#ffe8c8', ground: '#100810', hemi: 0.9,
+      key: ['#fff0dc', 2, [-4, 6, 5]], fill: ['#c080ff', 0.4, [6, 0, 3]], rim: ['#ffd090', 1.2, [2, 3, -6]],
+    },
+    env: 1.2,
+    surface: 'kaleido',
+    motion: 'fluid',
+    ambient: { mode: 'float', shape: 'star', colors: 'faces', count: 30, size: 0.06, speed: 0.3, opacity: 0.7, additive: true },
+    burst: { shape: 'star', colors: 'faces', size: 0.16, speed: 2.4, gravity: 0, drag: 2.4, life: 0.9, additive: true },
+  },
+  {
+    // 실험실 조명대 위 배양접시. 칸마다 색 배지가 밑에서 비추는 빛에 은은히 비치고, 그 위로 균 무리가 자라
+    // 손가락처럼 갈라지며 퍼진다. 접시마다 이름표 테이프, 50초쯤 자라면 새 접시로 바뀐다
+    id: 'petri',
+    name: '배양접시',
+    bg: '#DCE6EA',
+    ink: '#16242C',
+    backdrop: [
+      'linear-gradient(rgba(120,150,165,.12) 1px, transparent 1px) 0 0 / 36px 36px',
+      'linear-gradient(90deg, rgba(120,150,165,.12) 1px, transparent 1px) 0 0 / 36px 36px',
+      'radial-gradient(60% 50% at 50% 45%, #F4FAFC, #CCD8DE)',
+    ].join(', '),
+    form: { bevel: 0.06, size: 0.94, radius: 0.12 },
+    body: { color: '#F2F4F4', roughness: 0.35 },
+    faces: ['#C82A3A', '#E05AA8', '#E8C83A', '#3A7AD8', '#4AB060', '#7A4AC0'],
+    lights: {
+      sky: '#ffffff', ground: '#c8d8e0', hemi: 2,
+      key: ['#ffffff', 1.8, [-3, 7, 5]], fill: ['#e0f0ff', 0.6, [6, 0, 3]], rim: ['#ffffff', 1, [0, 4, -6]],
+    },
+    surface: 'petri',
+    motion: 'smooth',
+    burst: { shape: 'bubble', colors: 'faces', size: 0.1, speed: 1.4, gravity: 1, drag: 1.6, life: 1.2, opacity: 0.8 },
+  },
+  {
+    // 역 벽의 지하철 노선도. 칸마다 면 색 노선이 굵게 지나가고(곧게, 또는 45도로 꺾여) 다른 노선이 가늘게 엇갈리며,
+    // 강이 흐르는 칸도 있다. 하얀 역과 갈아타는 역, 노선을 따라 작은 열차가 달린다
+    id: 'transit',
+    name: '노선도',
+    bg: '#F4F2EC',
+    ink: '#1A1A1A',
+    backdrop: [
+      'linear-gradient(35deg, transparent 47%, rgba(224,48,42,.16) 47% 49.5%, transparent 49.5%)',
+      'linear-gradient(-20deg, transparent 60%, rgba(42,90,208,.14) 60% 62%, transparent 62%)',
+      'linear-gradient(90deg, transparent 22%, rgba(42,160,72,.14) 22% 23.5%, transparent 23.5%)',
+      'linear-gradient(0deg, transparent 30%, rgba(242,184,30,.18) 30% 31.6%, transparent 31.6%)',
+      'linear-gradient(170deg, transparent 70%, rgba(150,200,235,.3) 70% 76%, transparent 76%)',
+      '#F4F2EC',
+    ].join(', '),
+    form: { bevel: 0.05, size: 0.94, radius: 0.06 },
+    body: { color: '#5A5E66', roughness: 0.5, metalness: 0.6 },
+    faces: ['#E0302A', '#2A5AD0', '#F2B81E', '#2AA048', '#8A3AB0', '#9A5A2A'],
+    lights: {
+      sky: '#ffffff', ground: '#d0d0d0', hemi: 2.3,
+      key: ['#ffffff', 1.4, [-3, 6, 5]], fill: ['#ffffff', 0.4, [6, 0, 3]], rim: ['#ffffff', 0.6, [0, 4, -6]],
+    },
+    surface: 'transit',
+    motion: 'mechanical',
+    burst: { shape: 'square', colors: 'faces', size: 0.09, speed: 2.4, gravity: 0, drag: 2.8, life: 0.7 },
+  },
+  {
+    // 기차역 대합실의 플립 보드. 칸마다 반으로 갈린 판에 숫자가 적혀 있다가, 때가 되면 위쪽 판이 툭 떨어지며
+    // 다음 숫자로 넘어간다. 판 색이 곧 면 색, 가운데 틈과 경첩. 착착 끊기며 돈다
+    id: 'flip',
+    name: '플립보드',
+    bg: '#16181C',
+    ink: '#F2F0E8',
+    backdrop: [
+      'repeating-linear-gradient(180deg, transparent 0 22px, rgba(0,0,0,.6) 22px 24px)',
+      'repeating-linear-gradient(90deg, rgba(255,210,80,.06) 0 14px, transparent 14px 16px)',
+      'radial-gradient(70% 55% at 50% 40%, #262A30, #0C0D10)',
+    ].join(', '),
+    form: { bevel: 0.05, size: 0.94, radius: 0.06 },
+    body: { color: '#1A1A1C', roughness: 0.5, metalness: 0.3 },
+    faces: ['#D8302A', '#2A5AC8', '#F4F0E4', '#F2C21E', '#2A9A4A', '#F07A1E'],
+    lights: {
+      sky: '#ffffff', ground: '#202020', hemi: 1.6,
+      key: ['#ffffff', 1.8, [-3, 6, 5]], fill: ['#fff4e0', 0.4, [6, 0, 3]], rim: ['#ffffff', 1, [0, 4, -6]],
+    },
+    surface: 'flip',
+    motion: 'stop',
+    burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.4, gravity: -5, drag: 1, life: 1 },
   },
 ];
 
