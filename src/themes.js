@@ -1344,31 +1344,7 @@ export const THEMES = [
     ambient: { mode: 'rise', shape: 'glow', colors: ['#FF9A3A', '#FFE07A', '#C83AA0'], count: 30, size: 0.08, speed: 0.4, opacity: 0.35, additive: true },
     burst: { shape: 'glow', colors: ['#FFFFFF', '#FFE07A', '#FF9A3A'], size: 0.12, speed: 2.4, gravity: 1, drag: 2, life: 0.8, additive: true },
   },
-  {
-    // 음악 감상실. 칸마다 색 레코드판이 33⅓회전으로 돌고, 촘촘한 소릿골이 나비 모양으로 번쩍이며,
-    // 이름표의 글자 줄이 돌아간다. 호두나무 턴테이블 몸통, 판이 꽂힌 선반 앞
-    id: 'vinyl',
-    name: '레코드',
-    bg: '#16110E',
-    ink: '#F0E2CC',
-    backdrop: [
-      'radial-gradient(45% 35% at 70% 25%, rgba(255,200,130,.18), transparent 70%)',
-      'linear-gradient(180deg, transparent 72%, rgba(0,0,0,.5) 72% 73%, transparent 73%)',
-      'repeating-linear-gradient(90deg, rgba(200,60,50,.22) 0 7px, rgba(30,30,30,.4) 7px 9px, rgba(60,90,160,.2) 9px 15px, rgba(30,30,30,.4) 15px 17px, rgba(220,170,60,.18) 17px 23px, rgba(30,30,30,.4) 23px 25px) 0 73% / 100% 27% no-repeat',
-      'linear-gradient(180deg, #241A14, #0E0A08)',
-    ].join(', '),
-    form: { bevel: 0.05, size: 0.94, radius: 0.04 },
-    body: { color: '#4A3020', roughness: 0.4 },
-    faces: ['#D02A3A', '#2A5AD0', '#F2C42A', '#2AA05A', '#F07A2A', '#E8E4DA'],
-    lights: {
-      sky: '#ffe0c0', ground: '#1a100a', hemi: 1.1,
-      key: ['#ffe8cc', 2.6, [-4, 6, 5]], fill: ['#ff9a5a', 0.4, [6, 0, 3]], rim: ['#ffd8a8', 1.2, [2, 3, -6]],
-    },
-    surface: 'vinyl',
-    motion: 'fluid',
-    ambient: { mode: 'float', shape: 'dot', colors: ['#FFE8C8'], count: 30, size: 0.025, speed: 0.15, opacity: 0.45 },
-    burst: { shape: 'glow', colors: 'faces', size: 0.12, speed: 2, gravity: 0, drag: 2, life: 0.9, additive: true },
-  },
+
   {
     // 만화경 속. 칸마다 거울 세 장이 비춘 색유리 조각이 천천히 돌며 무늬가 피었다 진다.
     // 면 색 유리가 가장 많고 다른 색이 섞인다. 놋쇠 통 몸통, 흐릿한 빛망울 배경
@@ -1591,51 +1567,8 @@ export const THEMES = [
     ambient: { mode: 'float', shape: 'glow', colors: ['#FFFFFF', '#F4EEE0'], count: 22, size: 0.05, speed: 0.2, opacity: 0.6 },
     burst: { shape: 'glow', colors: 'faces', size: 0.09, speed: 1.6, gravity: -1, drag: 2.4, life: 1.2, opacity: 0.85 },
   },
-  {
-    // 햇볕 드는 창가. 고양이 털을 두른 큐브. 다 맞추면 면 하나가 고양이 한 마리의 등이다. 짧고 촘촘한 털이 결 따라 눕고
-    // 털끝이 빛을 받아 번진다. 치즈, 턱시도, 삼색, 러시안 블루, 고등어 태비, 벵갈. 말랑하게 돌고, 돌리면 털이 날린다
-    id: 'cat',
-    name: '고양이',
-    bg: '#E8DCCC',
-    ink: '#2A2018',
-    backdrop: [
-      'linear-gradient(115deg, transparent 0 30%, rgba(255,240,200,.45) 30% 42%, transparent 42% 46%, rgba(255,240,200,.45) 46% 58%, transparent 58%)',
-      'radial-gradient(70% 55% at 50% 45%, #F2E8DA, #D2C2AC)',
-    ].join(', '),
-    form: { bevel: 0.14, size: 0.94, radius: 0.2, grid: 40 },
-    body: { color: '#6A4A7A', roughness: 0.9 },
-    faces: ['#E8923A', '#222024', '#F4F0EA', '#7A8AA0', '#8A7A68', '#E2C890'],
-    lights: {
-      sky: '#fff4e4', ground: '#a08a70', hemi: 1.6,
-      key: ['#ffe8c8', 2.4, [-5, 6, 4]], fill: ['#e0e8ff', 0.4, [6, 0, 3]], rim: ['#fff0d8', 1.6, [2, 4, -6]],
-    },
-    surface: 'cat',
-    motion: 'squish',
-    ambient: { mode: 'float', shape: 'dot', colors: ['#FFFFFF', '#F2E2CC'], count: 26, size: 0.03, speed: 0.2, opacity: 0.6 },
-    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: -0.8, drag: 2.6, life: 1.4 },
-  },
-  {
-    // 거실 러그 위 강아지 방석. 강아지 털을 두른 큐브. 다 맞추면 면 하나가 강아지 한 마리의 등이다.
-    // 골든 리트리버, 블랙 래브라도, 달마시안, 비글, 허스키, 시바. 신나게 통통 튀며 돈다
-    id: 'dog',
-    name: '강아지',
-    bg: '#D8C8B0',
-    ink: '#2A1E16',
-    backdrop: [
-      'repeating-linear-gradient(0deg, rgba(150,90,60,.14) 0 10px, transparent 10px 22px, rgba(60,90,120,.1) 22px 26px, transparent 26px 40px)',
-      'radial-gradient(70% 55% at 50% 45%, #E6D8C2, #BCA88C)',
-    ].join(', '),
-    form: { bevel: 0.14, size: 0.94, radius: 0.2, grid: 40 },
-    body: { color: '#3A5A8A', roughness: 0.9 },
-    faces: ['#E8C070', '#1E1C1E', '#F2F0EA', '#8A4A22', '#8A929A', '#D8783A'],
-    lights: {
-      sky: '#fff6ea', ground: '#a08a70', hemi: 1.6,
-      key: ['#fff0dc', 2.3, [-4, 6, 5]], fill: ['#e0e8ff', 0.4, [6, 0, 3]], rim: ['#fff4e0', 1.5, [2, 4, -6]],
-    },
-    surface: 'dog',
-    motion: 'bouncy',
-    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.6, gravity: -1, drag: 2.4, life: 1.3 },
-  },
+
+
   {
     // 톱밥 깔린 햄스터 집. 조각마다 햄스터처럼 동그랗게 부풀어 숨 쉬듯 들썩이고, 아주 가늘고 보송한 털이 덮였다.
     // 다 맞추면 면마다 한 마리의 등이다. 골든, 정글리안, 펄, 블랙, 푸딩, 사파이어. 돌리면 해바라기씨가 튄다
@@ -1822,29 +1755,7 @@ export const THEMES = [
     surface: 'wild',
     motion: 'squish',
   },
-  {
-    // 정원의 공작. 칸마다 깃털 끝 눈알 무늬 하나. 짙은 남색 심장과 푸른, 구릿빛, 금빛 초록 고리, 깃대에서 갈라져 흩날리는 깃가지.
-    // 보는 각도에 따라 구조색이 번쩍인다. 깃가지 빛이 곧 면 색
-    id: 'peacock',
-    name: '공작 깃털',
-    bg: '#1A2A20',
-    ink: '#E8F4EC',
-    backdrop: [
-      'radial-gradient(55% 45% at 50% 40%, rgba(80,200,160,.14), transparent 70%)',
-      'linear-gradient(180deg, #24382C, #0C140F)',
-    ].join(', '),
-    form: { bevel: 0.07, size: 0.92, radius: 0.12, grid: 44 },
-    body: { color: '#2A2018', roughness: 0.4 },
-    faces: ['#2A5AC8', '#2A9A6A', '#D8A83A', '#F0F0EA', '#7A3AA0', '#C8302A'],
-    lights: {
-      sky: '#fff4e4', ground: '#3a2a1a', hemi: 1.2,
-      key: ['#fff0dc', 2.2, [-4, 6, 5]], fill: ['#ffc890', 0.4, [6, 0, 3]], rim: ['#ffffff', 1.2, [2, 4, -6]],
-    },
-    ambient: { mode: 'float', shape: 'leaf', colors: ['#2A9A6A', '#2A5AC8'], count: 10, size: 0.12, speed: 0.3, opacity: 0.8 },
-    burst: { shape: 'leaf', colors: 'faces', size: 0.14, speed: 1.6, gravity: -1, drag: 2.2, life: 1.4 },
-    surface: 'peacock',
-    motion: 'fluid',
-  },
+
 
   {
     // 레이싱카 정비소. 다 맞추면 면 하나가 한 장의 2/2 능직 탄소섬유 판이다. 다발마다 섬유 결이 있어 빛과 결이 맞는 다발만 번쩍이고,
@@ -1944,121 +1855,11 @@ export const THEMES = [
     surface: 'magic',
     motion: 'smooth',
   },
-  {
-    // 연주회장 무대. 다 맞추면 면 하나가 건반 한 벌이다. 흰 건반은 면 색 래커, 그 위로 검은 건반이 솟았고,
-    // 여기저기서 건반이 하나씩 눌려 내려가며 불이 들어온다. 검은 피아노 칠 몸통
-    id: 'piano',
-    name: '피아노',
-    bg: '#1A1614',
-    ink: '#F2EAE0',
-    backdrop: [
-      'radial-gradient(35% 50% at 50% 0%, rgba(255,240,210,.25), transparent 70%)',
-      'repeating-linear-gradient(90deg, rgba(120,20,30,.35) 0 40px, rgba(80,10,20,.35) 40px 44px)' ,
-      'linear-gradient(180deg, #2A1E1A, #0C0908)',
-    ].join(', '),
-    form: { bevel: 0.04, size: 0.96, radius: 0.03, grid: 40 },
-    body: { color: '#141416', roughness: 0.1 },
-    faces: ['#F4F0E6', '#E04A4A', '#3A6AE0', '#F2C83A', '#3AB06A', '#9A5AD0'],
-    lights: {
-      sky: '#fff4e4', ground: '#3a2a1a', hemi: 1.2,
-      key: ['#fff0dc', 2.2, [-4, 6, 5]], fill: ['#ffc890', 0.4, [6, 0, 3]], rim: ['#ffffff', 1.2, [2, 4, -6]],
-    },
-    env: 1,
-    burst: { shape: 'star', colors: ['#FFFFFF', '#FFE8A8'], size: 0.12, speed: 2, gravity: 0.5, drag: 2, life: 1, additive: true },
-    surface: 'piano',
-    motion: 'smooth',
-  },
-  {
-    // 녹음실. 칸마다 우퍼 하나가 박자에 맞춰 쿵쿵 앞뒤로 들썩인다. 고운 동심원 결의 콘(면 색), 고무 테, 볼록한 먼지 덮개,
-    // 검은 틀과 나사. 뒤로 소리 물결이 퍼진다
-    id: 'speaker',
-    name: '스피커',
-    bg: '#121214',
-    ink: '#EEEEF2',
-    backdrop: [
-      'repeating-radial-gradient(circle at 50% 45%, rgba(255,255,255,.04) 0 2px, transparent 2px 34px)',
-      'radial-gradient(70% 55% at 50% 45%, #1E1E24, #08080A)',
-    ].join(', '),
-    form: { bevel: 0.05, size: 0.94, radius: 0.06, grid: 44 },
-    body: { color: '#1A1A1C', roughness: 0.7 },
-    faces: ['#E8E4DA', '#E0402A', '#2A5AD0', '#F2C42A', '#2AA05A', '#9A4AC8'],
-    lights: {
-      sky: '#e8f0ff', ground: '#101014', hemi: 0.9,
-      key: ['#ffffff', 2.2, [-4, 6, 5]], fill: ['#c8d8ff', 0.4, [6, 0, 3]], rim: ['#ffffff', 1.4, [0, 4, -6]],
-    },
-    burst: { shape: 'glow', colors: 'faces', size: 0.12, speed: 3, gravity: 0, drag: 2.6, life: 0.7, additive: true },
-    surface: 'speaker',
-    motion: 'snap',
-  },
-  {
-    // 70년대 책상 위 카세트테이프. 칸마다 면 색 플라스틱 테이프가 하나씩. 크림색 이름표의 색 띠와 손글씨,
-    // 창 안에서 돌아가는 두 릴(한쪽은 많이, 한쪽은 적게 감겼다), 헤드 구멍과 나사
-    id: 'cassette',
-    name: '카세트',
-    bg: '#E8DCC8',
-    ink: '#2A2018',
-    backdrop: [
-      'repeating-linear-gradient(90deg, rgba(120,80,40,.08) 0 2px, transparent 2px 23px)',
-      'radial-gradient(70% 55% at 50% 45%, #F2E8D6, #D2C2A6)',
-    ].join(', '),
-    form: { bevel: 0.05, size: 0.94, radius: 0.08, grid: 44 },
-    body: { color: '#2A2A2E', roughness: 0.35 },
-    faces: ['#E0402A', '#2A5AD0', '#F2F0EA', '#F2C42A', '#2AA05A', '#E070B0'],
-    lights: {
-      sky: '#ffffff', ground: '#a09080', hemi: 1.8,
-      key: ['#fff6e8', 2, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1, [0, 4, -6]],
-    },
-    burst: { shape: 'streak', colors: ['#3A2418', '#5A3A24'], size: 0.12, speed: 2, gravity: -4, drag: 1.4, life: 1.2 },
-    surface: 'cassette',
-    motion: 'stop',
-  },
-  {
-    // 나무 벽 앞 통기타. 다 맞추면 면 하나가 기타 앞판이다. 울림구멍과 자개 로제트, 거북등 픽가드, 세로로 지나가는 여섯 줄과 그림자,
-    // 아래쪽 브리지. 돌리면 줄이 떨린다. 몸통 칠이 곧 면 색(선버스트, 검정, 하양, 체리, 파랑, 원목)
-    id: 'guitar',
-    name: '기타',
-    bg: '#2A1E16',
-    ink: '#F2E6D8',
-    backdrop: [
-      'radial-gradient(40% 32% at 50% 30%, rgba(255,210,150,.16), transparent 70%)',
-      'repeating-linear-gradient(90deg, rgba(0,0,0,.2) 0 3px, transparent 3px 52px)',
-      'linear-gradient(180deg, #3A2A1E, #160F0A)',
-    ].join(', '),
-    form: { bevel: 0.06, size: 0.95, radius: 0.06, grid: 48 },
-    body: { color: '#5A3A24', roughness: 0.3 },
-    faces: ['#E0802A', '#1E1E22', '#F2EEE6', '#B82A3A', '#2A5AB0', '#E8C890'],
-    lights: {
-      sky: '#fff4e4', ground: '#3a2a1a', hemi: 1.2,
-      key: ['#fff0dc', 2.2, [-4, 6, 5]], fill: ['#ffc890', 0.4, [6, 0, 3]], rim: ['#ffffff', 1.2, [2, 4, -6]],
-    },
-    burst: { shape: 'star', colors: ['#FFE8B0', '#FFFFFF'], size: 0.12, speed: 2, gravity: 0, drag: 2.4, life: 0.8, additive: true },
-    surface: 'guitar',
-    motion: 'fluid',
-  },
-  {
-    // 공연장 무대 위 드럼 세트. 칸마다 북 하나를 위에서 본다. 면 색으로 물들인 북 가죽이 박자에 맞춰 둥둥 울리며 물결이 퍼지고,
-    // 가운데 점 패치, 크롬 테와 조임 나사, 테 바깥엔 반짝이 랩. 무대 조명이 교차한다
-    id: 'drum',
-    name: '드럼',
-    bg: '#100C14',
-    ink: '#F2EEF8',
-    backdrop: [
-      'linear-gradient(160deg, transparent 0 30%, rgba(255,80,160,.14) 30% 38%, transparent 38%)',
-      'linear-gradient(200deg, transparent 0 30%, rgba(80,160,255,.14) 30% 38%, transparent 38%)',
-      'radial-gradient(80% 60% at 50% 45%, #1E1828, #060408)',
-    ].join(', '),
-    form: { bevel: 0.05, size: 0.94, radius: 0.08, grid: 44 },
-    body: { color: '#1E1E22', roughness: 0.3, metalness: 0.5 },
-    faces: ['#E0402A', '#2A5AD0', '#F2F0EA', '#F2C42A', '#2AA05A', '#9A4AC8'],
-    lights: {
-      sky: '#e8f0ff', ground: '#101014', hemi: 0.9,
-      key: ['#ffffff', 2.2, [-4, 6, 5]], fill: ['#c8d8ff', 0.4, [6, 0, 3]], rim: ['#ffffff', 1.4, [0, 4, -6]],
-    },
-    flicker: 'disco',
-    burst: { shape: 'star', colors: 'faces', size: 0.14, speed: 2.6, gravity: 0, drag: 2.4, life: 0.8, additive: true },
-    surface: 'drum',
-    motion: 'snap',
-  },
+
+
+
+
+
   {
     // 모로코 리아드의 젤리주 타일 벽. 다 맞추면 면 하나가 한 벽이다. 여덟 꼭지 별 타일(면 색)과 십자 타일이 맞물리고,
     // 별 둘레를 흰 띠가 감싼다. 손으로 깎아 구운 조각마다 색과 면이 조금씩 다르고 유약에 잔금이 갔다
@@ -2186,9 +1987,8 @@ export const GROUPS = [
   { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'fossil', 'bismuth', 'banded'] },
   { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'tartan', 'camo'] },
   { name: '문양', themes: ['arabesque', 'artdeco', 'celtic', 'aztec', 'paisley'] },
-  { name: '동물', themes: ['wool', 'cat', 'dog', 'hamster', 'wild', 'peacock', 'dragon'] },
+  { name: '동물', themes: ['wool', 'hamster', 'wild', 'dragon'] },
   { name: '금속·기계', themes: ['metal', 'gauge', 'rust', 'mercury', 'circuit', 'carbon'] },
-  { name: '음악', themes: ['vinyl', 'piano', 'speaker', 'cassette', 'guitar', 'drum'] },
   { name: '디지털·레트로', themes: ['glitch', 'pixel', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '기묘', themes: ['flesh', 'eldritch', 'bone', 'slime', 'magic'] },
 ];
