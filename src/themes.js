@@ -1973,7 +1973,125 @@ export const THEMES = [
     burst: { shape: 'dot', colors: ['#C8A070', '#8A6040'], size: 0.05, speed: 1.6, gravity: 2, drag: 1.4, life: 1 },
     surface: 'paisley',
     motion: 'bouncy',
+  },  {
+    // 해 질 녘 산사 법당. 칸마다 빗살과 솟을살이 엇갈린 나무 문살이 솟았고, 살이 만나는 자리마다 깎아 붙인 꽃.
+    // 살 뒤로 물러앉은 창호지에 법당 안 등불빛이 은은히 비친다. 살엔 면 색 단청, 닳은 데는 나뭇결
+    id: 'kkotsal',
+    name: '꽃살문',
+    bg: '#1A120C',
+    ink: '#F2E6D0',
+    backdrop: [
+      'radial-gradient(50% 35% at 50% 20%, rgba(255,190,110,.25), transparent 70%)',
+      'repeating-linear-gradient(90deg, rgba(0,0,0,.18) 0 3px, transparent 3px 90px)',
+      'radial-gradient(80% 65% at 50% 45%, #3A2616, #0E0906)',
+    ].join(', '),
+    form: { bevel: 0.06, size: 0.95, radius: 0.04, grid: 52 },
+    body: { color: '#3A2618', roughness: 0.75 },
+    faces: ['#2E8B62', '#C8462C', '#2F5DAF', '#E2B23A', '#EDE7DA', '#7A2E22'],
+    lights: {
+      sky: '#fff0dc', ground: '#2a1a10', hemi: 1.0,
+      key: ['#ffe8c8', 2.2, [-4, 6, 5]], fill: ['#c8d8ff', 0.3, [6, 0, 3]], rim: ['#ffd8a0', 1.0, [2, 4, -6]],
+    },
+    ambient: { mode: 'float', shape: 'glow', colors: ['#FFD08A'], count: 18, size: 0.03, speed: 0.15, opacity: 0.5, additive: true },
+    burst: { shape: 'petal', colors: 'faces', size: 0.1, speed: 1.6, gravity: -1, drag: 2, life: 1.4 },
+    surface: 'kkotsal',
+    motion: 'heavy',
   },
+  {
+    // 보석상 진열장. 칸마다 은판에 선반으로 깎은 결 위로 투명 에나멜을 녹여 덮었고(파베르제 식), 둘레엔 줄 새긴 은테와 진주 한 줄.
+    // 면마다 결이 다르다(햇살, 물결, 보리알, 바구니, 동심원, 불꽃). 짙은 벨벳 위 조명
+    id: 'guilloche',
+    name: '기요셰',
+    bg: '#22090F',
+    ink: '#F6E8EC',
+    backdrop: [
+      'radial-gradient(45% 35% at 50% 25%, rgba(255,230,235,.18), transparent 70%)',
+      'repeating-linear-gradient(0deg, rgba(0,0,0,.08) 0 1px, transparent 1px 3px)',
+      'radial-gradient(80% 65% at 50% 45%, #4A1420, #12050A)',
+    ].join(', '),
+    form: { bevel: 0.05, size: 0.95, radius: 0.06, grid: 56 },
+    body: { color: '#8A8C94', roughness: 0.25, metalness: 0.9 },
+    faces: ['#5A9AD8', '#E2789E', '#E6C140', '#2C9A68', '#7B3FA0', '#EAE4D8'],
+    lights: {
+      sky: '#ffffff', ground: '#402028', hemi: 1.0,
+      key: ['#ffffff', 2.4, [-4, 6, 5]], fill: ['#ffe0e8', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.4, [2, 4, -6]],
+    },
+    env: 1.0,
+    burst: { shape: 'star', colors: ['#FFFFFF', '#FFE8F0'], size: 0.12, speed: 2.2, gravity: 0, drag: 2.4, life: 0.8, additive: true },
+    surface: 'guilloche',
+    motion: 'smooth',
+  },
+  {
+    // 호텔 침대 머리맡. 다 맞추면 면 하나가 마름모로 누빈 새틴 한 장이다. 박음질 사이 마름모가 도톰하게 부풀고,
+    // 골엔 땀이 점점이 박혀 잔주름이 진다. 새틴 결 따라 빛이 미끄러진다
+    id: 'quilt',
+    name: '퀼팅',
+    bg: '#E8E0D6',
+    ink: '#2A2024',
+    backdrop: [
+      'radial-gradient(60% 45% at 50% 30%, rgba(255,255,255,.55), transparent 70%)',
+      'radial-gradient(80% 65% at 50% 45%, #F2ECE4, #CFC4B8)',
+    ].join(', '),
+    form: { bevel: 0.1, size: 0.95, radius: 0.1, grid: 48 },
+    body: { color: '#4A3A40', roughness: 0.6 },
+    faces: ['#B8323A', '#24356E', '#F2EEE6', '#2E7A5A', '#D8A23A', '#8A4A9A'],
+    lights: {
+      sky: '#ffffff', ground: '#a09080', hemi: 1.6,
+      key: ['#fff6ee', 2, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1, [0, 4, -6]],
+    },
+    burst: { shape: 'dot', colors: 'faces', size: 0.06, speed: 1.6, gravity: -1, drag: 2, life: 1.2 },
+    surface: 'quilt',
+    motion: 'squish',
+  },
+  {
+    // 마라케시 골목 찻집. 칸마다 두드린 놋쇠판에 별과 물방울 구멍을 뚫었고, 구멍 뒤 색유리로 불빛이 새어 나와 일렁인다.
+    // 구멍 둘레는 솟고 오목한 데엔 거뭇한 녹. 새어 나오는 유리 빛이 곧 면 색. 어둑한 방
+    id: 'lantern',
+    name: '모로코 등',
+    bg: '#0E0906',
+    ink: '#F6E2C0',
+    backdrop: [
+      'radial-gradient(30% 22% at 50% 50%, rgba(255,170,80,.18), transparent 70%)',
+      'radial-gradient(80% 65% at 50% 45%, #241610, #060403)',
+    ].join(', '),
+    form: { bevel: 0.05, size: 0.95, radius: 0.04, grid: 56 },
+    body: { color: '#2A1E14', roughness: 0.4, metalness: 0.6 },
+    faces: ['#E83A2A', '#2A7AE8', '#3AC86A', '#F2B83A', '#B04AE0', '#F2F0E6'],
+    lights: {
+      sky: '#ffe0b0', ground: '#1a0e06', hemi: 0.7,
+      key: ['#ffd8a0', 1.8, [-4, 6, 5]], fill: ['#ff9a50', 0.4, [6, 0, 3]], rim: ['#ffcf90', 1.0, [2, 4, -6]],
+    },
+    env: 0.6,
+    flicker: 'candle',
+    ambient: { mode: 'float', shape: 'glow', colors: 'faces', count: 24, size: 0.035, speed: 0.15, opacity: 0.6, additive: true },
+    burst: { shape: 'star', colors: 'faces', size: 0.12, speed: 2, gravity: 0, drag: 2.4, life: 0.9, additive: true },
+    surface: 'lantern',
+    motion: 'heavy',
+  },
+  {
+    // 이스파한 양탄자 가게. 다 맞추면 면 하나가 손으로 맨 양탄자 한 장이다. 가운데 메달리온과 네 귀퉁이 조각, 바탕의 잔꽃,
+    // 겹 테두리와 그 안의 꽃. 털 한 올이 매듭 하나라 무늬가 잘게 계단지고, 무늬 윤곽은 털을 깎아 패였다.
+    // 천연 염료라 줄마다 색이 조금씩 다르다(아브라시). 바탕이 곧 면 색
+    id: 'carpet',
+    name: '페르시아 카펫',
+    bg: '#2A1A12',
+    ink: '#F2E4CC',
+    backdrop: [
+      'repeating-linear-gradient(90deg, rgba(0,0,0,.12) 0 2px, transparent 2px 72px)',
+      'radial-gradient(70% 55% at 50% 40%, #4A3020, #160C08)',
+    ].join(', '),
+    form: { bevel: 0.1, size: 0.95, radius: 0.08, grid: 44 },
+    body: { color: '#3A2A20', roughness: 0.95 },
+    faces: ['#9E2A2B', '#1F2E5A', '#E6DCC4', '#3E6B48', '#C89A3C', '#6A2F5A'],
+    lights: {
+      sky: '#fff4e4', ground: '#3a2a1a', hemi: 1.2,
+      key: ['#fff0dc', 2.2, [-4, 6, 5]], fill: ['#ffc890', 0.4, [6, 0, 3]], rim: ['#ffffff', 1.2, [2, 4, -6]],
+    },
+    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: 2, drag: 1.4, life: 1 },
+    surface: 'carpet',
+    motion: 'heavy',
+  },
+
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -1986,7 +2104,7 @@ export const GROUPS = [
   { name: '우주', themes: ['space', 'planet', 'blackhole', 'nebula', 'star', 'galaxy'] },
   { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'fossil', 'bismuth', 'banded'] },
   { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'tartan', 'camo'] },
-  { name: '문양', themes: ['arabesque', 'artdeco', 'celtic', 'aztec', 'paisley'] },
+  { name: '문양', themes: ['arabesque', 'artdeco', 'celtic', 'aztec', 'paisley', 'kkotsal', 'guilloche', 'quilt', 'lantern', 'carpet'] },
   { name: '동물', themes: ['wool', 'hamster', 'wild', 'dragon'] },
   { name: '금속·기계', themes: ['metal', 'gauge', 'rust', 'mercury', 'circuit', 'carbon'] },
   { name: '디지털·레트로', themes: ['glitch', 'pixel', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
