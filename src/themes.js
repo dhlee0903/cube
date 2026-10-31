@@ -1782,30 +1782,102 @@ export const THEMES = [
     motion: 'snap',
   },
   {
-    // 자연사 박물관 뼈 수장고. 다 맞추면 면 하나가 머리뼈 한 판이다. 실제로 패인 톱니 봉합선, 영양공, 결 따라 난 금,
-    // 오래 묻혀 밴 얼룩. 면마다 뼈가 겪은 일이 달라 빛깔이 다르다(갓 마른 뼈, 황토, 구리, 그을림, 하얗게 탄 뼈, 늪).
-    // 몸통은 뼈 속 해면뼈. 어둑한 진열장 위로 스포트라이트
+    // 도살장 뒤편. 다 맞추면 면 하나가 머리뼈 한 판이다. 피가 고인 톱니 봉합선, 들러붙은 살점과 힘줄, 번진 핏자국,
+    // 쩍 갈라진 틈으로 드러난 골수. 면마다 뼈가 겪은 일이 달라 빛깔이 다르다(갓 마른 뼈, 황토, 구리, 그을림, 하얗게 탄 뼈, 늪).
+    // 몸통은 골수가 찬 해면뼈. 붉은 백열등 아래
     id: 'bone',
     name: '뼈',
-    bg: '#14120F',
-    ink: '#EAE2D2',
+    bg: '#120807',
+    ink: '#EEDFD6',
     backdrop: [
-      'radial-gradient(40% 30% at 50% 18%, rgba(255,240,215,.22), transparent 70%)',
-      'radial-gradient(90% 60% at 50% 110%, rgba(90,70,50,.35), transparent 70%)',
-      'radial-gradient(80% 65% at 50% 40%, #26221D, #0A0908)',
+      'radial-gradient(40% 30% at 50% 18%, rgba(255,200,170,.2), transparent 70%)',
+      'radial-gradient(90% 60% at 50% 110%, rgba(110,12,10,.4), transparent 70%)',
+      'radial-gradient(80% 65% at 50% 40%, #2A1A16, #080404)',
     ].join(', '),
     form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 44 },
     body: { color: '#5E3A2A', roughness: 0.75 },
     faces: ['#E4D6B8', '#A9472E', '#4E8C6E', '#2C2420', '#8D9BB0', '#93683A'],
     lights: {
-      sky: '#fff4e6', ground: '#2a2018', hemi: 0.9,
-      key: ['#fff2dc', 2.4, [-4, 6, 5]], fill: ['#c8d0e0', 0.35, [6, 0, 3]], rim: ['#ffffff', 0.9, [2, 4, -6]],
+      sky: '#fff0e6', ground: '#2a1010', hemi: 0.9,
+      key: ['#ffe8d8', 2.4, [-4, 6, 5]], fill: ['#ff9a80', 0.35, [6, 0, 3]], rim: ['#ffffff', 0.9, [2, 4, -6]],
     },
-    ambient: { mode: 'float', shape: 'dot', colors: ['#E8DCC0'], count: 24, size: 0.02, speed: 0.12, opacity: 0.35 },
-    burst: { shape: 'dot', colors: ['#E8DCC0', '#C8B898'], size: 0.05, speed: 1.6, gravity: 2, drag: 1.2, life: 1.2 },
+    ambient: { mode: 'float', shape: 'dot', colors: ['#E8DCC0'], count: 20, size: 0.02, speed: 0.12, opacity: 0.3 },
+    burst: { shape: 'drip', colors: ['#8A0A10', '#5A0608'], size: 0.09, speed: 1.6, gravity: 3, drag: 1.2, life: 1.2 },
     surface: 'bone',
     motion: 'heavy',
   },
+  {
+    // 눈알 무더기. 칸마다 사람 눈 하나가 짓무른 눈꺼풀 사이로 불룩 솟아 손끝을 따라 굴러간다. 핏발 선 흰자,
+    // 크게 열린 홍채(면 색)의 결과 굴, 번들거리는 눈물막. 가끔 깜빡이고, 잡으면 일제히 질끈 감았다 동공을 키운다. 붉은 어둠
+    id: 'eyeball',
+    name: '안구',
+    bg: '#120506',
+    ink: '#F4DEDC',
+    backdrop: [
+      'radial-gradient(50% 40% at 50% 45%, rgba(120,10,20,.35), transparent 70%)',
+      'radial-gradient(80% 65% at 50% 45%, #2A0A0E, #070203)',
+    ].join(', '),
+    form: { bevel: 0.12, size: 0.94, radius: 0.2, grid: 48 },
+    body: { color: '#4A1418', roughness: 0.2 },
+    faces: ['#3A7AD0', '#3A9A4A', '#8A4A1A', '#D89A20', '#9AA8B0', '#B03A8A'],
+    lights: {
+      sky: '#ffe8e8', ground: '#300808', hemi: 0.9,
+      key: ['#fff4f0', 2.2, [-4, 6, 5]], fill: ['#ff8080', 0.35, [6, 0, 3]], rim: ['#ffd0d0', 1.0, [2, 4, -6]],
+    },
+    env: 0.7,
+    burst: { shape: 'drip', colors: ['#8A0A10', '#C01818'], size: 0.1, speed: 1.6, gravity: 3, drag: 1.2, life: 1.2 },
+    surface: 'eyeball',
+    motion: 'squish',
+  },
+  {
+    // 해부대 위. 다 맞추면 면 하나에 창자가 빽빽하게 똬리를 틀었다. 불룩한 관이 천천히 꿈틀대며 연동하고 장액으로 번들거린다.
+    // 관을 가로지르는 동맥과 정맥, 골마다 낀 노란 지방과 고인 피. 면마다 장기 빛깔이 다르다(소장, 간, 담즙, 장간막 지방, 멍, 대장)
+    id: 'viscera',
+    name: '내장',
+    bg: '#140608',
+    ink: '#F4DEDC',
+    backdrop: [
+      'radial-gradient(45% 35% at 50% 20%, rgba(220,230,255,.12), transparent 70%)',
+      'radial-gradient(80% 65% at 50% 45%, #2A1012, #080304)',
+    ].join(', '),
+    form: { bevel: 0.12, size: 0.95, radius: 0.16, grid: 48 },
+    body: { color: '#2A0C0E', roughness: 0.15 },
+    faces: ['#E08A8A', '#7A2020', '#6A8A2A', '#E8C060', '#7A3A7A', '#A0603A'],
+    lights: {
+      sky: '#f0f4ff', ground: '#300808', hemi: 1.0,
+      key: ['#ffffff', 2.4, [-4, 6, 5]], fill: ['#ffb0a0', 0.35, [6, 0, 3]], rim: ['#ffffff', 1.0, [2, 4, -6]],
+    },
+    env: 0.8,
+    burst: { shape: 'drip', colors: ['#8A0A10', '#C01818', '#E8C060'], size: 0.1, speed: 1.6, gravity: 3, drag: 1.2, life: 1.2 },
+    surface: 'viscera',
+    motion: 'squish',
+  },
+  {
+    // 부검실. 다 맞추면 면 하나가 위에서 본 대뇌다. 가운데 깊은 틈이 좌우 반구를 가르고, 구불구불한 이랑이 솟고 고랑은 깊다.
+    // 고랑을 따라 기는 핏줄, 희뿌옇게 번들거리는 거미막. 심장 박동에 맞춰 살짝 부푼다.
+    // 면마다 뇌의 상태가 다르다(갓 꺼낸 분홍, 포르말린 회색, 멍든 보라, 출혈, 괴사, 파랗게 물들인 표본)
+    id: 'brain',
+    name: '뇌',
+    bg: '#0E0A0C',
+    ink: '#F0E4E6',
+    backdrop: [
+      'radial-gradient(45% 35% at 50% 18%, rgba(230,240,255,.16), transparent 70%)',
+      'linear-gradient(180deg, transparent 70%, rgba(120,140,150,.12))',
+      'radial-gradient(80% 65% at 50% 45%, #22181C, #060405)',
+    ].join(', '),
+    form: { bevel: 0.12, size: 0.95, radius: 0.16, grid: 52 },
+    body: { color: '#2A1418', roughness: 0.2 },
+    faces: ['#E08A9A', '#B9B19C', '#7A4A7A', '#9A2A2A', '#A8A048', '#3E5EA8'],
+    lights: {
+      sky: '#f4f8ff', ground: '#200a0c', hemi: 1.0,
+      key: ['#ffffff', 2.3, [-4, 6, 5]], fill: ['#c0d0ff', 0.35, [6, 0, 3]], rim: ['#ffffff', 1.0, [2, 4, -6]],
+    },
+    env: 0.7,
+    burst: { shape: 'drip', colors: ['#8A0A10', '#C01818'], size: 0.09, speed: 1.6, gravity: 3, drag: 1.2, life: 1.2 },
+    surface: 'brain',
+    motion: 'squish',
+  },
+
 
 
   {
@@ -2098,9 +2170,9 @@ export const themeById = (id) => THEMES.find((t) => t.id === id);
 
 // 테마 고르는 목록에서 묶어 보여 주는 무리. 테마는 모두 한 무리에만 들어간다(테스트가 본다)
 export const GROUPS = [
-  { name: '기본', themes: ['classic', 'candy', 'brick', 'dice', 'jelly', 'clay', 'bubblewrap', 'paper', 'doodle'] },
+  { name: '기본', themes: ['classic', 'candy', 'brick', 'dice', 'jelly', 'clay', 'bubblewrap', 'paper', 'doodle', 'slime'] },
   { name: '자연', themes: ['forest', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert', 'honey', 'fruit'] },
-  { name: '빛·불', themes: ['neon', 'lava', 'electric', 'disco', 'lavalamp', 'kaleido'] },
+  { name: '빛·불', themes: ['neon', 'lava', 'electric', 'disco', 'lavalamp', 'kaleido', 'magic'] },
   { name: '우주', themes: ['space', 'planet', 'blackhole', 'nebula', 'star', 'galaxy'] },
   { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'fossil', 'bismuth', 'banded'] },
   { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'tartan', 'camo'] },
@@ -2108,5 +2180,5 @@ export const GROUPS = [
   { name: '동물', themes: ['wool', 'hamster', 'wild', 'dragon'] },
   { name: '금속·기계', themes: ['metal', 'gauge', 'rust', 'mercury', 'circuit', 'carbon'] },
   { name: '디지털·레트로', themes: ['glitch', 'pixel', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
-  { name: '기묘', themes: ['flesh', 'eldritch', 'bone', 'slime', 'magic'] },
+  { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'viscera', 'brain'] },
 ];
