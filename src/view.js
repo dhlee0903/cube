@@ -445,6 +445,17 @@ export class CubeView {
         key = 1 + this.strike * 2;
         this.uniforms.uCharge.value = Math.max(this.uniforms.uCharge.value, this.strike);
         break;
+      case 'disco': {
+        // 1분에 120박. 박마다 역광이 번쩍이고, 세 조명의 색이 천천히 돈다
+        const beat = Math.max(0, Math.sin(seconds * Math.PI * 4)) ** 6;
+        const hue = (seconds * 0.08) % 1;
+        this.key.color.setHSL(hue, 0.85, 0.62);
+        this.fill.color.setHSL((hue + 0.33) % 1, 0.85, 0.6);
+        this.rim.color.setHSL((hue + 0.66) % 1, 0.9, 0.62);
+        rim = 0.7 + 1.6 * beat;
+        key = 0.85 + 0.3 * beat;
+        break;
+      }
       case 'aurora':
         this.rim.color.setHSL(0.42 + 0.18 * (0.5 + 0.5 * Math.sin(seconds * 0.25)), 0.9, 0.6);
         rim = 0.8 + 0.4 * Math.sin(seconds * 0.6);

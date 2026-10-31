@@ -15,7 +15,7 @@
 // halo      스티커 둘레로 번지는 빛의 세기. haloMode가 'shadow'면 스티커 밑 그림자
 // lights    조명 { sky, ground, hemi, key, fill, rim }. key 등은 [색, 세기, [x, y, z]]
 // light     조명 전체 배율
-// flicker   조명이 일렁이는 방식: candle, lava, lightning, aurora
+// flicker   조명이 일렁이는 방식: candle, lava, lightning, aurora, disco
 // env       주변 반사 세기
 // surface   겉면 질감. surfaces.js
 // motion    돌아가는 맛. motions.js
@@ -936,6 +936,248 @@ export const THEMES = [
     motion: 'heavy',
     ambient: { mode: 'wind', shape: 'dot', colors: ['#9A6A44', '#7A5034'], count: 120, size: 0.035, speed: 0.6, opacity: 0.5 },
     burst: { shape: 'streak', colors: ['#8A4A20', '#6A3A1A', '#B86A30'], size: 0.1, speed: 1.8, gravity: -6, drag: 1.4, life: 1.1 },
+  },
+  {
+    // 트레이딩카드 홀로 포일. 보는 각도에 따라 무지개 띠가 쓸려 가고, 별 무늬와 반짝이
+    id: 'holo',
+    name: '홀로그램',
+    bg: '#0B0A14',
+    ink: '#F2EEFF',
+    backdrop: [
+      'radial-gradient(40% 35% at 20% 25%, rgba(255,90,200,.22), transparent 70%)',
+      'radial-gradient(40% 35% at 82% 30%, rgba(80,220,255,.2), transparent 70%)',
+      'radial-gradient(45% 35% at 50% 95%, rgba(255,220,90,.16), transparent 70%)',
+      'linear-gradient(#141226, #0B0A14)',
+    ].join(', '),
+    drift: 'conic-gradient(from 0deg at 50% 45%, rgba(255,80,160,.08), rgba(80,200,255,.08), rgba(255,230,90,.08), rgba(160,90,255,.08), rgba(255,80,160,.08))',
+    form: { bevel: 0.06, size: 0.86, radius: 0.08, depth: 0.012 },
+    body: { color: '#1C1C24', roughness: 0.15, metalness: 0.9 },
+    faces: ['#FF6FB5', '#4FD8FF', '#E8ECF5', '#FFD25A', '#5FFFB8', '#A07CFF'],
+    env: 1,
+    lights: {
+      sky: '#ffffff', ground: '#1a1428', hemi: 1.1,
+      key: ['#ffffff', 1.8, [-4, 6, 5]], fill: ['#ff9ae0', 0.6, [6, 0, 3]], rim: ['#9ae8ff', 1.6, [2, 4, -6]],
+    },
+    light: 0.8,
+    surface: 'holo',
+    motion: 'snap',
+    ambient: { mode: 'float', shape: 'star', colors: ['#FF8AD0', '#8AE8FF', '#FFE58A', '#B89AFF'], count: 34, size: 0.13, speed: 0.5, opacity: 0.9, additive: true },
+    burst: { shape: 'star', colors: ['#FF8AD0', '#8AE8FF', '#FFE58A', '#FFFFFF'], size: 0.16, speed: 2.6, gravity: -2, drag: 1.5, life: 1, additive: true },
+  },
+  {
+    // 거실 소파 위 털실 큐브. V자 코가 솟고 털실 가닥과 보풀이 보인다. 면마다 다른 페어아일 무늬
+    id: 'knit',
+    name: '니트',
+    bg: '#E8D8C2',
+    ink: '#2E241C',
+    backdrop: [
+      'radial-gradient(60% 50% at 50% 38%, rgba(255,240,210,.55), transparent 72%)',
+      'repeating-linear-gradient(60deg, rgba(90,60,30,.05) 0 6px, transparent 6px 12px)',
+      'repeating-linear-gradient(-60deg, rgba(90,60,30,.05) 0 6px, transparent 6px 12px)',
+      'linear-gradient(#EADCC8, #D9C5AA)',
+    ].join(', '),
+    form: { bevel: 0.16, size: 0.86, radius: 0.16, depth: 0.02 },
+    body: { color: '#5A504A', roughness: 0.95 },
+    faces: ['#C8362E', '#24407A', '#F1E8D6', '#D9A42A', '#3D6B3F', '#9A7BB0'],
+    lights: {
+      sky: '#fff6e8', ground: '#a08868', hemi: 2,
+      key: ['#ffe8c8', 2.3, [-4, 6, 5]], fill: ['#d8e0ff', 0.4, [6, 0, 3]], rim: ['#fff0d8', 1.4, [2, 4, -6]],
+    },
+    surface: 'knit',
+    motion: 'bouncy',
+    ambient: { mode: 'float', shape: 'dot', colors: ['#FFFFFF', '#F4ECDC'], count: 26, size: 0.035, speed: 0.15, opacity: 0.6 },
+    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: -1, drag: 2.6, life: 1.4 },
+  },
+  {
+    // 제도판 위 기술 도면. 면마다 다른 인화지와 부품. 고르면 선이 그려져 나간다
+    id: 'blueprint',
+    name: '설계도',
+    bg: '#1E4E8C',
+    ink: '#F0F6FF',
+    backdrop: [
+      `${svg(100, 100, "<g fill='none' stroke='rgba(255,255,255,.22)' stroke-width='.3'><circle cx='18' cy='22' r='12'/><circle cx='18' cy='22' r='7'/><path d='M4 22 H32 M18 8 V36'/><circle cx='84' cy='78' r='10'/><path d='M70 78 H98 M84 64 V92'/><path d='M60 10 H96 M60 8 V12 M96 8 V12'/><path d='M6 90 L30 66 M6 86 L26 66'/></g>", 'xMidYMid slice')} center / cover no-repeat`,
+      'linear-gradient(rgba(255,255,255,.12) 1px, transparent 1px) 0 0 / 60px 60px',
+      'linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px) 0 0 / 60px 60px',
+      'linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px) 0 0 / 12px 12px',
+      'linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px) 0 0 / 12px 12px',
+      'radial-gradient(70% 60% at 50% 40%, #2A62A8, #1A447C)',
+    ].join(', '),
+    form: { bevel: 0.02, size: 0.88, radius: 0.02, depth: 0 },
+    body: { color: '#13294A', roughness: 0.9 },
+    faces: ['#2A5FA8', '#8A5A2E', '#F4F1E8', '#E8D46A', '#3E8A5A', '#E07A84'],
+    lights: {
+      sky: '#ffffff', ground: '#304870', hemi: 2.3,
+      key: ['#ffffff', 1.4, [-4, 6, 5]], fill: ['#d8e8ff', 0.4, [6, 0, 3]], rim: ['#ffffff', 0.6, [2, 4, -6]],
+    },
+    surface: 'blueprint',
+    motion: 'mechanical',
+    ambient: { mode: 'float', shape: 'dot', colors: ['#FFFFFF'], count: 14, size: 0.03, speed: 0.12, opacity: 0.4 },
+    burst: { shape: 'streak', colors: ['#FFFFFF', '#CFE0FF'], size: 0.1, speed: 1.6, gravity: -2, drag: 2.4, life: 1.1 },
+  },
+  {
+    // 자연사 박물관 진열장. 면마다 다른 돌판에 박힌 화석. 위에서 비추는 진열장 조명
+    id: 'fossil',
+    name: '화석',
+    bg: '#18221F',
+    ink: '#E8E2D2',
+    backdrop: [
+      'linear-gradient(transparent 82%, #2A2620 82%, #1C1915 100%)',
+      'radial-gradient(34% 62% at 50% -4%, rgba(255,236,200,.4), rgba(255,236,200,.08) 55%, transparent 75%)',
+      'linear-gradient(#22302B, #18221F 80%)',
+    ].join(', '),
+    form: { bevel: 0.05, size: 0.88, radius: 0.05, depth: 0.012 },
+    body: { color: '#262628', roughness: 0.85 },
+    faces: ['#C8955A', '#5E7E9E', '#E6DCC4', '#B0503A', '#7A8A5A', '#8A5A7A'],
+    lights: {
+      sky: '#fff2dc', ground: '#2a2a24', hemi: 1.6,
+      key: ['#fff0d8', 3, [0, 9, 3]], fill: ['#c8d8ff', 0.3, [6, -1, 4]], rim: ['#ffffff', 0.9, [3, 3, -6]],
+    },
+    surface: 'fossil',
+    motion: 'heavy',
+    ambient: { mode: 'float', shape: 'dot', colors: ['#FFF2D8'], count: 30, size: 0.03, speed: 0.12, opacity: 0.5 },
+    burst: { shape: 'dot', colors: ['#D8CCB4', '#A89878', '#7A6E5A'], size: 0.05, speed: 1.5, gravity: -3, drag: 2.2, life: 1.1 },
+  },
+  {
+    // 말랑한 구미 젤리. 실제로 볼록하고 돌리면 출렁출렁, 안에서 비치는 빛과 설탕 알갱이
+    id: 'jelly',
+    name: '젤리',
+    bg: '#FFE9F2',
+    ink: '#3A1E2E',
+    backdrop: [
+      'radial-gradient(circle, rgba(255,160,200,.35) 22%, transparent 24%) 0 0 / 46px 46px',
+      'radial-gradient(circle, rgba(140,230,210,.35) 22%, transparent 24%) 23px 23px / 46px 46px',
+      'linear-gradient(#FFF1F7, #FFE2EE)',
+    ].join(', '),
+    form: { bevel: 0.24, size: 0.9, radius: 0.32, grid: 32 },
+    body: { color: '#6A1E44', roughness: 0.08 },
+    faces: ['#FF3B5C', '#3E7BFF', '#FFF2C8', '#FFC21E', '#38D46A', '#B04CFF'],
+    lights: {
+      sky: '#ffffff', ground: '#ffc8e0', hemi: 2.1,
+      key: ['#ffffff', 2, [-3, 6, 5]], fill: ['#ffd8f0', 0.6, [6, 0, 4]], rim: ['#ffffff', 1.4, [0, 4, -6]],
+    },
+    surface: 'jelly',
+    motion: 'squish',
+    ambient: { mode: 'fall', shape: 'dot', colors: ['#FFFFFF'], count: 40, size: 0.03, speed: 0.2, opacity: 0.8 },
+    burst: { shape: 'drip', colors: 'faces', size: 0.09, speed: 2.2, gravity: -6, drag: 1.2, life: 1.1 },
+  },
+  {
+    // 한옥 선반 위 도자기. 면마다 다른 유약(청자, 청화, 백자, 분청, 진사, 천목), 빙렬과 상감 구름무늬
+    id: 'ceramic',
+    name: '도자기',
+    bg: '#EFE6D6',
+    ink: '#2A221A',
+    backdrop: [
+      PAPER_GRAIN,
+      'linear-gradient(transparent 80%, #B08A60 80%, #A07A52 83%, #8A6642 83%, #C8A882 84.5%, #D2B690 100%)',
+      'linear-gradient(90deg, transparent 49.6%, rgba(120,90,60,.18) 49.6%, rgba(120,90,60,.18) 50.4%, transparent 50.4%)',
+      'radial-gradient(60% 50% at 50% 40%, #F8F2E6, #E8DCC6)',
+    ].join(', '),
+    form: { bevel: 0.08, size: 0.84, radius: 0.12, depth: 0.012 },
+    body: { color: '#8A6A50', roughness: 0.95 },
+    faces: ['#5FA890', '#2E4E8E', '#F1EFE6', '#A8A090', '#A8343A', '#3A2A22'],
+    env: 0.6,
+    lights: {
+      sky: '#fff8ec', ground: '#8a7058', hemi: 1.9,
+      key: ['#fff2dc', 2.4, [-4, 7, 5]], fill: ['#e0e8ff', 0.4, [6, 0, 3]], rim: ['#ffffff', 1, [2, 4, -6]],
+    },
+    surface: 'ceramic',
+    motion: 'heavy',
+    burst: { shape: 'square', colors: ['#F1EFE6', '#5FA890', '#D8D0C0'], size: 0.06, speed: 1.8, gravity: -6, drag: 1, life: 1 },
+  },
+  {
+    // 칸마다 작은 행성이 솟아 자전하는 태양계 모형. 면마다 다른 행성, 가장자리엔 대기가 빛난다
+    id: 'planet',
+    name: '행성',
+    bg: '#04040C',
+    ink: '#E6E8FF',
+    backdrop: [
+      stars(110, 31),
+      'radial-gradient(40% 30% at 75% 25%, rgba(120,80,255,.18), transparent 70%)',
+      'radial-gradient(35% 25% at 20% 75%, rgba(0,160,255,.14), transparent 70%)',
+      '#04040C',
+    ].join(', '),
+    drift: 'radial-gradient(30% 22% at 65% 70%, rgba(255,120,200,.1), transparent 70%)',
+    form: { bevel: 0.04, size: 0.9, radius: 0.45, grid: 36 },
+    body: { color: '#15161E', roughness: 0.5 },
+    faces: ['#D89A5A', '#2A6AC8', '#E8EEF4', '#C8502A', '#3E8A3E', '#7A4AC8'],
+    lights: {
+      sky: '#3a3a6a', ground: '#000000', hemi: 0.35,
+      key: ['#ffffff', 3.4, [-7, 3, 4]], fill: ['#6b5cff', 0.25, [6, -2, 3]], rim: ['#9fd8ff', 1, [4, 2, -6]],
+    },
+    surface: 'planet',
+    motion: 'fluid',
+    ambient: { mode: 'orbit', shape: 'glow', colors: ['#FFFFFF', '#CFC8FF'], count: 160, size: 0.045, speed: 1, additive: true },
+    burst: { shape: 'star', colors: ['#FFFFFF', '#FFD9A0', '#A8E8FF'], size: 0.13, speed: 1.4, gravity: 0, drag: 0.8, life: 1.5, additive: true },
+  },
+  {
+    // 체크무늬 식탁보 위 과일 바구니. 면마다 과일 껍질(딸기, 블루베리, 바나나, 귤, 수박, 자두)
+    id: 'fruit',
+    name: '과일',
+    bg: '#F6EFE6',
+    ink: '#2A1E16',
+    backdrop: [
+      'repeating-linear-gradient(0deg, rgba(210,40,50,.28) 0 22px, transparent 22px 44px)',
+      'repeating-linear-gradient(90deg, rgba(210,40,50,.28) 0 22px, transparent 22px 44px)',
+      '#FBF6EE',
+    ].join(', '),
+    form: { bevel: 0.14, size: 0.86, radius: 0.22, depth: 0.04 },
+    body: { color: '#B88A4A', roughness: 0.7 },
+    faces: ['#D8203A', '#3B4F9E', '#F2D84A', '#F28A1C', '#3E9A3E', '#6E2A6A'],
+    lights: {
+      sky: '#ffffff', ground: '#c8a888', hemi: 2.1,
+      key: ['#fff6e8', 2.3, [-3, 7, 5]], fill: ['#ffe0d0', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
+    },
+    surface: 'fruit',
+    motion: 'bouncy',
+    ambient: { mode: 'buzz', shape: 'fly', colors: ['#2A2018'], count: 3, size: 0.08, speed: 1.5, opacity: 0.9 },
+    burst: { shape: 'drip', colors: 'faces', size: 0.08, speed: 2.4, gravity: -7, drag: 1, life: 1 },
+  },
+  {
+    // 미러볼. 거울 조각마다 돌아가는 색 조명이 걸려 번쩍이고, 박자에 맞춰 조명 색이 돈다
+    id: 'disco',
+    name: '디스코',
+    bg: '#0A0612',
+    ink: '#F6EEFF',
+    backdrop: [
+      'radial-gradient(70% 25% at 50% 105%, rgba(255,80,200,.35), transparent 70%)',
+      'repeating-conic-gradient(from 0deg at 50% -10%, rgba(255,255,255,.05) 0deg 4deg, transparent 4deg 14deg)',
+      'linear-gradient(#160C24, #0A0612)',
+    ].join(', '),
+    drift: [
+      'radial-gradient(18% 14% at 25% 30%, rgba(255,60,180,.25), transparent 70%)',
+      'radial-gradient(18% 14% at 75% 35%, rgba(60,160,255,.25), transparent 70%)',
+      'radial-gradient(18% 14% at 50% 75%, rgba(255,220,60,.2), transparent 70%)',
+    ].join(', '),
+    form: { bevel: 0.05, size: 0.9, radius: 0.04, depth: 0 },
+    body: { color: '#1A1A22', roughness: 0.2, metalness: 0.8 },
+    faces: ['#FF4FA0', '#3F7BFF', '#E6E8F0', '#FFC83D', '#2FE08A', '#9B4DFF'],
+    env: 0.8,
+    lights: {
+      sky: '#ffffff', ground: '#100818', hemi: 0.9,
+      key: ['#ffffff', 1.6, [-4, 5, 5]], fill: ['#ffffff', 0.8, [6, 0, 3]], rim: ['#ffffff', 1.4, [0, 4, -6]],
+    },
+    flicker: 'disco',
+    surface: 'disco',
+    motion: 'snap',
+    ambient: { mode: 'orbit', shape: 'dot', colors: ['#FF6AC8', '#6AC0FF', '#FFE06A', '#8AFFC0'], count: 90, size: 0.05, speed: 2.2, opacity: 0.9, additive: true },
+    burst: { shape: 'star', colors: 'faces', size: 0.15, speed: 3, gravity: 0, drag: 2.5, life: 0.7, additive: true },
+  },
+  {
+    // 팝아트 만화. 빛을 세 단으로 끊어 칠하고 그늘엔 망점, 굵은 먹 윤곽선, 뒤로 햇살 무늬
+    id: 'comic',
+    name: '만화',
+    bg: '#FFD84A',
+    ink: '#1A1208',
+    backdrop: [
+      'radial-gradient(circle, rgba(230,60,40,.35) 28%, transparent 30%) 0 0 / 14px 14px',
+      'repeating-conic-gradient(from 0deg at 50% 45%, #FFD84A 0deg 9deg, #FFC21E 9deg 18deg)',
+    ].join(', '),
+    form: { bevel: 0.08, size: 0.84, radius: 0.1, depth: 0.015 },
+    body: { color: '#2A2A38', roughness: 1 },
+    faces: ['#E8202A', '#1E5BD8', '#FFFFFF', '#FFE04A', '#20B04A', '#E8389A'],
+    surface: 'comic',
+    motion: 'bouncy',
+    burst: { shape: 'star', colors: ['#FFFFFF', '#FFE04A', '#E8202A'], size: 0.22, speed: 2.8, gravity: -1, drag: 2.4, life: 0.8 },
   },
 ];
 

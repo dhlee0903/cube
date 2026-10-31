@@ -90,7 +90,7 @@ test('테마가 쓰는 질감·움직임·입자 이름은 모두 실제로 있�
   const { SURFACES } = await import('../src/surfaces.js');
   const { MOTIONS } = await import('../src/motions.js');
   const { SHAPES, MODES } = await import('../src/particles.js');
-  const flickers = new Set(['candle', 'lava', 'lightning', 'aurora']);
+  const flickers = new Set(['candle', 'lava', 'lightning', 'aurora', 'disco']);
   for (const t of THEMES) {
     if (t.surface) assert.ok(SURFACES.includes(t.surface), `${t.name}: 질감 ${t.surface}`);
     if (t.motion) assert.ok(t.motion in MOTIONS, `${t.name}: 움직임 ${t.motion}`);
