@@ -4521,165 +4521,13 @@ export const THEMES = [
     motion: 'heavy',
     burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.6, gravity: -2, drag: 1.4, life: 1.2 },
   },
-  {
-    // 화산투성이 위성. 황으로 물든 평원에 화산 구덩이가 꺼지고 바닥엔 용암 호수가 이글거린다
-    id: 'io',
-    name: '이오 화산',
-    bg: '#04040A',
-    ink: '#F2E8C8',
-    backdrop: [
-      'radial-gradient(1px 1px at 20% 30%, #fff 50%, transparent 51%)',
-      'radial-gradient(1px 1px at 70% 20%, #fff 50%, transparent 51%)',
-      'radial-gradient(1px 1px at 40% 80%, #fff 50%, transparent 51%)',
-      'radial-gradient(1px 1px at 85% 65%, #fff 50%, transparent 51%)',
-      'radial-gradient(60% 50% at 30% 20%, rgba(120,140,255,.12), transparent 70%)',
-      '#04040A',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 48 },
-    body: { color: '#5A4A6A', roughness: 0.8 },
-    faces: ['#E8D040', '#E0802A', '#B8302A', '#F0F0E8', '#2A2622', '#7A9A40'],
-    lights: {
-      sky: '#d0d8ff', ground: '#050508', hemi: 0.9,
-      key: ['#fffaf0', 3, [-5, 6, 4]], fill: ['#304060', 0.3, [5, -1, 3]], rim: ['#a0c0ff', 0.8, [0, 3, -6]],
-    },
-    ambient: { mode: 'float', shape: 'star', colors: ['#FFFFFF', '#C8D8FF'], count: 26, size: 0.06, speed: 0.15, opacity: 0.8, additive: true },
-    surface: 'io',
-    sound: 'molten',
-    motion: 'heavy',
-    burst: { shape: 'glow', colors: ['#FF8A30', '#FFD060'], size: 0.1, speed: 2.4, gravity: -3, drag: 1.4, life: 0.9, additive: true },
-  },
-  {
-    // 옷장 속 골덴 바지. 굵은 골이 나란히 솟고 털이 서서 빛이 밀린다
-    id: 'corduroy',
-    name: '코듀로이',
-    bg: '#E8E0D4',
-    ink: '#2A2420',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 20%, rgba(255,250,240,.6), transparent 70%)',
-      'linear-gradient(180deg, #F2ECE2, #D4C8B6)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 48 },
-    body: { color: '#2A2622', roughness: 0.9 },
-    faces: ['#B8864A', '#4A5A2A', '#9A3A2A', '#22305A', '#EEE4CE', '#D8A030'],
-    lights: {
-      sky: '#ffffff', ground: '#6a6058', hemi: 1.7,
-      key: ['#fff4e2', 2.4, [-3, 7, 5]], fill: ['#d8e4ff', 0.45, [5, 0, 4]], rim: ['#ffffff', 0.8, [0, 3, -6]],
-    },
-    surface: 'corduroy',
-    sound: 'cloth',
-    motion: 'smooth',
-    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.6, gravity: -2, drag: 1.4, life: 1.2 },
-  },
-  {
-    // 청바지 한 자락. 사선 능직 위로 통솔기가 솟고 주황 실 땀과 구리 리벳, 닳아 바랜 솔기
-    id: 'denim',
-    name: '데님',
-    bg: '#2A3448',
-    ink: '#EEF2F8',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 20%, rgba(200,220,255,.15), transparent 70%)',
-      'linear-gradient(180deg, #3A4A64, #141A26)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 48 },
-    body: { color: '#C87A3A', roughness: 0.6 },
-    faces: ['#1E2A5A', '#4A7AB0', '#A8C4DC', '#1E1E22', '#C8B48A', '#8A2A2A'],
-    lights: {
-      sky: '#ffffff', ground: '#6a6058', hemi: 1.7,
-      key: ['#fff4e2', 2.4, [-3, 7, 5]], fill: ['#d8e4ff', 0.45, [5, 0, 4]], rim: ['#ffffff', 0.8, [0, 3, -6]],
-    },
-    surface: 'denim',
-    sound: 'cloth',
-    motion: 'smooth',
-    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.6, gravity: -2, drag: 1.4, life: 1.2 },
-  },
-  {
-    // 벨벳 위 레이스. 망사 바탕에 꽃과 잎이 짜여 솟고 굵은 테두리 실이 한 단 더 솟는다
-    id: 'lace',
-    name: '레이스',
-    bg: '#1A1018',
-    ink: '#F2E8EE',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 20%, rgba(255,220,240,.15), transparent 70%)',
-      'linear-gradient(180deg, #2E2028, #0A0608)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 48 },
-    body: { color: '#4A2A4A', roughness: 0.9 },
-    faces: ['#F2F0EA', '#D8B878', '#1A1A1C', '#B82A3A', '#E0909A', '#2A3A6A'],
-    lights: {
-      sky: '#ffffff', ground: '#6a6058', hemi: 1.7,
-      key: ['#fff4e2', 2.4, [-3, 7, 5]], fill: ['#d8e4ff', 0.45, [5, 0, 4]], rim: ['#ffffff', 0.8, [0, 3, -6]],
-    },
-    surface: 'lace',
-    sound: 'cloth',
-    motion: 'smooth',
-    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.6, gravity: -2, drag: 1.4, life: 1.2 },
-  },
-  {
-    // 욕실 선반. 실 고리가 빽빽이 서서 보송하게 솟고 가운데엔 납작한 짜임 띠
-    id: 'terry',
-    name: '수건',
-    bg: '#E8EEF2',
-    ink: '#2A3038',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 20%, rgba(255,255,255,.7), transparent 70%)',
-      'linear-gradient(180deg, #F4F8FA, #D4DEE4)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 48 },
-    body: { color: '#3A3A44', roughness: 0.95 },
-    faces: ['#F2F0EA', '#E8A0A8', '#6AA8D8', '#E8D060', '#7AC890', '#8A6AB0'],
-    lights: {
-      sky: '#ffffff', ground: '#6a6058', hemi: 1.7,
-      key: ['#fff4e2', 2.4, [-3, 7, 5]], fill: ['#d8e4ff', 0.45, [5, 0, 4]], rim: ['#ffffff', 0.8, [0, 3, -6]],
-    },
-    surface: 'terry',
-    sound: 'cloth',
-    motion: 'squish',
-    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.6, gravity: -2, drag: 1.4, life: 1.2 },
-  },
-  {
-    // 벌집 스모킹 천. 꿰맨 점은 들어가고 사이 천은 빵빵하게 부풀며 주름이 방사로 뻗는다
-    id: 'smocking',
-    name: '스모킹',
-    bg: '#E8E0D8',
-    ink: '#2A2420',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 20%, rgba(255,250,245,.6), transparent 70%)',
-      'linear-gradient(180deg, #F2ECE6, #D4C8BC)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 48 },
-    body: { color: '#2A2A30', roughness: 0.8 },
-    faces: ['#C83A4A', '#3A6AB0', '#E8C850', '#4A9A6A', '#F0EAE0', '#8A4A9A'],
-    lights: {
-      sky: '#ffffff', ground: '#6a6058', hemi: 1.7,
-      key: ['#fff4e2', 2.4, [-3, 7, 5]], fill: ['#d8e4ff', 0.45, [5, 0, 4]], rim: ['#ffffff', 0.8, [0, 3, -6]],
-    },
-    surface: 'smocking',
-    sound: 'cloth',
-    motion: 'squish',
-    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.6, gravity: -2, drag: 1.4, life: 1.2 },
-  },
-  {
-    // 공방 작업대. 세 가닥으로 땋은 굵은 끈이 번갈아 넘어가며 솟고 실이 꼬인 결이 보인다
-    id: 'braid',
-    name: '땋은 끈',
-    bg: '#2A2420',
-    ink: '#F0E6D6',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 20%, rgba(255,220,180,.2), transparent 70%)',
-      'linear-gradient(180deg, #3E342C, #120E0A)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 48 },
-    body: { color: '#8A7A6A', roughness: 0.7 },
-    faces: ['#C83A2A', '#2A5AA8', '#E8C040', '#3A8A4A', '#F0EEE8', '#1E1E22'],
-    lights: {
-      sky: '#ffffff', ground: '#6a6058', hemi: 1.7,
-      key: ['#fff4e2', 2.4, [-3, 7, 5]], fill: ['#d8e4ff', 0.45, [5, 0, 4]], rim: ['#ffffff', 0.8, [0, 3, -6]],
-    },
-    surface: 'braid',
-    sound: 'cloth',
-    motion: 'smooth',
-    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.6, gravity: -2, drag: 1.4, life: 1.2 },
-  },
+
+
+
+
+
+
+
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -4705,8 +4553,7 @@ export const GROUPS = [
   { name: 'SF', themes: ['greeble', 'mecha', 'heatsink', 'reactor', 'biomech', 'cables'] },
   { name: '지질', themes: ['cave', 'travertine', 'canyon', 'meteorite', 'salt', 'mudpot'] },
   { name: '유물', themes: ['bronze', 'tablet', 'coins', 'cloisonne', 'jeondol', 'repousse'] },
-  { name: '행성 표면', themes: ['crater', 'dunes', 'icymoon', 'asteroid', 'io'] },
-  { name: '옷감', themes: ['corduroy', 'denim', 'lace', 'terry', 'smocking', 'braid'] },
+  { name: '행성 표면', themes: ['crater', 'dunes', 'icymoon', 'asteroid'] },
   { name: '픽셀', themes: ['pixel', 'handheld', 'cga', 'onebit', 'clash', 'arcade', 'amber', 'led', 'ascii', 'bricks', 'beads'] },
   { name: '명화', themes: ['oil', 'watercolor', 'ukiyoe', 'monet', 'seurat', 'gogh', 'munch', 'klimt', 'cubism', 'warhol', 'collage'] },
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
