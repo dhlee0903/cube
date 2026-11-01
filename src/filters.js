@@ -1,7 +1,8 @@
 import {
   DepthTexture, HalfFloatType, Mesh, NearestFilter, NoBlending, OrthographicCamera, PlaneGeometry, Scene,
-  ShaderMaterial, Vector2, Vector4, WebGLRenderTarget,
+  ShaderMaterial, Vector2, Vector3, Vector4, WebGLRenderTarget,
 } from 'three';
+import { PAINT_TYPES, paintShader } from './paint.js';
 
 // 화면 필터. 장면을 한 번 텍스처에 그린 뒤, 그 그림 전체에 효과를 입혀 화면에 옮긴다.
 // 스티커에 무늬를 그리는 대신 렌더링 자체가 카툰, 8비트 게임, 고장 난 화면처럼 보이게 한다.
@@ -327,6 +328,18 @@ const MODES = { palette: 0, ramp: 1, clash: 2, led: 3, levels: 4 };
 const CELLS = { square: 0, lcd: 1, led: 2, brick: 3, bead: 4, ascii: 5, crt: 6, arcade: 7 };
 const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
 
+// 명화 필터의 기본값. 테마의 filter에 { type: 'oil', ... }로 덮어쓴다
+//   bg       그림 속 배경 색 셋(필터마다 쓰는 법이 다르다)
+//   palette  물감(최대 12). 우키요에 안료, 쇠라풍 순색, 워홀풍 칸 바탕 넷과 흰 면 대신 칠할 색 넷
+//   tiles    화면을 몇 칸으로 나눠 같은 장면을 되풀이하는지(워홀풍 2)
+//   animated 가만히 있어도 움직이는지
+//   dab, len, swirl, dot, relief, jitter, pastel, line  붓 자국 필터(dabs)의 크기, 길이, 소용돌이, 점 여부, 요철, 색 흔들림, 파스텔, 윤곽
+//   align, blunt, varnish, width  붓질을 형태 경계에 맞출지, 붓 끝이 뭉툭한 정도, 니스, 붓 폭
+const PAINT_BASE = {
+  bg: ['#202020', '#606060', '#A0A0A0'], palette: [], tiles: 1, animated: false,
+  dab: 8, len: 1.8, swirl: 1, dot: 0, relief: 0.6, jitter: 0.06, pastel: 0, line: 0, align: 0, blunt: 0, varnish: 0, width: 0.36,
+};
+
 export class Filter {
   constructor(renderer, uniforms) {
     this.renderer = renderer;
@@ -357,6 +370,28 @@ export class Filter {
       depthWrite: false,
     });
     this.shared = shared;
+    this.make = make;
+    this.tiles = 1;
+    this.animated = false;
+    this.paintUniforms = {
+      uBgA: { value: new Vector3() },
+      uBgB: { value: new Vector3() },
+      uBgC: { value: new Vector3() },
+      uPal: { value: new Float32Array(36) },
+      uPalN: { value: 0 },
+      uDab: { value: 8 },
+      uLen: { value: 1.8 },
+      uSwirl: { value: 1 },
+      uDot: { value: 0 },
+      uRelief: { value: 0.6 },
+      uJit: { value: 0.06 },
+      uPastel: { value: 0 },
+      uLine: { value: 0 },
+      uAlign: { value: 0 },
+      uBlunt: { value: 0 },
+      uVarnish: { value: 0 },
+      uWide: { value: 0.36 },
+    };
     this.materials = {
       toon: make(TOON, {
         tDepth: { value: null },
@@ -384,6 +419,10 @@ export class Filter {
   /** 필터를 고른다. 'toon'·'glitch'·'pixel' 이름이나 { type, ... } 설정. 없으면 null. 화면 크기 계산이 바뀌면 true */
   set(spec) {
     const type = typeof spec === 'string' ? spec : spec?.type;
+    // 명화 필터는 처음 쓸 때 셰이더를 만든다
+    if (PAINT_TYPES.includes(type) && !this.materials[type]) {
+      this.materials[type] = this.make(paintShader(type, COMMON), this.paintUniforms);
+    }
     const next = this.materials[type] ? type : null;
     const key = JSON.stringify(spec ?? null);
     if (key === this.key) return false;
@@ -404,6 +443,32 @@ export class Filter {
       u.uGain.value = p.gain;
       u.uBg.value.set(...(p.bg ? rgb(p.bg) : [0, 0, 0]), p.bg ? 1 : 0);
       u.uLine.value.set(...(p.line ? rgb(p.line) : [0, 0, 0]), p.line ? 1 : 0);
+    }
+    this.tiles = 1;
+    this.animated = next === 'glitch';
+    if (PAINT_TYPES.includes(next)) {
+      const p = { ...PAINT_BASE, ...spec };
+      const u = this.paintUniforms;
+      u.uBgA.value.set(...rgb(p.bg[0]));
+      u.uBgB.value.set(...rgb(p.bg[1]));
+      u.uBgC.value.set(...rgb(p.bg[2]));
+      u.uPal.value.fill(0);
+      p.palette.slice(0, 12).forEach((c, i) => u.uPal.value.set(rgb(c), i * 3));
+      u.uPalN.value = Math.min(12, p.palette.length);
+      u.uDab.value = p.dab;
+      u.uLen.value = p.len;
+      u.uSwirl.value = p.swirl;
+      u.uDot.value = p.dot;
+      u.uRelief.value = p.relief;
+      u.uJit.value = p.jitter;
+      u.uPastel.value = p.pastel;
+      u.uLine.value = p.line;
+      u.uAlign.value = p.align;
+      u.uBlunt.value = p.blunt;
+      u.uVarnish.value = p.varnish;
+      u.uWide.value = p.width;
+      this.tiles = p.tiles;
+      this.animated = p.animated;
     }
     this.alloc();
     return true;

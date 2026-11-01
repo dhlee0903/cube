@@ -453,7 +453,7 @@ export class CubeView {
     const ambient = [].concat(theme.ambient ?? []);
     this.ambients.forEach((a, i) => a.set(this.still ? null : ambient[i], theme.faces));
     this.burst.set(this.still ? null : theme.burst, theme.faces);
-    this.moving = !this.still && (MOVING.has(surface) || ambient.length > 0 || Boolean(this.flicker) || theme.filter === 'glitch');
+    this.moving = !this.still && (MOVING.has(surface) || ambient.length > 0 || Boolean(this.flicker) || this.filter.animated);
     this.themeAt = performance.now();
     if (this.cube) this.place();
     this.invalidate();
@@ -707,7 +707,8 @@ export class CubeView {
   look(e) {
     const r = this.renderer.domElement.getBoundingClientRect();
     if (!r.width) return;
-    const ndc = new Vector3(((e.clientX - r.left) / r.width) * 2 - 1, 1 - ((e.clientY - r.top) / r.height) * 2, 0.5);
+    const [lx, ly] = this.point(e, null);
+    const ndc = new Vector3((lx / r.width) * 2 - 1, 1 - (ly / r.height) * 2, 0.5);
     ndc.unproject(this.camera);
     const dir = ndc.sub(this.camera.position).normalize();
     // 큐브 앞쪽(z = 2) 평면과 만나는 점
@@ -717,17 +718,34 @@ export class CubeView {
     this.lookedAt = performance.now();
   }
 
-  point(e) {
+  point(e, tile = this.drag?.tile) {
     const r = this.renderer.domElement.getBoundingClientRect();
-    return [e.clientX - r.left, e.clientY - r.top];
+    let x = e.clientX - r.left;
+    let y = e.clientY - r.top;
+    // 같은 장면을 n×n으로 되풀이하는 필터(워홀풍)에서는 짚은 칸 안의 자리를 화면 전체 자리로 바꾼다.
+    // 끌기는 처음 짚은 칸을 기준으로 이어 간다
+    const n = this.filter.tiles;
+    if (n > 1) {
+      const t = tile ?? this.tileOf(x, y);
+      x = (x - (t[0] * this.width) / n) * n;
+      y = (y - (t[1] * this.height) / n) * n;
+    }
+    return [x, y];
+  }
+
+  tileOf(x, y) {
+    const n = this.filter.tiles;
+    return [Math.min(n - 1, Math.floor((x / this.width) * n)), Math.min(n - 1, Math.floor((y / this.height) * n))];
   }
 
   down(e) {
     if (this.drag || e.button === 1) return;
-    const [x, y] = this.point(e);
+    const r = this.renderer.domElement.getBoundingClientRect();
+    const tile = this.tileOf(e.clientX - r.left, e.clientY - r.top);
+    const [x, y] = this.point(e, tile);
     // 오른쪽 버튼은 큐브 위에서도 전체 돌리기
     const hit = this.locked || this.turning || e.button === 2 ? null : this.pick(x, y);
-    this.drag = { id: e.pointerId, x0: x, y0: y, x, y, hit, mode: hit ? 'pending' : 'orbit' };
+    this.drag = { id: e.pointerId, x0: x, y0: y, x, y, hit, tile, mode: hit ? 'pending' : 'orbit' };
     this.renderer.domElement.setPointerCapture(e.pointerId);
   }
 
