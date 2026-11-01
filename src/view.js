@@ -448,9 +448,7 @@ export class CubeView {
     this.motion = MOTIONS[theme.motion] ?? MOTIONS.smooth;
     this.pulse = !this.still && Boolean(theme.pulse);
     this.jitter = !this.still && Boolean(theme.jitter);
-    const filtered = this.filter.mode;
-    this.filter.set(theme.filter);
-    if (filtered !== this.filter.mode) this.resize();
+    if (this.filter.set(theme.filter)) this.resize();
     this.root.position.set(0, 0, 0);
     const ambient = [].concat(theme.ambient ?? []);
     this.ambients.forEach((a, i) => a.set(this.still ? null : ambient[i], theme.faces));

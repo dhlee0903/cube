@@ -84,9 +84,6 @@
 | space-1.mp3 | Micro Pack - Organic Wooshes/Classic Swish 1.wav |
 | space-2.mp3 | Micro Pack - Organic Wooshes/Classic Swish 2.wav |
 | space-3.mp3 | Micro Pack - Organic Wooshes/Gentle Swish.wav |
-| fruit-1.mp3 | Micro Pack - CaptSubtle - Melon/Knock the Melon 1.wav |
-| fruit-2.mp3 | Micro Pack - CaptSubtle - Melon/Knock the Melon 2.wav |
-| fruit-3.mp3 | Micro Pack - CaptSubtle - Melon/Tap the Melon 1.wav |
 | flesh-1.mp3 | Micro Pack - CaptSubtle - Melon/Slap the Melon 1.wav |
 | flesh-2.mp3 | Micro Pack - CaptSubtle - Melon/Slap the Melon 2.wav |
 | flesh-3.mp3 | Micro Pack - CaptSubtle - Melon/Slap the Melon 3.wav |

@@ -638,6 +638,221 @@ export const THEMES = [
     burst: { shape: 'square', colors: 'faces', size: 0.11, speed: 2.8, gravity: -8, drag: 0.5, life: 1 },
   },
   {
+    // 휴대용 게임기의 초록 액정. 네 단 초록으로만 그리고 화소 사이로 옅은 격자가 비치며, 짙은 화소는 뒤판에 살짝 그림자를 드리운다.
+    // 색이 넷뿐이라 면은 블록 속 그림으로 갈린다(민무늬, 안쪽 테, 가운데 네모, 빗금, 네 칸, 가로줄). 칸칸이 끊기는 움직임
+    id: 'handheld',
+    name: '휴대 게임기',
+    bg: '#9BBC0F',
+    ink: '#0F380F',
+    backdrop: '#9BBC0F',
+    form: { bevel: 0.04, size: 0.92, radius: 0.02 },
+    body: { color: '#202020', roughness: 0.7 },
+    faces: ['#D84040', '#4080D8', '#E8C040', '#40B060', '#A060D0', '#E08040'],
+    lights: {
+      sky: '#ffffff', ground: '#8890a0', hemi: 1.8,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.5, [0, 3, -6]],
+    },
+    filter: { type: 'pixel', palette: ['#0F380F', '#306230', '#8BAC0F', '#9BBC0F'], mode: 'ramp', cell: 'lcd', res: 95, dither: 0.5, gamma: 0.62, bg: '#9BBC0F', line: '#0F380F' },
+    surface: 'blocks',
+    sound: 'pixel',
+    motion: 'stepped',
+    burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
+  },
+  {
+    // 옛 PC의 네 색 화면. 검정, 자홍, 청록, 흰색만으로 그늘과 빛을 바둑판 점으로 섞는다.
+    // 면은 블록 속 그림으로 갈린다(민무늬, 안쪽 테, 가운데 네모, 빗금, 네 칸, 가로줄)
+    id: 'cga',
+    name: 'CGA',
+    bg: '#000000',
+    ink: '#55FFFF',
+    backdrop: '#000000',
+    form: { bevel: 0.04, size: 0.92, radius: 0.02 },
+    body: { color: '#202020', roughness: 0.7 },
+    faces: ['#D84040', '#4080D8', '#E8C040', '#40B060', '#A060D0', '#E08040'],
+    lights: {
+      sky: '#ffffff', ground: '#8890a0', hemi: 1.8,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.5, [0, 3, -6]],
+    },
+    filter: { type: 'pixel', palette: ['#000000', '#FF55FF', '#55FFFF', '#FFFFFF'], mode: 'ramp', res: 110, dither: 0.35, gamma: 0.7, bg: '#000000', line: null },
+    surface: 'blocks',
+    sound: 'pixel',
+    motion: 'stepped',
+    burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
+  },
+  {
+    // 흑백 두 색뿐인 옛 컴퓨터 화면. 흰 종이 같은 바탕에 검은 점만으로 그늘과 빛을 바둑판 점으로 나타낸다.
+    // 면은 블록 속 그림으로 갈린다(민무늬, 안쪽 테, 가운데 네모, 빗금, 네 칸, 가로줄)
+    id: 'onebit',
+    name: '1비트',
+    bg: '#FFFFFF',
+    ink: '#000000',
+    backdrop: '#FFFFFF',
+    form: { bevel: 0.04, size: 0.92, radius: 0.02 },
+    body: { color: '#202020', roughness: 0.7 },
+    faces: ['#D84040', '#4080D8', '#E8C040', '#40B060', '#A060D0', '#E08040'],
+    lights: {
+      sky: '#ffffff', ground: '#8890a0', hemi: 1.8,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.5, [0, 3, -6]],
+    },
+    filter: { type: 'pixel', palette: ['#000000', '#FFFFFF'], mode: 'ramp', res: 150, dither: 0.85, gamma: 0.5, gain: 1.7, bg: '#FFFFFF', line: '#000000' },
+    surface: 'blocks',
+    sound: 'paper',
+    motion: 'stepped',
+    burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
+  },
+  {
+    // 8×8 칸마다 두 색만 쓸 수 있던 8비트 컴퓨터 화면. 열다섯 색 팔레트, 색이 다른 스티커가 한 칸 묶음에 걸치면
+    // 한쪽 색이 옆으로 번져 덮인다(컬러 클래시). 도톰한 블록 스티커
+    id: 'clash',
+    name: '8비트 컴퓨터',
+    bg: '#D7D7D7',
+    ink: '#000000',
+    backdrop: '#D7D7D7',
+    form: { bevel: 0.05, size: 0.86, radius: 0.04, depth: 0.06 },
+    body: { color: '#000000', roughness: 0.6 },
+    faces: ['#FF0000', '#0000FF', '#FFFF00', '#00FF00', '#00FFFF', '#FF00FF'],
+    lights: {
+      sky: '#ffffff', ground: '#8890a0', hemi: 1.8,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.5, [0, 3, -6]],
+    },
+    filter: { type: 'pixel', palette: ['#000000', '#0000D7', '#D70000', '#D700D7', '#00D700', '#00D7D7', '#D7D700', '#D7D7D7', '#0000FF', '#FF0000', '#FF00FF', '#00FF00', '#00FFFF', '#FFFF00', '#FFFFFF'], mode: 'clash', res: 120, dither: 0.25, line: '#000000' },
+    sticker: { roughness: 0.45 },
+    surface: 'plain',
+    sound: 'pixel',
+    motion: 'stepped',
+    burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
+  },
+  {
+    // 오락실 브라운관. 색을 채널마다 여섯 단으로 끊고, 화소마다 빨강·초록·파랑 형광 줄과 주사선이 보이며 옆 화소로 빛이 번진다.
+    // 스프라이트 검은 테두리, 도톰한 블록 스티커
+    id: 'arcade',
+    name: '오락실',
+    bg: '#000000',
+    ink: '#F0F0F0',
+    backdrop: '#000000',
+    form: { bevel: 0.05, size: 0.86, radius: 0.04, depth: 0.06 },
+    body: { color: '#141414', roughness: 0.6 },
+    faces: ['#FF3030', '#3060FF', '#FFE030', '#30E050', '#FFFFFF', '#FF9020'],
+    lights: {
+      sky: '#ffffff', ground: '#8890a0', hemi: 1.8,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.5, [0, 3, -6]],
+    },
+    filter: { type: 'pixel', mode: 'levels', levels: 6, cell: 'arcade', res: 105, dither: 0.35, bg: '#000000', line: '#000000' },
+    sticker: { roughness: 0.4 },
+    surface: 'plain',
+    sound: 'pixel',
+    motion: 'stepped',
+    burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
+  },
+  {
+    // 호박색 단색 모니터. 검정에서 호박빛까지 다섯 단으로만 그리고, 줄마다 빛나는 주사선과 옆으로 번지는 형광.
+    // 면은 블록 속 그림으로 갈린다(민무늬, 안쪽 테, 가운데 네모, 빗금, 네 칸, 가로줄)
+    id: 'amber',
+    name: '앰버 모니터',
+    bg: '#0A0500',
+    ink: '#FFB000',
+    backdrop: '#0A0500',
+    form: { bevel: 0.04, size: 0.92, radius: 0.02 },
+    body: { color: '#202020', roughness: 0.7 },
+    faces: ['#D84040', '#4080D8', '#E8C040', '#40B060', '#A060D0', '#E08040'],
+    lights: {
+      sky: '#ffffff', ground: '#8890a0', hemi: 1.8,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.5, [0, 3, -6]],
+    },
+    filter: { type: 'pixel', palette: ['#0A0500', '#4A2400', '#9A5200', '#E88E00', '#FFC040'], mode: 'ramp', cell: 'crt', res: 100, dither: 0.5, bg: '#0A0500', line: null },
+    surface: 'blocks',
+    sound: 'mech',
+    motion: 'stepped',
+    burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
+  },
+  {
+    // 경기장 LED 전광판. 화소 하나가 둥근 LED 알 하나다. 일곱 가지 꽉 찬 색을 네 단 밝기로 켜고, 꺼진 알은 어둡게 보이며,
+    // 켜진 알은 둘레로 빛이 번진다
+    id: 'led',
+    name: 'LED 전광판',
+    bg: '#050505',
+    ink: '#FFD02A',
+    backdrop: '#050505',
+    form: { bevel: 0.05, size: 0.86, radius: 0.04, depth: 0.06 },
+    body: { color: '#202020', roughness: 0.6 },
+    faces: ['#FF2A2A', '#2AFF4A', '#3A6AFF', '#FFD02A', '#2AE0FF', '#FF3AD8'],
+    lights: {
+      sky: '#ffffff', ground: '#8890a0', hemi: 1.8,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.5, [0, 3, -6]],
+    },
+    filter: { type: 'pixel', palette: ['#FF2A2A', '#2AFF4A', '#3A6AFF', '#FFD02A', '#2AE0FF', '#FF3AD8', '#FFFFFF'], mode: 'led', cell: 'led', res: 80, dither: 0.5, bg: '#1C1C20', line: null },
+    sticker: { roughness: 0.4 },
+    surface: 'plain',
+    sound: 'electric',
+    motion: 'stepped',
+    burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
+  },
+  {
+    // 글자만 찍히는 단말기 화면. 칸마다 밝기에 맞는 글자 하나(빈칸 - . : + = % * # @)를 열여섯 색 글자색으로 찍는다
+    id: 'ascii',
+    name: '아스키',
+    bg: '#000000',
+    ink: '#AAAAAA',
+    backdrop: '#000000',
+    form: { bevel: 0.05, size: 0.86, radius: 0.04, depth: 0.06 },
+    body: { color: '#555555', roughness: 0.6 },
+    faces: ['#FF5555', '#5555FF', '#FFFF55', '#55FF55', '#55FFFF', '#FF55FF'],
+    lights: {
+      sky: '#ffffff', ground: '#8890a0', hemi: 1.8,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.5, [0, 3, -6]],
+    },
+    filter: { type: 'pixel', palette: ['#000000', '#AA0000', '#00AA00', '#AA5500', '#0000AA', '#AA00AA', '#00AAAA', '#AAAAAA', '#555555', '#FF5555', '#55FF55', '#FFFF55', '#5555FF', '#FF55FF', '#55FFFF', '#FFFFFF'], mode: 'palette', cell: 'ascii', res: 110, aspect: 1.6, dither: 0, gamma: 0.6, gain: 1.35, bg: '#000000', line: null },
+    sticker: { roughness: 0.4 },
+    surface: 'plain',
+    sound: 'mech',
+    motion: 'stepped',
+    burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
+  },
+  {
+    // 장난감 블록으로 찍은 모자이크. 화소 하나가 둥근 돌기가 달린 판 하나이고 바탕은 회색 기초판이다.
+    // 열여섯 가지 블록 색, 판 사이 이음매, 왼쪽 위에서 든 빛에 돌기 그늘
+    id: 'bricks',
+    name: '블록 모자이크',
+    bg: '#A0A5A9',
+    ink: '#0E1418',
+    backdrop: '#A0A5A9',
+    form: { bevel: 0.05, size: 0.86, radius: 0.04, depth: 0.06 },
+    body: { color: '#1B2A34', roughness: 0.6 },
+    faces: ['#C91A09', '#0055BF', '#F2CD37', '#237841', '#F4F4F4', '#FE8A18'],
+    lights: {
+      sky: '#ffffff', ground: '#8890a0', hemi: 1.8,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.5, [0, 3, -6]],
+    },
+    filter: { type: 'pixel', palette: ['#F4F4F4', '#1B2A34', '#C91A09', '#F2CD37', '#0055BF', '#237841', '#FE8A18', '#A0A5A9', '#6C6E68', '#582A12', '#E4CD9E', '#0A3463', '#BBE90B', '#720E0F', '#36AEBF', '#E4ADC8'], mode: 'palette', cell: 'brick', res: 64, dither: 0.08, bg: '#A0A5A9', line: '#1B2A34' },
+    sticker: { roughness: 0.4 },
+    surface: 'plain',
+    sound: 'dice',
+    motion: 'snap',
+    burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
+  },
+  {
+    // 다리미로 녹여 붙인 플라스틱 비즈 작품. 화소 하나가 가운데 구멍 난 구슬 하나이고, 구멍과 틈으로 못 박힌 판이 비친다.
+    // 열여섯 가지 구슬 색
+    id: 'beads',
+    name: '비즈',
+    bg: '#E6E8EC',
+    ink: '#2A2A2A',
+    backdrop: '#E6E8EC',
+    form: { bevel: 0.05, size: 0.86, radius: 0.04, depth: 0.06 },
+    body: { color: '#2A2A2A', roughness: 0.6 },
+    faces: ['#D8282E', '#2A5CC8', '#F5D62A', '#2EA44A', '#F59AB8', '#F28A1E'],
+    lights: {
+      sky: '#ffffff', ground: '#8890a0', hemi: 1.8,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.5, [0, 3, -6]],
+    },
+    filter: { type: 'pixel', palette: ['#F2F2F2', '#2A2A2A', '#D8282E', '#8A1A1E', '#F5D62A', '#C8A020', '#2A5CC8', '#1A3A8A', '#2EA44A', '#1E6A3A', '#F59AB8', '#C86A8A', '#F28A1E', '#B85A12', '#9A9A9A', '#7AC8F0'], mode: 'palette', cell: 'bead', res: 70, dither: 0.05, gain: 1.1, bg: '#E6E8EC', line: '#2A2A2A' },
+    sticker: { roughness: 0.4 },
+    surface: 'plain',
+    sound: 'candy',
+    motion: 'bouncy',
+    burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
+  },
+  {
     // 인쇄 회로 기판. 면마다 솔더 마스크 색이 다르고, 45도로 꺾인 배선과 금도금 비아, 다리 달린 칩과 실크 인쇄,
     // 모서리의 저항, 콘덴서, LED. 배선을 따라 신호가 흐르고, 돌리면 몰려간다
     id: 'circuit',
@@ -1200,173 +1415,13 @@ export const THEMES = [
     ambient: { mode: 'orbit', shape: 'glow', colors: ['#FFFFFF', '#CFC8FF'], count: 160, size: 0.045, speed: 1, additive: true },
     burst: { shape: 'star', colors: ['#FFFFFF', '#FFD9A0', '#A8E8FF'], size: 0.13, speed: 1.4, gravity: 0, drag: 0.8, life: 1.5, additive: true },
   },
-  {
-    // 체크무늬 식탁보 위 도마. 과일을 깍둑썰기해 조각마다 네모난 과일 덩어리다(수박, 배, 파인애플, 망고, 키위, 용과).
-    // 반짝이는 과즙 알갱이와 섬유, 씨와 껍질, 심, 맺힌 과즙 방울
-    id: 'fruit',
-    name: '과일',
-    bg: '#F6EFE6',
-    ink: '#2A1E16',
-    backdrop: [
-      'repeating-linear-gradient(0deg, rgba(210,40,50,.28) 0 22px, transparent 22px 44px)',
-      'repeating-linear-gradient(90deg, rgba(210,40,50,.28) 0 22px, transparent 22px 44px)',
-      '#FBF6EE',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.92, radius: 0.08, depth: 0.05 },
-    body: { color: '#B07A44', roughness: 0.7 },
-    faces: ['#E8344A', '#F2ECD8', '#F6D84A', '#F49A1C', '#7DBE3A', '#D0207A'],
-    lights: {
-      sky: '#ffffff', ground: '#c8a888', hemi: 2.1,
-      key: ['#fff6e8', 2.3, [-3, 7, 5]], fill: ['#ffe0d0', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
-    },
-    surface: 'fruit',
-    sound: 'fruit',
-    motion: 'bouncy',
-    ambient: { mode: 'buzz', shape: 'fly', colors: ['#2A2018'], count: 3, size: 0.08, speed: 1.5, opacity: 0.9 },
-    burst: { shape: 'drip', colors: 'faces', size: 0.08, speed: 2.4, gravity: -7, drag: 1, life: 1 },
-  },
-  {
-    // 여름 평상. 다 맞추면 면 하나가 수박을 네모나게 썬 단면이거나 껍질이다. 물기 머금은 속살 알갱이가 반짝이고 씨가 도톰하게 박혔다.
-    // 면마다 수박이 다르다(빨간 속, 노란 속, 주황 속, 검은 껍질, 줄무늬 껍질, 흰 속껍질)
-    id: 'watermelon',
-    name: '수박',
-    bg: '#E8F2E0',
-    ink: '#1E2A1A',
-    backdrop: [
-      'radial-gradient(70% 45% at 50% 0%, rgba(255,255,240,.8), transparent 70%)',
-      'repeating-linear-gradient(90deg, #D8C8A0 0 40px, #C8B890 40px 42px)',
-    ].join(', '),
-    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
-    body: { color: '#5A5040', roughness: 0.6 },
-    faces: ['#E8384A', '#F2D24A', '#F28A3A', '#1E4A2A', '#7AB85A', '#E8F0D8'],
-    lights: {
-      sky: '#ffffff', ground: '#a0b080', hemi: 1.8,
-      key: ['#fff4e2', 2.3, [-4, 7, 5]], fill: ['#ffe8e0', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
-    },
-    env: 0.8,
-    burst: { shape: 'drip', colors: ['#E8384A', '#FF8A9A'], size: 0.07, speed: 2.2, gravity: -7, drag: 1, life: 1 },
-    surface: 'watermelon',
-    sound: 'fruit',
-    motion: 'bouncy',
-  },
-  {
-    // 가을 들판 짚더미. 다 맞추면 면 하나가 커다란 호박의 겉이다. 둥근 이랑이 실제로 볼록볼록 솟고 골은 깊다. 가는 줄과 잔점, 은은한 윤.
-    // 면마다 호박이 다르다(주황 호박, 초록 단호박, 흰 호박, 푸른 잿빛 호박, 붉은 밤호박, 누런 땅콩호박)
-    id: 'pumpkin',
-    name: '호박',
-    bg: '#F2E2C2',
-    ink: '#2A1A0E',
-    backdrop: [
-      'radial-gradient(70% 45% at 50% 0%, rgba(255,240,200,.8), transparent 70%)',
-      'linear-gradient(180deg, #E8C890 0 50%, #C8A060 50% 100%)',
-    ].join(', '),
-    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
-    body: { color: '#6A4A2A', roughness: 0.8 },
-    faces: ['#E87A1E', '#3A5A32', '#EEE8D8', '#8A9AA0', '#B8301E', '#D8A86A'],
-    lights: {
-      sky: '#ffffff', ground: '#8a6a40', hemi: 1.8,
-      key: ['#fff4e2', 2.3, [-4, 7, 5]], fill: ['#ffe0b0', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
-    },
-    ambient: { mode: 'fall', shape: 'leaf', colors: ['#C88A3A', '#B8501E', '#E8B060'], count: 12, size: 0.2, speed: 0.2, opacity: 0.9 },
-    burst: { shape: 'leaf', colors: ['#C88A3A', '#8A6A2A', '#E8B060'], size: 0.12, speed: 1.6, gravity: -3, drag: 1.4, life: 1.4 },
-    surface: 'pumpkin',
-    sound: 'wood',
-    motion: 'heavy',
-  },
-  {
-    // 열대 과일 가판. 다 맞추면 면 하나가 용과의 껍질이거나 속살이다. 끝이 초록으로 물든 잎 비늘이 실제로 들려 솟고,
-    // 속살엔 까만 씨가 촘촘하다. 면마다 다르다(분홍 껍질, 노란 껍질, 흰 속, 자줏빛 속, 붉은 속, 덜 익은 초록 껍질)
-    id: 'dragonfruit',
-    name: '용과',
-    bg: '#F6EEF0',
-    ink: '#2A1420',
-    backdrop: [
-      'radial-gradient(70% 45% at 50% 0%, rgba(255,255,255,.8), transparent 70%)',
-      'linear-gradient(180deg, #F8E0EA, #E8C0D0)',
-    ].join(', '),
-    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
-    body: { color: '#3A3A2A', roughness: 0.6 },
-    faces: ['#F0508A', '#F2D040', '#F2EEE8', '#90104E', '#D82A3A', '#5AA04A'],
-    lights: {
-      sky: '#ffffff', ground: '#c0a0b0', hemi: 1.8,
-      key: ['#fff4e2', 2.3, [-4, 7, 5]], fill: ['#fff0f8', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
-    },
-    env: 0.8,
-    burst: { shape: 'dot', colors: ['#141414', '#F0508A'], size: 0.04, speed: 2, gravity: -6, drag: 1.2, life: 1 },
-    surface: 'dragonfruit',
-    sound: 'fruit',
-    motion: 'bouncy',
-  },
-  {
-    // 해변 노점. 다 맞추면 면 하나가 파인애플의 껍질이거나 썬 속살이다. 육각 눈이 사선으로 줄지어 실제로 솟고 눈마다 가시 끝이 섰다.
-    // 면마다 다르다(덜 익은 초록, 잘 익은 금빛, 지나 익은 갈색 껍질, 노란 속살, 흰 속살, 붉은 관상 파인애플)
-    id: 'pineapple',
-    name: '파인애플',
-    bg: '#F2F0E0',
-    ink: '#2A2414',
-    backdrop: [
-      'radial-gradient(70% 45% at 50% 0%, rgba(255,255,230,.8), transparent 70%)',
-      'linear-gradient(180deg, #A8E0E8 0 50%, #F2E0B0 50% 100%)',
-    ].join(', '),
-    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
-    body: { color: '#2A4A3A', roughness: 0.6 },
-    faces: ['#5A8A3A', '#D88A30', '#8A5A2A', '#F2D860', '#F0EAC8', '#B8402A'],
-    lights: {
-      sky: '#ffffff', ground: '#c8b080', hemi: 1.8,
-      key: ['#fff4e2', 2.3, [-4, 7, 5]], fill: ['#fff0c8', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
-    },
-    burst: { shape: 'drip', colors: ['#F2D860', '#FFF0A0'], size: 0.07, speed: 2.2, gravity: -7, drag: 1, life: 1 },
-    surface: 'pineapple',
-    sound: 'fruit',
-    motion: 'bouncy',
-  },
-  {
-    // 대리석 식탁. 다 맞추면 면 하나가 쪼갠 석류 속이거나 껍질이다. 즙 주머니 알갱이가 보석처럼 볼록 솟아 빛이 맺히고 사이엔 누런 막.
-    // 면마다 다르다(붉은 알, 분홍 알, 흰 알, 검붉은 알, 갈색 가죽 껍질, 연분홍 껍질)
-    id: 'pomegranate',
-    name: '석류',
-    bg: '#ECEAE8',
-    ink: '#2A1418',
-    backdrop: [
-      'radial-gradient(70% 45% at 50% 0%, rgba(255,255,255,.8), transparent 70%)',
-      'linear-gradient(135deg, #F2F0EE, #C8C4C0)',
-    ].join(', '),
-    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
-    body: { color: '#3A4A3A', roughness: 0.6 },
-    faces: ['#C8102E', '#E86A8A', '#EEE0D8', '#5A0A1E', '#8A4A2A', '#E0A890'],
-    lights: {
-      sky: '#ffffff', ground: '#a09090', hemi: 1.8,
-      key: ['#fff4e2', 2.3, [-4, 7, 5]], fill: ['#fff0f0', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
-    },
-    env: 0.8,
-    burst: { shape: 'drip', colors: ['#C8102E', '#E8305A'], size: 0.07, speed: 2.2, gravity: -7, drag: 1, life: 1 },
-    surface: 'pomegranate',
-    sound: 'fruit',
-    motion: 'bouncy',
-  },
-  {
-    // 과일 바구니. 다 맞추면 면 하나가 큼직한 감귤의 겉이다. 향기름 주머니가 잔 보조개처럼 실제로 오목오목 패였고 겉은 밀랍처럼 반들거린다.
-    // 면마다 감귤이 다르다(오렌지, 레몬, 라임, 자몽, 블러드오렌지, 유자)
-    id: 'citrus',
-    name: '귤껍질',
-    bg: '#F6F2E6',
-    ink: '#2A2010',
-    backdrop: [
-      'radial-gradient(70% 45% at 50% 0%, rgba(255,255,240,.8), transparent 70%)',
-      'linear-gradient(180deg, #F8F0D8, #E8D8B0)',
-    ].join(', '),
-    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
-    body: { color: '#3A4A6A', roughness: 0.6 },
-    faces: ['#F28A1E', '#F2DA3A', '#4A8A2A', '#F2A078', '#A8301E', '#E8E0A0'],
-    lights: {
-      sky: '#ffffff', ground: '#c0a880', hemi: 1.8,
-      key: ['#fff4e2', 2.3, [-4, 7, 5]], fill: ['#fff8e0', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
-    },
-    burst: { shape: 'drip', colors: ['#FFB040', '#FFE070'], size: 0.06, speed: 2.2, gravity: -7, drag: 1, life: 1 },
-    surface: 'citrus',
-    sound: 'fruit',
-    motion: 'bouncy',
-  },
+
+
+
+
+
+
+
   {
     // 미러볼. 거울 조각마다 돌아가는 색 조명이 걸려 번쩍이고, 박자에 맞춰 조명 색이 돈다
     id: 'disco',
@@ -2914,7 +2969,6 @@ export const themeById = (id) => THEMES.find((t) => t.id === id);
 export const GROUPS = [
   { name: '기본', themes: ['classic', 'candy', 'brick', 'dice', 'jelly', 'clay', 'bubblewrap', 'paper', 'box', 'doodle', 'slime'] },
   { name: '자연', themes: ['forest', 'grass', 'soil', 'timber', 'pebble', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert', 'honey'] },
-  { name: '과일', themes: ['fruit', 'watermelon', 'pumpkin', 'dragonfruit', 'pineapple', 'pomegranate', 'citrus'] },
   { name: '빛·불', themes: ['neon', 'lava', 'electric', 'tesla', 'disco', 'lavalamp', 'kaleido'] },
   { name: '우주', themes: ['space', 'planet', 'blackhole', 'nebula', 'star', 'galaxy'] },
   { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'fossil', 'bismuth', 'banded'] },
@@ -2924,6 +2978,7 @@ export const GROUPS = [
   { name: '판타지', themes: ['dragon', 'phoenix', 'mithril', 'damascus', 'fairywing', 'dragonegg'] },
   { name: '동물', themes: ['wool', 'hamster', 'wild', 'croc', 'python', 'stingray', 'calf'] },
   { name: '금속·기계', themes: ['metal', 'gauge', 'rust', 'mercury', 'circuit', 'carbon'] },
-  { name: '디지털·레트로', themes: ['glitch', 'pixel', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
+  { name: '픽셀', themes: ['pixel', 'handheld', 'cga', 'onebit', 'clash', 'arcade', 'amber', 'led', 'ascii', 'bricks', 'beads'] },
+  { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'viscera', 'brain'] },
 ];
