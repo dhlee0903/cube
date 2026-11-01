@@ -407,6 +407,31 @@ export const THEMES = [
     burst: { shape: 'streak', colors: 'faces', size: 0.15, speed: 1.6, gravity: -1.6, drag: 2.4, life: 1.8 },
   },
   {
+    // 이삿짐 창고. 칸마다 골판지 상자 겉면: 겉종이 아래 골이 줄지어 은은하게 오르내리고, 종이 섬유와 재생지 티끌,
+    // 칸마다 다른 취급 표시(위쪽 화살표, 우산, 깨지는 잔, 재활용), 몇 칸엔 기포 갇힌 갈색 포장 테이프, 눌려 찌그러진 자국과
+    // 접힌 금. 면마다 상자 빛깔이 다르다(크라프트, 흰 상자, 색 골판지)
+    id: 'box',
+    name: '골판지',
+    bg: '#D8C8B0',
+    ink: '#2A2018',
+    backdrop: [
+      'radial-gradient(60% 45% at 50% 25%, rgba(255,250,235,.5), transparent 70%)',
+      'repeating-linear-gradient(90deg, rgba(90,60,30,.08) 0 3px, transparent 3px 90px)',
+      'radial-gradient(80% 65% at 50% 45%, #E2D2BA, #A8906E)',
+    ].join(', '),
+    form: { bevel: 0.05, size: 0.95, radius: 0.04, grid: 48 },
+    body: { color: '#6A4A2E', roughness: 0.9 },
+    faces: ['#B8875A', '#E6E0D4', '#B8403A', '#3A64A8', '#4A8A5A', '#E0B848'],
+    lights: {
+      sky: '#fff8ec', ground: '#8a7058', hemi: 1.4,
+      key: ['#fff2e0', 2.1, [-4, 6, 5]], fill: ['#e8ecff', 0.45, [6, 0, 3]], rim: ['#ffffff', 0.9, [0, 4, -6]],
+    },
+    burst: { shape: 'square', colors: ['#B8875A', '#8A6038'], size: 0.06, speed: 1.6, gravity: 2.5, drag: 1.2, life: 1.1 },
+    surface: 'box',
+    sound: 'paper',
+    motion: 'heavy',
+  },
+  {
     // 테슬라 코일 실험실. 칸마다 플라스마 구가 들어 있어 번개 가닥이 꿈틀거리고, 손가락을 대면 그쪽으로 몰려든다.
     // 가끔 방 전체가 번쩍인다
     id: 'electric',
@@ -439,7 +464,8 @@ export const THEMES = [
     motion: 'snap',
     ambient: { mode: 'float', shape: 'glow', colors: ['#BFE3FF', '#7FB8FF', '#FFFFFF'], count: 50, size: 0.06, speed: 1.4, opacity: 0.8, additive: true },
     burst: { shape: 'streak', colors: ['#FFFFFF', '#9FD4FF', '#5C9DFF'], size: 0.1, speed: 5, gravity: 0, drag: 4.5, life: 0.4, additive: true },
-  },  {
+  },
+  {
     // 고전압 실험실. 다 맞추면 면 하나가 테슬라 코일 2차 권선의 한 토막이다. 에나멜 입힌 구리선이 촘촘히 감겨 한 가닥씩 솟았고,
     // 이따금 보랏빛 번개가 면 위로 탁 튀어 갈라지며 지나간 자리의 선이 달아오른다. 가장자리엔 코로나. 에나멜 빛깔이 곧 면 색
     id: 'tesla',
@@ -1582,7 +1608,7 @@ export const THEMES = [
       'repeating-linear-gradient(90deg, rgba(0,0,0,.18) 0 3px, transparent 3px 60px)',
       'linear-gradient(180deg, #3A2A1E, #1A120C)',
     ].join(', '),
-    form: { bevel: 0.1, size: 0.92, radius: 0.1 },
+    form: { bevel: 0.12, size: 0.94, radius: 0.14, grid: 24 },
     body: { color: '#5A3A24', roughness: 0.55 },
     faces: ['#C82A2A', '#2A6A3A', '#2A4A9A', '#E8C040', '#F0EEE6', '#8A3A7A'],
     lights: {
@@ -1594,7 +1620,8 @@ export const THEMES = [
     motion: 'bouncy',
     ambient: { mode: 'float', shape: 'dot', colors: ['#FFE8D0', '#FFFFFF'], count: 24, size: 0.03, speed: 0.15, opacity: 0.5 },
     burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: -1, drag: 2.6, life: 1.4 },
-  },  {
+  },
+  {
     // 양복점 재단대. 다 맞추면 면 하나가 한 폭의 모직이다. 짙은 실 넷·면 색 실 넷을 번갈아 걸고 2/2 능직으로 짜
     // 저절로 사냥개 이빨 무늬가 나온다. 꼬인 올과 잔털, 쿠션처럼 도톰한 칸
     id: 'houndstooth',
@@ -1783,6 +1810,128 @@ export const THEMES = [
     motion: 'heavy',
     ambient: { mode: 'rise', shape: 'glow', colors: ['#FFB04A', '#FF6A1A'], count: 50, size: 0.04, speed: 0.4, opacity: 0.8, additive: true },
     burst: { shape: 'glow', colors: ['#FFD08A', '#FF8A2A', '#FF4A1A'], size: 0.1, speed: 2.6, gravity: 1.4, drag: 1.6, life: 1, additive: true },
+  },
+  {
+    // 재가 날리는 둥지. 다 맞추면 면 하나가 깃털 덮인 날개 한 장. 끝이 뾰족한 깃털이 아래로 겹겹이 포개져 도톰하고
+    // 깃대와 깃가지가 섰으며, 깃털 끝은 불씨처럼 타올라 일렁인다. 깃털 사이 그늘엔 잉걸불. 깃털 색이 곧 면 색
+    id: 'phoenix',
+    name: '불사조 깃털',
+    bg: '#120806',
+    ink: '#F6E2CC',
+    backdrop: [
+      'radial-gradient(35% 25% at 50% 85%, rgba(255,120,30,.25), transparent 70%)',
+      'radial-gradient(80% 60% at 50% 40%, #2A140C, #060302)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 48 },
+    body: { color: '#1A0E0A', roughness: 0.6 },
+    faces: ['#E0301E', '#F2A41E', '#2E6AE8', '#20B070', '#9A3AD8', '#F2E8D8'],
+    lights: {
+      sky: '#ffc8a0', ground: '#200a04', hemi: 0.9,
+      key: ['#ffe0c0', 2.4, [-4, 6, 5]], fill: ['#ff6a2a', 0.6, [6, -2, 3]], rim: ['#ffb070', 1.3, [0, 4, -6]],
+    },
+    flicker: 'candle',
+    ambient: { mode: 'rise', shape: 'glow', colors: ['#FFB04A', '#FF6A1A', '#FFE08A'], count: 60, size: 0.035, speed: 0.6, opacity: 0.85, additive: true },
+    burst: { shape: 'glow', colors: ['#FFD27A', '#FF7A2A', '#FFFFFF'], size: 0.06, speed: 2.4, gravity: -2, drag: 1.6, life: 1.2, additive: true },
+    surface: 'phoenix',
+    sound: 'space',
+    motion: 'fluid',
+  },
+  {
+    // 요정 대장간. 다 맞추면 면 하나가 사슬 갑옷 한 장. 고리 하나가 네 고리를 꿰는 4-1 엮음으로 줄마다 고리가 번갈아 기울어
+    // 이웃 고리 위아래로 지나가고, 틈으로 짙은 누비옷이 비친다. 은빛에 푸른 윤, 면마다 다른 빛으로 물들인 고리
+    id: 'mithril',
+    name: '미스릴 사슬',
+    bg: '#0C0E14',
+    ink: '#E8EEF8',
+    backdrop: [
+      'radial-gradient(45% 35% at 50% 30%, rgba(160,190,255,.18), transparent 70%)',
+      'radial-gradient(80% 65% at 50% 45%, #1C2030, #05060A)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 24 },
+    body: { color: '#2A2A30', roughness: 0.35, metalness: 0.8 },
+    faces: ['#C8CCD4', '#D4A040', '#7A4AB0', '#2E6AC8', '#2EA89A', '#B05A3A'],
+    lights: {
+      sky: '#e8f0ff', ground: '#10101a', hemi: 1.0,
+      key: ['#ffffff', 2.4, [-4, 6, 5]], fill: ['#a8b8ff', 0.5, [6, 0, 3]], rim: ['#d0e0ff', 1.3, [2, 4, -6]],
+    },
+    env: 1.1,
+    burst: { shape: 'star', colors: ['#FFFFFF', '#BFD8FF'], size: 0.1, speed: 2.4, gravity: 0, drag: 2.4, life: 0.7, additive: true },
+    surface: 'mithril',
+    sound: 'scale',
+    motion: 'smooth',
+  },
+  {
+    // 대장장이의 작업대. 다 맞추면 면 하나가 칼날 한 판. 수백 겹 접어 두드린 강철 겹이 물결치고 군데군데 빗방울 고리가 피었다.
+    // 산에 부식시켜 짙은 겹은 패이고 밝은 겹은 반들거린다. 달군 온도에 따라 면마다 산화막 빛깔이 다르다(짚빛, 청동, 보라, 파랑, 하늘, 은)
+    id: 'damascus',
+    name: '다마스쿠스',
+    bg: '#141210',
+    ink: '#EEE8E0',
+    backdrop: [
+      'radial-gradient(35% 25% at 30% 85%, rgba(255,140,60,.18), transparent 70%)',
+      'radial-gradient(80% 65% at 50% 45%, #2A2622, #080706)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
+    body: { color: '#1A1A1E', roughness: 0.3, metalness: 0.9 },
+    faces: ['#D8B860', '#B07040', '#9A3A8A', '#3A5AB0', '#7AA8D0', '#C8CCD0'],
+    lights: {
+      sky: '#ffc8a0', ground: '#200a04', hemi: 0.9,
+      key: ['#ffe0c0', 2.4, [-4, 6, 5]], fill: ['#ff6a2a', 0.6, [6, -2, 3]], rim: ['#ffb070', 1.3, [0, 4, -6]],
+    },
+    env: 1.0,
+    burst: { shape: 'streak', colors: ['#FFD27A', '#FFFFFF'], size: 0.1, speed: 3, gravity: 3, drag: 1.2, life: 0.6, additive: true },
+    surface: 'damascus',
+    sound: 'metal',
+    motion: 'heavy',
+  },
+  {
+    // 달빛 숲 속 빈터. 다 맞추면 면 하나가 날개 한 장. 한 귀퉁이에서 굵은 날개맥이 부채처럼 뻗고 가는 가로맥이 작은 방을 나눈다.
+    // 맥은 솟아 짙고, 방마다 얇은 막이 면 색으로 비치며 보는 각도에 따라 무지갯빛이 아른거린다. 날개 끝 무늬점과 반짝이는 가루
+    id: 'fairywing',
+    name: '요정 날개',
+    bg: '#0A0C16',
+    ink: '#EEF0FF',
+    backdrop: [
+      'radial-gradient(30% 22% at 70% 18%, rgba(220,230,255,.35), transparent 70%)',
+      'radial-gradient(80% 65% at 50% 45%, #182030, #04050A)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
+    body: { color: '#1A1A2A', roughness: 0.3 },
+    faces: ['#FF7AC8', '#7AD8FF', '#B8F07A', '#FFD27A', '#B88AFF', '#F2F4FF'],
+    lights: {
+      sky: '#e8f0ff', ground: '#10101a', hemi: 1.0,
+      key: ['#ffffff', 2.4, [-4, 6, 5]], fill: ['#a8b8ff', 0.5, [6, 0, 3]], rim: ['#d0e0ff', 1.3, [2, 4, -6]],
+    },
+    ambient: { mode: 'float', shape: 'glow', colors: ['#FFFFFF', '#FFD6F0', '#BFEFFF'], count: 40, size: 0.03, speed: 0.3, opacity: 0.7, additive: true },
+    burst: { shape: 'star', colors: 'faces', size: 0.1, speed: 2, gravity: -0.5, drag: 2, life: 1.2, additive: true },
+    surface: 'fairywing',
+    sound: 'crystal',
+    motion: 'fluid',
+  },
+  {
+    // 용의 둥지. 다 맞추면 면 하나가 거대한 알 껍데기 한 판. 잔 육각 비늘이 오돌토돌 솟아 오팔처럼 무지갯빛이 돌고 검은 점이 흩뿌려졌다.
+    // 곧 깨어나려는지 금이 그물처럼 갔고, 금 사이로 속불이 새어 나와 심장처럼 뛴다. 껍데기 색이 곧 면 색
+    id: 'dragonegg',
+    name: '용의 알',
+    bg: '#100A08',
+    ink: '#F4E6D6',
+    backdrop: [
+      'radial-gradient(35% 25% at 50% 80%, rgba(255,110,30,.2), transparent 70%)',
+      'radial-gradient(80% 60% at 50% 40%, #241812, #060403)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 48 },
+    body: { color: '#1A1410', roughness: 0.6 },
+    faces: ['#B8202A', '#20704A', '#2A4A9A', '#D89A2A', '#7A2A7A', '#E8E0D0'],
+    lights: {
+      sky: '#ffc8a0', ground: '#200a04', hemi: 0.9,
+      key: ['#ffe0c0', 2.4, [-4, 6, 5]], fill: ['#ff6a2a', 0.6, [6, -2, 3]], rim: ['#ffb070', 1.3, [0, 4, -6]],
+    },
+    flicker: 'candle',
+    env: 0.8,
+    burst: { shape: 'glow', colors: ['#FFB04A', '#FF6A1A'], size: 0.06, speed: 2, gravity: -1, drag: 1.6, life: 1.1, additive: true },
+    surface: 'dragonegg',
+    sound: 'ceramic',
+    motion: 'heavy',
   },
   {
     // 봄날 목장. 막 깎은 양털 뭉치를 씌운 큐브. 꼬불꼬불 주름진 털 다발이 볼록볼록 솟고 다발 사이 골은 깊다.
@@ -2166,30 +2315,6 @@ export const THEMES = [
     sound: 'squish',
     motion: 'squish',
   },
-  {
-    // 지하 제단. 칸마다 검은 돌판에 마법진을 끌로 깊이 새겼다. 겹 원 사이의 알 수 없는 문자 띠, 엇갈린 두 삼각형, 가운데 눈 문양.
-    // 패인 홈 바닥에서 빛이 스며 나와 물결치듯 일렁인다. 홈의 빛이 곧 면 색
-    id: 'magic',
-    name: '마법진',
-    bg: '#060508',
-    ink: '#F0E8FF',
-    backdrop: [
-      'radial-gradient(40% 32% at 50% 50%, rgba(160,80,255,.14), transparent 70%)',
-      'radial-gradient(80% 60% at 50% 45%, #14101A, #030204)',
-    ].join(', '),
-    form: { bevel: 0.05, size: 0.94, radius: 0.05, grid: 56 },
-    body: { color: '#1A161E', roughness: 0.85 },
-    faces: ['#FF3A3A', '#A04AFF', '#3AE0F0', '#FFC83A', '#3AF07A', '#F0F0FF'],
-    lights: {
-      sky: '#40304a', ground: '#000000', hemi: 0.4,
-      key: ['#ffffff', 0.8, [-4, 5, 5]], fill: ['#8a6aff', 0.3, [6, 0, 3]], rim: ['#c0a8ff', 0.9, [0, 4, -6]],
-    },
-    ambient: { mode: 'rise', shape: 'glow', colors: 'faces', count: 50, size: 0.04, speed: 0.5, opacity: 0.8, additive: true },
-    burst: { shape: 'star', colors: 'faces', size: 0.15, speed: 2.4, gravity: 0, drag: 2.4, life: 0.9, additive: true },
-    surface: 'magic',
-    sound: 'crystal',
-    motion: 'smooth',
-  },
 
 
 
@@ -2313,7 +2438,8 @@ export const THEMES = [
     surface: 'paisley',
     sound: 'leather',
     motion: 'bouncy',
-  },  {
+  },
+  {
     // 해 질 녘 산사 법당. 칸마다 빗살과 솟을살이 엇갈린 나무 문살이 솟았고, 살이 만나는 자리마다 깎아 붙인 꽃.
     // 살 뒤로 물러앉은 창호지에 법당 안 등불빛이 은은히 비친다. 살엔 면 색 단청, 닳은 데는 나뭇결
     id: 'kkotsal',
@@ -2435,408 +2561,6 @@ export const THEMES = [
     surface: 'carpet',
     sound: 'cloth',
     motion: 'heavy',
-  },  {
-    // 사무실 모니터 옆. 칸마다 면 색 메모지 한 장이 붙었고 아래 모서리가 실제로 들려 있다. 손끝을 가까이 대면
-    // 그 메모지 모서리가 더 들린다. 볼펜으로 휘갈긴 메모와 밑줄, 동그라미 낙서
-    id: 'postit',
-    name: '포스트잇',
-    bg: '#E8DCC8',
-    ink: '#2A2018',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 25%, rgba(255,255,255,.55), transparent 70%)',
-      'repeating-linear-gradient(90deg, rgba(110,80,50,.07) 0 2px, transparent 2px 70px)',
-      'radial-gradient(80% 65% at 50% 45%, #E6D8C4, #B8A288)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 40 },
-    body: { color: '#3A3A40', roughness: 0.6 },
-    faces: ['#FFE94A', '#FF8AC0', '#7FD8FF', '#A8F07A', '#FFA65A', '#C9A8FF'],
-    lights: {
-      sky: '#ffffff', ground: '#a09080', hemi: 1.5,
-      key: ['#fff6ec', 2.1, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.0, [0, 4, -6]],
-    },
-    burst: { shape: 'square', colors: 'faces', size: 0.08, speed: 1.8, gravity: 1.5, drag: 1.4, life: 1.4 },
-    surface: 'postit',
-    sound: 'paper',
-    motion: 'bouncy',
-  },
-  {
-    // 밤샘 작업 책상. 칸마다 기계식 키보드 키캡 하나: 비스듬한 옆면과 오목한 윗면, 왼쪽 위에 찍힌 글자.
-    // 손끝을 대면 그 키가 쑥 눌리고, 가끔 누가 타자를 치듯 여기저기 키가 혼자 눌렸다 올라온다
-    id: 'keycap',
-    name: '키캡',
-    bg: '#1E1E24',
-    ink: '#E8E8F0',
-    backdrop: [
-      'radial-gradient(50% 40% at 50% 30%, rgba(140,160,255,.15), transparent 70%)',
-      'radial-gradient(80% 65% at 50% 45%, #2E2E38, #0C0C10)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 48 },
-    body: { color: '#8A8E96', roughness: 0.35, metalness: 0.8 },
-    faces: ['#E8E2D0', '#3A3C42', '#C83A3A', '#2E6AB8', '#E8B83A', '#3A9A6A'],
-    lights: {
-      sky: '#ffffff', ground: '#a09080', hemi: 1.5,
-      key: ['#fff6ec', 2.1, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.0, [0, 4, -6]],
-    },
-    burst: { shape: 'square', colors: 'faces', size: 0.06, speed: 2, gravity: 2, drag: 1.2, life: 1 },
-    surface: 'keycap',
-    sound: 'key',
-    motion: 'snap',
-  },
-  {
-    // 회의실 게시판. 칸마다 거친 코르크판에 면 색 색인 카드가 압정으로 비뚤게 꽂혔다. 알갱이가 다져진 코르크와
-    // 그 구멍, 들뜬 카드 가장자리와 그림자, 옅은 괘선과 빨간 줄, 둥글게 솟은 압정 머리
-    id: 'cork',
-    name: '코르크보드',
-    bg: '#E6DCCC',
-    ink: '#2A2018',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 25%, rgba(255,255,255,.55), transparent 70%)',
-      'repeating-linear-gradient(90deg, rgba(110,80,50,.07) 0 2px, transparent 2px 70px)',
-      'radial-gradient(80% 65% at 50% 45%, #E6D8C4, #B8A288)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 48 },
-    body: { color: '#7A5A3A', roughness: 0.95 },
-    faces: ['#F2EEE4', '#F5D76E', '#F2A7B8', '#9FD3F0', '#A8DDA0', '#F49A5A'],
-    lights: {
-      sky: '#ffffff', ground: '#a09080', hemi: 1.5,
-      key: ['#fff6ec', 2.1, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.0, [0, 4, -6]],
-    },
-    burst: { shape: 'dot', colors: ['#B8865A', '#8A5A30'], size: 0.04, speed: 1.6, gravity: 2.5, drag: 1.2, life: 1 },
-    surface: 'cork',
-    sound: 'paper',
-    motion: 'heavy',
-  },
-  {
-    // 도서관 열람실. 칸마다 면 색으로 물들인 스프링 공책 한 쪽. 파란 괘선과 빨간 여백 선, 연필 글씨와 낙서,
-    // 지운 자국. 위쪽 철사 스프링 고리가 실제로 솟아 구멍을 꿴다
-    id: 'notebook',
-    name: '공책',
-    bg: '#E8E2D6',
-    ink: '#2A2420',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 25%, rgba(255,255,255,.55), transparent 70%)',
-      'repeating-linear-gradient(90deg, rgba(110,80,50,.07) 0 2px, transparent 2px 70px)',
-      'radial-gradient(80% 65% at 50% 45%, #E6D8C4, #B8A288)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 48 },
-    body: { color: '#5A5A62', roughness: 0.8 },
-    faces: ['#F2F0E8', '#F7E08A', '#F2B8C8', '#9CC8F0', '#C2E2B0', '#C8A8F0'],
-    lights: {
-      sky: '#ffffff', ground: '#a09080', hemi: 1.5,
-      key: ['#fff6ec', 2.1, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.0, [0, 4, -6]],
-    },
-    burst: { shape: 'square', colors: ['#FFFFFF', '#E8E8E0'], size: 0.06, speed: 1.6, gravity: 1, drag: 1.6, life: 1.4 },
-    surface: 'notebook',
-    sound: 'paper',
-    motion: 'smooth',
-  },
-  {
-    // 다이어리 꾸미기 책상. 칸마다 면 색 종이테이프 세 가닥이 엇갈려 붙었다. 반투명한 크레이프 종이라 겹친 데는 짙고,
-    // 끝은 손으로 찢어 들쭉날쭉하다. 가닥마다 물방울·줄·격자 잔무늬, 그 아래 크라프트 종이
-    id: 'tape',
-    name: '마스킹테이프',
-    bg: '#F0E6D8',
-    ink: '#2A2018',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 25%, rgba(255,255,255,.55), transparent 70%)',
-      'repeating-linear-gradient(90deg, rgba(110,80,50,.07) 0 2px, transparent 2px 70px)',
-      'radial-gradient(80% 65% at 50% 45%, #E6D8C4, #B8A288)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 40 },
-    body: { color: '#C8A878', roughness: 0.9 },
-    faces: ['#E8574A', '#4A8AE8', '#F2C84A', '#4AB878', '#E87AB8', '#2A2A30'],
-    lights: {
-      sky: '#ffffff', ground: '#a09080', hemi: 1.5,
-      key: ['#fff6ec', 2.1, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.0, [0, 4, -6]],
-    },
-    burst: { shape: 'square', colors: 'faces', size: 0.07, speed: 1.6, gravity: 1, drag: 1.6, life: 1.3 },
-    surface: 'tape',
-    sound: 'paper',
-    motion: 'bouncy',
-  },
-  {
-    // 정리함 위 모눈종이. 칸마다 면 색 비닐을 입힌 종이 클립 세 개가 흩어졌다. 두 겹 철사 고리가 실제로 둥글게 솟았고
-    // 겹친 데는 위 클립이 아래를 덮는다. 반들거리는 비닐 겉과 그림자
-    id: 'clips',
-    name: '클립',
-    bg: '#ECEAE4',
-    ink: '#262428',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 25%, rgba(255,255,255,.6), transparent 70%)',
-      'radial-gradient(80% 65% at 50% 45%, #F4F2EE, #C8C6C0)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 52 },
-    body: { color: '#E8E6E0', roughness: 0.6 },
-    faces: ['#E8453A', '#3A7AE8', '#F2C43A', '#3AB86A', '#B05AD8', '#2A2A2A'],
-    lights: {
-      sky: '#ffffff', ground: '#a09080', hemi: 1.5,
-      key: ['#fff6ec', 2.1, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.0, [0, 4, -6]],
-    },
-    burst: { shape: 'square', colors: 'faces', size: 0.05, speed: 2, gravity: 2, drag: 1.2, life: 1 },
-    surface: 'clips',
-    sound: 'metal',
-    motion: 'snap',
-  },  {
-    // 성의 무기고. 칸마다 두드려 편 강철판: 말아 올린 테, 비스듬히 솟은 홈줄, 네 귀 리벳. 테 안쪽엔 면 색(문장 색) 띠와 금박 선.
-    // 칼자국과 찍힌 자국, 반들거리는 강철
-    id: 'armor',
-    name: '판금 갑옷',
-    bg: '#141210',
-    ink: '#EEE6DA',
-    backdrop: [
-      'radial-gradient(40% 30% at 50% 30%, rgba(255,190,120,.2), transparent 70%)',
-      'repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 3px, transparent 3px 46px)',
-      'radial-gradient(80% 65% at 50% 45%, #2E2620, #080606)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 48 },
-    body: { color: '#3A3A40', roughness: 0.35, metalness: 0.9 },
-    faces: ['#B81E2A', '#1E3A9A', '#1E7A3A', '#E0B020', '#6A2A7A', '#E8E8EC'],
-    lights: {
-      sky: '#fff0dc', ground: '#2a1a10', hemi: 0.9,
-      key: ['#ffe2c0', 2.4, [-4, 6, 5]], fill: ['#a8b8ff', 0.35, [6, 0, 3]], rim: ['#ffd8a0', 1.1, [2, 4, -6]],
-    },
-    env: 1.0,
-    flicker: 'candle',
-    burst: { shape: 'star', colors: ['#FFFFFF', '#FFE0A0'], size: 0.1, speed: 2.4, gravity: 0, drag: 2.4, life: 0.6, additive: true },
-    surface: 'armor',
-    sound: 'metal',
-    motion: 'heavy',
-  },
-  {
-    // 용의 굴 깊은 곳. 칸마다 기울어 겹겹이 쌓인 금화(솟은 테와 별 무늬) 사이에 면 색 보석 하나가 박혔다.
-    // 동전마다 빛이 다르게 번쩍이고 팔각으로 깎인 보석 안에서 빛이 튄다
-    id: 'treasure',
-    name: '보물',
-    bg: '#120C06',
-    ink: '#F4E6C8',
-    backdrop: [
-      'radial-gradient(50% 40% at 50% 60%, rgba(255,190,60,.25), transparent 70%)',
-      'radial-gradient(80% 65% at 50% 45%, #2E2010, #060402)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 48 },
-    body: { color: '#3A2414', roughness: 0.7 },
-    faces: ['#C8102E', '#1E4AC8', '#109A50', '#F2B020', '#9A3AD0', '#E8F0F8'],
-    lights: {
-      sky: '#fff0dc', ground: '#2a1a10', hemi: 0.9,
-      key: ['#ffe2c0', 2.4, [-4, 6, 5]], fill: ['#a8b8ff', 0.35, [6, 0, 3]], rim: ['#ffd8a0', 1.1, [2, 4, -6]],
-    },
-    env: 1.0,
-    burst: { shape: 'star', colors: ['#FFD86A', '#FFFFFF'], size: 0.12, speed: 2.6, gravity: 2, drag: 1.2, life: 1, additive: true },
-    surface: 'treasure',
-    sound: 'coin',
-    motion: 'heavy',
-  },
-  {
-    // 연금술사의 진열장. 칸마다 유리창 너머 면 색 물약이 반쯤 찼다. 물약은 늘 화면 아래로 고여 큐브를 돌리면
-    // 수평을 지키며 출렁이고, 바닥에서 거품이 올라온다. 은은히 빛나는 물약, 놋쇠 못 박은 나무 틀
-    id: 'potion',
-    name: '포션',
-    bg: '#0E0A0C',
-    ink: '#F0E6F4',
-    backdrop: [
-      'radial-gradient(45% 35% at 50% 40%, rgba(160,120,255,.18), transparent 70%)',
-      'repeating-linear-gradient(90deg, rgba(0,0,0,.25) 0 3px, transparent 3px 60px)',
-      'radial-gradient(80% 65% at 50% 45%, #2A1E26, #060406)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 32 },
-    body: { color: '#2A1A10', roughness: 0.6 },
-    faces: ['#E8203A', '#2050E8', '#20C860', '#F2C020', '#A030E8', '#20D8D8'],
-    lights: {
-      sky: '#fff0dc', ground: '#2a1a10', hemi: 0.9,
-      key: ['#ffe2c0', 2.4, [-4, 6, 5]], fill: ['#a8b8ff', 0.35, [6, 0, 3]], rim: ['#ffd8a0', 1.1, [2, 4, -6]],
-    },
-    burst: { shape: 'bubble', colors: 'faces', size: 0.08, speed: 1.4, gravity: -1.5, drag: 1.4, life: 1.6 },
-    surface: 'potion',
-    sound: 'pop',
-    motion: 'fluid',
-  },
-  {
-    // 안개 낀 들판의 선돌. 칸마다 거친 화강암에 룬 여섯 자를 두 줄로 새기고 홈에 면 색 안료를 칠했다.
-    // 손끝을 가까이 대면 그 칸의 룬이 깨어나 홈 바닥부터 빛이 차오른다. 운모가 반짝이고 지의류가 피었다
-    id: 'runestone',
-    name: '룬스톤',
-    bg: '#1A1E22',
-    ink: '#E8ECF0',
-    backdrop: [
-      'linear-gradient(180deg, rgba(200,210,220,.18), transparent 60%)',
-      'radial-gradient(80% 65% at 50% 45%, #3A4048, #0E1012)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 52 },
-    body: { color: '#3A3836', roughness: 0.9 },
-    faces: ['#FF4A2A', '#3A8AFF', '#3AE08A', '#FFC83A', '#C85AFF', '#E8F0FF'],
-    lights: {
-      sky: '#e8f0ff', ground: '#202428', hemi: 1.0,
-      key: ['#f0f4ff', 2.0, [-4, 6, 5]], fill: ['#a8b8d0', 0.4, [6, 0, 3]], rim: ['#ffffff', 0.9, [2, 4, -6]],
-    },
-    burst: { shape: 'glow', colors: 'faces', size: 0.05, speed: 1.4, gravity: -0.5, drag: 1.8, life: 1.4, additive: true },
-    surface: 'runestone',
-    sound: 'stone',
-    motion: 'heavy',
-  },
-  {
-    // 마법사의 서재. 칸마다 면 색 가죽 표지: 도드라지게 눌러 낸 봉인 문장, 솟은 놋쇠 모서리와 리벳, 금박 겹줄.
-    // 오돌토돌한 가죽 결과 주름, 손때로 반들거리는 모서리. 문장 가운데 보석은 손끝이 다가오면 깨어나 빛난다
-    id: 'grimoire',
-    name: '마법서',
-    bg: '#120E0C',
-    ink: '#F0E4CC',
-    backdrop: [
-      'radial-gradient(40% 30% at 50% 30%, rgba(255,190,120,.2), transparent 70%)',
-      'repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 3px, transparent 3px 46px)',
-      'radial-gradient(80% 65% at 50% 45%, #2E2620, #080606)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 52 },
-    body: { color: '#C8A050', roughness: 0.5, metalness: 0.6 },
-    faces: ['#7A1E1E', '#1E3A7A', '#1E4A2A', '#8A5A20', '#6A2A6A', '#1A1A1A'],
-    lights: {
-      sky: '#fff0dc', ground: '#2a1a10', hemi: 0.9,
-      key: ['#ffe2c0', 2.4, [-4, 6, 5]], fill: ['#a8b8ff', 0.35, [6, 0, 3]], rim: ['#ffd8a0', 1.1, [2, 4, -6]],
-    },
-    flicker: 'candle',
-    burst: { shape: 'glow', colors: ['#FFD27A', '#B8E0FF'], size: 0.05, speed: 1.6, gravity: -0.6, drag: 1.8, life: 1.3, additive: true },
-    surface: 'grimoire',
-    sound: 'book',
-    motion: 'heavy',
-  },  {
-    // 체험 전시관. 칸마다 검은 판에 면 색 금속 핀이 벌집처럼 꽂혔다. 손끝(마우스)이 가리키는 자리의 핀이 뒤에서 민 것처럼
-    // 쑥 밀려 나오고, 가만히 두면 핀들이 물결처럼 천천히 오르내린다
-    id: 'pinart',
-    name: '핀아트',
-    bg: '#0E0E12',
-    ink: '#ECECF2',
-    backdrop: [
-      'radial-gradient(50% 40% at 50% 30%, rgba(255,255,255,.12), transparent 70%)',
-      'radial-gradient(80% 65% at 50% 45%, #2A2830, #0A0A0E)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 64 },
-    body: { color: '#1A1A1E', roughness: 0.5, metalness: 0.5 },
-    faces: ['#E83A3A', '#3A7AE8', '#F2C43A', '#3AB86A', '#B05AD8', '#E8E8EC'],
-    lights: {
-      sky: '#ffffff', ground: '#403848', hemi: 1.2,
-      key: ['#ffffff', 2.2, [-4, 6, 5]], fill: ['#d8e0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.1, [2, 4, -6]],
-    },
-    env: 0.9,
-    burst: { shape: 'dot', colors: 'faces', size: 0.04, speed: 2, gravity: 1.5, drag: 1.4, life: 1 },
-    surface: 'pinart',
-    sound: 'scale',
-    motion: 'smooth',
-  },
-  {
-    // 무대 의상실. 칸마다 앞은 면 색 금속, 뒤는 은빛 홀로그램인 스팽글이 비늘처럼 달렸다. 손끝으로 쓸면 그 자리
-    // 스팽글이 휙 뒤집혀 뒷면이 드러나고(뒤집히는 순간엔 옆으로 서서 얇게 보인다), 손을 떼면 다시 넘어간다
-    id: 'sequin',
-    name: '스팽글',
-    bg: '#120A18',
-    ink: '#F6E8F4',
-    backdrop: [
-      'radial-gradient(40% 30% at 50% 20%, rgba(255,180,255,.2), transparent 70%)',
-      'radial-gradient(80% 65% at 50% 45%, #2A1630, #08040A)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 48 },
-    body: { color: '#2A2630', roughness: 0.6 },
-    faces: ['#E8306A', '#2A6AE8', '#E8B020', '#20B870', '#9A40E0', '#E8E8F0'],
-    lights: {
-      sky: '#ffffff', ground: '#403848', hemi: 1.2,
-      key: ['#ffffff', 2.2, [-4, 6, 5]], fill: ['#d8e0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.1, [2, 4, -6]],
-    },
-    env: 1.0,
-    burst: { shape: 'star', colors: 'faces', size: 0.1, speed: 2.4, gravity: 0, drag: 2.2, life: 0.8, additive: true },
-    surface: 'sequin',
-    sound: 'cloth',
-    motion: 'bouncy',
-  },
-  {
-    // 과학관 체험대. 칸마다 매끈한 면 색 판인데 열을 받으면 색이 바뀐다(무드링처럼). 손끝이 가리키는 자리가 데워져
-    // 무지갯빛 고리를 그리며 옅어지고, 큐브를 돌리는 동안엔 손 열기에 판 전체가 달아오른다. 남은 손자국이 천천히 식으며 흐른다
-    id: 'thermo',
-    name: '열변색',
-    bg: '#1A1A20',
-    ink: '#EEF0F4',
-    backdrop: [
-      'radial-gradient(50% 40% at 50% 30%, rgba(255,255,255,.12), transparent 70%)',
-      'radial-gradient(80% 65% at 50% 45%, #2A2830, #0A0A0E)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 24 },
-    body: { color: '#8A8A90', roughness: 0.3 },
-    faces: ['#B01E3A', '#1E3AA8', '#1E8A4A', '#D89A10', '#6A1E8A', '#1E1E24'],
-    lights: {
-      sky: '#ffffff', ground: '#403848', hemi: 1.2,
-      key: ['#ffffff', 2.2, [-4, 6, 5]], fill: ['#d8e0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.1, [2, 4, -6]],
-    },
-    burst: { shape: 'glow', colors: ['#FF8A4A', '#FFD24A', '#4AE0FF'], size: 0.05, speed: 1.6, gravity: -0.8, drag: 1.8, life: 1.2, additive: true },
-    surface: 'thermo',
-    sound: 'cube',
-    motion: 'smooth',
-  },
-  {
-    // 바닷가 기념품 가게. 칸마다 유리 상자에 여러 색 모래가 층층이 담겼다. 모래는 늘 화면 아래쪽으로 쏠려 쌓이고
-    // 큐브를 돌리면 새 바닥 쪽으로 다시 내려앉는다. 면 색과 크림, 짙은 색 층이 물결치고 맨 위엔 굴러다니는 낱알
-    id: 'sand',
-    name: '중력 모래',
-    bg: '#E8DCC8',
-    ink: '#2A2018',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 25%, rgba(255,250,235,.6), transparent 70%)',
-      'radial-gradient(80% 65% at 50% 45%, #F2E6D0, #C8B090)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 24 },
-    body: { color: '#3A3A40', roughness: 0.4, metalness: 0.6 },
-    faces: ['#E86A3A', '#3A8AE8', '#E8C83A', '#3AA86A', '#C84A9A', '#F2ECE0'],
-    lights: {
-      sky: '#ffffff', ground: '#403848', hemi: 1.2,
-      key: ['#ffffff', 2.2, [-4, 6, 5]], fill: ['#d8e0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.1, [2, 4, -6]],
-    },
-    burst: { shape: 'dot', colors: 'faces', size: 0.03, speed: 1.4, gravity: 3, drag: 1, life: 1.2 },
-    surface: 'sand',
-    sound: 'sand',
-    motion: 'heavy',
-  },
-  {
-    // 비눗방울 놀이터. 칸마다 면 색 고리에 비누막이 걸렸다. 두께에 따라 무지갯빛이 생기고, 막이 흘러내려 위쪽은 얇아
-    // 검게 비고 아래로 갈수록 색 띠가 겹진다. 막 속 소용돌이가 천천히 돌고 막은 숨 쉬듯 부풀었다 가라앉는다
-    id: 'soap',
-    name: '비누막',
-    bg: '#0C0E14',
-    ink: '#EEF2FA',
-    backdrop: [
-      'radial-gradient(45% 35% at 50% 30%, rgba(180,220,255,.15), transparent 70%)',
-      'radial-gradient(80% 65% at 50% 45%, #1E2230, #06070A)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 32 },
-    body: { color: '#1A1A22', roughness: 0.3 },
-    faces: ['#FF4A6A', '#3AA0FF', '#FFD23A', '#3AD07A', '#B06AFF', '#FF8A3A'],
-    lights: {
-      sky: '#ffffff', ground: '#403848', hemi: 1.2,
-      key: ['#ffffff', 2.2, [-4, 6, 5]], fill: ['#d8e0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.1, [2, 4, -6]],
-    },
-    env: 0.9,
-    burst: { shape: 'bubble', colors: ['#FFFFFF', '#BFEFFF', '#FFD6F0'], size: 0.12, speed: 1.2, gravity: -0.8, drag: 1.2, life: 2 },
-    surface: 'soap',
-    sound: 'pop',
-    motion: 'fluid',
-  },
-  {
-    // 문방구 책받침. 칸마다 가는 원통 렌즈가 세로로 늘어선 판이라, 보는 각도에 따라 동그라미 → 네모 → 별로 그림이 바뀐다.
-    // 큐브를 돌리면 칸마다 그림이 따로 휙휙 넘어간다. 렌즈마다 빛이 가늘게 맺히고 무지갯빛이 번진다
-    id: 'lenticular',
-    name: '렌티큘러',
-    bg: '#ECECF2',
-    ink: '#202028',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 25%, rgba(255,255,255,.6), transparent 70%)',
-      'radial-gradient(80% 65% at 50% 45%, #F4F4F8, #C4C4CC)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.1, grid: 64 },
-    body: { color: '#E8E8EC', roughness: 0.3 },
-    faces: ['#E83A4A', '#2E6AE8', '#F2C030', '#2EB06A', '#A040D8', '#1E1E24'],
-    lights: {
-      sky: '#ffffff', ground: '#403848', hemi: 1.2,
-      key: ['#ffffff', 2.2, [-4, 6, 5]], fill: ['#d8e0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.1, [2, 4, -6]],
-    },
-    burst: { shape: 'square', colors: 'faces', size: 0.07, speed: 2, gravity: 1, drag: 1.4, life: 1 },
-    surface: 'lenticular',
-    sound: 'flip',
-    motion: 'snap',
   },
 
 
@@ -2848,7 +2572,7 @@ export const themeById = (id) => THEMES.find((t) => t.id === id);
 
 // 테마 고르는 목록에서 묶어 보여 주는 무리. 테마는 모두 한 무리에만 들어간다(테스트가 본다)
 export const GROUPS = [
-  { name: '기본', themes: ['classic', 'candy', 'brick', 'dice', 'jelly', 'clay', 'bubblewrap', 'paper', 'doodle', 'slime'] },
+  { name: '기본', themes: ['classic', 'candy', 'brick', 'dice', 'jelly', 'clay', 'bubblewrap', 'paper', 'box', 'doodle', 'slime'] },
   { name: '자연', themes: ['forest', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert', 'honey', 'fruit'] },
   { name: '빛·불', themes: ['neon', 'lava', 'electric', 'tesla', 'disco', 'lavalamp', 'kaleido'] },
   { name: '우주', themes: ['space', 'planet', 'blackhole', 'nebula', 'star', 'galaxy'] },
@@ -2856,9 +2580,7 @@ export const GROUPS = [
   { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'camo'] },
   { name: '문양', themes: ['arabesque', 'artdeco', 'celtic', 'aztec', 'paisley', 'kkotsal', 'guilloche', 'quilt', 'lantern', 'carpet'] },
   { name: '패턴', themes: ['houndstooth', 'glencheck', 'herringbone', 'gingham', 'argyle', 'swissdot', 'chevron', 'tartan'] },
-  { name: '감각', themes: ['pinart', 'sequin', 'thermo', 'sand', 'soap', 'lenticular'] },
-  { name: '판타지', themes: ['armor', 'treasure', 'potion', 'runestone', 'grimoire', 'dragon', 'magic'] },
-  { name: '사무용품', themes: ['postit', 'keycap', 'cork', 'notebook', 'tape', 'clips'] },
+  { name: '판타지', themes: ['dragon', 'phoenix', 'mithril', 'damascus', 'fairywing', 'dragonegg'] },
   { name: '동물', themes: ['wool', 'hamster', 'wild'] },
   { name: '금속·기계', themes: ['metal', 'gauge', 'rust', 'mercury', 'circuit', 'carbon'] },
   { name: '디지털·레트로', themes: ['glitch', 'pixel', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
