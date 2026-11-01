@@ -1657,12 +1657,6 @@ export const THEMES = [
     burst: { shape: 'star', colors: ['#FFFFFF', '#FFD9A0', '#A8E8FF'], size: 0.13, speed: 1.4, gravity: 0, drag: 0.8, life: 1.5, additive: true },
   },
 
-
-
-
-
-
-
   {
     // 미러볼. 거울 조각마다 돌아가는 색 조명이 걸려 번쩍이고, 박자에 맞춰 조명 색이 돈다
     id: 'disco',
@@ -2318,8 +2312,8 @@ export const THEMES = [
   },
 
   {
-    // 불 꺼진 동굴 속 잠든 용. 다 맞추면 면 하나가 비늘 덮인 살갗 한 장. 아래로 겹친 비늘이 도톰하고 가운데 등줄이 서며,
-    // 보는 각도에 따라 빛깔이 돈다. 비늘 틈으로 몸속 불씨가 숨 쉬듯 빛나고, 묵직하게 돈다
+    // 불 꺼진 동굴 속 잠든 용. 다 맞추면 면 하나가 비늘 덮인 살갗 한 장. 끝이 뾰족한 방패꼴 비늘이 기와처럼 겹쳐 끝이 들린
+    // 턱을 이루고 가운데 용골이 섰다. 보는 각도에 따라 빛깔이 돌고, 윗비늘 그늘 속으로 몸속 불씨가 숨 쉬듯 빛난다
     id: 'dragon',
     name: '용 비늘',
     bg: '#120C0A',
@@ -2330,7 +2324,7 @@ export const THEMES = [
       'radial-gradient(80% 60% at 50% 40%, #241812, #080504)',
     ].join(', '),
     drift: 'radial-gradient(30% 22% at 50% 85%, rgba(255,120,40,.1), transparent 70%)',
-    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 48 },
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 56 },
     body: { color: '#1A1410', roughness: 0.6 },
     faces: ['#C82A2A', '#2A8A4A', '#2A5AB8', '#D8A82A', '#5A2A7A', '#D8DCE0'],
     lights: {
@@ -2346,8 +2340,8 @@ export const THEMES = [
     burst: { shape: 'glow', colors: ['#FFD08A', '#FF8A2A', '#FF4A1A'], size: 0.1, speed: 2.6, gravity: 1.4, drag: 1.6, life: 1, additive: true },
   },
   {
-    // 재가 날리는 둥지. 다 맞추면 면 하나가 깃털 덮인 날개 한 장. 끝이 뾰족한 깃털이 아래로 겹겹이 포개져 도톰하고
-    // 깃대와 깃가지가 섰으며, 깃털 끝은 불씨처럼 타올라 일렁인다. 깃털 사이 그늘엔 잉걸불. 깃털 색이 곧 면 색
+    // 재가 날리는 둥지. 다 맞추면 면 하나가 깃털 덮인 날개 한 장. 길쭉한 깃털이 겹겹이 포개져 끝이 들려 층이 지고,
+    // 오목하게 휜 깃 가운데로 깃대가 솟았다. 뿌리는 그을려 짙고 끝은 불씨처럼 달아 일렁인다. 깃털 색이 곧 면 색
     id: 'phoenix',
     name: '불사조 깃털',
     bg: '#120806',
@@ -2356,7 +2350,7 @@ export const THEMES = [
       'radial-gradient(35% 25% at 50% 85%, rgba(255,120,30,.25), transparent 70%)',
       'radial-gradient(80% 60% at 50% 40%, #2A140C, #060302)',
     ].join(', '),
-    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 48 },
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 56 },
     body: { color: '#1A0E0A', roughness: 0.6 },
     faces: ['#E0301E', '#F2A41E', '#2E6AE8', '#20B070', '#9A3AD8', '#F2E8D8'],
     lights: {
@@ -2371,8 +2365,8 @@ export const THEMES = [
     motion: 'fluid',
   },
   {
-    // 요정 대장간. 다 맞추면 면 하나가 사슬 갑옷 한 장. 고리 하나가 네 고리를 꿰는 4-1 엮음으로 줄마다 고리가 번갈아 기울어
-    // 이웃 고리 위아래로 지나가고, 틈으로 짙은 누비옷이 비친다. 은빛에 푸른 윤, 면마다 다른 빛으로 물들인 고리
+    // 요정 대장간. 다 맞추면 면 하나가 사슬 갑옷 한 장. 큼직한 고리로 엮은 4-1 사슬로, 줄마다 납작한 통고리와 쐐기 리벳
+    // 고리가 번갈아 들고 고리가 겹겹이 솟는다. 틈 깊숙이 마름모로 누빈 누비옷. 은빛에 푸른 윤, 면마다 물들인 고리
     id: 'mithril',
     name: '미스릴 사슬',
     bg: '#0C0E14',
@@ -2381,7 +2375,7 @@ export const THEMES = [
       'radial-gradient(45% 35% at 50% 30%, rgba(160,190,255,.18), transparent 70%)',
       'radial-gradient(80% 65% at 50% 45%, #1C2030, #05060A)',
     ].join(', '),
-    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 24 },
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 64 },
     body: { color: '#2A2A30', roughness: 0.35, metalness: 0.8 },
     faces: ['#C8CCD4', '#D4A040', '#7A4AB0', '#2E6AC8', '#2EA89A', '#B05A3A'],
     lights: {
@@ -2395,8 +2389,8 @@ export const THEMES = [
     motion: 'smooth',
   },
   {
-    // 대장장이의 작업대. 다 맞추면 면 하나가 칼날 한 판. 수백 겹 접어 두드린 강철 겹이 물결치고 군데군데 빗방울 고리가 피었다.
-    // 산에 부식시켜 짙은 겹은 패이고 밝은 겹은 반들거린다. 달군 온도에 따라 면마다 산화막 빛깔이 다르다(짚빛, 청동, 보라, 파랑, 하늘, 은)
+    // 대장장이의 작업대. 다 맞추면 면 하나가 칼날 한 판. 면마다 단조 무늬가 다르다(물결, 빗방울, 사다리, 꼬임, 깃털, 바구니).
+    // 칸마다 망치 자국이 오목오목 패이고 가장자리는 비스듬히 갈렸다. 면마다 산화막 빛깔(짚빛, 청동, 보라, 파랑, 하늘, 은)
     id: 'damascus',
     name: '다마스쿠스',
     bg: '#141210',
@@ -2405,7 +2399,7 @@ export const THEMES = [
       'radial-gradient(35% 25% at 30% 85%, rgba(255,140,60,.18), transparent 70%)',
       'radial-gradient(80% 65% at 50% 45%, #2A2622, #080706)',
     ].join(', '),
-    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 56 },
     body: { color: '#1A1A1E', roughness: 0.3, metalness: 0.9 },
     faces: ['#D8B860', '#B07040', '#9A3A8A', '#3A5AB0', '#7AA8D0', '#C8CCD0'],
     lights: {
@@ -2419,8 +2413,8 @@ export const THEMES = [
     motion: 'heavy',
   },
   {
-    // 달빛 숲 속 빈터. 다 맞추면 면 하나가 날개 한 장. 한 귀퉁이에서 굵은 날개맥이 부채처럼 뻗고 가는 가로맥이 작은 방을 나눈다.
-    // 맥은 솟아 짙고, 방마다 얇은 막이 면 색으로 비치며 보는 각도에 따라 무지갯빛이 아른거린다. 날개 끝 무늬점과 반짝이는 가루
+    // 달빛 숲 속 빈터. 다 맞추면 면 하나가 잠자리 날개 같은 날개 한 장. 부채처럼 뻗은 세로맥마다 산과 골로 접혀 병풍처럼
+    // 주름지고, 가로맥이 네모 방을 나눈다. 막은 비눗방울처럼 무지갯빛, 앞쪽 끝 연문과 반짝이는 가루
     id: 'fairywing',
     name: '요정 날개',
     bg: '#0A0C16',
@@ -2429,7 +2423,7 @@ export const THEMES = [
       'radial-gradient(30% 22% at 70% 18%, rgba(220,230,255,.35), transparent 70%)',
       'radial-gradient(80% 65% at 50% 45%, #182030, #04050A)',
     ].join(', '),
-    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 56 },
     body: { color: '#1A1A2A', roughness: 0.3 },
     faces: ['#FF7AC8', '#7AD8FF', '#B8F07A', '#FFD27A', '#B88AFF', '#F2F4FF'],
     lights: {
@@ -2443,8 +2437,8 @@ export const THEMES = [
     motion: 'fluid',
   },
   {
-    // 용의 둥지. 다 맞추면 면 하나가 거대한 알 껍데기 한 판. 잔 육각 비늘이 오돌토돌 솟아 오팔처럼 무지갯빛이 돌고 검은 점이 흩뿌려졌다.
-    // 곧 깨어나려는지 금이 그물처럼 갔고, 금 사이로 속불이 새어 나와 심장처럼 뛴다. 껍데기 색이 곧 면 색
+    // 용의 둥지. 다 맞추면 면 하나가 거대한 알 껍데기 한 판. 돌처럼 굳은 다각형 판이 볼록하게 솟아 오팔빛이 돌고, 깊이 간 금
+    // 가장자리 판은 들떴으며 금 속에서 속불이 심장처럼 뛴다. 칸마다 알처럼 둥글게 부풀었다. 껍데기 색이 곧 면 색
     id: 'dragonegg',
     name: '용의 알',
     bg: '#100A08',
@@ -2453,9 +2447,9 @@ export const THEMES = [
       'radial-gradient(35% 25% at 50% 80%, rgba(255,110,30,.2), transparent 70%)',
       'radial-gradient(80% 60% at 50% 40%, #241812, #060403)',
     ].join(', '),
-    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 48 },
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 56 },
     body: { color: '#1A1410', roughness: 0.6 },
-    faces: ['#B8202A', '#20704A', '#2A4A9A', '#D89A2A', '#7A2A7A', '#E8E0D0'],
+    faces: ['#A81E26', '#1E6A44', '#26468E', '#CC9028', '#6E2668', '#DCD4C2'],
     lights: {
       sky: '#ffc8a0', ground: '#200a04', hemi: 0.9,
       key: ['#ffe0c0', 2.4, [-4, 6, 5]], fill: ['#ff6a2a', 0.6, [6, -2, 3]], rim: ['#ffb070', 1.3, [0, 4, -6]],
@@ -2495,7 +2489,6 @@ export const THEMES = [
     ambient: { mode: 'float', shape: 'glow', colors: ['#FFFFFF', '#F4EEE0'], count: 22, size: 0.05, speed: 0.2, opacity: 0.6 },
     burst: { shape: 'glow', colors: 'faces', size: 0.09, speed: 1.6, gravity: -1, drag: 2.4, life: 1.2, opacity: 0.85 },
   },
-
 
   {
     // 톱밥 깔린 햄스터 집. 조각마다 햄스터처럼 동그랗게 부풀어 숨 쉬듯 들썩이고, 아주 가늘고 보송한 털이 덮였다.
@@ -2770,7 +2763,6 @@ export const THEMES = [
     motion: 'smooth',
   },
 
-
   {
     // 레이싱카 정비소. 다 맞추면 면 하나가 한 장의 2/2 능직 탄소섬유 판이다. 다발마다 섬유 결이 있어 빛과 결이 맞는 다발만 번쩍이고,
     // 돌리면 체크 광택이 서로 자리를 바꾼다. 두꺼운 투명 코팅, 면마다 섬유 색이 다르다
@@ -2824,7 +2816,6 @@ export const THEMES = [
     motion: 'heavy',
   },
 
-
   {
     // 눈알 무더기. 칸마다 사람 눈 하나가 짓무른 눈꺼풀 사이로 불룩 솟아 손끝을 따라 굴러간다. 핏발 선 흰자,
     // 크게 열린 홍채(면 색)의 결과 굴, 번들거리는 눈물막. 가끔 깜빡이고, 잡으면 일제히 질끈 감았다 동공을 키운다. 붉은 어둠
@@ -2849,10 +2840,6 @@ export const THEMES = [
     sound: 'eye',
     motion: 'squish',
   },
-
-
-
-
 
   {
     // 폐공장의 독성 슬라임 통. 칸마다 형광으로 빛나는 끈적한 슬라임이 울퉁불퉁 출렁이고 거품이 부풀었다 톡 터지며,
@@ -2879,10 +2866,6 @@ export const THEMES = [
     sound: 'squish',
     motion: 'squish',
   },
-
-
-
-
 
   {
     // 모로코 리아드의 젤리주 타일 벽. 다 맞추면 면 하나가 한 벽이다. 여덟 꼭지 별 타일(면 색)과 십자 타일이 맞물리고,
@@ -3126,9 +3109,6 @@ export const THEMES = [
     sound: 'cloth',
     motion: 'heavy',
   },
-
-
-
 
   {
     // 바닷속 산호초. 관 모양 폴립이 다닥다닥 솟고 컵 속 촉수가 형광으로 빛나며 천천히 숨 쉰다
@@ -3400,40 +3380,29 @@ export const THEMES = [
     burst: { shape: 'dot', colors: 'faces', size: 0.06, speed: 1.8, gravity: -4, drag: 1.6, life: 0.9 },
   },
 
-
-
-
   {
-    // 축축한 잇몸. 칸마다 어금니 넷이 솟아 박혔고 씹는 면엔 교두와 홈, 썩은 구멍
+    // 조각 하나가 어금니 하나. 교두 다섯이 솟은 치관이 번들거리는 잇몸에 박혔다
     id: 'teeth',
     name: '이빨',
     bg: '#140608',
     ink: '#F2D8D8',
     backdrop: [
-      'radial-gradient(60% 45% at 50% 20%, rgba(255,150,150,.15), transparent 70%)',
+      'radial-gradient(60% 45% at 50% 20%, rgba(255,170,160,.16), transparent 70%)',
       'linear-gradient(180deg, #3A1014, #08020A)',
     ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.12, grid: 48 },
-    body: { color: '#3A0E14', roughness: 0.25 },
-    faces: ['#E8909A', '#7A1A2A', '#E8D0C8', '#8A5A8A', '#C8B060', '#6A8090'],
+    form: { bevel: 0.1, size: 0.96, radius: 0.18, grid: 56 },
+    body: { color: '#3C0A14', roughness: 0.34 },
+    faces: ['#ECE4D0', '#D8A23A', '#9A9EA4', '#8E6234', '#2E241E', '#A81E24'],
     lights: {
-      sky: '#ffe8e0', ground: '#200808', hemi: 1.3,
-      key: ['#fff0e8', 2.4, [-3, 7, 5]], fill: ['#ff8070', 0.5, [5, 0, 4]], rim: ['#ffd0c0', 1, [0, 3, -6]],
+      sky: '#fff0e8', ground: '#200808', hemi: 1.2,
+      key: ['#fff4ec', 2.6, [-3, 7, 5]], fill: ['#ff9080', 0.5, [5, 0, 4]], rim: ['#ffe0d0', 1.1, [0, 3, -6]],
     },
+    env: 0.6,
     surface: 'teeth',
-    sound: 'flesh',
+    sound: 'ceramic',
     motion: 'squish',
-    burst: { shape: 'drip', colors: ['#F0D8D0', '#E0B0B0'], size: 0.06, speed: 1.6, gravity: -6, drag: 1.2, life: 1 },
+    burst: { shape: 'flake', colors: ['#F4EEE0', '#E8D8B8', '#C02028'], size: 0.06, speed: 2, gravity: -7, drag: 1, life: 1 },
   },
-
-
-
-
-
-
-
-
-
 
 
   {
@@ -3482,40 +3451,6 @@ export const THEMES = [
     motion: 'smooth',
     burst: { shape: 'star', colors: ['#FFFFFF', '#FFF2C0'], size: 0.1, speed: 2, gravity: -1, drag: 2, life: 0.8, additive: true },
   },
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 ];
 
