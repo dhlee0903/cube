@@ -582,27 +582,28 @@ export const THEMES = [
     burst: { shape: 'star', colors: 'faces', size: 0.18, speed: 2.6, gravity: -3, drag: 1.4, life: 1, additive: true },
   },
   {
-    // 고장 난 CRT 화면. 늘 어긋난 색과 주사선, 굴러가는 테이프 띠, 깨지는 덩어리와 흘러내리는 줄,
-    // 가끔 끊기는 신호. 버벅이며 건너뛰는 회전, 가끔 화면째 튄다
+    // 고장 난 CRT 화면으로 보는 큐브. 큐브 자체는 매끈한 네온 플라스틱이고, 화면 전체에 필터가 걸린다: 늘 조금 어긋난 색,
+    // 주사선과 잡음, 위에서 아래로 굴러가는 테이프 띠, 이따금 가로 띠째 찢어져 밀리고 네모 덩어리가 깨진다.
+    // 돌리면 더 심해지고, 아주 가끔 신호가 끊겨 화면 전체가 지지직거린다. 버벅이며 건너뛰는 회전
     id: 'glitch',
     name: '글리치',
     bg: '#0A0A0C',
     ink: '#F0F0F0',
     backdrop: [
-      'repeating-linear-gradient(0deg, rgba(255,255,255,.04) 0 1px, transparent 1px 3px)',
       'radial-gradient(75% 65% at 50% 45%, transparent 55%, rgba(0,0,0,.85) 100%)',
-      'linear-gradient(90deg, rgba(255,0,85,.07), transparent 12%, transparent 88%, rgba(0,255,200,.07))',
       'radial-gradient(60% 50% at 50% 45%, #1C1C26, #0A0A0C 70%)',
     ].join(', '),
-    form: { bevel: 0.02, size: 0.86, radius: 0.02, depth: 0 },
-    body: { color: '#121214', roughness: 0.4 },
+    form: { bevel: 0.05, size: 0.88, radius: 0.06, depth: 0.03 },
+    body: { color: '#121214', roughness: 0.35 },
+    sticker: { roughness: 0.22 },
     faces: ['#FF0055', '#B000FF', '#F4F4F4', '#FFD400', '#00FFC8', '#2F5BFF'],
+    glow: 0.35,
     lights: {
       sky: '#d0d0ff', ground: '#101018', hemi: 1.6,
-      key: ['#ffffff', 1.4, [-4, 5, 5]], fill: ['#ff0055', 0.6, [6, 0, 3]], rim: ['#00ffc8', 1.2, [-2, 3, -6]],
+      key: ['#ffffff', 1.6, [-4, 5, 5]], fill: ['#ff0055', 0.6, [6, 0, 3]], rim: ['#00ffc8', 1.2, [-2, 3, -6]],
     },
-    light: 0.85,
-    surface: 'glitch',
+    filter: 'glitch',
+    surface: 'plain',
     sound: 'glitch',
     motion: 'stutter',
     jitter: true,
@@ -610,8 +611,8 @@ export const THEMES = [
     burst: { shape: 'square', colors: 'faces', size: 0.08, speed: 3, gravity: 0, drag: 3.2, life: 0.5 },
   },
   {
-    // 8비트 게임 속 블록. 면마다 다른 16×16 타일(벽돌, 돌길, 흘러가는 구름, 깜빡이는 물음표, 흔들리는 풀과 꽃,
-    // 밀려가는 물결), 칸칸이 끊기는 움직임
+    // 8비트 게임 화면. 큐브를 낮은 해상도로 그려 칸칸이 키우고, 16색 팔레트로 줄이면서 그늘과 빛을 바둑판 점(디더링)으로
+    // 섞고, 스프라이트처럼 검은 테두리를 두른다. 스티커는 도톰한 블록이라 모서리 빛과 그늘이 점으로 찍힌다. 칸칸이 끊기는 움직임
     id: 'pixel',
     name: '픽셀',
     bg: '#5C94FC',
@@ -621,15 +622,16 @@ export const THEMES = [
       `${svg(100, 30, "<g shape-rendering='crispEdges'><path d='M0 30 V18 H6 V14 H12 V10 H22 V14 H28 V18 H34 V30Z' fill='#00A800'/><path d='M50 30 V22 H56 V16 H66 V12 H74 V16 H82 V22 H90 V30Z' fill='#00A800'/><rect x='14' y='16' width='2' height='2' fill='#005800'/><rect x='66' y='18' width='2' height='2' fill='#005800'/><rect x='0' y='26' width='100' height='4' fill='#C84C0C'/><rect x='0' y='26' width='100' height='1' fill='#FCA044'/></g>")} bottom / 100% 30% no-repeat`,
       'linear-gradient(#6EA2FF, #5C94FC 70%)',
     ].join(', '),
-    form: { bevel: 0.01, size: 0.96, radius: 0.001, depth: 0 },
-    body: { color: '#101018', roughness: 1 },
-    sticker: { roughness: 1 },
-    faces: ['#C8442C', '#8C8C9C', '#FFF1E8', '#F8B830', '#3CB043', '#29ADFF'],
+    form: { bevel: 0.05, size: 0.84, radius: 0.04, depth: 0.06 },
+    body: { color: '#1D2B53', roughness: 0.6 },
+    sticker: { roughness: 0.45 },
+    faces: ['#FF004D', '#29ADFF', '#FFF1E8', '#FFEC27', '#00E436', '#FFA300'],
     lights: {
-      sky: '#ffffff', ground: '#c8d8ff', hemi: 3,
-      key: ['#ffffff', 0.8, [-3, 6, 5]], fill: ['#ffffff', 0.2, [5, 0, 4]], rim: ['#ffffff', 0, [0, 3, -6]],
+      sky: '#ffffff', ground: '#8890b0', hemi: 1.8,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.6, [0, 3, -6]],
     },
-    surface: 'pixel',
+    filter: 'pixel',
+    surface: 'plain',
     sound: 'pixel',
     motion: 'stepped',
     ambient: { mode: 'rise', shape: 'square', colors: ['#F8D030', '#FFFFFF'], count: 18, size: 0.08, speed: 0.35, opacity: 0.85 },
@@ -2224,8 +2226,9 @@ export const THEMES = [
     burst: { shape: 'streak', colors: ['#3A3430', '#F2EEE6', '#5A524A'], size: 0.09, speed: 1.8, gravity: -6, drag: 1, life: 1.1, turns: true },
   },
   {
-    // 셀 애니메이션 속 하늘. 빛을 두 단으로 끊어 칠하고 그늘엔 보랏빛이 돈다. 밝은 쪽 가장자리엔 림 라이트,
-    // 매끈한 하이라이트 한 점, 면 색보다 짙은 같은 색 윤곽선. 몸통 실루엣엔 먹선. 뭉게구름과 반짝이, 통통 튀며 돈다
+    // 셀 애니메이션 속 하늘. 렌더링 자체가 카툰이다: 빛을 세 단으로 딱 끊어 칠하고 그늘엔 보랏빛, 밝은 쪽 가장자리엔 림 라이트,
+    // 둥근 모서리엔 하이라이트 한 줄. 화면 필터가 큐브 실루엣과 조각 사이에 먹선을 긋고, 스티커 테두리에도 같은 굵기의 먹선.
+    // 뭉게구름과 반짝이, 통통 튀며 돈다
     id: 'toon',
     name: '카툰',
     bg: '#8EC8FF',
@@ -2238,9 +2241,10 @@ export const THEMES = [
       'radial-gradient(11% 7% at 88% 66%, #FFFFFF 70%, transparent 72%)',
       'linear-gradient(180deg, #5AA8FF, #A8D8FF 70%, #D8F0FF)',
     ].join(', '),
-    form: { bevel: 0.1, size: 0.9, radius: 0.14 },
+    form: { bevel: 0.12, size: 0.86, radius: 0.16 },
     body: { color: '#2A2A4A', roughness: 1 },
     faces: ['#FF5A6E', '#4A7AF0', '#FFF6E8', '#FFD23A', '#3AD07A', '#B06AF0'],
+    filter: 'toon',
     surface: 'toon',
     sound: 'pop',
     motion: 'bouncy',

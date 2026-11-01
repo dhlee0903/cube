@@ -10,6 +10,7 @@ import { FACES, createCube, layerOf } from './cube.js';
 import { MOVING, wear } from './surfaces.js';
 import { Ambient, Burst } from './particles.js';
 import { MOTIONS } from './motions.js';
+import { Filter } from './filters.js';
 
 const BODY = 0.96;
 const SIZE = 3; // 몇 칸이든 화면에서는 같은 크기로 보이게
@@ -90,6 +91,7 @@ export class CubeView {
     this.renderer = new WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     host.appendChild(this.renderer.domElement);
+    this.drawn = new Vector2();
 
     this.scene = new Scene();
     this.camera = new PerspectiveCamera(FOV, 1, 0.1, 100);
@@ -124,6 +126,8 @@ export class CubeView {
       uSticker: { value: new Vector2(0.4, 0.09) },
     };
     this.themeAt = 0;
+    // 렌더링 전체에 거는 화면 필터(카툰, 8비트, 고장 난 화면)
+    this.filter = new Filter(this.renderer, this.uniforms);
 
     this.bodyMat = new MeshStandardMaterial({ roughness: 0.55 });
     wear(this.bodyMat, 'body', this.uniforms);
@@ -444,11 +448,14 @@ export class CubeView {
     this.motion = MOTIONS[theme.motion] ?? MOTIONS.smooth;
     this.pulse = !this.still && Boolean(theme.pulse);
     this.jitter = !this.still && Boolean(theme.jitter);
+    const filtered = this.filter.mode;
+    this.filter.set(theme.filter);
+    if (filtered !== this.filter.mode) this.resize();
     this.root.position.set(0, 0, 0);
     const ambient = [].concat(theme.ambient ?? []);
     this.ambients.forEach((a, i) => a.set(this.still ? null : ambient[i], theme.faces));
     this.burst.set(this.still ? null : theme.burst, theme.faces);
-    this.moving = !this.still && (MOVING.has(surface) || ambient.length > 0 || Boolean(this.flicker));
+    this.moving = !this.still && (MOVING.has(surface) || ambient.length > 0 || Boolean(this.flicker) || theme.filter === 'glitch');
     this.themeAt = performance.now();
     if (this.cube) this.place();
     this.invalidate();
@@ -631,7 +638,8 @@ export class CubeView {
     // 손을 떼고 잠시 지나면 시선이 다시 보는 사람에게 돌아온다
     if (now - (this.lookedAt ?? 0) > 2500) u.uPointer.value.multiplyScalar(Math.exp(-dt * 2));
 
-    this.renderer.render(this.scene, this.camera);
+    if (this.filter.mode) this.filter.render(this.scene, this.camera);
+    else this.renderer.render(this.scene, this.camera);
     this.pace(dt);
     if (this.tweens.length || this.moving || bursting || settling) this.invalidate();
     else this.last = 0;
@@ -661,6 +669,8 @@ export class CubeView {
     this.width = w;
     this.height = h;
     this.renderer.setSize(w, h);
+    this.renderer.getDrawingBufferSize(this.drawn);
+    this.filter.setSize(this.drawn.x, this.drawn.y, this.renderer.getPixelRatio());
     this.camera.aspect = w / h;
     const v = (FOV * Math.PI) / 180;
     const across = 2 * Math.atan(Math.tan(v / 2) * this.camera.aspect);
@@ -671,7 +681,8 @@ export class CubeView {
     this.camera.updateMatrixWorld();
 
     // 입자 크기(월드 단위)를 화면 픽셀로 바꾸는 비율, 입자가 떠다닐 범위
-    const scale = (h * this.renderer.getPixelRatio()) / (2 * Math.tan(v / 2));
+    // 8비트 필터는 낮은 해상도로 그리므로 입자도 그만큼 작게
+    const scale = (h * this.renderer.getPixelRatio()) / (2 * Math.tan(v / 2)) / this.filter.block;
     this.burst.setScale(scale);
     const halfH = distance * Math.tan(v / 2);
     for (const a of this.ambients) {

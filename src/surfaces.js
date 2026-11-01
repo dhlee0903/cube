@@ -1096,157 +1096,6 @@ B.gem = {
   surface: 'roughnessFactor = .2 + .2 * fxH;',
 };
 
-S.glitch = {
-  // 망가진 화면. 늘 색이 조금 어긋나 있고 주사선이 흐르며, 늘어난 테이프 같은 띠가 위에서 아래로 굴러가며
-  // 화면을 옆으로 민다. 이따금 칸이 네모 덩어리째 깨져 색이 뒤섞이거나 뒤집히고(데이터모싱),
-  // 밝은 줄이 아래로 녹아 흘러내리고(픽셀 정렬), 아주 가끔 신호가 끊겨 지지직거린다
-  color: `
-    vec2 fxUv = fxUV();
-    float fxT = uTime;
-    float fxF = floor(fxT * 12.);
-    float fxBurst = max(step(.9, fxH1(fxF * .37 + vSeed * 17.)), step(.4, uCharge) * step(.5, fxH1(fxF * 1.3 + vSeed)));
-    float fxBandY = 1.2 - fract(fxT * .21 + vSeed * .7) * 1.4;
-    float fxBand = exp(-pow((fxUv.y - fxBandY) / .07, 2.));
-    float fxJag = fxH1(floor(fxUv.y * 70.) + fxF) - .5;
-    float fxShift = fxBand * (.05 + .12 * fxJag) + fxBurst * (fxH1(floor(fxUv.y * 12.) + fxF * 3.1) - .5) * .3;
-    vec2 fxBlk = floor(fxUv * 6.);
-    float fxMoshT = floor(fxT * 2.5);
-    float fxMosh = step(.8, fxH2(fxBlk + fxMoshT + vSeed * 5.)) * step(.55, fxH1(fxMoshT * .3 + vSeed * 9.));
-    vec2 fxSrc = fxUv + vec2(fxShift, 0.) + fxMosh * (vec2(fxH2(fxBlk + 1.), fxH2(fxBlk + 2.)) - .5) * .35;
-    vec2 fxQs = (fxSrc - .5) * 2. * uSticker.x;
-    vec2 fxB2 = vec2(uSticker.x);
-    float fxSplit = .018 + .05 * fxBurst + .035 * fxBand;
-    float fxRr = step(fxBox(fxQs + vec2(fxSplit, 0.), fxB2, uSticker.y), 0.);
-    float fxGg = step(fxBox(fxQs, fxB2, uSticker.y), 0.);
-    float fxBb = step(fxBox(fxQs - vec2(fxSplit, 0.), fxB2, uSticker.y), 0.);
-    vec3 fxC = diffuseColor.rgb;
-    // 화면 속 잔무늬: 덩어리가 밀리면 같이 어긋나 보인다
-    float fxInner = step(.5, fract(fxSrc.x * 9.)) * step(.5, fract(fxSrc.y * 9.)) * .06;
-    fxC *= 1. - fxInner;
-    fxC = mix(fxC, fxC.gbr, fxMosh * step(.45, fxH2(fxBlk + 9.)));
-    fxC = mix(fxC, vec3(1.) - fxC, fxMosh * step(.8, fxH2(fxBlk + 4.)));
-    float fxScan = .8 + .2 * step(.5, fract(vLocal.y * 60. + fxT * 4.));
-    fxC = vec3(fxC.r * fxRr, fxC.g * fxGg, fxC.b * fxBb) * fxScan;
-    fxC += fxBand * (.1 + (fxH2(vec2(floor(fxUv.x * 80.), floor(fxUv.y * 90.) + fxF)) - .5) * .35);
-    // 픽셀 정렬: 몇 줄이 아래로 녹아 흐른다
-    float fxColX = floor(fxUv.x * 40.);
-    float fxSortT = floor(fxT * .7);
-    float fxSortOn = step(.86, fxH1(fxColX * .71 + fxSortT * 3.3 + vSeed * 3.));
-    float fxSortStart = .2 + .7 * fxH1(fxColX + fxSortT);
-    float fxSortLen = fract(fxT * .7) * .8;
-    float fxSort = fxSortOn * step(fxUv.y, fxSortStart) * step(fxSortStart - fxSortLen, fxUv.y);
-    fxC = mix(fxC, mix(fxC, vec3(1.), .45) * (1. - (fxSortStart - fxUv.y) * .8), fxSort * fxGg);
-    // 신호 끊김
-    float fxLost = step(.986, fxH1(floor(fxT * 4.) + vSeed * 31.));
-    float fxStatic = fxH2(floor(fxUv * vec2(90., 70.)) + fxF * 13.);
-    fxC = mix(fxC, vec3(fxStatic), fxLost * .92);
-    // 죽은 화소 줄
-    fxC *= 1. - step(.995, fxH1(floor(fxUv.y * 120.) + vSeed * 7.)) * .7;
-    diffuseColor.rgb = fxC + .02;`,
-  surface: 'roughnessFactor = .3;',
-  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * (.3 + .5 * fxBurst + .3 * fxBand);',
-};
-B.glitch = {
-  color: `
-    float fxScan = .75 + .25 * step(.5, fract(vLocal.y * 40. - uTime * 2.));
-    diffuseColor.rgb *= fxScan;`,
-};
-
-S.pixel = {
-  // 16×16 픽셀 그림 타일. 면마다 다르다: 벽돌, 돌길, 흘러가는 구름, 깜빡이는 물음표 블록,
-  // 풀잎이 흔들리고 꽃이 핀 풀밭, 물결이 밀려가는 물. 칸마다 윤곽선과 위왼쪽 밝음, 아래오른쪽 그늘
-  head: `
-    const int fxQm[8] = int[8](30, 51, 3, 6, 12, 12, 0, 12);
-    // 0~3 면 색의 짙기(0이 가장 짙다), 4 흰 빛, 5 검은 윤곽, 6 다른 색, 7 회색
-    float fxPix(vec2 px, float fr) {
-      if (px.x < .5 || px.y < .5 || px.x > 14.5 || px.y > 14.5) return 5.;
-      vec2 p = px - 1.;
-      if (uFace < .5) {
-        float row = floor(p.y / 4.5);
-        float ly = p.y - row * 4.5;
-        float lx = mod(p.x + mod(row, 2.) * 3.5, 7.);
-        if (ly > 3.4 || lx > 6.) return 7.;
-        float k = fxH2(vec2(floor((p.x + mod(row, 2.) * 3.5) / 7.), row) + vSeed);
-        if (ly > 2.4 || lx > 5.) return 1.;
-        if (ly < .6 || lx < 1.) return 3.;
-        return k > .8 ? 1. : 2.;
-      } else if (uFace < 1.5) {
-        vec3 v = fxVoronoi(p / 4.2 + vSeed * 3.);
-        if (v.y < .12) return 0.;
-        vec2 o = p / 4.2 - floor(p / 4.2);
-        float k = fxH2(floor(p / 4.2 + .5) + vSeed);
-        if (v.y < .25) return 1.;
-        return v.z > .7 ? 3. : 2.;
-      } else if (uFace < 2.5) {
-        vec2 c = vec2(mod(p.x + floor(fr / 2.), 14.), p.y);
-        float puff = 0.;
-        puff = max(puff, step(length(c - vec2(3., 8.)), 3.6));
-        puff = max(puff, step(length(c - vec2(8., 9.5)), 4.2));
-        puff = max(puff, step(length(c - vec2(12.5, 7.)), 3.2));
-        puff = max(puff, step(length(c - vec2(-1.5, 7.)), 3.2));
-        puff = max(puff, step(abs(c.y - 4.), 2.5));
-        if (puff < .5) return 6.;
-        if (c.y < 2.5) return 1.;
-        if (c.y > 11.5 || (puff > .5 && step(length(c - vec2(8., 11.)), 2.) > .5)) return 3.;
-        return 2.;
-      } else if (uFace < 3.5) {
-        if ((p.x < 1.5 || p.x > 11.5) && (p.y < 1.5 || p.y > 11.5)) return length(fract(p / 2.) - .5) < .3 ? 0. : 1.;
-        vec2 g = p - vec2(4., 3.);
-        int row = 7 - int(g.y);
-        int col = int(g.x);
-        if (row >= 0 && row < 8 && col >= 0 && col < 6) {
-          if (((fxQm[row] >> (5 - col)) & 1) == 1) return 4.;
-          int r2 = row - 1, c2 = col - 1;
-          if (r2 >= 0 && c2 >= 0 && ((fxQm[r2] >> (5 - c2)) & 1) == 1) return 0.;
-        }
-        float blink = step(.75, fract(fr / 6.));
-        if (p.y > 12.5 || p.x < .5) return 3.;
-        if (p.y < .5 || p.x > 12.5) return 1.;
-        return blink > .5 ? 3. : 2.;
-      } else if (uFace < 4.5) {
-        float sway = mod(floor(fr / 3.) + p.x, 2.);
-        float bladeTop = 10. + mod(p.x * 3., 3.);
-        if (p.y > bladeTop + .5) return 6.5;
-        if (p.y > bladeTop - .5) return (mod(p.x + sway, 2.) < 1.) ? 3. : 6.5;
-        vec2 fl = floor(p / 4.);
-        vec2 fo = p - fl * 4.;
-        if (fxH2(fl + vSeed) > .7 && length(fo - 2.) < .8) return 6.;
-        float k = fxH2(p + vSeed * 5.);
-        return k > .82 ? 1. : (k < .14 ? 3. : 2.);
-      } else {
-        float w = mod(p.x + floor(p.y / 3.5) * 3. + fr, 8.);
-        float ly = mod(p.y, 3.5);
-        if (ly > 2.4 && w < 3.) return 4.;
-        if (ly > 2.4 && w < 5.) return 3.;
-        if (ly < .6) return 1.;
-        if (fxH2(p + floor(fr / 2.) + vSeed) > .985) return 4.;
-        return 2.;
-      }
-    }`,
-  color: `
-    // 풀은 위로 자라고 물음표는 바로 서도록, 화면 위쪽에 맞춰 90도 단위로 돌려 그린다
-    vec2 fxUpP = -fxDown();
-    float fxSnapP = floor(atan(fxUpP.y, fxUpP.x) / 1.5708 + .5) * 1.5708;
-    vec2 fxSuP = vec2(cos(fxSnapP), sin(fxSnapP));
-    vec2 fxUvP = vec2(dot(fxQ(), vec2(fxSuP.y, -fxSuP.x)), dot(fxQ(), fxSuP)) * .5 + .5;
-    vec2 fxPx = floor(clamp(fxUvP, 0., .999) * 16.);
-    float fxFr = floor(uTime * 6.);
-    float fxK = fxPix(fxPx, fxFr);
-    vec3 fxB = diffuseColor.rgb;
-    vec3 fxAccent = uFace < 2.5 ? vec3(.45, .7, 1.) : (uFace < 4.5 ? (fxK > 6.2 ? vec3(.0) : vec3(.95, .3, .35)) : vec3(1.));
-    vec3 fxC = fxK < .5 ? fxB * .45 : fxK < 1.5 ? fxB * .7 : fxK < 2.5 ? fxB : fxK < 3.5 ? min(fxB * 1.2 + .08, vec3(1.))
-      : fxK < 4.5 ? vec3(1., .98, .9) : fxK < 5.5 ? vec3(.07, .06, .1) : fxK < 6.2 ? fxAccent : fxK < 6.7 ? fxB * .45 : vec3(.72, .7, .66);
-    if (uFace > 3.5 && uFace < 4.5 && fxK > 6.2) fxC = fxB * .45;
-    diffuseColor.rgb = fxC;`,
-  surface: 'roughnessFactor = 1.;',
-  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * .14;',
-};
-B.pixel = {
-  color: `
-    diffuseColor.rgb *= .8 + .4 * fxH3(floor(vLocal * 16.) + vSeed * 20.);`,
-  surface: 'roughnessFactor = 1.;',
-};
-
 S.circuit = {
   // 인쇄 회로 기판. 면마다 솔더 마스크 색이 다르고(빨강, 보라, 하양, 노랑, 초록, 파랑 기판),
   // 마스크 아래로 구리 배선이 45도로 꺾여 지나가고 끝엔 금도금 비아, 가운데엔 다리가 달린 검은 칩과
@@ -4415,34 +4264,28 @@ B.hamster = {
 };
 
 S.toon = {
-  // 셀 애니메이션. 빛을 두 단으로 끊어 칠하고 그늘엔 보랏빛이 돌며, 밝은 쪽 가장자리엔 림 라이트,
-  // 매끈한 하이라이트 한 점. 윤곽선은 먹이 아니라 면 색보다 짙은 같은 색이다. 몸통도 같은 식으로 칠한다
+  // 셀 애니메이션. 빛을 세 단(그늘, 바탕, 밝은 면)으로 딱 끊어 칠하고 그늘엔 보랏빛이 돈다. 밝은 쪽 가장자리엔 림 라이트,
+  // 둥근 모서리엔 매끈한 하이라이트가 한 줄 맺힌다. 스티커 테두리엔 화면에서 늘 같은 굵기의 먹선을 긋는다.
+  // 큐브 실루엣과 조각 사이 먹선은 화면 필터(카툰)가 깊이로 긋는다
   color: `
-    float fxOutline = 1. - smoothstep(.022, .032, fxEdge());
     vec3 fxBase = diffuseColor.rgb;
+    float fxEw = max(fwidth(fxEdge()), 1e-4);
+    float fxInk = 1. - smoothstep(fxEw * 2.2, fxEw * 3.2, fxEdge());
     diffuseColor.rgb = vec3(0.);`,
   surface: 'roughnessFactor = 1.; metalnessFactor = 0.;',
   emissive: `
     vec3 fxLd = normalize(vec3(-.5, .7, .55));
     vec3 fxV = normalize(vViewPosition);
     float fxNdl = dot(normal, fxLd);
-    float fxLit = smoothstep(.16, .2, fxNdl);
-    vec3 fxShade = fxBase * vec3(.66, .62, .9);
-    vec3 fxCol = mix(fxShade, fxBase * mix(1., 1.08, smoothstep(.4, 1., fxNdl)), fxLit);
+    float fxLit = smoothstep(.08, .11, fxNdl);
+    float fxHi = smoothstep(.6, .63, fxNdl);
+    vec3 fxCol = mix(fxBase * vec3(.6, .56, .86), fxBase, fxLit);
+    fxCol = mix(fxCol, min(fxBase * 1.18, vec3(1.)), fxHi);
     float fxRimL = smoothstep(.6, .64, 1. - abs(dot(normal, fxV))) * fxLit;
-    fxCol = mix(fxCol, mix(fxBase, vec3(1.), .55), fxRimL * .75);
-    float fxSpec = smoothstep(.972, .976, dot(normal, normalize(fxLd + fxV)));
+    fxCol = mix(fxCol, mix(fxBase, vec3(1.), .3), fxRimL * .7);
+    float fxSpec = smoothstep(.95, .96, dot(normal, normalize(fxLd + fxV))) * step(dot(normal, vTz), .99);
     fxCol = mix(fxCol, vec3(1.), fxSpec);
-    // 면 하나를 비스듬히 가르는 그늘 띠. 애니메이션 배경처럼 평평한 면도 두 톤으로 나뉜다
-    vec2 fxF = fxFace();
-    float fxBand = smoothstep(.34, .36, dot(fxF, normalize(vec2(.8, -1.))) + (fxN2(fxF * 2.) - .5) * .06);
-    fxCol = mix(fxCol, fxCol * vec3(.78, .76, .92), fxBand * fxLit);
-    // 칸마다 반들거리는 하이라이트: 왼쪽 위에 둥근 줄 하나와 점 하나
-    vec2 fxQt = fxQ();
-    float fxGl = (1. - smoothstep(.0, .025, abs(length(fxQt - vec2(.35, -.35)) - .95))) * step(fxQt.y, -fxQt.x * .2 + .35) * step(.15, -fxQt.x + fxQt.y + .6) * step(-.95, fxQt.x) * step(fxQt.y, .95);
-    float fxGlDot = 1. - smoothstep(.07, .09, length(fxQt - vec2(-.62, .62)));
-    fxCol = mix(fxCol, vec3(1.), max(fxGl * .85, fxGlDot) * (.4 + .6 * fxLit));
-    totalEmissiveRadiance = mix(fxCol, fxBase * .32, fxOutline);`,
+    totalEmissiveRadiance = mix(fxCol, vec3(.07, .06, .11), fxInk);`,
 };
 B.toon = {
   emissive: `
@@ -4450,9 +4293,10 @@ B.toon = {
     vec3 fxV = normalize(vViewPosition);
     float fxNdl = dot(normal, fxLd);
     vec3 fxB = diffuse;
-    vec3 fxCol = mix(fxB * vec3(.62, .58, .85), fxB, smoothstep(.16, .2, fxNdl));
-    float fxSil = smoothstep(.72, .76, 1. - abs(dot(normal, fxV)));
-    totalEmissiveRadiance = mix(fxCol, vec3(.08, .06, .12), fxSil);
+    vec3 fxCol = mix(fxB * vec3(.6, .56, .86), fxB, smoothstep(.08, .11, fxNdl));
+    fxCol = mix(fxCol, fxB * 1.4, smoothstep(.6, .63, fxNdl));
+    fxCol = mix(fxCol, vec3(.8), smoothstep(.99, .993, dot(normal, normalize(fxLd + fxV))) * .6);
+    totalEmissiveRadiance = fxCol;
     diffuseColor.rgb = vec3(0.);`,
   surface: 'roughnessFactor = 1.; metalnessFactor = 0.;',
 };
@@ -5968,7 +5812,7 @@ export const SURFACES = Object.keys(S);
 /** 이 질감은 시간에 따라 움직이는가. 움직이면 계속 그려야 한다. */
 export const MOVING = new Set([
   'neon', 'lava', 'water', 'forest', 'space', 'candy', 'ice',
-  'electric', 'flesh', 'eldritch', 'gem', 'glitch', 'pixel', 'circuit', 'aurora',
+  'electric', 'flesh', 'eldritch', 'gem', 'circuit', 'aurora',
   'stained', 'najeon', 'rain', 'mercury', 'gauge', 'honey', 'clay',
   'holo', 'jelly', 'planet', 'disco',
   'fossil', 'doodle', 'ink', 'lavalamp', 'glass', 'fruit',
