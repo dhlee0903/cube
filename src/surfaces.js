@@ -3422,8 +3422,8 @@ S.dragon = {
       float t = clamp((1. - s.z) * .5, 0., 1.);
       float dome = sqrt(max(0., 1. - s.y * s.y));
       float keel = exp(-s.y * s.y / .03) * smoothstep(.9, -.5, s.z);
-      float lip = smoothstep(1., .88, s.x);
-      return ((.3 + .7 * t) * (.6 + .4 * dome) + .28 * keel) * (.5 + .5 * lip);
+      float lip = smoothstep(1., .72, s.x);
+      return ((.3 + .7 * t) * (.6 + .4 * dome) + .28 * keel) * (.18 + .82 * lip);
     }
     float fxDragonH(vec2 p, float seed) {
       vec4 s = fxScale(aHome.xy + p * aHome.z);
@@ -3440,14 +3440,14 @@ S.dragon = {
     float fxKeel = exp(-fxS.y * fxS.y / .03) * smoothstep(.9, -.5, fxS.z);
     float fxRim = smoothstep(.8, .97, fxS.x);
     float fxSh = 1. - smoothstep(0., .22, fxScSh);
-    float fxAO = smoothstep(0., .6, fxT) * (1. - fxSh * .75);
+    float fxAO = smoothstep(0., .6, fxT) * (1. - fxSh * .85);
     float fxStri = .5 + .5 * sin(fxS.y * 28. + fxS.w * 6.);
     float fxPit = smoothstep(.6, .85, fxN2(fxF * 80.));
     vec3 fxC = fxBase * (.28 + .8 * fxAO) * (.85 + .3 * fxS.w);
     fxC = mix(fxC, fxBase * 1.4 + .04, fxKeel * .4);
     fxC = mix(fxC, mix(fxBase, vec3(1., .92, .75), .3) * 1.1, fxRim * fxAO * .4);
     fxC *= (.9 + .14 * fxStri) * (1. - fxPit * .2);
-    float fxEmber = fxSh * (.55 + .45 * sin(uTime * 1.5 + fxS.w * 20.)) * smoothstep(.3, .7, fxN2(fxF * 2. + uTime * .15));
+    float fxEmber = fxSh * fxSh * (.55 + .45 * sin(uTime * 1.5 + fxS.w * 20.)) * smoothstep(.55, .8, fxN2(fxF * 2. + uTime * .15));
     diffuseColor.rgb = fxC;`,
   normal: 'normal = fxBump(normal, clamp(fxHt - vLift, -.02, .02) + fxStri * .00035 * fxAO - fxPit * .0003);',
   surface: 'roughnessFactor = mix(.6, .2, fxAO) + fxPit * .15; metalnessFactor = .5 * fxAO;',
@@ -3483,6 +3483,10 @@ S.phoenix = {
           d.x += (hs - .5) * .3 * (1. - d.y) * (1. - d.y) * .5;
           float w = .62 + .38 * smoothstep(-1.2, -.1, d.y);
           float r = max(length(vec2(d.x / w, d.y)), abs(d.x) * .3 - d.y);
+          // 깃가지 결을 따라 가장자리가 해지고 군데군데 깊이 갈라졌다
+          float bu = d.y * 1.1 - abs(d.x / w) * .95;
+          r += (fxN2(vec2(bu * 16., hs * 40. + sign(d.x))) - .3) * .16 * smoothstep(.6, 1., r);
+          r += step(.82, fxN2(vec2(bu * 7., hs * 23. + sign(d.x)))) * smoothstep(.3, .5, abs(d.x / w)) * .5;
           if (r < 1.) return vec4(r, d.x / w, d.y, hs);
           fxPlSh = min(fxPlSh, r - 1.);
         }
@@ -3493,8 +3497,8 @@ S.phoenix = {
       float t = clamp((1. - f.z) * .5, 0., 1.);
       float cup = sqrt(max(0., 1. - f.y * f.y));
       float shaft = exp(-f.y * f.y / .008) * smoothstep(-.95, .3, f.z);
-      float lip = smoothstep(1., .86, f.x);
-      return ((.25 + .75 * t) * (.55 + .45 * cup) + .25 * shaft) * (.45 + .55 * lip);
+      float lip = smoothstep(1., .75, f.x);
+      return ((.25 + .75 * t) * (.55 + .45 * cup) + .25 * shaft) * (.2 + .8 * lip);
     }
     float fxPhoenixH(vec2 p, float seed) {
       vec4 f = fxPlume(aHome.xy + p * aHome.z);
@@ -3510,7 +3514,7 @@ S.phoenix = {
     float fxT = clamp((1. - fxP.z) * .5, 0., 1.);
     float fxSh = 1. - smoothstep(0., .2, fxPlSh);
     float fxAO = smoothstep(0., .55, fxT) * (1. - fxSh * .7);
-    float fxShaft = exp(-fxP.y * fxP.y / .004) * smoothstep(-.95, .3, fxP.z);
+    float fxShaft = exp(-fxP.y * fxP.y / .0025) * smoothstep(-.95, .4, fxP.z);
     float fxBarbU = fxP.z * 1.1 - abs(fxP.y) * .95 + fxN2(fxF * 12.) * .08;
     float fxBarb = .5 + .5 * sin(fxBarbU * 64.);
     float fxSplit = smoothstep(.72, .9, fxN2(vec2(fxBarbU * 9., fxP.w * 9. + sign(fxP.y)))) * smoothstep(.15, .5, abs(fxP.y));
@@ -3527,7 +3531,7 @@ S.phoenix = {
   emissive: `
     float fxFr = fxFresnel(normal, 2.);
     vec3 fxFire = mix(fxBase, vec3(1., .8, .35), .55);
-    float fxEmber = fxSh * smoothstep(.35, .75, fxN2(fxF * 3. + vec2(0., uTime * .3)));
+    float fxEmber = fxSh * fxSh * smoothstep(.5, .8, fxN2(fxF * 3. + vec2(0., uTime * .3)));
     totalEmissiveRadiance = fxFire * pow(fxTip, 1.8) * fxFlick * (1. - fxSplit * .5) * 1.1 + fxBase * fxFr * .25 * fxAO
       + vec3(1., .45, .1) * fxEmber * 1.3;`,
 };
@@ -3562,14 +3566,14 @@ S.mithril = {
           vec2 e = fxRot(tilt) * d;
           e.x /= .8;
           float r = length(e);
-          float hw = odd < .5 ? .12 : .095;
-          float band = abs(r - .4);
+          float hw = odd < .5 ? .13 : .105;
+          float band = abs(r - .44);
           if (band > hw) continue;
           float u = band / hw;
           float wire = odd < .5 ? 1. - pow(u, 6.) : sqrt(max(0., 1. - u * u));
           float ang = atan(e.y, e.x);
           float rivet = odd < .5 ? 0. : exp(-pow((ang - .8) / .2, 2.));
-          float h = clamp((d.x * tilt * 1.2 + d.y * 1.4 + .8) / 2.2, 0., 1.) + wire * (.18 + .12 * rivet);
+          float h = clamp((d.x * sign(tilt) * 1.3 + d.y * .45 + .9) / 1.8, 0., 1.) + wire * (.2 + .12 * rivet);
           if (h > best.y) best = vec4(wire, h, fxH2(c), rivet);
         }
       }
@@ -3577,7 +3581,7 @@ S.mithril = {
     }
     float fxMailleH(vec2 p, float seed) {
       vec4 m = fxRing(aHome.xy + p * aHome.z);
-      float on = step(.001, m.x);
+      float on = smoothstep(0., .45, m.x);
       return smoothstep(0., .06, fxEdgeAt(p)) * mix(.004, .012 + .036 * m.y, on);
     }`,
   height: 'fxMailleH',
@@ -3695,15 +3699,17 @@ S.fairywing = {
       fxWCorr *= .3 + .7 * (1. - smoothstep(.6, 3.8, r));
       // 맥 사이를 가로맥이 네모 방으로 나누고, 날개 끝 쪽은 방이 잘게 갈라진다
       float sk = k * 2. + step(0., ft);
-      float rr = r * (7. + 4. * smoothstep(1.8, 3.6, r)) + fxH1(sk) * 1.7;
-      float rung = 1. - smoothstep(0., .07, abs(fract(rr + .5) - .5));
-      float sub = 1. - smoothstep(0., .05, abs(abs(ft) - .25 - .08 * fxH1(floor(rr) + sk)));
-      sub *= step(.55, fxH1(floor(rr) * 3. + sk)) * smoothstep(1.4, 2.2, r);
-      return vec4(max(main, max(rung, sub) * .7 * (1. - main)), main, fxH1(floor(rr) + sk * 7.), r);
+      float rr = r * 17. + fxH1(sk) * 1.7;
+      float rung = 1. - smoothstep(0., .1, abs(fract(rr + .5) - .5));
+      vec3 v = fxVoronoi(vec2(t * 3.2, r * 15.) + uFace * 5.);
+      float net = 1. - smoothstep(0., .07, v.y);
+      float outer = smoothstep(1.7, 2.6, r);
+      float xv = mix(rung, net, outer);
+      return vec4(max(main, xv * .6 * (1. - main)), main, mix(fxH1(floor(rr) + sk * 7.), v.z, outer), r);
     }
     float fxWingH(vec2 p, float seed) {
       vec4 w = fxWing(aHome.xy + p * aHome.z);
-      return smoothstep(0., .05, fxEdgeAt(p)) * (.01 + .04 * (.5 + .5 * fxWCorr) + .005 * w.y + .002 * w.x);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.01 + .05 * (.5 + .5 * fxWCorr) + .004 * w.y);
     }`,
   height: 'fxWingH',
   color: `
@@ -3716,7 +3722,7 @@ S.fairywing = {
     float fxThick = fxN2(fxF * 2.5 + uFace * 7. + uTime * .03) + fxWg.z * .4;
     vec3 fxMem = fxBase * (.55 + .2 * fxWg.z) * (.85 + .2 * fxN2(fxF * 9.));
     vec3 fxVein = mix(fxBase * .2, vec3(.1, .07, .05), .55);
-    vec3 fxC = mix(fxMem, fxVein, fxWg.x);
+    vec3 fxC = mix(fxMem, mix(fxBase * .35, fxVein, fxWg.y), fxWg.x);
     fxC = mix(fxC, mix(fxBase, vec3(.08), .6), fxStig * .85);
     diffuseColor.rgb = fxC;`,
   normal: 'normal = fxBump(normal, clamp(fxHt - vLift, -.01, .01) + fxWg.x * .0008 + fxWg.y * .0006 + fxN2(fxF * 40.) * .00015);',
@@ -3725,7 +3731,7 @@ S.fairywing = {
     float fxFr = fxFresnel(normal, 1.3);
     vec3 fxIri = .5 + .5 * cos(6.2832 * (fxFr * 1.1 + fxThick * .9 + uTime * .04 + vec3(0., .33, .67)));
     float fxDust = fxGlint(fxF * 60., .25, 1.8);
-    totalEmissiveRadiance = (fxBase * .18 + fxIri * fxFr * .35 + vec3(1.) * fxDust * .7) * (1. - fxWg.x * .85) * (1. - fxStig * .8);`,
+    totalEmissiveRadiance = (fxBase * .14 + fxIri * fxFr * .55 + vec3(1.) * fxDust * .7) * (1. - fxWg.x * .85) * (1. - fxStig * .8);`,
 };
 
 B.fairywing = {
@@ -3781,7 +3787,7 @@ S.dragonegg = {
     float fxBeatE = .55 + .45 * fxBeat();
     float fxFr = fxFresnel(normal, 2.);
     vec3 fxOpal = .5 + .5 * cos(6.2832 * (fxFr * 1.2 + fxE.z * .4 + vec3(0., .33, .67)));
-    totalEmissiveRadiance = vec3(1., .5, .12) * fxE.y * fxBeatE * 2.2 + vec3(1., .35, .05) * fxE.w * (1. - fxE.y) * fxBeatE * .25
+    totalEmissiveRadiance = vec3(1., .36, .06) * fxE.y * fxBeatE * 2.4 + vec3(1., .35, .05) * fxE.w * (1. - fxE.y) * fxBeatE * .25
       + mix(fxBase, fxOpal, .55) * fxFr * .3 * fxE.x;`,
 };
 
