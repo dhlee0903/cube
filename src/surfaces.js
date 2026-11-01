@@ -3485,8 +3485,8 @@ S.phoenix = {
           float r = max(length(vec2(d.x / w, d.y)), abs(d.x) * .3 - d.y);
           // 깃가지 결을 따라 가장자리가 해지고 군데군데 깊이 갈라졌다
           float bu = d.y * 1.1 - abs(d.x / w) * .95;
-          r += (fxN2(vec2(bu * 16., hs * 40. + sign(d.x))) - .3) * .16 * smoothstep(.6, 1., r);
-          r += step(.82, fxN2(vec2(bu * 7., hs * 23. + sign(d.x)))) * smoothstep(.3, .5, abs(d.x / w)) * .5;
+          r += (fxN2(vec2(bu * 8., hs * 40. + sign(d.x))) - .4) * .07 * smoothstep(.7, 1., r);
+          r += smoothstep(.86, .92, fxN2(vec2(bu * 5., hs * 23. + sign(d.x)))) * smoothstep(.35, .6, abs(d.x / w)) * .35;
           if (r < 1.) return vec4(r, d.x / w, d.y, hs);
           fxPlSh = min(fxPlSh, r - 1.);
         }
@@ -3694,7 +3694,7 @@ S.fairywing = {
       float t = a * 8. + fxN2(vec2(r * 1.2, uFace)) * .7 + r * .3;
       float k = floor(t + .5);
       float ft = t - k;
-      float main = 1. - smoothstep(0., .03 + .03 / (1. + r), abs(ft) * r * .55);
+      float main = 1. - smoothstep(0., .04 + .035 / (1. + r), abs(ft) * r * .55);
       fxWCorr = abs(fract(t * .5) * 2. - 1.) * 2. - 1.;
       fxWCorr *= .3 + .7 * (1. - smoothstep(.6, 3.8, r));
       // 맥 사이를 가로맥이 네모 방으로 나누고, 날개 끝 쪽은 방이 잘게 갈라진다
@@ -3709,7 +3709,7 @@ S.fairywing = {
     }
     float fxWingH(vec2 p, float seed) {
       vec4 w = fxWing(aHome.xy + p * aHome.z);
-      return smoothstep(0., .05, fxEdgeAt(p)) * (.01 + .05 * (.5 + .5 * fxWCorr) + .004 * w.y);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.01 + .07 * (.5 + .5 * fxWCorr) + .005 * w.y);
     }`,
   height: 'fxWingH',
   color: `
@@ -3720,7 +3720,7 @@ S.fairywing = {
     vec3 fxBase = diffuseColor.rgb;
     float fxStig = (1. - smoothstep(.1, .14, length((fxF - vec2(.55, 1.05)) / vec2(1.7, .7)))) * (1. - fxWg.x);
     float fxThick = fxN2(fxF * 2.5 + uFace * 7. + uTime * .03) + fxWg.z * .4;
-    vec3 fxMem = fxBase * (.55 + .2 * fxWg.z) * (.85 + .2 * fxN2(fxF * 9.));
+    vec3 fxMem = fxBase * (.4 + .16 * fxWg.z) * (.85 + .2 * fxN2(fxF * 9.));
     vec3 fxVein = mix(fxBase * .2, vec3(.1, .07, .05), .55);
     vec3 fxC = mix(fxMem, mix(fxBase * .35, fxVein, fxWg.y), fxWg.x);
     fxC = mix(fxC, mix(fxBase, vec3(.08), .6), fxStig * .85);

@@ -2432,7 +2432,7 @@ export const THEMES = [
     },
     ambient: { mode: 'float', shape: 'glow', colors: ['#FFFFFF', '#FFD6F0', '#BFEFFF'], count: 40, size: 0.03, speed: 0.3, opacity: 0.7, additive: true },
     burst: { shape: 'star', colors: 'faces', size: 0.1, speed: 2, gravity: -0.5, drag: 2, life: 1.2, additive: true },
-    env: 0.7,
+    env: 0.5,
     surface: 'fairywing',
     sound: 'crystal',
     motion: 'fluid',
