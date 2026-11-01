@@ -922,6 +922,100 @@ export const THEMES = [
     burst: { shape: 'drip', colors: ['#F5B21B', '#E89A10', '#FFD36A'], size: 0.09, speed: 1.8, gravity: -6, drag: 1.4, life: 1.3 },
   },
   {
+    // 들판 한가운데. 다 맞추면 면 하나가 위에서 내려다본 풀밭 한 뙈기다. 끝이 뾰족한 풀잎이 겹겹이 눕고, 잎맥이 서고, 이슬이 맺혔다.
+    // 면마다 풀이 다르다(잔디, 가을 억새빛, 푸른 김의털, 붉은 띠, 보랏빛 수크령, 서리 내린 풀)
+    id: 'grass',
+    name: '풀밭',
+    bg: '#E8EED8',
+    ink: '#1E2A16',
+    backdrop: [
+      'radial-gradient(80% 50% at 50% -10%, rgba(255,250,210,.7), transparent 70%)',
+      'linear-gradient(180deg, #CFE3F2 0 45%, #A8C878 45% 60%, #6A9A3A 100%)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
+    body: { color: '#5A3E28', roughness: 0.85 },
+    faces: ['#4A9A3A', '#C8A040', '#7AA8B0', '#B83A2A', '#7A3A6A', '#D8E0E0'],
+    lights: {
+      sky: '#ffffff', ground: '#6a8a3a', hemi: 1.8,
+      key: ['#fff4e2', 2.3, [-4, 7, 5]], fill: ['#e8ffd0', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
+    },
+    ambient: { mode: 'float', shape: 'dot', colors: ['#FFF6C8', '#FFFFFF'], count: 30, size: 0.04, speed: 0.25, opacity: 0.8 },
+    burst: { shape: 'leaf', colors: 'faces', size: 0.12, speed: 1.6, gravity: -2, drag: 1.6, life: 1.4 },
+    surface: 'grass',
+    sound: 'nature',
+    motion: 'smooth',
+  },
+  {
+    // 밭고랑. 다 맞추면 면 하나가 갓 일군 흙 한 판이다. 부슬부슬한 흙덩이가 실제로 솟고, 잔돌과 실뿌리, 젖은 자국.
+    // 면마다 흙이 다르다(검은 부엽토, 갈색 밭흙, 붉은 황토, 누런 모래흙, 잿빛 점토, 흰 마사토)
+    id: 'soil',
+    name: '흙',
+    bg: '#E8DCC8',
+    ink: '#2A1E14',
+    backdrop: [
+      'radial-gradient(70% 40% at 50% 0%, rgba(255,240,210,.6), transparent 70%)',
+      'linear-gradient(180deg, #D8C8A8 0 40%, #8A6A48 40% 100%)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
+    body: { color: '#4A6A32', roughness: 0.5 },
+    faces: ['#2A2624', '#6A4428', '#A8482A', '#C8A050', '#7A8480', '#E0D0A8'],
+    lights: {
+      sky: '#ffffff', ground: '#5a4030', hemi: 1.8,
+      key: ['#fff4e2', 2.3, [-4, 7, 5]], fill: ['#ffe8c8', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
+    },
+    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.6, gravity: -6, drag: 1.4, life: 1 },
+    surface: 'soil',
+    sound: 'molten',
+    motion: 'heavy',
+  },
+  {
+    // 장작 쌓인 제재소. 다 맞추면 면 하나가 통나무 한 토막의 마구리다. 나이테가 고리를 그리며 실제로 결이 지고, 심재와
+    // 변재 빛깔이 갈리고, 마른 갈라짐과 톱자국이 남았다. 몸통은 나무껍질. 면마다 나무가 다르다(자작, 참나무, 삼나무, 호두, 흑단, 잿빛 고목)
+    id: 'timber',
+    name: '통나무',
+    bg: '#2A2018',
+    ink: '#F2E6D2',
+    backdrop: [
+      'radial-gradient(60% 40% at 50% 10%, rgba(255,210,150,.35), transparent 70%)',
+      'linear-gradient(180deg, #3A2C20, #1A120C)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
+    body: { color: '#6A8A4A', roughness: 0.9 },
+    faces: ['#E8D4A8', '#C08A4A', '#A04A30', '#6A4A34', '#141010', '#9A9A90'],
+    lights: {
+      sky: '#ffffff', ground: '#2a1a10', hemi: 1.8,
+      key: ['#fff4e2', 2.3, [-4, 7, 5]], fill: ['#ffd8a8', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
+    },
+    ambient: { mode: 'float', shape: 'dot', colors: ['#FFE8C0'], count: 24, size: 0.03, speed: 0.2, opacity: 0.6 },
+    burst: { shape: 'square', colors: ['#E8C890', '#C8A070'], size: 0.05, speed: 1.8, gravity: -5, drag: 1.4, life: 1 },
+    surface: 'timber',
+    sound: 'wood',
+    motion: 'heavy',
+  },
+  {
+    // 냇가 자갈밭. 다 맞추면 면 하나가 물살에 닳은 조약돌이 깔린 바닥이다. 동글납작한 돌이 실제로 솟고 사이엔 모래.
+    // 돌마다 결이 다르고(점박이, 석영 줄, 줄무늬) 몇 개는 물에 젖어 번들거린다. 면마다 돌이 다르다(현무암, 장미석, 황토석, 청석, 사문석, 백석)
+    id: 'pebble',
+    name: '조약돌',
+    bg: '#D8DCD8',
+    ink: '#1E2224',
+    backdrop: [
+      'radial-gradient(70% 45% at 50% 0%, rgba(255,255,255,.7), transparent 70%)',
+      'linear-gradient(180deg, #C8D8DC, #8A9890)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
+    body: { color: '#C8B890', roughness: 0.8 },
+    faces: ['#2A2A2C', '#B88A7A', '#D0A050', '#5A6878', '#5A8A6A', '#E8E6E0'],
+    lights: {
+      sky: '#ffffff', ground: '#6a7068', hemi: 1.8,
+      key: ['#fff4e2', 2.3, [-4, 7, 5]], fill: ['#e0f0ff', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
+    },
+    burst: { shape: 'dot', colors: 'faces', size: 0.06, speed: 1.8, gravity: -7, drag: 1.2, life: 1 },
+    surface: 'pebble',
+    sound: 'stone',
+    motion: 'heavy',
+  },
+  {
     // 클레이 애니메이션 촬영장. 찰흙을 꾹 눌러 만든 큐브라 지문과 문지른 자국이 남아 있고,
     // 1초에 여덟 번 모양이 꿈틀거리며, 돌릴 때도 컷컷이 끊긴다
     id: 'clay',
@@ -1128,6 +1222,148 @@ export const THEMES = [
     motion: 'bouncy',
     ambient: { mode: 'buzz', shape: 'fly', colors: ['#2A2018'], count: 3, size: 0.08, speed: 1.5, opacity: 0.9 },
     burst: { shape: 'drip', colors: 'faces', size: 0.08, speed: 2.4, gravity: -7, drag: 1, life: 1 },
+  },
+  {
+    // 여름 평상. 다 맞추면 면 하나가 수박을 네모나게 썬 단면이거나 껍질이다. 물기 머금은 속살 알갱이가 반짝이고 씨가 도톰하게 박혔다.
+    // 면마다 수박이 다르다(빨간 속, 노란 속, 주황 속, 검은 껍질, 줄무늬 껍질, 흰 속껍질)
+    id: 'watermelon',
+    name: '수박',
+    bg: '#E8F2E0',
+    ink: '#1E2A1A',
+    backdrop: [
+      'radial-gradient(70% 45% at 50% 0%, rgba(255,255,240,.8), transparent 70%)',
+      'repeating-linear-gradient(90deg, #D8C8A0 0 40px, #C8B890 40px 42px)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
+    body: { color: '#5A5040', roughness: 0.6 },
+    faces: ['#E8384A', '#F2D24A', '#F28A3A', '#1E4A2A', '#7AB85A', '#E8F0D8'],
+    lights: {
+      sky: '#ffffff', ground: '#a0b080', hemi: 1.8,
+      key: ['#fff4e2', 2.3, [-4, 7, 5]], fill: ['#ffe8e0', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
+    },
+    env: 0.8,
+    burst: { shape: 'drip', colors: ['#E8384A', '#FF8A9A'], size: 0.07, speed: 2.2, gravity: -7, drag: 1, life: 1 },
+    surface: 'watermelon',
+    sound: 'fruit',
+    motion: 'bouncy',
+  },
+  {
+    // 가을 들판 짚더미. 다 맞추면 면 하나가 커다란 호박의 겉이다. 둥근 이랑이 실제로 볼록볼록 솟고 골은 깊다. 가는 줄과 잔점, 은은한 윤.
+    // 면마다 호박이 다르다(주황 호박, 초록 단호박, 흰 호박, 푸른 잿빛 호박, 붉은 밤호박, 누런 땅콩호박)
+    id: 'pumpkin',
+    name: '호박',
+    bg: '#F2E2C2',
+    ink: '#2A1A0E',
+    backdrop: [
+      'radial-gradient(70% 45% at 50% 0%, rgba(255,240,200,.8), transparent 70%)',
+      'linear-gradient(180deg, #E8C890 0 50%, #C8A060 50% 100%)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
+    body: { color: '#6A4A2A', roughness: 0.8 },
+    faces: ['#E87A1E', '#3A5A32', '#EEE8D8', '#8A9AA0', '#B8301E', '#D8A86A'],
+    lights: {
+      sky: '#ffffff', ground: '#8a6a40', hemi: 1.8,
+      key: ['#fff4e2', 2.3, [-4, 7, 5]], fill: ['#ffe0b0', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
+    },
+    ambient: { mode: 'fall', shape: 'leaf', colors: ['#C88A3A', '#B8501E', '#E8B060'], count: 12, size: 0.2, speed: 0.2, opacity: 0.9 },
+    burst: { shape: 'leaf', colors: ['#C88A3A', '#8A6A2A', '#E8B060'], size: 0.12, speed: 1.6, gravity: -3, drag: 1.4, life: 1.4 },
+    surface: 'pumpkin',
+    sound: 'wood',
+    motion: 'heavy',
+  },
+  {
+    // 열대 과일 가판. 다 맞추면 면 하나가 용과의 껍질이거나 속살이다. 끝이 초록으로 물든 잎 비늘이 실제로 들려 솟고,
+    // 속살엔 까만 씨가 촘촘하다. 면마다 다르다(분홍 껍질, 노란 껍질, 흰 속, 자줏빛 속, 붉은 속, 덜 익은 초록 껍질)
+    id: 'dragonfruit',
+    name: '용과',
+    bg: '#F6EEF0',
+    ink: '#2A1420',
+    backdrop: [
+      'radial-gradient(70% 45% at 50% 0%, rgba(255,255,255,.8), transparent 70%)',
+      'linear-gradient(180deg, #F8E0EA, #E8C0D0)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
+    body: { color: '#3A3A2A', roughness: 0.6 },
+    faces: ['#F0508A', '#F2D040', '#F2EEE8', '#90104E', '#D82A3A', '#5AA04A'],
+    lights: {
+      sky: '#ffffff', ground: '#c0a0b0', hemi: 1.8,
+      key: ['#fff4e2', 2.3, [-4, 7, 5]], fill: ['#fff0f8', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
+    },
+    env: 0.8,
+    burst: { shape: 'dot', colors: ['#141414', '#F0508A'], size: 0.04, speed: 2, gravity: -6, drag: 1.2, life: 1 },
+    surface: 'dragonfruit',
+    sound: 'fruit',
+    motion: 'bouncy',
+  },
+  {
+    // 해변 노점. 다 맞추면 면 하나가 파인애플의 껍질이거나 썬 속살이다. 육각 눈이 사선으로 줄지어 실제로 솟고 눈마다 가시 끝이 섰다.
+    // 면마다 다르다(덜 익은 초록, 잘 익은 금빛, 지나 익은 갈색 껍질, 노란 속살, 흰 속살, 붉은 관상 파인애플)
+    id: 'pineapple',
+    name: '파인애플',
+    bg: '#F2F0E0',
+    ink: '#2A2414',
+    backdrop: [
+      'radial-gradient(70% 45% at 50% 0%, rgba(255,255,230,.8), transparent 70%)',
+      'linear-gradient(180deg, #A8E0E8 0 50%, #F2E0B0 50% 100%)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
+    body: { color: '#2A4A3A', roughness: 0.6 },
+    faces: ['#5A8A3A', '#D88A30', '#8A5A2A', '#F2D860', '#F0EAC8', '#B8402A'],
+    lights: {
+      sky: '#ffffff', ground: '#c8b080', hemi: 1.8,
+      key: ['#fff4e2', 2.3, [-4, 7, 5]], fill: ['#fff0c8', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
+    },
+    burst: { shape: 'drip', colors: ['#F2D860', '#FFF0A0'], size: 0.07, speed: 2.2, gravity: -7, drag: 1, life: 1 },
+    surface: 'pineapple',
+    sound: 'fruit',
+    motion: 'bouncy',
+  },
+  {
+    // 대리석 식탁. 다 맞추면 면 하나가 쪼갠 석류 속이거나 껍질이다. 즙 주머니 알갱이가 보석처럼 볼록 솟아 빛이 맺히고 사이엔 누런 막.
+    // 면마다 다르다(붉은 알, 분홍 알, 흰 알, 검붉은 알, 갈색 가죽 껍질, 연분홍 껍질)
+    id: 'pomegranate',
+    name: '석류',
+    bg: '#ECEAE8',
+    ink: '#2A1418',
+    backdrop: [
+      'radial-gradient(70% 45% at 50% 0%, rgba(255,255,255,.8), transparent 70%)',
+      'linear-gradient(135deg, #F2F0EE, #C8C4C0)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
+    body: { color: '#3A4A3A', roughness: 0.6 },
+    faces: ['#C8102E', '#E86A8A', '#EEE0D8', '#5A0A1E', '#8A4A2A', '#E0A890'],
+    lights: {
+      sky: '#ffffff', ground: '#a09090', hemi: 1.8,
+      key: ['#fff4e2', 2.3, [-4, 7, 5]], fill: ['#fff0f0', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
+    },
+    env: 0.8,
+    burst: { shape: 'drip', colors: ['#C8102E', '#E8305A'], size: 0.07, speed: 2.2, gravity: -7, drag: 1, life: 1 },
+    surface: 'pomegranate',
+    sound: 'fruit',
+    motion: 'bouncy',
+  },
+  {
+    // 과일 바구니. 다 맞추면 면 하나가 큼직한 감귤의 겉이다. 향기름 주머니가 잔 보조개처럼 실제로 오목오목 패였고 겉은 밀랍처럼 반들거린다.
+    // 면마다 감귤이 다르다(오렌지, 레몬, 라임, 자몽, 블러드오렌지, 유자)
+    id: 'citrus',
+    name: '귤껍질',
+    bg: '#F6F2E6',
+    ink: '#2A2010',
+    backdrop: [
+      'radial-gradient(70% 45% at 50% 0%, rgba(255,255,240,.8), transparent 70%)',
+      'linear-gradient(180deg, #F8F0D8, #E8D8B0)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
+    body: { color: '#3A4A6A', roughness: 0.6 },
+    faces: ['#F28A1E', '#F2DA3A', '#4A8A2A', '#F2A078', '#A8301E', '#E8E0A0'],
+    lights: {
+      sky: '#ffffff', ground: '#c0a880', hemi: 1.8,
+      key: ['#fff4e2', 2.3, [-4, 7, 5]], fill: ['#fff8e0', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
+    },
+    burst: { shape: 'drip', colors: ['#FFB040', '#FFE070'], size: 0.06, speed: 2.2, gravity: -7, drag: 1, life: 1 },
+    surface: 'citrus',
+    sound: 'fruit',
+    motion: 'bouncy',
   },
   {
     // 미러볼. 거울 조각마다 돌아가는 색 조명이 걸려 번쩍이고, 박자에 맞춰 조명 색이 돈다
@@ -2157,6 +2393,129 @@ export const THEMES = [
     sound: 'cloth',
     motion: 'squish',
   },
+  {
+    // 가죽 공방 작업대. 다 맞추면 면 하나가 악어 배 가죽 한 장이다. 네모난 비늘판이 줄지어 실제로 솟고 골은 깊다. 가운데 판이 크고
+    // 옆으로 갈수록 잘다. 광택 가공이라 판 꼭대기가 번들거린다. 면마다 염색이 다르다(검정, 꼬냑, 버건디, 네이비, 포레스트, 본)
+    id: 'croc',
+    name: '악어가죽',
+    bg: '#1A1614',
+    ink: '#EEE6DA',
+    backdrop: [
+      'radial-gradient(60% 40% at 50% 15%, rgba(255,230,200,.25), transparent 70%)',
+      'repeating-linear-gradient(90deg, rgba(255,255,255,.02) 0 2px, transparent 2px 6px)',
+      'linear-gradient(180deg, #2A221C, #120E0C)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
+    body: { color: '#6A6A70', roughness: 0.45 },
+    faces: ['#1A1A1C', '#8A4A1E', '#6A1A26', '#1E2E5A', '#2A4A2A', '#C8B8A0'],
+    lights: {
+      sky: '#ffffff', ground: '#2a1a10', hemi: 1.8,
+      key: ['#fff4e2', 2.3, [-4, 7, 5]], fill: ['#ffe0c0', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
+    },
+    env: 0.8,
+    burst: { shape: 'dot', colors: 'faces', size: 0.04, speed: 1.4, gravity: -4, drag: 2, life: 0.9 },
+    surface: 'croc',
+    sound: 'leather',
+    motion: 'smooth',
+  },
+  {
+    // 가죽 공방 작업대. 다 맞추면 면 하나가 타조 등가죽 한 장이다. 깃대 자리가 둥근 혹으로 솟아 흩어졌고 혹마다 구멍이 패였다.
+    // 가운데가 빽빽하고 가장자리로 성기다. 면마다 염색이 다르다(타바코, 블랙, 레드, 터쿼이즈, 올리브, 그레이)
+    id: 'ostrich',
+    name: '타조가죽',
+    bg: '#1A1614',
+    ink: '#EEE6DA',
+    backdrop: [
+      'radial-gradient(60% 40% at 50% 15%, rgba(255,230,200,.25), transparent 70%)',
+      'repeating-linear-gradient(90deg, rgba(255,255,255,.02) 0 2px, transparent 2px 6px)',
+      'linear-gradient(180deg, #2A221C, #120E0C)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
+    body: { color: '#E8DCC8', roughness: 0.45 },
+    faces: ['#B8885A', '#2A2624', '#8A2A2A', '#2A8A8A', '#6A7A3A', '#9A9AA0'],
+    lights: {
+      sky: '#ffffff', ground: '#2a1a10', hemi: 1.8,
+      key: ['#fff4e2', 2.3, [-4, 7, 5]], fill: ['#ffe0c0', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
+    },
+    burst: { shape: 'dot', colors: 'faces', size: 0.04, speed: 1.4, gravity: -4, drag: 2, life: 0.9 },
+    surface: 'ostrich',
+    sound: 'leather',
+    motion: 'smooth',
+  },
+  {
+    // 가죽 공방 작업대. 다 맞추면 면 하나가 비단뱀 가죽 한 장이다. 마름모 비늘이 기와처럼 겹쳐 뒤끝이 들렸고, 테 두른 얼룩이 번졌다.
+    // 비늘 끝은 무지갯빛. 면마다 바탕이 다르다(내추럴, 차콜, 레드, 코발트, 에메랄드, 화이트)
+    id: 'python',
+    name: '비단뱀가죽',
+    bg: '#1A1614',
+    ink: '#EEE6DA',
+    backdrop: [
+      'radial-gradient(60% 40% at 50% 15%, rgba(255,230,200,.25), transparent 70%)',
+      'repeating-linear-gradient(90deg, rgba(255,255,255,.02) 0 2px, transparent 2px 6px)',
+      'linear-gradient(180deg, #2A221C, #120E0C)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
+    body: { color: '#8A7A6A', roughness: 0.45 },
+    faces: ['#C8A878', '#2A2628', '#B83A3A', '#3A5AA8', '#3A7A5A', '#E8E4DC'],
+    lights: {
+      sky: '#ffffff', ground: '#2a1a10', hemi: 1.8,
+      key: ['#fff4e2', 2.3, [-4, 7, 5]], fill: ['#ffe0c0', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
+    },
+    env: 0.8,
+    burst: { shape: 'dot', colors: 'faces', size: 0.04, speed: 1.4, gravity: -4, drag: 2, life: 0.9 },
+    surface: 'python',
+    sound: 'scale',
+    motion: 'smooth',
+  },
+  {
+    // 가죽 공방 작업대. 다 맞추면 면 하나가 가오리 등가죽(샤그린) 한 장이다. 칼슘 알갱이가 빈틈없이 솟고 가운데엔 흰 알갱이 별(크라운).
+    // 갈아 윤낸 알갱이 꼭대기는 흰 속이 드러나 반짝인다. 면마다 염색이 다르다(블랙, 와인, 네이비, 틸, 골드, 퍼플)
+    id: 'stingray',
+    name: '가오리가죽',
+    bg: '#1A1614',
+    ink: '#EEE6DA',
+    backdrop: [
+      'radial-gradient(60% 40% at 50% 15%, rgba(255,230,200,.25), transparent 70%)',
+      'repeating-linear-gradient(90deg, rgba(255,255,255,.02) 0 2px, transparent 2px 6px)',
+      'linear-gradient(180deg, #2A221C, #120E0C)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
+    body: { color: '#D8D0C0', roughness: 0.45 },
+    faces: ['#1A1A1E', '#5A1A2A', '#1E3A6A', '#1E5A4A', '#C8A030', '#7A3A8A'],
+    lights: {
+      sky: '#ffffff', ground: '#2a1a10', hemi: 1.8,
+      key: ['#fff4e2', 2.3, [-4, 7, 5]], fill: ['#ffe0c0', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
+    },
+    env: 0.8,
+    burst: { shape: 'dot', colors: 'faces', size: 0.04, speed: 1.4, gravity: -4, drag: 2, life: 0.9 },
+    surface: 'stingray',
+    sound: 'leather',
+    motion: 'smooth',
+  },
+  {
+    // 가죽 공방 작업대. 다 맞추면 면 하나가 가방용 송아지가죽 한 장이다. 오그린 자갈무늬가 도톰히 솟고, 스티커마다 가장자리를 따라
+    // 새들 스티치가 비스듬히 박혔다. 면마다 색이 다르다(에투프, 블랙, 오렌지, 블루, 그린, 크림)
+    id: 'calf',
+    name: '소가죽',
+    bg: '#1A1614',
+    ink: '#EEE6DA',
+    backdrop: [
+      'radial-gradient(60% 40% at 50% 15%, rgba(255,230,200,.25), transparent 70%)',
+      'repeating-linear-gradient(90deg, rgba(255,255,255,.02) 0 2px, transparent 2px 6px)',
+      'linear-gradient(180deg, #2A221C, #120E0C)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
+    body: { color: '#6A3A20', roughness: 0.45 },
+    faces: ['#8A7A6A', '#1E1C1C', '#E0701E', '#2A4A8A', '#2A6A4A', '#EEE6D2'],
+    lights: {
+      sky: '#ffffff', ground: '#2a1a10', hemi: 1.8,
+      key: ['#fff4e2', 2.3, [-4, 7, 5]], fill: ['#ffe0c0', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
+    },
+    burst: { shape: 'dot', colors: 'faces', size: 0.04, speed: 1.4, gravity: -4, drag: 2, life: 0.9 },
+    surface: 'calf',
+    sound: 'leather',
+    motion: 'smooth',
+  },
 
 
   {
@@ -2573,7 +2932,8 @@ export const themeById = (id) => THEMES.find((t) => t.id === id);
 // 테마 고르는 목록에서 묶어 보여 주는 무리. 테마는 모두 한 무리에만 들어간다(테스트가 본다)
 export const GROUPS = [
   { name: '기본', themes: ['classic', 'candy', 'brick', 'dice', 'jelly', 'clay', 'bubblewrap', 'paper', 'box', 'doodle', 'slime'] },
-  { name: '자연', themes: ['forest', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert', 'honey', 'fruit'] },
+  { name: '자연', themes: ['forest', 'grass', 'soil', 'timber', 'pebble', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert', 'honey'] },
+  { name: '과일', themes: ['fruit', 'watermelon', 'pumpkin', 'dragonfruit', 'pineapple', 'pomegranate', 'citrus'] },
   { name: '빛·불', themes: ['neon', 'lava', 'electric', 'tesla', 'disco', 'lavalamp', 'kaleido'] },
   { name: '우주', themes: ['space', 'planet', 'blackhole', 'nebula', 'star', 'galaxy'] },
   { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'fossil', 'bismuth', 'banded'] },
@@ -2581,7 +2941,7 @@ export const GROUPS = [
   { name: '문양', themes: ['arabesque', 'artdeco', 'celtic', 'aztec', 'paisley', 'kkotsal', 'guilloche', 'quilt', 'lantern', 'carpet'] },
   { name: '패턴', themes: ['houndstooth', 'glencheck', 'herringbone', 'gingham', 'argyle', 'swissdot', 'chevron', 'tartan'] },
   { name: '판타지', themes: ['dragon', 'phoenix', 'mithril', 'damascus', 'fairywing', 'dragonegg'] },
-  { name: '동물', themes: ['wool', 'hamster', 'wild'] },
+  { name: '동물', themes: ['wool', 'hamster', 'wild', 'croc', 'ostrich', 'python', 'stingray', 'calf'] },
   { name: '금속·기계', themes: ['metal', 'gauge', 'rust', 'mercury', 'circuit', 'carbon'] },
   { name: '디지털·레트로', themes: ['glitch', 'pixel', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'viscera', 'brain'] },
