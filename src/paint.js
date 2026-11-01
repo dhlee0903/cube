@@ -102,7 +102,7 @@ void main() {
   } else {
     float h1 = fxHash(tid), h2 = fxHash(tid + 5.1), h3 = fxHash(tid + 9.7), hz = fxHash(tid + 31.3);
     // 사진마다 조금 다른 자리, 각도, 거리에서 찍었다
-    vec2 src = tc + fxRot(tr * .55) * tl * (1. + (h3 - .5) * .1) + (vec2(h1, h2) - .5) * .035;
+    vec2 src = tc + fxRot(tr * .25) * tl * (1. + (h3 - .5) * .04) + (vec2(h1, h2) - .5) * .012;
     vec2 uv = src / fxAsp() + .5;
     vec3 photo = fxOver(uv, fxBack(uv));
     photo *= .86 + .26 * hz;
@@ -144,7 +144,7 @@ vec3 fxBack(vec2 uv) {
   return mix(sea, sky, smoothstep(-.12, .02, w));
 }
 vec3 fxWave(vec2 uv) {
-  vec2 w = vec2(sin(uv.y * 22. + uTime * .4), cos(uv.x * 19. - uTime * .3)) * .004;
+  vec2 w = vec2(sin(uv.y * 22. + uTime * .4), cos(uv.x * 19. - uTime * .3)) * .0025;
   return fxOver(uv + w, fxBack(uv));
 }
 void main() {
@@ -163,14 +163,15 @@ void main() {
     acc += fxWave(q / uRes);
     nz += fxHash(floor(q / (1.6 * uDpr)));
   }
-  vec3 col = acc / 15.;
+  // 큐브 위에서는 색을 문질러 섞지 않는다(스티커 색이 그대로 보이게). 흐름 붓질은 결로만 남는다
+  vec3 col = mix(acc / 15., fxWave(vUv), fxTex(vUv).a * .85);
   float st = nz / 15.;
   col = fxSat(col, 1.5);
   col = mix(col, vec3(.1, .13, .28), smoothstep(.32, .08, fxL(col)) * .55);
   col = mix(col, col * vec3(1.12, 1., .78), smoothstep(.55, .9, fxL(col)) * .4);
   col *= .84 + .32 * st;
   // 출렁이는 굵은 윤곽
-  vec2 w = vec2(sin(vUv.y * 22. + uTime * .4), cos(vUv.x * 19. - uTime * .3)) * .004;
+  vec2 w = vec2(sin(vUv.y * 22. + uTime * .4), cos(vUv.x * 19. - uTime * .3)) * .0025;
   float rim = fxRim(vUv + w, 2.5 * uDpr);
   col = mix(col, vec3(.08, .09, .16), rim * (.6 + .4 * st));
   gl_FragColor = vec4(clamp(col, 0., 1.), 1.);
@@ -233,7 +234,8 @@ void main() {
   float D = uDab * uDpr;
   vec3 bg = fxBack(vUv);
   vec3 under = fxOver(vUv, bg);
-  vec3 col = uPalN > 0 ? vec3(.93, .9, .82) : mix(under * .7, under, uPastel * 2.);
+  // 붓 자국 사이로는 그 자리 색이 비친다(점묘는 캔버스와 섞인 색)
+  vec3 col = uPalN > 0 ? mix(under, vec3(.93, .9, .82), .4) : under * (.9 + uPastel);
   float ridge = 0.;
   float bz = -1.;
   for (int L = 0; L < 2; L++) {
@@ -258,12 +260,13 @@ void main() {
         vec2 qd = abs(lo) / vec2(uLen * .5, uWide);
         float r = uDot > .5 ? length(lo) / .5 : mix(length(qd), pow(pow(qd.x, 4.) + pow(qd.y, 4.), .25), uBlunt);
         float z = h + float(L);
-        if (r < 1. && z > bz) {
+        vec3 sc = fxOver(cp / uRes, bg);
+        // 붓 자국은 칸 경계를 넘지 않는다: 붓 가운데 색이 이 자리 색과 다르면(다른 스티커나 몸통) 칠하지 않는다
+        if (r < 1. && z > bz && length(sc - under) < .2) {
           bz = z;
-          vec3 sc = fxOver(cp / uRes, bg);
           sc += (vec3(fxHash(c + 1.1), fxHash(c + 2.2), fxHash(c + 4.4)) - .5) * uJit;
           sc = mix(fxSat(sc, 1.25), vec3(1.), uPastel);
-          if (uPalN > 0) sc = fxPick(sc + (vec3(fxHash(c + 5.5), fxHash(c + 6.6), fxHash(c + 8.8)) - .5) * .28);
+          if (uPalN > 0) sc = fxPick(sc + (vec3(fxHash(c + 5.5), fxHash(c + 6.6), fxHash(c + 8.8)) - .5) * .16);
           col = sc;
           ridge = (1. - r * r) * (.85 + .15 * sin(lo.y / uWide * 4. + h * 6.));
         }
@@ -325,14 +328,22 @@ void main() {
     vec4 cc = fxTex((cell + .5) * T / uRes);
     float h = fxHash(cell);
     float tile;
-    if (h < .4) tile = 1. - smoothstep(.34, .4, max(abs(f.x), abs(f.y)));
-    else if (h < .75) tile = 1. - smoothstep(.36, .42, length(f));
-    else tile = (1. - smoothstep(.36, .42, length(f))) * smoothstep(.12, .17, length(f));
+    if (h < .4) tile = 1. - smoothstep(.42, .47, max(abs(f.x), abs(f.y)));
+    else if (h < .75) tile = 1. - smoothstep(.44, .5, length(f));
+    else tile = (1. - smoothstep(.44, .5, length(f))) * smoothstep(.1, .15, length(f));
     vec3 hsv = fxHsv(cc.rgb);
     vec3 fill = fxSat(cc.rgb, 1.2) * (.82 + .32 * fxHash(cell + 2.));
     if (hsv.y < .25 && hsv.z < .4) fill = fxHash(cell + 4.) > .55 ? vec3(.95, .93, .88) : vec3(.04);
     col = mix(gold * .92, fill, tile * step(.5, cc.a));
-    col = mix(col, vec3(.2, .12, .04), fxRim(vUv, 1.6 * uDpr) * .7);
+    // 스티커 테두리를 짙게 둘러 칸이 갈리게
+    float e = 0.;
+    for (int i = 0; i < 4; i++) {
+      float an = float(i) * .785398;
+      vec2 o = vec2(cos(an), sin(an)) * 1.8 * uDpr / uRes;
+      vec4 a = fxTex(vUv + o), b = fxTex(vUv - o);
+      e = max(e, length(a.rgb * a.a - b.rgb * b.a) + abs(a.a - b.a));
+    }
+    col = mix(col, vec3(.16, .09, .02), smoothstep(.2, .4, e) * .85);
   }
   col += pow(fxN(P * 30. + uTime * .2), 8.) * .55 * (c.a < .5 ? 1. : .3);
   gl_FragColor = vec4(clamp(col, 0., 1.), 1.);
@@ -361,13 +372,15 @@ void main() {
   }
   float edge = (d2 - d1) / K;
   float h1 = fxHash(cid), h2 = fxHash(cid + 3.1), h3 = fxHash(cid + 7.7);
-  // 조각마다 조금씩 다른 시점
-  vec2 src = cpos + fxRot((h1 - .5) * .4) * (P - cpos) * (1. + (h3 - .5) * .2) + (vec2(h2, h3) - .5) * .07;
+  // 조각마다 조금씩 다른 시점. 큐브 위에서는 적게 어긋나 스티커를 알아볼 수 있다
+  float cube = fxTex(vUv).a;
+  float k = mix(1., .2, cube);
+  vec2 src = cpos + fxRot((h1 - .5) * .4 * k) * (P - cpos) * (1. + (h3 - .5) * .2 * k) + (vec2(h2, h3) - .5) * .07 * k;
   vec2 uv = src / fxAsp() + .5;
   vec2 cuv = cpos / fxAsp() + .5;
-  vec3 col = mix(fxOver(uv, fxBack(uv)), fxOver(cuv, fxBack(cuv)), .5);
+  vec3 col = mix(fxOver(uv, fxBack(uv)), fxOver(cuv, fxBack(cuv)), mix(.5, .12, cube));
   float l = fxL(col);
-  col = mix(col, mix(vec3(.17, .13, .1), vec3(.86, .74, .52), l), .55);
+  col = mix(col, mix(vec3(.17, .13, .1), vec3(.86, .74, .52), l), mix(.55, .15, cube));
   // 조각마다 빛이 다른 쪽에서 든다
   float gdir = h1 * 6.2832;
   float grad = dot(P - cpos, vec2(cos(gdir), sin(gdir))) * K * .9;
@@ -375,7 +388,7 @@ void main() {
   float hatch = smoothstep(.3, .7, fxN(vec2(dot(P, vec2(cos(gdir + .8), sin(gdir + .8))) * 70., dot(P, vec2(-sin(gdir + .8), cos(gdir + .8))) * 6.)));
   col *= 1. - hatch * .16 * (.4 + .6 * smoothstep(.1, .45, -grad));
   float ln = (1. - smoothstep(0., .008, edge)) * step(.5, fxN(P * 6. + 3.));
-  col = mix(col, vec3(.12, .09, .07), ln * .75);
+  col = mix(col, vec3(.12, .09, .07), ln * mix(.75, .3, cube));
   col *= .92 + .12 * fxN(vUv * uRes / (2. * uDpr));
   gl_FragColor = vec4(clamp(col, 0., 1.), 1.);
 }`;
@@ -421,7 +434,7 @@ vec3 fxBack(vec2 uv) {
 }
 void main() {
   vec2 pos = vUv * uRes / uDpr;
-  vec2 wob = (vec2(fxN(pos * .025), fxN(pos * .025 + 7.)) - .5) * 7. * uDpr / uRes;
+  vec2 wob = (vec2(fxN(pos * .025), fxN(pos * .025 + 7.)) - .5) * 4. * uDpr / uRes;
   vec3 bg = fxBack(vUv);
   vec4 t = fxTex(vUv + wob);
   vec3 c = mix(bg, t.rgb, t.a);
