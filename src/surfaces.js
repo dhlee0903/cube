@@ -4709,100 +4709,80 @@ B.wild = {
 };
 
 S.croc = {
-  // 악어가죽(배 부위). 다 맞추면 면 하나가 악어 배 가죽 한 장이다. 네모난 비늘판이 바둑판처럼 줄과 열을 맞춰 늘어섰고,
-  // 판마다 쿠션처럼 둥글게 부풀어 실제로 솟았으며 판 사이 골은 좁고 깊게 접혔다. 가운데 열 판이 크고 옆으로 갈수록 잘아진다.
-  // 마노로 문질러 광을 낸 글레이즈 가공이라 판 꼭대기는 유리처럼 번들거리며 조금 밝게 바래고, 골은 무광으로 짙게 물들었다.
-  // 면마다 염색이 다르다(검정, 꼬냑, 버건디, 네이비, 포레스트, 본)
+  // 악어가죽 가방. 다 맞추면 면 하나가 악어 배 가죽으로 만든 가방 앞판이다. 배 한가운데 열을 기준으로 비늘판이 좌우 거의
+  // 대칭으로 줄지어 섰고, 가운데 판은 크고 네모나며 옆으로 갈수록 잘아지다가 옆구리에선 작고 둥근 비늘이 두 줄씩 촘촘해진다.
+  // 판마다 쿠션처럼 살짝 부풀어 실제로 솟았고 판 사이 골은 좁고 깊게 접혔다. 배 판마다 아래쪽에 털구멍 자리 점이 하나씩 있다.
+  // 마노로 문질러 낸 글레이즈 광택이라 판 꼭대기마다 빛이 맺히고, 염료가 얇아진 꼭대기는 조금 밝고 골은 짙다.
+  // 스티커마다 가장자리를 따라 가죽과 같은 빛깔 실로 새들 스티치가 박혔고, 끝은 칠을 먹여 마감했다.
+  // 면마다 가방 색이 다르다(블랙, 골드 브라운, 버건디, 네이비, 그린, 가운데가 희고 옆으로 잿빛이 번지는 히말라야)
   head: `
-    // 비늘판: x 볼록함(0 골 ~ 1 꼭대기), y 판마다 난수, z 판 가운데 쪽(0 가장자리 ~ 1 가운데)
-    vec3 fxCroc(vec2 F) {
-      vec2 w = F + (vec2(fxN2(F * 2.5 + uFace), fxN2(F * 2.5 + 9. + uFace)) - .5) * .07;
-      float x = w.x * (1. + .7 * w.x * w.x);
-      float ry = w.y * 5.6 + .15 * sin(x * 2.5 + uFace) + uFace * .3;
+    // 비늘판: x 볼록함(0 골 ~ 1 꼭대기), y 판마다 난수, z 판 가운데 쪽(0 가장자리 ~ 1 가운데), w 털구멍 점
+    vec4 fxCroc(vec2 F) {
+      vec2 w = F + (vec2(fxN2(F * 2.2 + uFace), fxN2(F * 2.2 + 9. + uFace)) - .5) * .05 + (vec2(fxN2(F * 7. + 3. + uFace), fxN2(F * 7. + 13. + uFace)) - .5) * .025;
+      float ax = abs(w.x);
+      float x = sign(w.x) * (ax + .9 * ax * ax * ax);
+      float flank = step(.64, ax);
+      float ry = w.y * 4.6 * (1. + flank) + .1 * sin(ax * 2.5 + uFace) + uFace * .3;
       float row = floor(ry);
-      float rx = x * 3.2 + (fxH1(row + uFace * 7.) - .5) * .3 + .5;
-      vec2 cell = vec2(floor(rx), row);
+      float rx = x * 4.2 + .5 + (fxH1(row + uFace * 7.) - .5) * mix(.14, .4, flank);
       vec2 q = vec2(fract(rx), fract(ry));
+      vec2 cell = vec2(floor(rx), row);
       float id = fxH2(cell + uFace * 13.);
-      if (id < .18) { q.x = fract(q.x * 2.); id = fxH2(cell + floor(fract(rx) * 2.) + 5.); }
       vec2 qq = abs(q - .5) * 2.;
-      float r = pow(pow(qq.x, 6.) + pow(qq.y, 6.), 1. / 6.);
-      return vec3(sqrt(max(0., 1. - pow(r, 9.))) * (.88 + .12 * id), id, 1. - r);
+      float pw = mix(9., 3., flank);
+      float r = pow(pow(qq.x, pw) + pow(qq.y, pw), 1. / pw);
+      float dome = sqrt(max(0., 1. - pow(r, mix(12., 5., flank)))) * (1. - .3 * flank);
+      vec2 cs = vec2(1. / (4.2 * (1. + 2.7 * ax * ax)), 1. / (4.6 * (1. + flank)));
+      vec2 pd = (q - vec2(.5 + (fxH2(cell + 3.1) - .5) * .3, .27 + .1 * fxH2(cell + 7.7))) * cs;
+      float pore = (1. - smoothstep(.005, .01, length(pd))) * (1. - flank) * step(.15, fxH2(cell + 5.5));
+      return vec4(dome * (.9 + .1 * id), id, 1. - r, pore);
+    }
+    // 새들 스티치: x 실, y 바늘구멍. q는 스티커 안 좌표(-1~1)
+    vec2 fxCrocStitch(vec2 q) {
+      float inset = .84;
+      vec2 a = abs(q);
+      float along = a.x > a.y ? q.y : q.x;
+      float acr = max(a.x, a.y) - inset;
+      float u = fract(along * 10. + .5) - .5;
+      float st = (1. - smoothstep(.018, .034, abs(acr + u * .04))) * (1. - smoothstep(.3, .38, abs(u)));
+      float hole = 1. - smoothstep(.012, .03, length(vec2(abs(u) - .45, acr) * vec2(.08, 1.)));
+      float on = step(max(a.x, a.y), inset + .07) * step(min(a.x, a.y), inset);
+      return vec2(st, hole) * on;
     }
     float fxCrocH(vec2 p, float seed) {
-      vec3 c = fxCroc(aHome.xy + p * aHome.z);
-      return smoothstep(0., .05, fxEdgeAt(p)) * (.004 + .014 * c.x);
+      vec4 c = fxCroc(aHome.xy + p * aHome.z);
+      vec2 s = fxCrocStitch(p / uSticker.x);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .016 * c.x - .002 * c.w + .003 * s.x - .003 * s.y);
     }`,
   height: 'fxCrocH',
   color: `
     if (fxEdge() < 0.) discard;
     vec2 fxF = fxFace();
-    vec3 fxCr = fxCroc(fxF);
+    vec4 fxCr = fxCroc(fxF);
+    vec2 fxSt = fxCrocStitch(fxQ());
     vec3 fxBase = diffuseColor.rgb;
-    float fxTop = smoothstep(.75, 1., fxCr.x) * smoothstep(.05, .3, fxCr.z);
-    float fxPore = step(.9, fxVoronoi(fxF * 120.).z) * fxTop;
-    vec3 fxC = fxBase * (.22 + .85 * fxCr.x) * (.88 + .24 * fxCr.y);
-    fxC = mix(fxC, fxBase * 1.3 + .05, fxTop * smoothstep(.15, .5, fxCr.z) * .35);
-    fxC *= (.92 + .12 * fxN2(fxF * 60.)) * (1. - fxPore * .25);
+    if (uFace > 4.5) fxBase = mix(fxBase, vec3(.4, .38, .36), smoothstep(.2, 1., abs(fxF.x) + .15 * fxN2(fxF * 3.)));
+    float fxTop = smoothstep(.6, 1., fxCr.x);
+    vec3 fxC = fxBase * (.3 + .75 * smoothstep(0., .45, fxCr.x)) * (.9 + .16 * fxCr.y);
+    fxC = mix(fxC, fxBase * 1.18 + .02, fxTop * smoothstep(.1, .45, fxCr.z) * .25);
+    fxC *= (1. - fxCr.w * .6) * (.95 + .08 * fxN2(fxF * 70.));
+    vec3 fxThread = mix(fxBase, vec3(.9, .88, .82), .14) * 1.12 + .02;
+    fxC = mix(fxC, fxThread * (.8 + .2 * fxN2(fxQ() * 90.)), fxSt.x);
+    fxC *= 1. - fxSt.y * .4;
+    float fxRim = smoothstep(.93, .99, max(abs(fxQ().x), abs(fxQ().y)));
+    fxC = mix(fxC, fxBase * .35, fxRim * .8);
     diffuseColor.rgb = fxC;`,
-  normal: 'normal = fxBump(normal, fxN2(fxF * 220.) * .0002 + fxN2(fxF * 50.) * .0003 - fxPore * .0004 + fxCr.x * .0008);',
-  surface: 'roughnessFactor = mix(.75, .06, fxTop);',
-  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * .03;',
+  normal: 'normal = fxBump(normal, fxN2(fxF * 260.) * .00012 + smoothstep(0., .3, fxVoronoi(fxF * 150.).y) * .00012 + fxCr.x * .0006 - fxCr.w * .0006);',
+  surface: 'roughnessFactor = mix(.62, .16, max(fxTop * (1. - fxSt.x), fxRim * .6));',
+  emissive: `
+    float fxSpec = pow(max(0., dot(normal, normalize(vec3(-.35, .55, .75)))), 70.) * fxTop * (1. - fxSt.x);
+    totalEmissiveRadiance = diffuseColor.rgb * .03 + vec3(1., .98, .95) * fxSpec * .45 + fxBase * fxFresnel(normal, 3.) * fxTop * .08;`,
 };
 
 B.croc = {
-  color: `diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 60. + vSeed);`,
-  surface: 'roughnessFactor = .45;',
-};
-
-S.ostrich = {
-  // 타조가죽. 다 맞추면 면 하나가 타조 등가죽 한 장이다. 깃털이 빠진 깃대 자리(퀼)가 둥근 혹으로 봉긋봉긋 실제로 솟았고,
-  // 혹 꼭대기마다 깃대가 박혔던 구멍이 짙게 패였다. 가운데 마름모(크라운)엔 혹이 빽빽하고 가장자리로 갈수록 성기며,
-  // 혹 간격은 고르지 않다. 혹은 조금 윤이 나고 사이 살갗은 잔주름이 진 반무광 가죽.
-  // 면마다 염색이 다르다(타바코, 블랙, 레드, 터쿼이즈, 올리브, 그레이)
-  head: `
-    // 깃대 혹: x 혹 볼록함, y 가운데 구멍
-    vec2 fxQuill(vec2 F) {
-      float crown = 1. - smoothstep(.55, 1.15, abs(F.x) * .9 + abs(F.y) * .7);
-      float dens = mix(.35, .97, crown);
-      vec2 g = F * 6.5 + uFace * 3.7;
-      vec2 i = floor(g), f = fract(g);
-      vec2 best = vec2(0.);
-      for (int y = -1; y <= 1; y++) {
-        for (int x = -1; x <= 1; x++) {
-          vec2 c = i + vec2(float(x), float(y));
-          if (fxH2(c + 3.3) > dens) continue;
-          vec2 o = vec2(fxH2(c), fxH2(c + 17.3)) * .6 + .2;
-          float r = length(vec2(float(x), float(y)) + o - f) / (.34 + .12 * fxH2(c + 8.8));
-          best.x = max(best.x, exp(-r * r * 2.5) * step(r, 1.6));
-          best.y = max(best.y, 1. - smoothstep(.1, .2, r));
-        }
-      }
-      return best;
-    }
-    float fxOstrichH(vec2 p, float seed) {
-      vec2 q = fxQuill(aHome.xy + p * aHome.z);
-      return smoothstep(0., .05, fxEdgeAt(p)) * (.008 + .026 * q.x - .01 * q.y);
-    }`,
-  height: 'fxOstrichH',
-  color: `
-    if (fxEdge() < 0.) discard;
-    vec2 fxF = fxFace();
-    vec2 fxQ2 = fxQuill(fxF);
-    vec3 fxBase = diffuseColor.rgb;
-    float fxGrain = smoothstep(0., .3, fxVoronoi(fxF * 70.).y);
-    vec3 fxC = fxBase * (.78 + .14 * fxGrain) * (1. + .25 * fxQ2.x);
-    fxC *= 1. - fxQ2.y * .6;
-    fxC *= .94 + .1 * fxN2(fxF * 8. + uFace);
-    diffuseColor.rgb = fxC;`,
-  normal: 'normal = fxBump(normal, fxGrain * .0004 + fxN2(fxF * 200.) * .0002);',
-  surface: 'roughnessFactor = .55 - fxQ2.x * .2;',
-  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * .03;',
-};
-
-B.ostrich = {
-  color: `diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 60. + vSeed);`,
-  surface: 'roughnessFactor = .5;',
+  // 가방 장식처럼 광을 낸 금속
+  color: `diffuseColor.rgb *= .95 + .08 * fxN3(vLocal * 30. + vSeed);`,
+  surface: 'roughnessFactor = .3;',
 };
 
 S.python = {
