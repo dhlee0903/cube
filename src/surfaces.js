@@ -8454,6 +8454,93 @@ B.windchime = {
   surface: 'roughnessFactor = .4;',
 };
 
+S.orrery = {
+  // 태양계 모형(오러리). 조각 하나가 위에서 내려다본 황동 오러리다. 면 색 법랑을 입힌 바탕판에 황도 눈금 고리가 새겨졌고,
+  // 가운데 솟은 황동 해가 은은히 빛난다. 해 둘레로 가는 궤도 고리와 황동 팔 끝마다 칠한 행성 다섯(공처럼 솟았다)이 저마다
+  // 다른 빠르기로 돈다. 층을 돌리면 태엽이 감긴 듯 빨라져 행성 뒤로 빛 꼬리가 길게 끌렸다가 잦아든다
+  head: `
+    float fxOrA(int i, float seed) {
+      float fi = float(i);
+      return uTime * (.5 / (1. + fi * .7)) + fxH1(fi * 3.1 + seed * 7.) * 6.2832;
+    }
+    float fxOrR(int i) { return .26 + float(i) * .13; }
+    float fxOrH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float r = length(q);
+      float sun = .05 * sqrt(max(0., 1. - r * r / .0225));
+      float h = sun;
+      for (int i = 0; i < 5; i++) {
+        float a = fxOrA(i, seed);
+        vec2 c = vec2(cos(a), sin(a)) * fxOrR(i);
+        float pr = .045 + .01 * mod(float(i) * 3., 4.);
+        float d = length(q - c);
+        h = max(h, .012 + .03 * sqrt(max(0., 1. - d * d / (pr * pr))));
+        // 팔
+        vec2 dir = c / length(c);
+        float along = dot(q, dir);
+        float arm = step(0., along) * step(along, fxOrR(i)) * (1. - smoothstep(.008, .014, abs(dot(q, vec2(-dir.y, dir.x)))));
+        h = max(h, .01 * arm);
+      }
+      return smoothstep(0., .04, fxEdgeAt(p)) * (.004 + h);
+    }`,
+  height: 'fxOrH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    float fxR = length(fxQ);
+    float fxAq = atan(fxQ.y, fxQ.x + 1e-6);
+    // 바탕판: 면 색 법랑, 황도 눈금 고리
+    vec3 fxCol = fxFc * (.75 + .1 * fxN2(fxQ * 20.));
+    float fxZod = (1. - smoothstep(.0, .012, abs(fxR - .92))) + (1. - smoothstep(.0, .012, abs(fxR - .86)));
+    float fxZt = step(.86, fxR) * step(fxR, .92) * (1. - smoothstep(.0, .05, abs(fract(fxAq * 12. / 6.2832) - .5) * 2. - .9));
+    fxCol = mix(fxCol, vec3(.85, .66, .3), clamp(fxZod + fxZt, 0., 1.) * .9);
+    float fxPl = 0., fxArm = 0., fxTrail = 0.;
+    vec3 fxPc = vec3(0.);
+    vec3 fxPn = vec3(0., 0., 1.);
+    for (int i = 0; i < 5; i++) {
+      float fi = float(i);
+      float a = fxOrA(i, vSeed);
+      float ro = fxOrR(i);
+      vec2 c = vec2(cos(a), sin(a)) * ro;
+      float pr = .045 + .01 * mod(fi * 3., 4.);
+      // 궤도 고리(가는 금 선)
+      fxCol = mix(fxCol, fxFc * .5, (1. - smoothstep(.0, .006, abs(fxR - ro))) * .6);
+      vec2 dir = c / ro;
+      float along = dot(fxQ, dir);
+      fxArm = max(fxArm, step(0., along) * step(along, ro) * (1. - smoothstep(.008, .014, abs(dot(fxQ, vec2(-dir.y, dir.x))))));
+      vec2 d = (fxQ - c) / pr;
+      float on = 1. - smoothstep(.9, 1., length(d));
+      if (on > fxPl) {
+        fxPl = on;
+        fxPn = vec3(d, sqrt(max(0., 1. - dot(d, d))));
+        fxPc = fi < 1. ? vec3(.7, .65, .6) : (fi < 2. ? vec3(.9, .75, .45) : (fi < 3. ? vec3(.3, .5, .9) : (fi < 4. ? vec3(.85, .35, .2) : vec3(.85, .7, .5))));
+      }
+      // 빠를 때 빛 꼬리: 궤도를 따라 뒤로
+      float da = mod(a - fxAq + 3.1416, 6.2832) - 3.1416;
+      fxTrail += (1. - smoothstep(.0, pr * .8, abs(fxR - ro))) * step(0., da) * exp(-da * (2. + 12. * (1. - uCharge))) * uCharge;
+    }
+    float fxSun = 1. - smoothstep(.14, .15, fxR);
+    fxCol = mix(fxCol, vec3(.85, .66, .3) * (.8 + .3 * fxN2(fxQ * 40.)), max(fxArm, fxSun));
+    vec3 fxPshade = fxPc * (.45 + .65 * fxPn.z) + vec3(1.) * pow(max(dot(fxPn, normalize(vec3(-.4, .5, .8))), 0.), 30.) * .6;
+    fxCol = mix(fxCol, fxPshade, fxPl);
+    float fxMet = max(max(fxArm, fxSun), clamp(fxZod + fxZt, 0., 1.));
+    diffuseColor.rgb = fxCol;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxOrH(fxP - vec2(fxE, 0.), vSeed) - fxOrH(fxP + vec2(fxE, 0.), vSeed),
+                               fxOrH(fxP - vec2(0., fxE), vSeed) - fxOrH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = mix(.25, .2, fxMet); metalnessFactor = mix(.1, .9, fxMet);',
+  emissive: 'totalEmissiveRadiance = vec3(1., .7, .3) * fxSun * .5 * (1. - fxR / .15) + mix(fxFc, vec3(1.), .5) * fxTrail * .6;',
+};
+B.orrery = {
+  // 몸통은 짙은 마호가니 받침
+  color: 'diffuseColor.rgb *= .8 + .3 * fxN3(vec3(vLocal.x * 4., vLocal.y * 40., vLocal.z * 4.) + vSeed);',
+  surface: 'roughnessFactor = .35;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -8498,6 +8585,7 @@ export const MOVING = new Set([
   'chladni',
   'safedial',
   'windchime',
+  'orrery',
 ]);
 
 /**

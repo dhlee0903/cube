@@ -4020,6 +4020,27 @@ export const THEMES = [
     motion: 'smooth',
     burst: { shape: 'star', colors: ['#FFFFFF', '#E0F0FF'], size: 0.06, speed: 1.8, gravity: 0, drag: 2, life: 0.8, additive: true },
   },
+  {
+    // 태양계 모형(오러리). 조각 하나가 위에서 본 황동 오러리다. 면 색 법랑 바탕판 가운데 해가 빛나고, 황동 팔 끝 행성 다섯이
+    // 저마다 궤도를 돈다. 층을 돌리면 빨라져 행성 뒤로 빛 꼬리가 끌린다
+    id: 'orrery',
+    name: '태양계 모형',
+    bg: '#08070A',
+    ink: '#F4F0E8',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #1E1A24, #040306)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.04, grid: 72 },
+    body: { color: '#3E1E12', roughness: 0.35 },
+    faces: ['#B82838', '#D8702A', '#C8A82A', '#2A8A58', '#2A50B0', '#8A3AA8'],
+    lights: {
+      sky: '#fff6ea', ground: '#100c08', hemi: 1,
+      key: ['#fff6ea', 2.4, [-3, 7, 5]], fill: ['#ffe6c8', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.4, [3, 4, -6]],
+    },
+    env: 0.9,
+    surface: 'orrery',
+    sound: 'mech',
+    motion: 'mechanical',
+    burst: { shape: 'star', colors: ['#FFD890', '#FFFFFF'], size: 0.06, speed: 1.8, gravity: 0, drag: 2, life: 0.8, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -4049,5 +4070,5 @@ export const GROUPS = [
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
   { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops', 'liquidtimer', 'oilwater', 'mobile'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'laser', 'magnifier', 'chrome', 'fiberoptic', 'ledcube'] },
-  { name: '돌리면', themes: ['pinwheel', 'musicbox', 'fireworks', 'chladni', 'safedial', 'windchime'] },
+  { name: '돌리면', themes: ['pinwheel', 'musicbox', 'fireworks', 'chladni', 'safedial', 'windchime', 'orrery'] },
 ];
