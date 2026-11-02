@@ -3894,6 +3894,26 @@ export const THEMES = [
     motion: 'snap',
     burst: { shape: 'square', colors: 'faces', size: 0.05, speed: 2, gravity: 0, drag: 2, life: 0.6, additive: true },
   },
+  {
+    // 바람개비. 조각 겉 전체가 종이 바람개비다. 귀퉁이에서 접어 올린 날개 넷이 실제로 솟고, 가만히 두면 천천히 돌다가
+    // 층을 돌리면 휙 돌아 날개가 흐릿한 원으로 번진다
+    id: 'pinwheel',
+    name: '바람개비',
+    bg: '#0C1014',
+    ink: '#F4F6FA',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #22303C, #06080A)',
+    form: { bevel: 0.04, size: 0.96, radius: 0.03, grid: 64 },
+    body: { color: '#E8E6E0', roughness: 0.6 },
+    faces: ['#E8343A', '#F5902A', '#F2D02A', '#2EB45C', '#2E74E8', '#A444E0'],
+    lights: {
+      sky: '#ffffff', ground: '#141820', hemi: 1,
+      key: ['#ffffff', 2.4, [-3, 7, 5]], fill: ['#e6ecff', 0.7, [6, 1, 4]], rim: ['#ffffff', 1.4, [3, 4, -6]],
+    },
+    surface: 'pinwheel',
+    sound: 'paper',
+    motion: 'bouncy',
+    burst: { shape: 'leaf', colors: 'faces', size: 0.08, speed: 2.2, gravity: 1, drag: 2, life: 0.8 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3923,4 +3943,5 @@ export const GROUPS = [
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
   { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops', 'liquidtimer', 'oilwater', 'mobile'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'laser', 'magnifier', 'chrome', 'fiberoptic', 'ledcube'] },
+  { name: '돌리면', themes: ['pinwheel'] },
 ];

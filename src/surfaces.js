@@ -8080,6 +8080,62 @@ B.ledcube = {
   surface: 'roughnessFactor = .15;',
 };
 
+S.pinwheel = {
+  // 바람개비. 조각 겉 전체가 한 장의 종이 바람개비다. 네 귀퉁이에서 가운데로 오려 번갈아 접어 올린 날개 넷이 둥글게 말려
+  // 실제로 솟고, 가운데는 황동 핀이 꽂혔다. 날개 겉은 면 색, 접혀 드러난 안쪽은 흰 바탕에 면 색 물방울 무늬. 가만히 두면
+  // 바람에 천천히 돌고, 층을 돌리면 휙 돌아 날개가 흐릿한 원으로 번졌다가 잦아든다
+  head: `
+    float fxPwAng(float t, float seed) { return t * .25 + seed * 6.2832; }
+    float fxPwH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float r = length(q);
+      float a = atan(q.y, q.x + 1e-6) - fxPwAng(uTime, seed);
+      float s = fract(a / 1.570796);
+      // 날개: 각 사분면 앞 절반이 접혀 올라 둥글게 말린다
+      float flap = smoothstep(.6, .5, s) * smoothstep(.0, .05, s) * smoothstep(.06, .2, r) * (1. - smoothstep(1.05, 1.25, r + s * .4));
+      float curl = .045 * flap * (1. - s / .55) * (1. - s / .55 * .3) * smoothstep(.0, .5, r);
+      float pin = .035 * (1. - smoothstep(.07, .1, r));
+      float blur = uCharge;
+      float h = mix(curl, .02 * smoothstep(.06, .25, r) * (1. - smoothstep(.9, 1.2, r)), blur);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + max(h, pin));
+    }`,
+  height: 'fxPwH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    float fxR = length(fxQ);
+    float fxA0 = atan(fxQ.y, fxQ.x + 1e-6);
+    float fxA = fxA0 - fxPwAng(uTime, vSeed);
+    float fxS = fract(fxA / 1.570796);
+    float fxFlap = smoothstep(.565, .545, fxS) * smoothstep(.06, .2, fxR) * (1. - smoothstep(1.05, 1.25, fxR + fxS * .4));
+    // 안쪽 무늬: 흰 바탕에 면 색 물방울
+    vec2 fxDq = fxQ * 6.;
+    float fxDots = 1. - smoothstep(.22, .28, length(fract(fxDq) - .5));
+    vec3 fxBack = mix(vec3(.95, .94, .9), fxFc, fxDots * .85);
+    vec3 fxFront = fxFc * (.75 + .3 * (1. - fxS / .55));
+    vec3 fxSharp = mix(fxBack, fxFront, fxFlap);
+    // 빨리 돌 땐 날개가 원으로 번진다
+    vec3 fxSmear = mix(fxBack, fxFc, .55) * (1. - .15 * smoothstep(.8, 1.1, fxR));
+    vec3 fxCol = mix(fxSharp, fxSmear, smoothstep(.15, .6, uCharge));
+    float fxPin = 1. - smoothstep(.07, .1, fxR);
+    fxCol = mix(fxCol, vec3(.85, .66, .3), fxPin);
+    diffuseColor.rgb = fxCol;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxPwH(fxP - vec2(fxE, 0.), vSeed) - fxPwH(fxP + vec2(fxE, 0.), vSeed),
+                               fxPwH(fxP - vec2(0., fxE), vSeed) - fxPwH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = fxBump(normalize(mat3(vTx, vTy, vTz) * fxNt), fxN2(fxP * 200.) * .0003);`,
+  surface: 'roughnessFactor = mix(.8, .3, fxPin); metalnessFactor = fxPin * .8;',
+  emissive: 'totalEmissiveRadiance = fxCol * .05;',
+};
+B.pinwheel = {
+  // 몸통은 흰 칠 나무
+  color: 'diffuseColor.rgb *= .9 + .12 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .6;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -8118,6 +8174,7 @@ export const MOVING = new Set([
   'chrome',
   'fiberoptic',
   'ledcube',
+  'pinwheel',
 ]);
 
 /**
