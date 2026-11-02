@@ -3527,6 +3527,60 @@ export const THEMES = [
     ambient: { mode: 'float', shape: 'glow', colors: ['#BFD4FF', '#FFFFFF'], count: 26, size: 0.08, speed: 0.3, opacity: 0.6, additive: true },
     burst: { shape: 'glow', colors: 'faces', size: 0.12, speed: 2, gravity: -1, drag: 2, life: 0.9, additive: true },
   },
+  {
+
+    // 플라스마 큐브. 조각 하나가 통째로 속이 빈 유리 상자이고, 조각 한가운데 전극에서 빛 가닥이 갈라져 유리 벽까지 뻗는다.
+    // 손끝을 가져가면 가까운 조각의 가닥들이 그쪽으로 휘어 모여 더 밝아진다. 가닥 빛이 곧 면 색
+    id: 'plasmaball',
+    name: '플라즈마 볼',
+    bg: '#06040C',
+    ink: '#EEE8FF',
+    backdrop: [
+      'radial-gradient(45% 35% at 50% 48%, rgba(150,90,255,.22), transparent 70%)',
+      'radial-gradient(70% 25% at 50% 100%, rgba(120,80,200,.12), transparent 70%)',
+      'radial-gradient(90% 70% at 50% 45%, #140C24, #040308)',
+    ].join(', '),
+    form: { bevel: 0.05, size: 0.96, radius: 0.06, grid: 40 },
+    body: { color: '#0E0E12', roughness: 0.08 },
+    faces: ['#A040FF', '#2A8CFF', '#FF2E63', '#2EE87A', '#FF8C1A', '#E4E8FF'],
+    lights: {
+      sky: '#b8b0ff', ground: '#050308', hemi: 0.35,
+      key: ['#f0eaff', 1.6, [-4, 6, 5]], fill: ['#8a6cff', 0.35, [6, 0, 3]], rim: ['#d8d0ff', 1.1, [2, 4, -6]],
+    },
+    env: 0.35,
+    surface: 'plasmaball',
+    sound: 'electric',
+    motion: 'smooth',
+    ambient: { mode: 'float', shape: 'glow', colors: ['#C8A8FF', '#8FB8FF'], count: 18, size: 0.05, speed: 0.3, opacity: 0.45, additive: true },
+    burst: { shape: 'streak', colors: 'faces', size: 0.09, speed: 4, gravity: 0, drag: 4, life: 0.45, additive: true },
+  },
+  {
+    // 호박. 조각 하나가 통째로 반들반들 간 호박 덩이라 봉긋 솟았고, 속 깊이 쥐라기 모기가 갇혀 있다.
+    // 기포와 흐름 자국, 햇살 같은 둥근 금(선 스팽글)이 각도에 따라 번쩍인다. 꿀빛, 체리, 초록, 도미니카 블루, 버터스카치, 코냑
+    id: 'amberstone',
+    name: '호박',
+    bg: '#100A05',
+    ink: '#FFE9CC',
+    backdrop: [
+      'radial-gradient(42% 34% at 50% 40%, rgba(255,190,110,.2), transparent 70%)',
+      'radial-gradient(80% 30% at 50% 100%, rgba(120,60,20,.25), transparent 70%)',
+      PAPER_GRAIN,
+      'radial-gradient(90% 70% at 50% 42%, #2A1A0E, #080503)',
+    ].join(', '),
+    form: { bevel: 0.08, size: 0.94, radius: 0.14, grid: 56 },
+    body: { color: '#17100B', roughness: 0.3, metalness: 0.1 },
+    faces: ['#F0A010', '#A81C14', '#6E8C14', '#2F7FD0', '#EBC46E', '#5C2A0C'],
+    lights: {
+      sky: '#fff0dc', ground: '#1a0e06', hemi: 0.9,
+      key: ['#fff2e0', 2.3, [-4, 6, 5]], fill: ['#ffd8a8', 0.4, [6, 0, 3]], rim: ['#ffffff', 1.2, [0, 4, -6]],
+    },
+    env: 0.7,
+    surface: 'amber',
+    sound: 'stone',
+    motion: 'smooth',
+    ambient: { mode: 'float', shape: 'dot', colors: ['#FFE2B8', '#FFC880'], count: 26, size: 0.025, speed: 0.12, opacity: 0.35 },
+    burst: { shape: 'star', colors: ['#FFE6B0', '#FFB040', '#FFFFFF'], size: 0.1, speed: 2, gravity: -1, drag: 2, life: 0.8, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3535,9 +3589,9 @@ export const themeById = (id) => THEMES.find((t) => t.id === id);
 export const GROUPS = [
   { name: '기본', themes: ['classic', 'candy', 'brick', 'dice', 'jelly', 'clay', 'bubblewrap', 'paper', 'box', 'slime'] },
   { name: '자연', themes: ['forest', 'grass', 'soil', 'timber', 'pebble', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert'] },
-  { name: '빛·불', themes: ['neon', 'lava', 'electric', 'disco', 'lavalamp', 'kaleido'] },
+  { name: '빛·불', themes: ['neon', 'lava', 'electric', 'plasmaball', 'disco', 'lavalamp', 'kaleido'] },
   { name: '우주', themes: ['space', 'planet', 'blackhole', 'nebula', 'galaxy'] },
-  { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'bismuth', 'druze', 'pave', 'diamond', 'ruby', 'sapphire', 'emerald', 'quartz', 'starstone', 'moonstone'] },
+  { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'bismuth', 'druze', 'pave', 'diamond', 'ruby', 'sapphire', 'emerald', 'quartz', 'starstone', 'moonstone', 'amberstone'] },
   { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'camo'] },
   { name: '문양', themes: ['lantern'] },
   { name: '패턴', themes: ['houndstooth', 'glencheck', 'herringbone', 'gingham', 'argyle', 'chevron', 'tartan', 'pinstripe', 'windowpane', 'buffalo', 'madras', 'seersucker', 'birdseye'] },
