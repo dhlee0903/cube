@@ -1258,28 +1258,29 @@ export const THEMES = [
     sound: 'electric',
     motion: 'smooth',
     burst: { shape: 'glow', colors: ['#5CFF6A', '#E8FFE8'], size: 0.08, speed: 2.4, gravity: -6, drag: 0.8, life: 1 },
-  },
-  {
-    // 직소 퍼즐. 다 맞춘 퍼즐 한 판처럼 장면 위로 조각 이음매가 지나가고, 조각마다 꼭지가 이웃 쪽으로 튀어나온다.
-    // 조각마다 판지 결과 빛이 조금씩 다르고, 이음매 위쪽 가장자리는 밝게 아래쪽은 그늘지게 도톰하다
-    id: 'jigsaw',
-    name: '직소 퍼즐',
-    bg: '#1E5A6A',
-    ink: '#F0F4F0',
-    backdrop: '#1E5A6A',
-    form: { bevel: 0.05, size: 0.88, radius: 0.04 },
-    body: { color: '#202020', roughness: 0.6 },
-    faces: ['#E83A30', '#2A5AD8', '#F5D020', '#2AA048', '#F4F4F0', '#F08A1E'],
+  },  {
+    // 복셀. 화소 하나가 작은 정육면체 하나라, 앞면 위로 밝은 윗면, 옆으로 어두운 옆면이 보여 그림 전체가
+    // 깍둑깍둑 쌓은 블록처럼 도톰하다. 채널마다 여섯 단 색, 블록 사이엔 가는 그늘
+    id: 'voxel',
+    name: '복셀',
+    bg: '#1A2238',
+    ink: '#FFE8A0',
+    backdrop: 'linear-gradient(180deg, #2A3A60 0%, #1A2238 60%, #10142A 100%)',
+    form: { bevel: 0.05, size: 0.86, radius: 0.04 },
+    body: { color: '#202028', roughness: 0.6 },
+    faces: ['#E83A3A', '#3A6AE8', '#F2D23A', '#3AB85A', '#F2F2F2', '#F08A2A'],
     lights: {
       sky: '#ffffff', ground: '#8890b0', hemi: 1.8,
       key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.6, [0, 3, -6]],
     },
-    filter: { type: 'pixel', cell: 'jigsaw', res: 230, gain: 1.05, bg: '#1E5A6A', line: null },
+    filter: { type: 'pixel', mode: 'levels', levels: 6, cell: 'voxel', res: 70, dither: 0.25, bg: null, line: null },
     surface: 'plain',
-    sound: 'paper',
+    sound: 'dice',
     motion: 'snap',
-    burst: { shape: 'square', colors: 'faces', size: 0.12, speed: 2.4, gravity: -8, drag: 0.6, life: 1 },
+    burst: { shape: 'square', colors: 'faces', size: 0.12, speed: 2.6, gravity: -8, drag: 0.6, life: 1 },
   },
+
+
 
 
   {
@@ -2553,7 +2554,31 @@ export const THEMES = [
     sound: 'cloth',
     motion: 'mechanical',
     burst: { shape: 'leaf', colors: ['#4A7A3A', '#6A5A32', '#2A3A1E'], size: 0.15, speed: 1.6, gravity: -1.2, drag: 2.2, life: 1.4 },
+  },  {
+    // 직소 퍼즐. 면 하나가 퍼즐 한 판이고 칸마다 꼭지 달린 조각 네 개가 끼워져 있다. 다 맞추면 면 전체 조각이 맞물리고,
+    // 섞으면 칸 가장자리에서 꼭지가 어긋난다. 조각 사이 골이 패여 판지 속살이 보이고 조각마다 살짝 들떴다
+    id: 'jigsaw',
+    name: '직소 퍼즐',
+    bg: '#14302A',
+    ink: '#F0F4F0',
+    backdrop: [
+      'radial-gradient(60% 45% at 50% 25%, rgba(120,200,170,.18), transparent 70%)',
+      'linear-gradient(180deg, #1E4A3E, #0C1C18)',
+    ].join(', '),
+    form: { bevel: 0.05, size: 0.95, radius: 0.03, grid: 56 },
+    body: { color: '#3A342C', roughness: 0.85 },
+    faces: ['#E8402E', '#2E64D8', '#F2C828', '#2EA050', '#F2F0EA', '#F08A1E'],
+    lights: {
+      sky: '#fff6ec', ground: '#203028', hemi: 1.3,
+      key: ['#fff4e6', 2.6, [-4, 6, 5]], fill: ['#c8e0ff', 0.45, [6, -1, 3]], rim: ['#ffffff', 1, [2, 3, -6]],
+    },
+    env: 0.35,
+    surface: 'jigsaw',
+    sound: 'paper',
+    motion: 'snap',
+    burst: { shape: 'square', colors: 'faces', size: 0.12, speed: 2.4, gravity: -8, drag: 0.6, life: 1 },
   },
+
   {
     // 오두막 벽난로 앞 모직 담요. 다 맞추면 면 하나가 한 장의 타탄 천. 날실과 씨실 줄무늬가 엇갈려 체크를 이루고
     // 2/2 능직의 비스듬한 결, 보풀. 면마다 바탕과 짙은 띠, 가는 줄 색이 다르다. 가죽 덧댐 몸통
@@ -2997,31 +3022,7 @@ export const THEMES = [
     sound: 'space',
     motion: 'fluid',
   },
-  {
-    // 별의 표면. 다 맞추면 면 하나가 별 하나의 얼굴이다. 면마다 별의 온도가 달라 빛이 다르다(붉은 왜성, 주황 별, 노란 해,
-    // 하얀 별, 푸른 거성, 갈색 왜성). 끓어오르는 쌀알 무늬, 흑점과 반그림자, 백반, 테두리에 솟는 홍염
-    id: 'star',
-    name: '항성',
-    bg: '#050304',
-    ink: '#FFF0E0',
-    backdrop: [
-      'radial-gradient(60% 50% at 50% 45%, rgba(255,160,60,.18), transparent 70%)',
-      stars(80, 33),
-      '#050304',
-    ].join(', '),
-    form: { bevel: 0.05, size: 0.94, radius: 0.05 },
-    body: { color: '#140A08', roughness: 0.4, metalness: 0.4, glow: '#FF8A3A' },
-    faces: ['#E8502A', '#F28A2A', '#F6D040', '#F4F4F0', '#6A9AFF', '#A83A5A'],
-    lights: {
-      sky: '#30304a', ground: '#000000', hemi: 0.4,
-      key: ['#ffffff', 1, [-5, 4, 5]], fill: ['#8a7aff', 0.3, [6, -1, 3]], rim: ['#8aa8ff', 1, [0, 4, -6]],
-    },
-    ambient: { mode: 'rise', shape: 'glow', colors: ['#FFD08A', '#FF8A3A'], count: 60, size: 0.04, speed: 0.6, opacity: 0.8, additive: true },
-    burst: { shape: 'glow', colors: 'faces', size: 0.14, speed: 3, gravity: 0, drag: 2, life: 0.9, additive: true },
-    surface: 'star',
-    sound: 'space',
-    motion: 'heavy',
-  },
+
   {
     // 깊은 우주. 다 맞추면 면마다 나선 은하 하나가 천천히 돈다. 노란 중심, 두 갈래로 감기는 팔과 먼지 띠,
     // 팔을 따라 붉은 별 탄생 구역, 둘레의 잔별과 먼 은하
@@ -3894,9 +3895,9 @@ export const GROUPS = [
   { name: '바다', themes: ['coral', 'barnacle', 'urchin', 'suckers', 'anemone', 'pearl'] },
   { name: '식물', themes: ['cactus', 'succulent', 'mushroom', 'pinecone', 'moss', 'bark'] },
   { name: '빛·불', themes: ['neon', 'lava', 'electric', 'tesla', 'disco', 'lavalamp', 'kaleido'] },
-  { name: '우주', themes: ['space', 'planet', 'blackhole', 'nebula', 'star', 'galaxy'] },
+  { name: '우주', themes: ['space', 'planet', 'blackhole', 'nebula', 'galaxy'] },
   { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'fossil', 'bismuth', 'banded', 'druze', 'pave'] },
-  { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'camo'] },
+  { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'camo', 'jigsaw'] },
   { name: '문양', themes: ['arabesque', 'artdeco', 'celtic', 'aztec', 'paisley', 'kkotsal', 'guilloche', 'quilt', 'lantern', 'carpet'] },
   { name: '패턴', themes: ['houndstooth', 'glencheck', 'herringbone', 'gingham', 'argyle', 'swissdot', 'chevron', 'tartan'] },
   { name: '판타지', themes: ['dragon', 'phoenix', 'mithril', 'damascus', 'fairywing', 'dragonegg'] },
@@ -3906,7 +3907,7 @@ export const GROUPS = [
     name: '픽셀',
     themes: ['pixel', 'handheld', 'cga', 'onebit', 'clash', 'arcade', 'amber', 'led', 'ascii', 'bricks', 'beads', 'flipdot', 'vga',
       'teletext', 'subpixel', 'halftone', 'riso', 'pegs', 'tessera', 'braille', 'scope', 'cubemosaic', 'domino', 'vfd',
-      'ansi', 'screentone', 'glassblock', 'dotprinter', 'coderain', 'nightvision', 'jigsaw'],
+      'ansi', 'screentone', 'glassblock', 'dotprinter', 'coderain', 'nightvision', 'voxel'],
   },
   { name: '명화', themes: ['oil', 'watercolor', 'ukiyoe', 'monet', 'seurat', 'gogh', 'munch', 'klimt', 'cubism', 'warhol', 'collage'] },
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },

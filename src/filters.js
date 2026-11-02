@@ -582,40 +582,6 @@ vec4 fxNight(vec2 g) {
   return vec4(o, 1.);
 }
 
-// 직소 퍼즐 조각: 조각마다 네 변에 꼭지가 이웃 쪽이나 내 쪽으로 튀어나온다. 이웃 꼭지가 들어온 자리는 이웃 조각
-vec2 fxPiece(vec2 P) {
-  vec2 b = floor(P), u = fract(P);
-  for (int k = 0; k < 4; k++) {
-    vec2 nrm = k == 0 ? vec2(1., 0.) : k == 1 ? vec2(-1., 0.) : k == 2 ? vec2(0., 1.) : vec2(0., -1.);
-    vec2 key = b + max(nrm, 0.);
-    float hz = abs(nrm.x);
-    float dir = fxHash(key * 1.3 + hz * 17.) > .5 ? 1. : -1.;
-    float intrude = nrm.x + nrm.y > 0. ? step(dir, 0.) : step(0., dir);
-    if (intrude > .5) {
-      vec2 c = vec2(.5) + nrm * .4 + vec2(abs(nrm.y), abs(nrm.x)) * (fxHash(key + 5.3 + hz) - .5) * .14;
-      if (length(u - c) < .16) return b + nrm;
-    }
-  }
-  return b;
-}
-
-// 직소 퍼즐: 장면을 다 맞춘 퍼즐 한 판처럼 조각 이음매가 지나간다. 조각마다 판지 결과 빛이 조금씩 다르고
-// 이음매 위쪽 가장자리는 밝게, 아래쪽은 그늘지게 도톰하다
-vec4 fxJigsaw(vec2 g) {
-  vec2 P = g / 13.;
-  vec2 id = fxPiece(P);
-  vec2 ex = vec2(fwidth(P.x) * 1.3, 0.), ey = vec2(0., fwidth(P.y) * 1.3);
-  float lft = fxPiece(P - ex) != id ? 1. : 0., rgt = fxPiece(P + ex) != id ? 1. : 0.;
-  float up = fxPiece(P + ey) != id ? 1. : 0., dn = fxPiece(P - ey) != id ? 1. : 0.;
-  vec4 r = fxAtL(g);
-  vec3 o = r.rgb * (.95 + .08 * fxHash(id));
-  o *= .96 + .04 * fxHash(floor(gl_FragCoord.xy / uDpr));
-  o = mix(o, o * 1.25 + .05, max(lft, up) * .6);
-  o = mix(o, o * .55, max(rgt, dn) * .7);
-  float seam = max(max(lft, rgt), max(up, dn));
-  return vec4(mix(o, o * .35, seam * .35), 1.);
-}
-
 float fxGlyph(int ch, vec2 f) {
   vec2 g = floor(vec2(f.x * 7. - 1., (1. - f.y) * 10. - 1.5));
   if (g.x < 0. || g.x > 4. || g.y < 0. || g.y > 6.) return 0.;
@@ -638,7 +604,6 @@ void main() {
   if (uCell == 24) { gl_FragColor = fxPrinter(g); return; }
   if (uCell == 25) { gl_FragColor = fxRain(g); return; }
   if (uCell == 26) { gl_FragColor = fxNight(g); return; }
-  if (uCell == 27) { gl_FragColor = fxJigsaw(g); return; }
   // 핀보드는 줄마다 반 칸씩 엇갈린다
   if (uCell == 14) g.x -= mod(floor(g.y), 2.) * .5;
   vec2 cell = floor(g);
@@ -752,6 +717,25 @@ void main() {
       pc += exp(-dot(q - vec2(-.13, .13), q - vec2(-.13, .13)) * 70.) * .45;
       outc = mix(hole, pc, peg) + col * exp(-r * r * 2.5) * .3 * (1. - peg);
     } else outc = hole;
+  } else if (uCell == 27) {
+    // 복셀: 화소 하나가 작은 정육면체. 앞면 위로 밝은 윗면, 오른쪽으로 어두운 옆면
+    float s = .22;
+    bool front = f.x < 1. - s && f.y < 1. - s;
+    bool top = f.y >= 1. - s && f.x >= f.y - (1. - s) && f.x < f.y - (1. - s) + 1. - s;
+    bool side = f.x >= 1. - s && f.y >= f.x - (1. - s) && f.y < f.x - (1. - s) + 1. - s;
+    if (cc.a > 0.) {
+      vec3 face = front ? col : top ? min(col * 1.3 + .06, vec3(1.)) : side ? col * .62 : col * .25;
+      float edgeL = front ? 1. - smoothstep(.0, .05, min(min(f.x, f.y), min(1. - s - f.x, 1. - s - f.y))) : 0.;
+      outc = mix(face, face * .7, edgeL * .5);
+      if (!front && !top && !side) { outc = uBg.a > 0. ? uBg.rgb : col * .2; }
+    } else {
+      outc = uBg.rgb;
+      outa = uBg.a;
+      vec4 lf = fxCell(cell - vec2(1., 0.)), dn = fxCell(cell - vec2(0., 1.));
+      // 이웃 블록이 드리운 그늘
+      float sh = max(lf.a > .75 ? (1. - smoothstep(0., .25, f.x)) : 0., dn.a > .75 ? (1. - smoothstep(0., .25, f.y)) * 0. : 0.);
+      outa = max(outa, sh * .35);
+    }
   } else if (uCell == 17) {
     // 빨간 고글: 빨간 빛줄이 줄줄이 그어지고, 비껴 겹친 흐린 상이 깊이를 준다
     vec3 base = cc.a > 0. ? col : uBg.rgb;
@@ -819,7 +803,7 @@ void main() {
 //            flipdot 뒤집히는 원판 | vga 두 번 그린 줄 | teletext 2×3 모자이크 글자 | subpixel 빨강·초록·파랑 막대
 //            halftone 네 판 망점 | riso 형광 잉크 세 판 | peg 엇갈린 빛 핀 | tessera 돌·유리 조각 | braille 2×4 점자 | scope 빨간 빛줄
 //            cubemosaic 3×3 큐브 | domino 도미노 패 점 | vfd 일곱 마디 숫자 | ansi 블록 글자 | tone 만화 스크린톤 | glassblock 유리 블록
-//            printer 도트 프린터 | rain 디지털 비 | night 야간 투시경 | jigsaw 직소 퍼즐
+//            printer 도트 프린터 | rain 디지털 비 | night 야간 투시경 | voxel 작은 정육면체
 //   animated 가만히 있어도 움직이는지(디지털 비, 야간 투시경)
 //   res      화면 짧은 쪽을 몇 칸으로 볼지(클수록 촘촘)
 //   aspect   칸 세로/가로 비(아스키 글자 칸)
@@ -837,7 +821,7 @@ const MODES = { palette: 0, ramp: 1, clash: 2, led: 3, levels: 4 };
 const CELLS = {
   square: 0, lcd: 1, led: 2, brick: 3, bead: 4, ascii: 5, crt: 6, arcade: 7, flipdot: 8, vga: 9, teletext: 10,
   subpixel: 11, halftone: 12, riso: 13, peg: 14, tessera: 15, braille: 16, scope: 17, cubemosaic: 18, domino: 19,
-  vfd: 20, ansi: 21, tone: 22, glassblock: 23, printer: 24, rain: 25, night: 26, jigsaw: 27,
+  vfd: 20, ansi: 21, tone: 22, glassblock: 23, printer: 24, rain: 25, night: 26, voxel: 27,
 };
 const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
 

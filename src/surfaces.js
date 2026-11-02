@@ -3796,6 +3796,68 @@ B.dragonegg = {
   surface: 'roughnessFactor = .6;',
 };
 
+S.jigsaw = {
+  // 직소 퍼즐. 면 하나가 퍼즐 한 판이고, 칸마다 꼭지 달린 조각 네 개가 끼워져 있다. 다 맞추면 면 전체 조각이 서로 맞물리고,
+  // 섞으면 칸 가장자리에서 꼭지가 어긋난다. 조각 사이는 칼로 따낸 골이 실제로 패여 회갈색 판지 속살이 보이고, 조각마다
+  // 살짝 들떠 높이와 빛이 다르다. 겉은 반들거리는 인쇄면에 구름 같은 그림이 찍혔다(면 색이 곧 그림 빛깔)
+  head: `
+    // 조각: xy 조각 번호, z 이음매까지 거리(조각 한 변이 1)
+    vec3 fxPieceD(vec2 P) {
+      vec2 b = floor(P), u = fract(P);
+      vec2 id = b;
+      float d = 9.;
+      for (int k = 0; k < 4; k++) {
+        vec2 nrm = k == 0 ? vec2(1., 0.) : k == 1 ? vec2(-1., 0.) : k == 2 ? vec2(0., 1.) : vec2(0., -1.);
+        // 변 하나를 두 조각이 함께 쓰므로 변의 자리로 꼭지 방향과 위치를 정한다
+        vec2 key = b + max(nrm, 0.);
+        float hz = abs(nrm.x);
+        float dir = fxH2(key * 1.3 + hz * 17.) > .5 ? 1. : -1.;
+        float intrude = nrm.x + nrm.y > 0. ? step(dir, 0.) : step(0., dir);
+        vec2 along = vec2(abs(nrm.y), abs(nrm.x));
+        vec2 mid = vec2(.5) + nrm * .5 + along * (fxH2(key + 5.3 + hz) - .5) * .16;
+        vec2 c = mid + nrm * (intrude > .5 ? -.1 : .1);
+        float R = .17;
+        float dc = length(u - c);
+        if (intrude > .5 && dc < R) id = b + nrm;
+        float de = abs(dot(mid - u, nrm));
+        float t = abs(dot(u - mid, along));
+        float dEdge = t > .135 ? de : 9.;
+        d = min(d, min(dEdge, abs(dc - R)));
+      }
+      return vec3(id, d);
+    }
+    float fxJigH(vec2 p, float seed) {
+      vec3 pc = fxPieceD((aHome.xy + p * aHome.z) * 2.);
+      float groove = 1. - smoothstep(0., .06, pc.z);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.016 + .005 * fxH2(pc.xy + 3.) - .014 * groove * groove);
+    }`,
+  height: 'fxJigH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec2 fxF = fxFace();
+    vec3 fxPc = fxPieceD(fxF * 2.);
+    float fxHt = fxJigH(vLocal.xy, vSeed);
+    vec3 fxBase = diffuseColor.rgb;
+    float fxPic = fxN2(fxF * 2.6 + uFace * 7.) * .6 + fxN2(fxF * 8. + uFace * 3.) * .4;
+    vec3 fxC = fxBase * (.8 + .32 * fxPic);
+    fxC = mix(fxC, fxC * vec3(1.08, 1.03, .9) + .03, smoothstep(.55, .8, fxN2(fxF * 1.4 + uFace * 5.)) * .6);
+    fxC *= .95 + .08 * fxH2(fxPc.xy);
+    float fxCore = 1. - smoothstep(.012, .03, fxPc.z);
+    float fxWall = (1. - smoothstep(.0, .06, fxPc.z)) * (1. - fxCore);
+    fxC *= 1. - fxWall * .3;
+    fxC = mix(fxC, vec3(.56, .5, .42) * (.75 + .35 * fxN2(fxF * 260.)), fxCore * .9);
+    diffuseColor.rgb = fxC;`,
+  normal: 'normal = fxBump(normal, clamp(fxHt - vLift, -.01, .01) + fxCore * fxN2(fxF * 300.) * .0003);',
+  surface: 'roughnessFactor = mix(.26, .9, fxCore);',
+  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * .03;',
+};
+
+B.jigsaw = {
+  // 몸통은 퍼즐 판 밑에 깐 짙은 판지
+  color: `diffuseColor.rgb *= .8 + .3 * fxN3(vLocal * 60. + vSeed);`,
+  surface: 'roughnessFactor = .85;',
+};
+
 const FUR = /* glsl */ `
   // 털 결: 면 좌표에서 대체로 아래로 흐르다 군데군데 휘어 돈다
   vec2 fxFurDir(vec2 F) {
@@ -3966,43 +4028,6 @@ B.nebula = {
   color: `float fxRim = smoothstep(.9, 1., fxBodyRim());`,
   surface: 'roughnessFactor = .3; metalnessFactor = .6;',
   emissive: 'totalEmissiveRadiance = vec3(.6, .7, 1.) * fxRim * .15;',
-};
-
-S.star = {
-  // 항성 표면. 다 맞추면 면 하나가 별 하나의 얼굴이다. 면마다 별의 온도가 달라 빛이 다르다(붉은 왜성, 주황 별, 노란 해,
-  // 하얀 별, 푸른 거성, 갈색 왜성). 끓어오르는 쌀알 무늬가 꿈틀대고, 검은 흑점과 가는 실 같은 반그림자,
-  // 밝은 백반, 가장자리로 갈수록 어두워지는 주연 감광. 면 테두리에선 홍염 고리가 솟는다
-  color: `
-    vec2 fxF = fxFace();
-    vec2 fxW = fxF + (vec2(fxN2(fxF * 5. + uTime * .03), fxN2(fxF * 5. + 7. - uTime * .03)) - .5) * .06;
-    vec3 fxV = fxVoronoi(fxW * 40. + uFace * 5.);
-    float fxLane = smoothstep(.0, .28, fxV.y);
-    float fxGran = (.5 + .5 * fxLane) * (.9 + .12 * fxV.z) * (1. - .18 * smoothstep(.15, .7, fxV.x)) * (.94 + .12 * fxN2(fxF * 110.));
-    float fxBoil = (.9 + .1 * sin(uTime * .8 + fxV.z * 30.)) * (.86 + .28 * fxF2(fxF * 2.6 + uFace * 3.));
-    vec2 fxSp = fxF - vec2(.28 * sin(uFace * 2.1 + 1.), .22 * cos(uFace * 1.3));
-    float fxSr = length(fxSp * vec2(1., 1.3)) + (fxN2(fxF * 5.) - .5) * .06;
-    float fxUmbra = 1. - smoothstep(.07, .1, fxSr);
-    float fxPen = 1. - smoothstep(.1, .2, fxSr);
-    float fxFil = .5 + .5 * sin(atan(fxSp.y, fxSp.x) * 46. + fxSr * 30.);
-    float fxFac = smoothstep(.62, .78, fxF2(fxF * 3. + 2.)) * .35 * (.6 + .4 * fxLane);
-    vec3 fxBase = diffuseColor.rgb;
-    vec3 fxHot = mix(fxBase, vec3(1.), .12);
-    vec3 fxCol = fxHot * fxGran * fxBoil * (1. + fxFac);
-    fxCol = mix(fxCol, fxBase * .4 * (.65 + .35 * fxFil), fxPen);
-    fxCol = mix(fxCol, fxBase * .06, fxUmbra);
-    float fxBorder = 1. - max(abs(fxF.x), abs(fxF.y));
-    float fxMu = sqrt(max(0., 1. - pow(length(fxF) / 1.5, 2.)));
-    fxCol *= mix(vec3(1., .55, .3), vec3(1.), fxMu) * (.45 + .6 * fxMu);
-    float fxLoop = exp(-pow((length(fract(fxF * 2.) - .5) - .32) / .025, 2.)) * (1. - smoothstep(0., .07, fxBorder)) * (.6 + .4 * sin(uTime * .7 + fxF.x * 3.));
-    fxCol += mix(fxBase, vec3(1., .5, .4), .4) * fxLoop * 1.2;
-    diffuseColor.rgb = vec3(.004);`,
-  surface: 'roughnessFactor = .4;',
-  emissive: 'totalEmissiveRadiance = fxCol * 1.15;',
-};
-B.star = {
-  color: `float fxRim = smoothstep(.85, 1., fxBodyRim());`,
-  surface: 'roughnessFactor = .4; metalnessFactor = .4;',
-  emissive: 'totalEmissiveRadiance = uBodyGlow * fxRim * .35;',
 };
 
 S.galaxy = {
@@ -6138,7 +6163,7 @@ export const MOVING = new Set([
   'neon', 'lava', 'water', 'forest', 'space', 'candy', 'ice', 'electric', 'flesh', 'eldritch', 'gem',
   'circuit', 'aurora', 'stained', 'najeon', 'rain', 'mercury', 'gauge', 'honey', 'clay', 'holo', 'jelly',
   'planet', 'disco', 'fossil', 'doodle', 'ink', 'lavalamp', 'glass', 'bubblewrap', 'thermal', 'kaleido',
-  'flip', 'blackhole', 'opal', 'dragon', 'nebula', 'star', 'galaxy', 'slime', 'lantern', 'eyeball', 'tesla',
+  'flip', 'blackhole', 'opal', 'dragon', 'nebula', 'galaxy', 'slime', 'lantern', 'eyeball', 'tesla',
   'hamster', 'phoenix', 'fairywing', 'dragonegg', 'coral', 'anemone', 'druze', 'pave',
 ]);
 
