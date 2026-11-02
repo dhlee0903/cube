@@ -7105,6 +7105,76 @@ B.marbles = {
   surface: 'roughnessFactor = .4;',
 };
 
+S.pendulum = {
+  // 진자. 조각 하나가 통째로 유리 상자이고, 속 깊이에 위쪽 황동 축에서 가는 막대 끝에 면 색 추가 매달렸다. 추는 늘 아래쪽
+  // (화면 아래)으로 드리우고, 추 뒤 판엔 눈금 호가 새겨졌다. 평소엔 숨 쉬듯 살짝 흔들리다가, 층을 돌리면 크게 흔들렸다
+  // 천천히 멈춘다. 위를 향한 면에선 추가 보는 쪽으로 늘어져 둥근 추 밑면이 보인다
+  head: `
+    float fxPdH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float n = pow(pow(abs(q.x), 6.) + pow(abs(q.y), 6.), 1. / 6.);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .014 * sqrt(max(0., 1. - n * n)));
+    }
+    vec2 fxPdSeg(vec2 p, vec2 a, vec2 b) {
+      vec2 pa = p - a, ba = b - a;
+      float h = clamp(dot(pa, ba) / dot(ba, ba), 0., 1.);
+      return vec2(length(pa - ba * h), h);
+    }`,
+  height: 'fxPdH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    vec2 fxGd = fxGrav;
+    float fxSt = smoothstep(.15, .5, fxGravL);
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVl = vec3(dot(fxV, vTx), dot(fxV, vTy), max(dot(fxV, vTz), .25));
+    vec2 fxQp = fxQ - fxVl.xy / fxVl.z * .22 / uSticker.x;
+    vec2 fxQb = fxQ - fxVl.xy / fxVl.z * .4 / uSticker.x;
+    // 흔들림
+    float fxTh = uCharge * .55 * sin(uTime * 4.2 + vSeed * 6.) + .04 * sin(uTime * 1.3 + vSeed * 9.);
+    vec2 fxDir = vec2(fxGd.x * cos(fxTh) - fxGd.y * sin(fxTh), fxGd.x * sin(fxTh) + fxGd.y * cos(fxTh));
+    vec2 fxPiv = -fxGd * .72 * fxSt;
+    vec2 fxBob = fxPiv + fxDir * 1.15 * fxSt;
+    // 뒤 판: 면 색 칠, 눈금 호
+    vec2 fxRel = fxQb - fxPiv;
+    float fxRr = length(fxRel);
+    float fxAng = acos(clamp(dot(fxRel / max(fxRr, 1e-3), fxGd), -1., 1.));
+    float fxTick = (1. - smoothstep(.006, .014, abs(fract(fxAng * 10. / 3.1416 * 2.) - .5) * .1)) * step(fxAng, .6) * (1. - smoothstep(.0, .02, abs(fxRr - 1.32))) * fxSt;
+    float fxArc = (1. - smoothstep(.004, .01, abs(fxRr - 1.27))) * step(fxAng, .6) * fxSt;
+    vec3 fxCol = fxFc * (.32 + .06 * fxN2(vec2(fxQb.x * 3., fxQb.y * 40.) + vSeed)) ;
+    fxCol = mix(fxCol, vec3(.85, .7, .4), (fxTick + fxArc) * .8);
+    // 막대와 축
+    vec2 fxSg = fxPdSeg(fxQp, fxPiv, fxBob);
+    float fxRod = (1. - smoothstep(.012, .022, fxSg.x)) * fxSt;
+    float fxAxle = 1. - smoothstep(.05, .065, length(fxQp - fxPiv));
+    fxCol = mix(fxCol, vec3(.8, .62, .3) * (.8 + .4 * smoothstep(.02, 0., fxSg.x)), max(fxRod, fxAxle * fxSt));
+    // 추: 면 색 공, 둘레 황동 테
+    float fxBr = mix(.42, .3, fxSt);
+    vec2 fxBl = (fxQp - fxBob) / fxBr;
+    float fxBd = length(fxBl);
+    float fxBall = 1. - smoothstep(.95, 1., fxBd);
+    vec3 fxBn = vec3(fxBl, sqrt(max(1. - fxBd * fxBd, 0.)));
+    float fxSpec = pow(max(dot(fxBn, normalize(vec3(-.4, .5, .8))), 0.), 30.);
+    vec3 fxBallC = fxFc * (.45 + .6 * fxBn.z) + vec3(1.) * fxSpec * .7;
+    fxBallC = mix(fxBallC, vec3(.85, .68, .35), smoothstep(.8, .9, fxBd));
+    fxCol = mix(fxCol, fxBallC, fxBall);
+    diffuseColor.rgb = fxCol;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxPdH(fxP - vec2(fxE, 0.), vSeed) - fxPdH(fxP + vec2(fxE, 0.), vSeed),
+                               fxPdH(fxP - vec2(0., fxE), vSeed) - fxPdH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = .04; metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxCol * .12;',
+};
+B.pendulum = {
+  // 몸통은 짙은 마호가니 시계 틀
+  color: 'diffuseColor.rgb *= .8 + .3 * fxN3(vec3(vLocal.x * 4., vLocal.y * 40., vLocal.z * 4.) + vSeed);',
+  surface: 'roughnessFactor = .35;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -7128,6 +7198,7 @@ export const MOVING = new Set([
   'bottleink',
   'hourglass',
   'marbles',
+  'pendulum',
 ]);
 
 /**

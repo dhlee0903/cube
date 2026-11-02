@@ -3580,6 +3580,27 @@ export const THEMES = [
     motion: 'bouncy',
     burst: { shape: 'glow', colors: 'faces', size: 0.06, speed: 1.6, gravity: 2, drag: 2, life: 0.6, additive: true },
   },
+  {
+    // 진자. 조각 하나가 통째로 유리 상자이고 속 깊이에 황동 축과 막대 끝 면 색 추가 매달렸다. 추는 늘 화면 아래쪽으로 드리우고,
+    // 층을 돌리면 크게 흔들렸다 천천히 멈춘다
+    id: 'pendulum',
+    name: '진자',
+    bg: '#0E0906',
+    ink: '#F6EEE4',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #2A1C12, #070403)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.05, grid: 40 },
+    body: { color: '#3E1E12', roughness: 0.35 },
+    faces: ['#E8402E', '#F5982A', '#F0D23A', '#34B864', '#2E7AE8', '#AA50E0'],
+    lights: {
+      sky: '#fff6ea', ground: '#140c08', hemi: 1,
+      key: ['#fff6ea', 2.3, [-3, 7, 5]], fill: ['#ffe6c8', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.4, [3, 4, -6]],
+    },
+    env: 0.8,
+    surface: 'pendulum',
+    sound: 'metal',
+    motion: 'heavy',
+    burst: { shape: 'dot', colors: ['#E8C070', '#FFE0A0'], size: 0.04, speed: 1.6, gravity: 3, drag: 2, life: 0.6 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3607,5 +3628,5 @@ export const GROUPS = [
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
-  { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles'] },
+  { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum'] },
 ];
