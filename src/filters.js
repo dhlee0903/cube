@@ -330,10 +330,12 @@ vec4 fxCubeMosaic(vec2 g) {
   if (anyA < .5) return vec4(wall, 1.);
   vec4 r = fxRaw(cell);
   vec3 col = r.a > .5 ? fxNearest(min(r.rgb * uGain, vec3(1.)) + fxBayer(cell) * uDither) : uPal[0];
+  // 아주 어두운 칸(조각 사이 틈)은 스티커를 붙이지 않아 검은 플라스틱이 보인다
+  float bare = r.a > .5 && max(max(r.r, r.g), r.b) * uGain < .2 ? 1. : 0.;
   vec2 lo = vec2(sub.x < .5 ? .2 : .07, sub.y < .5 ? .2 : .07);
   vec2 hi = vec2(sub.x > 1.5 ? .8 : .93, sub.y > 1.5 ? .8 : .93);
   vec2 c = (lo + hi) * .5;
-  float st = 1. - smoothstep(-.02, .02, fxRBox(f - c, (hi - lo) * .5, .1));
+  float st = (1. - smoothstep(-.02, .02, fxRBox(f - c, (hi - lo) * .5, .1))) * (1. - bare);
   float tilt = fxHash(cb) * .14 - .07;
   vec3 sc = col * (.9 + tilt + .14 * (f.y - c.y)) + exp(-dot(f - c - vec2(-.14, .14), f - c - vec2(-.14, .14)) * 30.) * .14;
   vec3 o = mix(vec3(.045) * (1. + tilt * 2.), sc, st);
