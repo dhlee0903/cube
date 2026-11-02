@@ -6325,6 +6325,68 @@ B.memoryfoam = {
   surface: 'roughnessFactor = .95;',
 };
 
+S.shadowgarden = {
+  // 그림자 정원. 조각 겉이 색을 먹인 석회 판이고, 그 위에 높이가 저마다 다른 네모 돌기둥 다섯이 솟았다. 손끝이 등불이라
+  // 손끝을 가져가면 기둥의 손끝 쪽 면이 환해지고 그림자가 반대쪽으로 길게 드리워, 손끝을 움직이면 해시계처럼 그림자가
+  // 판 위를 돈다. 손을 떼면 등불이 보는 사람 쪽으로 물러나 그림자가 짧아진다
+  head: `
+    // 기둥 i: xy 자리, z 반폭, w 높이
+    vec4 fxSgP(int i, float seed) {
+      vec2 c = i == 0 ? vec2(0.) : vec2(i == 1 || i == 4 ? -1. : 1., i < 3 ? -1. : 1.) * .2;
+      float h = .05 + .1 * fxH1(seed * 13. + float(i) * 3.7);
+      return vec4(c, i == 0 ? .055 : .04, i == 0 ? .16 : h);
+    }
+    float fxSgH(vec2 p, float seed) {
+      float h = .012;
+      for (int i = 0; i < 5; i++) {
+        vec4 P = fxSgP(i, seed);
+        vec2 d = abs(p - P.xy) - P.z;
+        float inside = 1. - smoothstep(-.004, .002, max(d.x, d.y));
+        // 기둥 꼭대기는 낮은 피라미드(오벨리스크)
+        float top = P.w - .02 * clamp(max(abs(p.x - P.x), abs(p.y - P.y)) / P.z, 0., 1.);
+        h = max(h, mix(.012, top, inside));
+      }
+      return h;
+    }
+    float fxSgHt(vec2 p, float seed) { return smoothstep(0., .04, fxEdgeAt(p)) * fxSgH(p, seed); }`,
+  height: 'fxSgHt',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxP = vLocal.xy;
+    float fxHt = fxSgHt(fxP, vSeed);
+    float fxE = .0012;
+    vec3 fxNt = normalize(vec3(fxSgHt(fxP - vec2(fxE, 0.), vSeed) - fxSgHt(fxP + vec2(fxE, 0.), vSeed),
+                               fxSgHt(fxP - vec2(0., fxE), vSeed) - fxSgHt(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    // 등불(손끝): 이 점에서 등불로 가는 길에 기둥이 있으면 그늘
+    vec3 fxL = fxPtr - vec3(fxP, fxHt);
+    float fxLd = length(fxL);
+    fxL /= fxLd;
+    float fxLit = 0.;
+    if (fxL.z > .02) {
+      fxLit = 1.;
+      for (int k = 1; k <= 22; k++) {
+        float t = float(k) * .018;
+        vec3 q = vec3(fxP, fxHt + .002) + fxL * t;
+        if (q.z > .2) break;
+        fxLit = min(fxLit, clamp((q.z - fxSgH(q.xy, vSeed)) * 160. + 1., 0., 1.));
+      }
+    }
+    float fxLamb = max(dot(fxNt, fxL), 0.);
+    float fxNear = smoothstep(6., 2., fxPtr.z);
+    // 석회 판: 잔 얼룩과 붓 자국
+    float fxPl = .9 + .1 * fxF2(fxP * 40. + vSeed * 3.);
+    diffuseColor.rgb = fxFc * fxPl * .55;`,
+  normal: 'normal = normalize(mat3(vTx, vTy, vTz) * fxNt);',
+  surface: 'roughnessFactor = .9; metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxFc * fxPl * vec3(1., .9, .75) * fxLamb * fxLit * (.25 + .9 * fxNear) / (1. + fxLd * fxLd * .08);',
+};
+B.shadowgarden = {
+  // 몸통은 짙은 현무암
+  color: 'diffuseColor.rgb *= .8 + .3 * fxN3(vLocal * 20. + vSeed);',
+  surface: 'roughnessFactor = .85;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -6336,6 +6398,7 @@ export const MOVING = new Set([
   'ferrofluid',
   'pinart',
   'memoryfoam',
+  'shadowgarden',
 ]);
 
 /**

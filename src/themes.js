@@ -3330,6 +3330,26 @@ export const THEMES = [
     motion: 'squish',
     burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: 1, drag: 2.5, life: 0.6 },
   },
+  {
+    // 그림자 정원. 색 먹인 석회 판에 네모 돌기둥 다섯이 솟았다. 손끝이 등불이라 기둥의 손끝 쪽 면이 환해지고 그림자가
+    // 반대쪽으로 길게 드리워, 손끝을 움직이면 해시계처럼 그림자가 돈다
+    id: 'shadowgarden',
+    name: '그림자 정원',
+    bg: '#0E0C0A',
+    ink: '#F4EEE6',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #241E18, #070605)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.04, grid: 96 },
+    body: { color: '#26241F', roughness: 0.85 },
+    faces: ['#E2553F', '#EE9A3A', '#E8CF4A', '#4FB878', '#4A86D8', '#9C6AD8'],
+    lights: {
+      sky: '#d8dcff', ground: '#120f0c', hemi: 0.7,
+      key: ['#fff4e6', 0.9, [-3, 7, 5]], fill: ['#d0d8ff', 0.4, [6, 1, 4]], rim: ['#ffffff', 0.6, [3, 4, -6]],
+    },
+    surface: 'shadowgarden',
+    sound: 'stone',
+    motion: 'heavy',
+    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.6, gravity: 3, drag: 2, life: 0.6 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3356,5 +3376,5 @@ export const GROUPS = [
   { name: '명화', themes: ['oil', 'watercolor', 'ukiyoe', 'monet', 'seurat', 'gogh', 'munch', 'klimt', 'cubism', 'warhol', 'collage'] },
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
-  { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam'] },
+  { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden'] },
 ];
