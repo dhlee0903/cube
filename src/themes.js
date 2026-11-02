@@ -1087,8 +1087,8 @@ export const THEMES = [
     burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
   },
   {
-    // 도미노 그림. 검은 도미노 패를 나무 탁자 위에 빽빽이 세워 깔고, 반쪽마다 밝기만큼 하얀 점(0~6)을 찍었다.
-    // 두 색뿐이라 면은 블록 속 그림으로 갈린다(민무늬, 안쪽 테, 가운데 네모, 빗금, 네 칸, 가로줄)
+    // 도미노 그림. 검은 도미노 패를 나무 탁자 위에 빽빽이 세워 깔고, 반쪽마다 밝기만큼 점(1~6)을 찍었다.
+    // 점은 색점 도미노처럼 그 자리 색이라, 면마다 점 색이 다르다
     id: 'domino',
     name: '도미노 아트',
     bg: '#3A2A1E',
@@ -1096,13 +1096,13 @@ export const THEMES = [
     backdrop: '#3A2A1E',
     form: { bevel: 0.04, size: 0.92, radius: 0.02 },
     body: { color: '#202020', roughness: 0.7 },
-    faces: ['#D84040', '#4080D8', '#E8C040', '#40B060', '#A060D0', '#E08040'],
+    faces: ['#E83A30', '#2A6AE8', '#F5D020', '#2AB050', '#F4F4F0', '#F08A1E'],
     lights: {
       sky: '#ffffff', ground: '#8890a0', hemi: 1.8,
       key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.5, [0, 3, -6]],
     },
-    filter: { type: 'pixel', palette: ['#141416', '#F4F0E6'], cell: 'domino', res: 72, dither: 0.5, gamma: 0.8, gain: 1.15, bg: '#3A2A1E', line: null },
-    surface: 'blocks',
+    filter: { type: 'pixel', palette: ['#F4F0E6', '#F03A30', '#3A7AF0', '#F8D828', '#30C060', '#F8901E'], cell: 'domino', res: 40, dither: 0.4, gamma: 0.85, gain: 1.15, bg: '#3A2A1E', line: '#141416' },
+    surface: 'plain',
     sound: 'dice',
     motion: 'snap',
     burst: { shape: 'square', colors: ['#141416', '#F4F0E6'], size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },

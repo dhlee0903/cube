@@ -354,10 +354,10 @@ float fxPip(vec2 f, float n) {
   bool mid = abs(k.x) > .5 && abs(k.y) < .5;
   bool diag = k.x * k.y > .5;
   bool on = n < .5 ? false : n < 1.5 ? center : n < 2.5 ? diag : n < 3.5 ? (center || diag) : n < 4.5 ? corner : n < 5.5 ? (corner || center) : (corner || mid);
-  return on ? 1. - smoothstep(.3, .38, d) : 0.;
+  return on ? 1. - smoothstep(.36, .45, d) : 0.;
 }
 
-// 도미노 아트: 검은 도미노 패를 세워 깔고, 반쪽마다 밝기만큼 하얀 점(0~6)을 찍는다
+// 도미노 아트: 검은 도미노 패를 세워 깔고, 반쪽마다 밝기만큼 점(1~6)을 찍는다. 점은 색점 도미노처럼 그 자리 색
 vec4 fxDomino(vec2 g) {
   vec2 cell = floor(g), f = fract(g);
   float hf = mod(cell.y, 2.);
@@ -367,13 +367,15 @@ vec4 fxDomino(vec2 g) {
   float body = 1. - smoothstep(-.015, .015, box);
   vec4 r = fxRaw(cell);
   float l = r.a > .5 ? pow(clamp(fxLum(r.rgb * uGain), 0., 1.), uGamma) : 0.;
-  float n = clamp(floor(l * 7. + fxBayer(cell) * uDither), 0., 6.);
-  vec3 tile = uPal[0] * (.85 + .3 * fxHash(dc));
+  float n = r.a > .5 ? clamp(floor(l * 6. + 1. + fxBayer(cell) * uDither), 1., 6.) : 0.;
+  vec3 c = min(r.rgb * uGain, vec3(1.));
+  vec3 pipC = fxNearest(c / max(max(max(c.r, c.g), c.b), .05));
+  vec3 tile = uLine.rgb * (.85 + .3 * fxHash(dc));
   tile += exp(-dot(dl - vec2(.28, 1.65), dl - vec2(.28, 1.65)) * 4.) * .07;
   float div = (1. - smoothstep(.012, .03, abs(dl.y - 1.))) * step(abs(dl.x - .5), .32);
-  tile = mix(tile, uPal[1] * .5, div * .6);
+  tile = mix(tile, vec3(.45), div * .6);
   float pip = fxPip(f, n);
-  tile = mix(tile, uPal[1], pip);
+  tile = mix(tile, pipC * (.85 + .15 * f.y), pip);
   vec3 table = uBg.rgb * (.85 + .15 * fxHash(floor(gl_FragCoord.xy / uDpr * vec2(.08, 1.))));
   table *= 1. - .5 * (1. - smoothstep(0., .08, box)) * (1. - body);
   return vec4(mix(table, tile, body), 1.);
@@ -463,12 +465,12 @@ vec4 fxTone(vec2 g) {
   float dark = clamp(1. - mx, 0., 1.);
   float o = 0.;
   if (r.a > .3) {
-    vec2 rd = mat2(.7071, .7071, -.7071, .7071) * sp / 5.;
+    vec2 rd = mat2(.7071, .7071, -.7071, .7071) * sp / 7.;
     float dotD = length(fract(rd) - .5);
-    float diag = abs(fract((sp.x + sp.y) / 6.) - .5);
-    float hor = abs(fract(sp.y / 5.) - .5);
-    float ver = abs(fract(sp.x / 5.) - .5);
-    float anti = abs(fract((sp.x - sp.y) / 6.) - .5);
+    float diag = abs(fract((sp.x + sp.y) / 9.) - .5);
+    float hor = abs(fract(sp.y / 6.) - .5);
+    float ver = abs(fract(sp.x / 6.) - .5);
+    float anti = abs(fract((sp.x - sp.y) / 9.) - .5);
     if (sat < .3) o = mx > .72 ? 0. : 1. - smoothstep(.22, .26, dotD + (mx - .72) * .5);
     else if (h < .04 || h > .93) o = 1. - smoothstep(.12 + dark * .25, .16 + dark * .25, diag);
     else if (h < .11) o = 1. - smoothstep(.3 + dark * .15, .34 + dark * .15, dotD);
@@ -485,7 +487,7 @@ vec4 fxTone(vec2 g) {
 // 유리 블록: 줄눈 사이로 쌓은 두꺼운 유리 블록. 블록마다 가운데 동심 물결이 뒤의 장면을 뒤집고 일그러뜨리며,
 // 가장자리는 두꺼워 짙고 비스듬한 반사 줄이 지나간다
 vec4 fxGlassBlock(vec2 g) {
-  float B = 6.;
+  float B = 5.;
   vec2 bp = g / B;
   vec2 bi = floor(bp), q = fract(bp) - .5;
   float rr = length(q);
