@@ -3474,6 +3474,27 @@ export const THEMES = [
     motion: 'bouncy',
     burst: { shape: 'star', colors: 'faces', size: 0.08, speed: 2.2, gravity: 1, drag: 2, life: 0.7, additive: true },
   },
+  {
+    // 기포 수평계. 조각 하나가 통째로 면 색 액체가 찬 유리 덩어리이고 원형 눈금 고리가 새겨졌다. 큰 공기 방울이 늘 화면
+    // 위쪽으로 떠오르고, 층을 돌리면 출렁이다 자리를 잡는다
+    id: 'spiritlevel',
+    name: '기포 수평계',
+    bg: '#0A0C10',
+    ink: '#EEF2F8',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #1E2430, #05060A)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.06, grid: 40 },
+    body: { color: '#1A1C22', roughness: 0.35, metalness: 0.8 },
+    faces: ['#F03A3A', '#FF9A1A', '#E8E82A', '#2AD86A', '#2A8AF0', '#B44AF0'],
+    lights: {
+      sky: '#ffffff', ground: '#12141a', hemi: 1,
+      key: ['#ffffff', 2.4, [-3, 7, 5]], fill: ['#dfe6ff', 0.7, [6, 1, 4]], rim: ['#ffffff', 1.6, [3, 4, -6]],
+    },
+    env: 0.9,
+    surface: 'spiritlevel',
+    sound: 'water',
+    motion: 'fluid',
+    burst: { shape: 'bubble', colors: ['#FFFFFF', '#E0F0FF'], size: 0.06, speed: 1.6, gravity: -2, drag: 2, life: 0.8 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3501,4 +3522,5 @@ export const GROUPS = [
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
+  { name: '기울기', themes: ['spiritlevel'] },
 ];

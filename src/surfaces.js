@@ -6778,6 +6778,61 @@ B.sequin = {
   surface: 'roughnessFactor = .4; metalnessFactor = .1;',
 };
 
+S.spiritlevel = {
+  // 기포 수평계. 조각 하나가 통째로 면 색 액체가 꽉 찬 유리 덩어리이고, 겉유리 가운데에 원형 수평계 눈금 고리 둘이 새겨졌다.
+  // 큰 공기 방울 하나가 겉유리 안쪽에 납작하게 붙어 늘 위쪽(화면 위)으로 떠오른다. 그래서 큐브를 어떻게 돌려 보든 방울이
+  // 저마다 위쪽으로 몰리고, 위를 향한 면에선 고리 가운데로 모인다. 층을 돌리면 방울이 출렁이다 자리를 잡는다. 방울 둘레는
+  // 빛이 꺾여 짙은 테가 지고 안쪽은 맑게 비친다
+  head: `
+    float fxSlH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float n = pow(pow(abs(q.x), 6.) + pow(abs(q.y), 6.), 1. / 6.);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .014 * sqrt(max(0., 1. - n * n)));
+    }`,
+  height: 'fxSlH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    // 이 면 위에 놓인 화면 아래쪽(길이 = 면이 선 정도)
+    vec2 fxG = -vec2(vTx.y, vTy.y);
+    float fxGl = length(fxG);
+    vec2 fxGd = fxG / max(fxGl, 1e-3);
+    // 방울: 위쪽으로 떠오른다. 돌린 직후엔 출렁인다
+    float fxWob = uCharge * sin(uTime * 11. + vSeed * 20.);
+    vec2 fxBp = -fxGd * .5 * smoothstep(.05, .6, fxGl) + vec2(-fxGd.y, fxGd.x) * fxWob * .18 + fxGd * abs(fxWob) * .1;
+    float fxBr = .27 * (1. + .08 * fxWob);
+    vec2 fxBq = (fxQ - fxBp) / fxBr;
+    fxBq.x *= 1. + .12 * fxGl;
+    float fxBd = length(fxBq);
+    float fxBub = 1. - smoothstep(.96, 1., fxBd);
+    float fxRim = smoothstep(.72, .97, fxBd) * fxBub;
+    // 액체: 가장자리로 갈수록 깊어 짙다
+    float fxM = max(abs(fxQ.x), abs(fxQ.y));
+    vec3 fxLiq = fxFc * (1.05 - .35 * fxM * fxM) * (.95 + .05 * fxF2(fxQ * 5. + uTime * .1));
+    vec3 fxAir = mix(fxFc, vec3(1.), .38);
+    vec3 fxCol = mix(fxLiq, fxAir, fxBub);
+    fxCol *= 1. - .6 * fxRim;
+    // 눈금 고리
+    float fxR = length(fxQ);
+    float fxRing = (1. - smoothstep(.006, .014, abs(fxR - .31))) + (1. - smoothstep(.006, .014, abs(fxR - .36)));
+    fxCol = mix(fxCol, vec3(.05), fxRing * .7);
+    diffuseColor.rgb = fxCol;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxSlH(fxP - vec2(fxE, 0.), vSeed) - fxSlH(fxP + vec2(fxE, 0.), vSeed),
+                               fxSlH(fxP - vec2(0., fxE), vSeed) - fxSlH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = .04; metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxLiq * .18 * (1. - fxBub) + fxAir * .12 * fxBub * (1. - fxRim) + vec3(1.) * smoothstep(.5, .1, length(fxBq - vec2(-.35, .4))) * fxBub * .25;',
+};
+B.spiritlevel = {
+  // 몸통은 검은 알루미늄 테
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .35; metalnessFactor = .8;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -6796,6 +6851,7 @@ export const MOVING = new Set([
   'candles',
   'iris',
   'sequin',
+  'spiritlevel',
 ]);
 
 /**
