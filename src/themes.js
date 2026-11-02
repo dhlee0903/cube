@@ -3456,6 +3456,27 @@ export const THEMES = [
     motion: 'snap',
     burst: { shape: 'glow', colors: 'faces', size: 0.06, speed: 1.8, gravity: 0, drag: 2, life: 0.6, additive: true },
   },
+  {
+    // 시계. 조각 겉 전체가 네모난 시계 문자판이다. 면 색 햇살 결 문자판에 금빛 인덱스와 바늘이 겹겹이 솟았다. 가만두면 초침이
+    // 째깍째깍 가고, 손끝을 가져가면 세 바늘이 모두 손끝 쪽으로 돌아 가리킨다
+    id: 'clockface',
+    name: '시계',
+    bg: '#08080A',
+    ink: '#F4F2EE',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #1E1E24, #040405)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.08, grid: 72 },
+    body: { color: '#3A3C42', roughness: 0.25, metalness: 0.9 },
+    faces: ['#C02834', '#D8782A', '#D8B83A', '#2A8A5A', '#2A5AB8', '#7E3AA8'],
+    lights: {
+      sky: '#ffffff', ground: '#121214', hemi: 1,
+      key: ['#fff8f0', 2.4, [-3, 7, 5]], fill: ['#e6ecff', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.4, [3, 4, -6]],
+    },
+    env: 1,
+    surface: 'clockface',
+    sound: 'mech',
+    motion: 'mechanical',
+    burst: { shape: 'dot', colors: ['#E8C878', '#FFFFFF'], size: 0.04, speed: 1.6, gravity: 2, drag: 2, life: 0.5 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3483,5 +3504,5 @@ export const GROUPS = [
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'chrome', 'fiberoptic', 'ledcube'] },
-  { name: '계기', themes: ['radar'] },
+  { name: '계기', themes: ['radar', 'clockface'] },
 ];

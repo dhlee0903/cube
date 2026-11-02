@@ -6701,6 +6701,95 @@ B.radar = {
   surface: 'roughnessFactor = .5; metalnessFactor = .5;',
 };
 
+S.clockface = {
+  // 시계. 조각 겉 전체가 네모난 시계 문자판이다. 면 색 문자판엔 가운데서 퍼지는 햇살 결(선버스트)이 깎였고, 네모 둘레를
+  // 따라 금빛 막대 인덱스 열둘이 붙어 솟았으며 분 눈금이 촘촘히 찍혔다. 금빛 시침과 분침, 가는 빨간 초침이 겹겹이 솟았고
+  // 가운데 꼭지가 덮었다. 가만두면 초침이 째깍째깍 한 칸씩 가고, 손끝을 가져가면 세 바늘이 모두 손끝 쪽으로 돌아 가리킨다
+  head: `
+    vec3 fxCkAng(float seed) {
+      float t = uTime + seed * 4000.;
+      float sec = floor(t) + smoothstep(.0, .12, fract(t));
+      vec3 idle = vec3(t / 3600. / 12., t / 3600., sec / 60.) * 6.2832;
+      vec2 d = fxPtr.xy;
+      float near = smoothstep(5., 2.2, fxPtr.z) * step(0., fxPtr.z) * smoothstep(.0, .05, length(d));
+      float fa = atan(d.x, d.y);
+      vec3 diff = mod(vec3(fa) - idle + 3.1416, 6.2832) - 3.1416;
+      return idle + diff * near;
+    }
+    // 바늘: 각도 a(12시 0, 시계 방향), 길이 L, 폭 w, 꼬리 tl
+    float fxCkHand(vec2 q, float a, float L, float w, float tl) {
+      vec2 dir = vec2(sin(a), cos(a));
+      float along = dot(q, dir);
+      float across = abs(dot(q, vec2(dir.y, -dir.x)));
+      float taper = mix(w, w * .35, clamp(along / L, 0., 1.));
+      return step(-tl, along) * step(along, L) * (1. - smoothstep(taper - .006, taper, across));
+    }
+    float fxCkIdx(vec2 q) {
+      // 네모 둘레의 인덱스 열둘: 각도로 나눠 둘레 띠에 막대
+      float a = atan(q.x, q.y);
+      float k = floor(a / .5236 + .5);
+      float ka = k * .5236;
+      vec2 dir = vec2(sin(ka), cos(ka));
+      float m = .8 / max(abs(dir.x), abs(dir.y));
+      float along = dot(q, dir);
+      float across = abs(dot(q, vec2(dir.y, -dir.x)));
+      float len = mod(k, 3.) < .5 ? .2 : .13;
+      return step(m - len, along) * step(along, m) * (1. - smoothstep(.025, .033, across));
+    }
+    float fxCkH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      vec3 A = fxCkAng(seed);
+      float h = .008 * fxCkIdx(q);
+      h = max(h, .014 * fxCkHand(q, A.x, .45, .075, .08));
+      h = max(h, .02 * fxCkHand(q, A.y, .7, .055, .1));
+      h = max(h, .025 * fxCkHand(q, A.z, .78, .012, .2));
+      h = max(h, .03 * (1. - smoothstep(.05, .06, length(q))));
+      return smoothstep(0., .04, fxEdgeAt(p)) * (.004 + h);
+    }`,
+  height: 'fxCkH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    vec3 fxA = fxCkAng(vSeed);
+    float fxR = length(fxQ);
+    float fxAq = atan(fxQ.x, fxQ.y);
+    // 햇살 결
+    float fxSun = fxN2(vec2(fxAq * 120., fxR * 3.));
+    vec3 fxDial = fxFc * (.78 + .1 * fxSun);
+    // 분 눈금(네모 둘레)
+    float fxM = max(abs(fxQ.x), abs(fxQ.y));
+    float fxMin = step(.86, fxM) * step(fxM, .89) * (1. - smoothstep(.0, .15, abs(fract(fxAq / .10472) - .5) * 2. - .82));
+    float fxIdx = fxCkIdx(fxQ);
+    float fxHr = fxCkHand(fxQ, fxA.x, .45, .075, .08);
+    float fxMn = fxCkHand(fxQ, fxA.y, .7, .055, .1);
+    float fxSc = fxCkHand(fxQ, fxA.z, .78, .012, .2);
+    float fxCap = 1. - smoothstep(.05, .06, fxR);
+    vec3 fxGold = vec3(.9, .74, .42);
+    vec3 fxCol = mix(fxDial, vec3(.9, .74, .42), fxMin * .6);
+    fxCol = mix(fxCol, fxGold, max(fxIdx, max(fxHr, fxMn)));
+    fxCol = mix(fxCol, vec3(.85, .1, .08), fxSc);
+    fxCol = mix(fxCol, fxGold * .9, fxCap);
+    float fxMet = max(max(fxIdx, max(fxHr, fxMn)), max(fxSc, fxCap));
+    // 햇살 결이 빛을 비스듬히 받는다
+    vec2 fxRad = fxQ / max(fxR, 1e-3);
+    vec3 fxNs = normalize(vec3(fxRad * (fxSun - .5) * .12 * (1. - fxMet), 1.));
+    diffuseColor.rgb = fxCol;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxCkH(fxP - vec2(fxE, 0.), vSeed) - fxCkH(fxP + vec2(fxE, 0.), vSeed),
+                               fxCkH(fxP - vec2(0., fxE), vSeed) - fxCkH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * normalize(fxNt + vec3(fxNs.xy, 0.)));`,
+  surface: 'roughnessFactor = mix(.3, .18, fxMet); metalnessFactor = mix(.35, .95, fxMet);',
+  emissive: 'totalEmissiveRadiance = fxCol * .03;',
+};
+B.clockface = {
+  // 몸통은 결 따라 깎은 강철 케이스
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .25; metalnessFactor = .9;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -6718,6 +6807,7 @@ export const MOVING = new Set([
   'fiberoptic',
   'ledcube',
   'radar',
+  'clockface',
 ]);
 
 /**
