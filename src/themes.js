@@ -3978,6 +3978,27 @@ export const THEMES = [
     motion: 'stutter',
     burst: { shape: 'dot', colors: ['#F0E8D8', '#FFFFFF'], size: 0.03, speed: 2, gravity: 3, drag: 1.5, life: 0.6 },
   },
+  {
+    // 금고 다이얼. 조각 하나가 면 색으로 칠한 옛 금고 문이다. 금빛 테두리와 리벳, 가운데 결 따라 깎은 강철 번호 다이얼이
+    // 솟았다. 층을 돌리면 번호를 맞추듯 다이얼이 이리저리 돌다가 잦아든다
+    id: 'safedial',
+    name: '금고 다이얼',
+    bg: '#0A0A0A',
+    ink: '#F2F0EC',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #22201E, #060505)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.04, grid: 64 },
+    body: { color: '#22242A', roughness: 0.4, metalness: 0.8 },
+    faces: ['#B02A2A', '#D8781E', '#D8B42A', '#2A8A4E', '#2A58B0', '#8A3AA8'],
+    lights: {
+      sky: '#ffffff', ground: '#121212', hemi: 1,
+      key: ['#fff8f0', 2.4, [-3, 7, 5]], fill: ['#e6ecff', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.4, [3, 4, -6]],
+    },
+    env: 0.9,
+    surface: 'safedial',
+    sound: 'mech',
+    motion: 'mechanical',
+    burst: { shape: 'dot', colors: ['#E8C070', '#D0D4DA'], size: 0.04, speed: 1.8, gravity: 3, drag: 2, life: 0.5 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -4007,5 +4028,5 @@ export const GROUPS = [
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
   { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops', 'liquidtimer', 'oilwater', 'mobile'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'laser', 'magnifier', 'chrome', 'fiberoptic', 'ledcube'] },
-  { name: '돌리면', themes: ['pinwheel', 'musicbox', 'fireworks', 'chladni'] },
+  { name: '돌리면', themes: ['pinwheel', 'musicbox', 'fireworks', 'chladni', 'safedial'] },
 ];

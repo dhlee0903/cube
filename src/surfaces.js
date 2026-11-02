@@ -8317,6 +8317,72 @@ B.chladni = {
   surface: 'roughnessFactor = .4; metalnessFactor = .5;',
 };
 
+S.safedial = {
+  // 금고 다이얼. 조각 하나가 면 색으로 칠한 옛 금고 문이다. 둘레에 금빛 테두리 선과 네 귀 리벳이 솟았고, 가운데에 결 따라
+  // 깎은 강철 번호 다이얼이 실제로 솟았다(눈금 마흔 개, 다섯 칸마다 긴 눈금, 가운데는 톱니 무늬 손잡이). 다이얼 위엔 고정된
+  // 금빛 표시 삼각. 층을 돌리면 번호를 맞추듯 다이얼이 이리저리 돌다가 잦아들고, 평소엔 거의 멈춰 있다
+  head: `
+    float fxSdAng(float seed) { return seed * 6.2832 + uCharge * 2.6 * sin(uTime * 3.2 + seed * 9.) + uTime * .02; }
+    float fxSdH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float r = length(q);
+      float a = atan(q.y, q.x + 1e-6) - fxSdAng(seed);
+      float dial = .02 * (1. - smoothstep(.56, .6, r));
+      float knob = .02 * (1. - smoothstep(.27, .3, r)) * (.85 + .15 * smoothstep(.0, .3, abs(fract(a * 30. / 6.2832) - .5) * 2.));
+      float m = max(abs(q.x), abs(q.y));
+      float border = .006 * (1. - smoothstep(.0, .02, abs(m - .84)));
+      vec2 rv = abs(q) - .74;
+      float rivet = .012 * sqrt(max(0., 1. - dot(rv, rv) / .0025));
+      return smoothstep(0., .04, fxEdgeAt(p)) * (.006 + max(max(dial + knob, border), rivet));
+    }`,
+  height: 'fxSdH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    float fxR = length(fxQ);
+    float fxA0 = atan(fxQ.y, fxQ.x + 1e-6);
+    float fxA = fxA0 - fxSdAng(vSeed);
+    float fxDial = 1. - smoothstep(.57, .6, fxR);
+    float fxKnob = 1. - smoothstep(.28, .3, fxR);
+    // 눈금: 바깥 띠에 마흔 개, 다섯 칸마다 길게
+    float fxT = fract(fxA * 40. / 6.2832);
+    float fxFive = step(.8, fract(fxA * 8. / 6.2832 + .1));
+    float fxAAt = fwidth(fxA * 40. / 6.2832) * 1.5;
+    float fxTick = (1. - smoothstep(.06, .06 + fxAAt + .04, min(fxT, 1. - fxT))) * step(fxR, .55) * step(mix(.47, .38, fxFive), fxR);
+    // 결 따라 깎은 강철(둥글게 돈 결)
+    float fxBrush = fxN2(vec2(fxA * 60., fxR * 300.));
+    vec3 fxSteel = vec3(.72, .73, .76) * (.85 + .25 * fxBrush);
+    vec3 fxCol = fxFc * (.82 + .1 * fxN2(fxQ * 20.));
+    float fxM = max(abs(fxQ.x), abs(fxQ.y));
+    float fxGold = (1. - smoothstep(.0, .02, abs(fxM - .84))) + (1. - smoothstep(.0, .008, abs(fxM - .79)));
+    vec2 fxRv = abs(fxQ) - .74;
+    float fxRiv = 1. - smoothstep(.045, .05, length(fxRv));
+    fxGold = max(fxGold, fxRiv);
+    // 표시 삼각(다이얼 위, 고정)
+    vec2 fxTq = fxQ - vec2(0., .66);
+    float fxMark = step(fxTq.y, 0.) * step(abs(fxTq.x), -fxTq.y * .6) * step(-.06, fxTq.y);
+    fxCol = mix(fxCol, vec3(.9, .72, .35), clamp(fxGold + fxMark, 0., 1.));
+    fxCol = mix(fxCol, fxSteel, fxDial);
+    fxCol = mix(fxCol, vec3(.05), fxTick * fxDial * (1. - fxKnob));
+    fxCol = mix(fxCol, fxSteel * .9, fxKnob);
+    float fxMet = max(max(fxDial, fxGold), fxMark);
+    diffuseColor.rgb = fxCol;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxSdH(fxP - vec2(fxE, 0.), vSeed) - fxSdH(fxP + vec2(fxE, 0.), vSeed),
+                               fxSdH(fxP - vec2(0., fxE), vSeed) - fxSdH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = mix(.45, .25, fxMet); metalnessFactor = mix(.2, .9, fxMet);',
+  emissive: 'totalEmissiveRadiance = fxCol * .03;',
+};
+B.safedial = {
+  // 몸통은 짙은 강철 금고 몸
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .4; metalnessFactor = .8;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -8359,6 +8425,7 @@ export const MOVING = new Set([
   'musicbox',
   'fireworks',
   'chladni',
+  'safedial',
 ]);
 
 /**
