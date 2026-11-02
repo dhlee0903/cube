@@ -46,6 +46,8 @@ varying vec2 vGrav;
 // fxGrav: 스티커 평면에서 화면 아래쪽(중력) 방향
 vec3 fxPtr;
 vec2 fxGrav;
+// fxGravL: 화면 아래쪽이 이 스티커 평면 위에 놓인 정도(0이면 면이 화면을 똑바로 보거나 위·아래를 향한다, 1이면 선 면)
+float fxGravL;
 `;
 
 // 정점·조각 셰이더 양쪽에서 쓰는 것
@@ -7031,6 +7033,78 @@ B.hourglass = {
   surface: 'roughnessFactor = .4;',
 };
 
+S.marbles = {
+  // 구슬 쟁반. 조각 겉이 테두리가 솟은 얕은 쟁반이고 바닥엔 두툼한 면 색 펠트가 깔렸다. 맑은 유리구슬 네 알이 펠트에
+  // 반쯤 묻혀 솟았는데, 늘 낮은 쪽(화면 아래쪽) 벽으로 굴러가 나란히 몰리고, 위를 향한 면에선 쟁반 여기저기 흩어져 있다. 층을 돌리면
+  // 구슬이 이리저리 굴렀다가 다시 몰린다. 구슬 속엔 면 색 고양이눈 날개가 비틀려 들었고, 바닥엔 구슬 그늘과 빛이 모인 자리
+  head: `
+    vec3 fxMbBall(int i, float seed) {
+      float fi = float(i);
+      float r = .082 + .014 * fxH1(seed * 7. + fi * 3.1);
+      vec2 rnd = (vec2(fxH1(seed * 13. + fi * 1.7), fxH1(seed * 29. + fi * 2.3)) - .5) * .5 + vec2(fi < 2. ? -.1 : .1, mod(fi, 2.) < 1. ? -.1 : .1);
+      vec2 gd = fxGrav;
+      vec2 sd = vec2(-gd.y, gd.x);
+      float wob = uCharge * sin(uTime * 7. + fi * 1.9 + seed * 20.) * .12;
+      vec2 packed = gd * (.36 - r) + sd * ((fi - 1.5) * .19 + wob) - gd * uCharge * .08 * abs(sin(uTime * 5. + fi));
+      vec2 c = mix(rnd, packed, smoothstep(.15, .5, fxGravL));
+      c = clamp(c, vec2(-.36 + r), vec2(.36 - r));
+      return vec3(c, r);
+    }
+    float fxMbH(vec2 p, float seed) {
+      float m = max(abs(p.x), abs(p.y)) / uSticker.x;
+      float tray = .006 + .028 * smoothstep(.84, .9, m);
+      float h = tray;
+      for (int i = 0; i < 4; i++) {
+        vec3 b = fxMbBall(i, seed);
+        float d = length(p - b.xy);
+        // 구슬은 펠트에 반쯤 묻혀 윗반구만 솟는다(옆 벽이 없어 겉이 끊기지 않는다)
+        h = max(h, .006 + 1.1 * sqrt(max(b.z * b.z - d * d, 0.)));
+      }
+      return smoothstep(0., .04, fxEdgeAt(p)) * h;
+    }`,
+  height: 'fxMbH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxP = vLocal.xy;
+    // 이 점을 덮는 구슬
+    vec3 fxB = vec3(0.);
+    float fxOn = 0.;
+    float fxAo = 1.;
+    for (int i = 0; i < 4; i++) {
+      vec3 b = fxMbBall(i, vSeed);
+      float d = length(fxP - b.xy);
+      if (d < b.z) { fxB = b; fxOn = 1.; }
+      fxAo *= 1. - .55 * exp(-pow(max(d - b.z * .7, 0.) / (b.z * .5), 2.));
+    }
+    vec2 fxL = (fxP - fxB.xy) / max(fxB.z, 1e-3);
+    vec3 fxNs = vec3(fxL, sqrt(max(1. - dot(fxL, fxL), 0.)));
+    // 고양이눈 날개: 구슬 속 비틀린 띠
+    float fxAng = vSeed * 6.2832 + fxB.x * 9.;
+    vec2 fxAx = vec2(cos(fxAng), sin(fxAng));
+    float fxTw = dot(fxL, fxAx) + .35 * dot(fxL, vec2(-fxAx.y, fxAx.x)) * dot(fxL, fxL);
+    float fxVane = exp(-fxTw * fxTw * 40.) * (1. - smoothstep(.75, .95, length(fxL)));
+    // 펠트 바닥과 쟁반 테
+    float fxM = max(abs(fxP.x), abs(fxP.y)) / uSticker.x;
+    float fxRimT = smoothstep(.84, .9, fxM);
+    float fxFelt = fxN2(fxP * 220. + vSeed * 3.);
+    vec3 fxFloor = fxFc * (.5 + .12 * fxFelt) * fxAo;
+    vec3 fxTray = mix(fxFloor, vec3(.08, .07, .06), fxRimT);
+    diffuseColor.rgb = mix(fxTray, fxFc * .25 + vec3(.03), fxOn);`,
+  normal: `
+    float fxE = .0012;
+    vec3 fxNt = normalize(vec3(fxMbH(fxP - vec2(fxE, 0.), vSeed) - fxMbH(fxP + vec2(fxE, 0.), vSeed),
+                               fxMbH(fxP - vec2(0., fxE), vSeed) - fxMbH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * mix(fxNt, fxNs, fxOn));`,
+  surface: 'roughnessFactor = mix(mix(.95, .35, fxRimT), .03, fxOn); metalnessFactor = mix(mix(0., .6, fxRimT), .1, fxOn);',
+  emissive: 'totalEmissiveRadiance = fxOn * (fxFc * fxVane * .9 + fxFc * .08 * (1. - fxNs.z * .5));',
+};
+B.marbles = {
+  // 몸통은 짙은 호두나무 쟁반
+  color: 'diffuseColor.rgb *= .8 + .3 * fxN3(vec3(vLocal.x * 4., vLocal.y * 40., vLocal.z * 4.) + vSeed);',
+  surface: 'roughnessFactor = .4;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -7053,6 +7127,7 @@ export const MOVING = new Set([
   'snowglobe',
   'bottleink',
   'hourglass',
+  'marbles',
 ]);
 
 /**
@@ -7093,6 +7168,7 @@ export function wear(material, part, uniforms, face = -1) {
         fxPtr = (inverse(modelViewMatrix * fxIM4) * vec4(uPointer, 1.)).xyz;
         vec2 fxGd = -vec2((normalMatrix * (mat3(fxIM4) * vec3(1., 0., 0.))).y, (normalMatrix * (mat3(fxIM4) * vec3(0., 1., 0.))).y);
         fxGrav = length(fxGd) > .05 ? normalize(fxGd) : vec2(0., -1.);
+        fxGravL = length(fxGd);
         vPtr = fxPtr;
         vGrav = fxGrav;
         vSeed = aSeed;
@@ -7118,7 +7194,7 @@ export function wear(material, part, uniforms, face = -1) {
         ${NOISE}
         ${FRAG}
         ${head}`)
-      .replace('#include <color_fragment>', `#include <color_fragment>\nfxPtr = vPtr;\nfxGrav = vGrav;\n${fx.color ?? ''}`)
+      .replace('#include <color_fragment>', `#include <color_fragment>\nfxPtr = vPtr;\nfxGrav = vGrav;\nfxGravL = length(vec2(vTx.y, vTy.y));\n${fx.color ?? ''}`)
       .replace('#include <metalnessmap_fragment>', `#include <metalnessmap_fragment>\n${fx.surface ?? ''}`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>\n${fx.normal ?? ''}`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>\n${fx.emissive ?? ''}

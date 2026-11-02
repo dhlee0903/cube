@@ -3559,6 +3559,27 @@ export const THEMES = [
     motion: 'fluid',
     burst: { shape: 'dot', colors: 'faces', size: 0.03, speed: 1.2, gravity: 4, drag: 1, life: 0.8 },
   },
+  {
+    // 구슬 쟁반. 조각 겉이 면 색 펠트를 깐 얕은 쟁반이고 유리구슬 네 알이 진짜 공으로 솟아 놓였다. 구슬은 늘 화면 아래쪽 벽으로
+    // 굴러 몰리고, 층을 돌리면 이리저리 굴렀다 다시 몰린다. 구슬 속엔 면 색 고양이눈 날개
+    id: 'marbles',
+    name: '구슬 쟁반',
+    bg: '#0C0A08',
+    ink: '#F4EEE6',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #241C14, #060504)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.05, grid: 72 },
+    body: { color: '#3A2618', roughness: 0.4 },
+    faces: ['#E83A30', '#F5962A', '#F0D23A', '#30B860', '#2E78E8', '#A84EE0'],
+    lights: {
+      sky: '#ffffff', ground: '#120e0a', hemi: 1,
+      key: ['#ffffff', 2.6, [-3, 7, 5]], fill: ['#ffe6d0', 0.7, [6, 1, 4]], rim: ['#ffffff', 1.8, [3, 4, -6]],
+    },
+    env: 1,
+    surface: 'marbles',
+    sound: 'glass',
+    motion: 'bouncy',
+    burst: { shape: 'glow', colors: 'faces', size: 0.06, speed: 1.6, gravity: 2, drag: 2, life: 0.6, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3586,5 +3607,5 @@ export const GROUPS = [
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
-  { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass'] },
+  { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles'] },
 ];
