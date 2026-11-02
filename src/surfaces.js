@@ -2397,7 +2397,7 @@ S.lavalamp = {
       + mix(fxWax, vec3(1., .95, .85), .45) * fxRim * fxBottom * .6
       + mix(fxWax, vec3(1.), .3) * pow(fxRim, 3.) * .25;
     vec3 fxTint = mix(vec3(1.) - fxWax, vec3(.35, .1, .4), .35);
-    vec3 fxLiquid = fxTint * (.06 + .32 * fxHeat) * (.85 + .3 * fxN2(vec2(fxR.x * 3., fxR.y * .8 - uTime * .05)));
+    vec3 fxLiquid = fxTint * (.16 + .45 * fxHeat) * (.85 + .3 * fxN2(vec2(fxR.x * 3., fxR.y * .8 - uTime * .05)));
     fxLiquid += fxWax * .1 * exp(-fxW.x * .6) * fxW.x;
     vec2 fxBq = vec2(fxR.x * 11., fxR.y * 7. - uTime * .3);
     float fxBubble = (1. - smoothstep(.04, .08, length(fract(fxBq) - .5))) * step(.9, fxH2(floor(fxBq)));
