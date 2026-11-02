@@ -3789,6 +3789,27 @@ export const THEMES = [
     motion: 'smooth',
     burst: { shape: 'star', colors: ['#FF5050', '#FFD040', '#50FF80', '#5080FF', '#C060FF'], size: 0.08, speed: 2.2, gravity: 0, drag: 2, life: 0.7, additive: true },
   },
+  {
+    // 레이저. 조각 하나가 통째로 옅은 연기가 낀 검은 유리 상자다. 귀퉁이 발사기의 면 색 레이저가 거울 둘에 꺾이고, 마지막
+    // 줄기는 늘 손끝을 겨눠 벽에 빛점이 맺힌다. 빛줄기는 연기에 은은히 번진다
+    id: 'laser',
+    name: '레이저',
+    bg: '#030304',
+    ink: '#EEEEF4',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #121218, #020203)',
+    form: { bevel: 0.04, size: 0.96, radius: 0.03, grid: 24 },
+    body: { color: '#18181C', roughness: 0.3, metalness: 0.7 },
+    faces: ['#FF2A2A', '#FF8A10', '#FFE020', '#20FF60', '#2A70FF', '#C030FF'],
+    lights: {
+      sky: '#c8ccff', ground: '#050508', hemi: 0.4,
+      key: ['#ffffff', 1.2, [-3, 7, 5]], fill: ['#c0c8ff', 0.3, [6, 1, 4]], rim: ['#ffffff', 1, [3, 4, -6]],
+    },
+    env: 0.7,
+    surface: 'laser',
+    sound: 'electric',
+    motion: 'snap',
+    burst: { shape: 'streak', colors: 'faces', size: 0.08, speed: 4, gravity: 0, drag: 4, life: 0.4, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3817,5 +3838,5 @@ export const GROUPS = [
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
   { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops', 'liquidtimer', 'oilwater', 'mobile'] },
-  { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism'] },
+  { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'laser'] },
 ];

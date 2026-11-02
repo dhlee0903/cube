@@ -7787,6 +7787,72 @@ B.prism = {
   emissive: 'totalEmissiveRadiance = vec3(.8, .85, 1.) * fxFresnel(normal, 3.) * .2;',
 };
 
+S.laser = {
+  // 레이저. 조각 하나가 통째로 옅은 연기가 낀 검은 유리 상자다. 한 귀퉁이 발사기에서 면 색 레이저가 나가 작은 거울 둘에
+  // 차례로 꺾이고, 마지막 줄기는 늘 손끝 쪽을 겨눠 그 자리 벽에 빛점이 맺힌다. 빛줄기는 연기에 흩어져 둘레가 은은히
+  // 번지고, 손끝을 움직이면 마지막 거울이 돌며 빛이 따라간다. 줄기와 거울은 상자 속 깊이에 있어 보는 각도 따라 어긋난다
+  head: `
+    float fxLzH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float n = pow(pow(abs(q.x), 8.) + pow(abs(q.y), 8.), 1. / 8.);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .008 * sqrt(max(0., 1. - n * n)));
+    }
+    float fxLzSeg(vec2 p, vec2 a, vec2 b) {
+      vec2 pa = p - a, ba = b - a;
+      return length(pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0., 1.));
+    }`,
+  height: 'fxLzH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVl = vec3(dot(fxV, vTx), dot(fxV, vTy), max(dot(fxV, vTz), .2));
+    vec2 fxQm = fxQ - fxVl.xy / fxVl.z * .2 / uSticker.x;
+    vec2 fxQb = fxQ - fxVl.xy / fxVl.z * .4 / uSticker.x;
+    float fxS = vSeed * 6.2832;
+    vec2 fxE = vec2(-.82, -.82) * vec2(cos(floor(fxS)), 1.);
+    fxE = vec2(-.82, -.8);
+    vec2 fxM1 = vec2(.78, -.55 + .3 * fxH1(vSeed * 3.));
+    vec2 fxM2 = vec2(-.6 + .3 * fxH1(vSeed * 5.), .74);
+    // 손끝 겨냥(상자 안으로 가둔다)
+    vec2 fxTg = clamp(fxPtr.xy / uSticker.x, vec2(-.85), vec2(.85));
+    vec2 fxTd = normalize(fxTg - fxM2 + vec2(.0001));
+    vec2 fxEnd = fxM2 + fxTd * 3.;
+    // 상자 벽에서 멈춘다
+    vec2 fxTb = (sign(fxTd) * .9 - fxM2) / (fxTd + sign(fxTd) * 1e-4);
+    fxEnd = fxM2 + fxTd * min(fxTb.x, fxTb.y);
+    float fxD = min(min(fxLzSeg(fxQm, fxE, fxM1), fxLzSeg(fxQm, fxM1, fxM2)), fxLzSeg(fxQm, fxM2, fxEnd));
+    float fxAA = fwidth(fxQm.x) * 1.5;
+    float fxCore = exp(-fxD * fxD / (.00012 + fxAA * fxAA));
+    float fxGlow = exp(-fxD / .06) * .35 + exp(-fxD / .015) * .4;
+    // 연기: 천천히 흐르는 뿌연 결이 빛을 받는다
+    float fxHaze = fxF2(fxQb * 2.5 + vec2(uTime * .05, uTime * .03) + vSeed * 7.);
+    fxGlow *= .6 + .8 * fxHaze;
+    float fxSpot = exp(-dot(fxQb - fxEnd, fxQb - fxEnd) * 120.) * 1.2;
+    // 거울: 은빛 작은 판, 발사기
+    float fxMir = max(1. - smoothstep(.06, .08, length((fxQm - fxM1) * vec2(1., 2.4))), 1. - smoothstep(.06, .08, length((fxQm - fxM2) * vec2(2.4, 1.))));
+    float fxEm = 1. - smoothstep(.07, .09, length(fxQm - fxE));
+    vec3 fxBeam = fxFc * (fxGlow + fxSpot) + mix(fxFc, vec3(1.), .6) * fxCore * 1.5;
+    vec3 fxCol = fxFc * (.06 + .1 * fxHaze) + vec3(.01);
+    fxCol = mix(fxCol, vec3(.75, .78, .82), fxMir * .8);
+    fxCol = mix(fxCol, vec3(.15), fxEm);
+    diffuseColor.rgb = fxCol;`,
+  normal: `
+    float fxEe = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxLzH(fxP - vec2(fxEe, 0.), vSeed) - fxLzH(fxP + vec2(fxEe, 0.), vSeed),
+                               fxLzH(fxP - vec2(0., fxEe), vSeed) - fxLzH(fxP + vec2(0., fxEe), vSeed), 2. * fxEe));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = .05; metalnessFactor = .2;',
+  emissive: 'totalEmissiveRadiance = fxBeam + fxFc * .06 * fxHaze;',
+};
+B.laser = {
+  // 몸통은 검은 금속 상자
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .3; metalnessFactor = .7;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -7820,6 +7886,7 @@ export const MOVING = new Set([
   'lenticular',
   'well',
   'prism',
+  'laser',
 ]);
 
 /**
