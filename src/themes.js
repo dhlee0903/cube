@@ -3810,6 +3810,27 @@ export const THEMES = [
     motion: 'snap',
     burst: { shape: 'streak', colors: 'faces', size: 0.08, speed: 4, gravity: 0, drag: 4, life: 0.4, additive: true },
   },
+  {
+    // 돋보기. 조각 겉 전체가 지폐처럼 정밀하게 인쇄한 종이다. 면 색 물결무늬 선 사이에 깨알 글씨가 박혔고, 손끝을 따라
+    // 볼록렌즈가 다니며 깨알 글씨를 세 배로 키운다
+    id: 'magnifier',
+    name: '돋보기',
+    bg: '#0A0C0A',
+    ink: '#F2F0E6',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #1E2620, #050605)',
+    form: { bevel: 0.04, size: 0.96, radius: 0.02, grid: 24 },
+    body: { color: '#1E2E24', roughness: 0.6 },
+    faces: ['#C83A34', '#D8862E', '#B89A1E', '#2E8A52', '#2E5EB8', '#7A3AA8'],
+    lights: {
+      sky: '#fff8ec', ground: '#0e100c', hemi: 1,
+      key: ['#fff8ec', 2.2, [-3, 7, 5]], fill: ['#f0f0ff', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.2, [3, 4, -6]],
+    },
+    env: 0.7,
+    surface: 'magnifier',
+    sound: 'paper',
+    motion: 'smooth',
+    burst: { shape: 'dot', colors: 'faces', size: 0.04, speed: 1.4, gravity: 1, drag: 2, life: 0.6 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3838,5 +3859,5 @@ export const GROUPS = [
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
   { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops', 'liquidtimer', 'oilwater', 'mobile'] },
-  { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'laser'] },
+  { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'laser', 'magnifier'] },
 ];
