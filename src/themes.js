@@ -3914,6 +3914,27 @@ export const THEMES = [
     motion: 'bouncy',
     burst: { shape: 'leaf', colors: 'faces', size: 0.08, speed: 2.2, gravity: 1, drag: 2, life: 0.8 },
   },
+  {
+    // 오르골. 조각 하나가 뚜껑을 연 오르골 상자다. 면 색 옻칠 상자 안에 핀 박힌 황동 원통이 솟아 누웠고 강철 빗살이 걸쳤다.
+    // 가만히 두면 원통이 천천히 돌며 빗살을 튕기고, 층을 돌리면 빨리 돌아 핀이 흐려지고 빗살이 떨며 반짝인다
+    id: 'musicbox',
+    name: '오르골',
+    bg: '#0E0A08',
+    ink: '#F6EEE4',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #2A1E16, #070504)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.04, grid: 72 },
+    body: { color: '#3A2418', roughness: 0.35 },
+    faces: ['#B8283A', '#D8782A', '#D8B83A', '#2E8A5A', '#2E5AB0', '#7A3AA0'],
+    lights: {
+      sky: '#fff6ea', ground: '#140e08', hemi: 1,
+      key: ['#fff6ea', 2.4, [-3, 7, 5]], fill: ['#ffe6c8', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.4, [3, 4, -6]],
+    },
+    env: 0.9,
+    surface: 'musicbox',
+    sound: 'metal',
+    motion: 'mechanical',
+    burst: { shape: 'star', colors: ['#FFE0A0', '#FFFFFF'], size: 0.06, speed: 1.8, gravity: -.5, drag: 2, life: 0.8, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3943,5 +3964,5 @@ export const GROUPS = [
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
   { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops', 'liquidtimer', 'oilwater', 'mobile'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'laser', 'magnifier', 'chrome', 'fiberoptic', 'ledcube'] },
-  { name: '돌리면', themes: ['pinwheel'] },
+  { name: '돌리면', themes: ['pinwheel', 'musicbox'] },
 ];

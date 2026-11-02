@@ -8136,6 +8136,71 @@ B.pinwheel = {
   surface: 'roughnessFactor = .6;',
 };
 
+S.musicbox = {
+  // 오르골. 조각 하나가 뚜껑을 연 오르골 상자를 위에서 본 모습이다. 면 색으로 옻칠한 상자 안에 짧은 핀이 촘촘히 박힌 황동
+  // 원통이 실제로 반원통꼴로 솟아 누웠고, 그 위로 강철 빗(빗살 열넷)이 걸쳐 빗살 끝이 원통에 닿는다. 가만히 두면 원통이
+  // 천천히 돌며 핀이 빗살을 하나씩 튕기고(튕긴 빗살이 반짝 떤다), 층을 돌리면 태엽이 풀리듯 빨리 돌아 핀이 줄무늬로
+  // 흐려지고 빗살이 한꺼번에 떨며 반짝인다
+  head: `
+    float fxMbxH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float inX = 1. - smoothstep(.7, .74, abs(q.x));
+      float cy = (q.y + .18) / .32;
+      float cyl = .05 * sqrt(max(0., 1. - cy * cy)) * inX;
+      float comb = .03 * smoothstep(.36, .34, -q.y + .72) * step(.36, q.y) * (1. - smoothstep(.66, .7, abs(q.x)));
+      float tooth = .026 * step(.08, q.y) * step(q.y, .38) * (1. - smoothstep(.024, .032, abs(fract(q.x * 7. + .5) - .5) / 7.)) * step(abs(q.x), .68);
+      float rim = .018 * smoothstep(.84, .9, max(abs(q.x), abs(q.y)));
+      return smoothstep(0., .04, fxEdgeAt(p)) * (.004 + max(max(cyl, max(comb, tooth)), rim));
+    }`,
+  height: 'fxMbxH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    float fxHt = fxMbxH(vLocal.xy, vSeed);
+    float fxCyR = (fxQ.y + .18) / .32;
+    float fxCyl = step(abs(fxCyR), 1.) * (1. - smoothstep(.7, .74, abs(fxQ.x)));
+    float fxComb = step(.36, fxQ.y) * smoothstep(.36, .34, -fxQ.y + .72) * (1. - smoothstep(.66, .7, abs(fxQ.x)));
+    float fxTooth = step(.08, fxQ.y) * step(fxQ.y, .38) * (1. - smoothstep(.024, .032, abs(fract(fxQ.x * 7. + .5) - .5) / 7.)) * step(abs(fxQ.x), .68);
+    float fxRim = smoothstep(.84, .9, max(abs(fxQ.x), abs(fxQ.y)));
+    // 원통 둘레 각도와 핀: 핀은 원통이 돌면 둘레를 따라 흐른다
+    float fxPhi = asin(clamp(fxCyR, -1., 1.));
+    float fxSpin = uTime * .35;
+    float fxBlur = smoothstep(.1, .6, uCharge);
+    vec2 fxPg = vec2(fxQ.x * 9.8, (fxPhi + fxSpin) * 4.);
+    vec2 fxPc = floor(fxPg);
+    vec2 fxPf = fract(fxPg) - .5;
+    float fxHas = step(.62, fxH2(fxPc + vSeed * 13.));
+    float fxPinS = (1. - smoothstep(.16, .26, length(fxPf * vec2(1., 1.6)))) * fxHas;
+    float fxPinB = (1. - smoothstep(.12, .2, abs(fxPf.x))) * fxHas * .45;
+    float fxPin = mix(fxPinS, fxPinB, fxBlur) * fxCyl;
+    // 빗살 떨림: 핀이 막 지난 빗살이 반짝
+    float fxTk = floor(fxQ.x * 7. + .5);
+    float fxPluck = pow(fract(uTime * .35 * 4. / 6.2832 * 6. + fxH1(fxTk + vSeed * 3.)), 6.) + uCharge * (.5 + .5 * sin(uTime * 60. + fxTk));
+    vec3 fxBrass = vec3(.85, .64, .3) * (.7 + .4 * sqrt(max(0., 1. - fxCyR * fxCyR)));
+    vec3 fxSteel = vec3(.72, .74, .78);
+    vec3 fxCol = fxFc * (.75 + .1 * fxN2(fxQ * 30.));
+    fxCol = mix(fxCol, fxFc * .45, fxRim);
+    fxCol = mix(fxCol, fxBrass, fxCyl);
+    fxCol = mix(fxCol, vec3(.95, .9, .8), fxPin);
+    fxCol = mix(fxCol, fxSteel, max(fxComb, fxTooth));
+    float fxMetal = max(max(fxCyl, fxComb), fxTooth);
+    diffuseColor.rgb = fxCol;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxMbxH(fxP - vec2(fxE, 0.), vSeed) - fxMbxH(fxP + vec2(fxE, 0.), vSeed),
+                               fxMbxH(fxP - vec2(0., fxE), vSeed) - fxMbxH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = fxBump(normalize(mat3(vTx, vTy, vTz) * fxNt), fxPin * .0015);`,
+  surface: 'roughnessFactor = mix(.3, .2, fxMetal); metalnessFactor = fxMetal * .9;',
+  emissive: 'totalEmissiveRadiance = vec3(1.) * fxTooth * clamp(fxPluck, 0., 1.) * .25 + fxCol * .04;',
+};
+B.musicbox = {
+  // 몸통은 짙은 호두나무 상자
+  color: 'diffuseColor.rgb *= .8 + .3 * fxN3(vec3(vLocal.x * 4., vLocal.y * 40., vLocal.z * 4.) + vSeed);',
+  surface: 'roughnessFactor = .35;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -8175,6 +8240,7 @@ export const MOVING = new Set([
   'fiberoptic',
   'ledcube',
   'pinwheel',
+  'musicbox',
 ]);
 
 /**
