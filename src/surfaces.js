@@ -8613,6 +8613,65 @@ B.vinyl = {
   surface: 'roughnessFactor = .3; metalnessFactor = .3;',
 };
 
+S.spintop = {
+  // 팽이. 조각마다 밝은 나무 탁자 위에서 도는 나무 팽이를 위에서 본다. 팽이 몸통은 원뿔꼴로 실제로 솟고 면 색과 흰색 띠,
+  // 나선 줄이 칠해졌으며 가운데 손잡이가 우뚝 솟았다. 층을 돌리면 빨리 돌아 줄무늬가 흐려지며 곧게 서고, 느려질수록
+  // 비틀거리며 축이 원을 그리고(세차) 그림자가 흔들린다
+  head: `
+    vec2 fxStC(float seed) {
+      float wob = .12 * (1. - uCharge) + .03;
+      float pa = uTime * (2. + 4. * uCharge) + seed * 6.2832;
+      return vec2(cos(pa), sin(pa)) * wob;
+    }
+    float fxStH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      vec2 c = fxStC(seed);
+      float r = length(q - c);
+      float body = .07 * max(0., 1. - r / .62) + .012 * (1. - smoothstep(.6, .63, r));
+      float stem = .05 * (1. - smoothstep(.07, .09, r));
+      return smoothstep(0., .04, fxEdgeAt(p)) * (.004 + body * step(r, .63) + stem);
+    }`,
+  height: 'fxStH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    vec2 fxC = fxStC(vSeed);
+    vec2 fxD = fxQ - fxC;
+    float fxR = length(fxD);
+    float fxA = atan(fxD.y, fxD.x + 1e-6);
+    float fxSpin = uTime * (3. + 30. * uCharge);
+    float fxBlur = smoothstep(.15, .6, uCharge);
+    float fxBody = 1. - smoothstep(.61, .63, fxR);
+    // 칠: 동심 띠와 나선 줄
+    float fxBand = step(.5, fract(fxR * 5.));
+    float fxSpiral = step(.5, fract((fxA - fxSpin) / 6.2832 * 4. + fxR * 2.));
+    float fxPaint = mix(fxSpiral, .5, fxBlur);
+    vec3 fxBodyC = mix(fxFc, vec3(.96, .94, .9), mix(fxBand * .7, fxPaint * .6, step(.2, fxR) * step(fxR, .45)));
+    fxBodyC = mix(fxBodyC, fxFc * .7, step(.45, fxR) * fxBand);
+    // 탁자: 밝은 나뭇결, 팽이 그림자
+    vec2 fxSh = fxQ - fxC - vec2(.08, -.1);
+    float fxShadow = 1. - smoothstep(.55, .8, length(fxSh));
+    vec3 fxTable = vec3(.78, .62, .44) * (.85 + .2 * fxN2(vec2(fxQ.x * 3., fxQ.y * 40.))) * (1. - .45 * fxShadow);
+    float fxStem = 1. - smoothstep(.07, .09, fxR);
+    vec3 fxCol = mix(fxTable, fxBodyC, fxBody);
+    fxCol = mix(fxCol, vec3(.45, .3, .18), fxStem);
+    diffuseColor.rgb = fxCol;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxStH(fxP - vec2(fxE, 0.), vSeed) - fxStH(fxP + vec2(fxE, 0.), vSeed),
+                               fxStH(fxP - vec2(0., fxE), vSeed) - fxStH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = mix(.6, .3, fxBody); metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxCol * .03;',
+};
+B.spintop = {
+  // 몸통은 밝은 나무 탁자
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vec3(vLocal.x * 4., vLocal.y * 40., vLocal.z * 4.) + vSeed);',
+  surface: 'roughnessFactor = .6;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -8659,6 +8718,7 @@ export const MOVING = new Set([
   'windchime',
   'orrery',
   'vinyl',
+  'spintop',
 ]);
 
 /**

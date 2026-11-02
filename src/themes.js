@@ -4062,6 +4062,26 @@ export const THEMES = [
     motion: 'smooth',
     burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 2, gravity: 0, drag: 2, life: 0.6, additive: true },
   },
+  {
+    // 팽이. 조각마다 나무 탁자 위에서 도는 나무 팽이다. 면 색과 흰 띠를 칠한 몸통이 솟고, 층을 돌리면 빨리 돌아 무늬가
+    // 흐려지며 곧게 섰다가 느려질수록 비틀거리며 원을 그린다
+    id: 'spintop',
+    name: '팽이',
+    bg: '#0E0A06',
+    ink: '#F6EEE2',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #2A2014, #070503)',
+    form: { bevel: 0.04, size: 0.96, radius: 0.03, grid: 64 },
+    body: { color: '#C8A27A', roughness: 0.6 },
+    faces: ['#D8302E', '#E8801E', '#E0C01E', '#2E9A52', '#2E62D0', '#8E3EC8'],
+    lights: {
+      sky: '#fff6ea', ground: '#140e08', hemi: 1,
+      key: ['#fff6ea', 2.4, [-3, 7, 5]], fill: ['#ffe6c8', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.2, [3, 4, -6]],
+    },
+    surface: 'spintop',
+    sound: 'wood',
+    motion: 'bouncy',
+    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 2.4, gravity: 0, drag: 2, life: 0.6 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -4091,5 +4111,5 @@ export const GROUPS = [
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
   { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops', 'liquidtimer', 'oilwater', 'mobile'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'laser', 'magnifier', 'chrome', 'fiberoptic', 'ledcube'] },
-  { name: '돌리면', themes: ['pinwheel', 'musicbox', 'fireworks', 'chladni', 'safedial', 'windchime', 'orrery', 'vinyl'] },
+  { name: '돌리면', themes: ['pinwheel', 'musicbox', 'fireworks', 'chladni', 'safedial', 'windchime', 'orrery', 'vinyl', 'spintop'] },
 ];
