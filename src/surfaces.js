@@ -7726,6 +7726,67 @@ B.well = {
   surface: 'roughnessFactor = .85;',
 };
 
+S.prism = {
+  // 프리즘. 조각 하나가 통째로 면 색으로 물든 각진 수정 덩어리다. 겉이 넓은 테이블과 둘레의 큰 패싯 여덟으로 깎여 실제로
+  // 솟았다. 손끝이 광원이라, 손끝에서 온 빛이 패싯마다 굴절하며 빛깔별로 갈라져 무지개 띠가 진다. 손끝을 움직이면 무지개가
+  // 패싯 위를 미끄러지고 빛깔 순서가 뒤바뀌며, 패싯이 빛을 눈으로 되비추는 순간 하얗게 번쩍인다
+  head: `
+    vec4 fxPrsCrown(vec2 q) {
+      vec4 best = vec4(0., 0., 1., .32);
+      for (int k = 0; k < 8; k++) {
+        float az = float(k) * .785398 + .3927;
+        vec2 u = vec2(cos(az), sin(az));
+        float th = mod(float(k), 2.) < 1. ? .62 : .45;
+        vec3 n = vec3(u * sin(th), cos(th));
+        float c = sin(th) * ((abs(u.x) + abs(u.y)) * .98) + cos(th) * .012;
+        float h = (c - dot(n.xy, q)) / n.z;
+        if (h < best.w) best = vec4(n, h);
+      }
+      return best;
+    }
+    float fxPrsH(vec2 p, float seed) {
+      float R = uSticker.x * .97;
+      return smoothstep(0., .04, fxEdgeAt(p)) * (.006 + R * max(fxPrsCrown(p / R).w, .012));
+    }
+    // 무지개(0 빨강 ~ 1 보라)
+    vec3 fxPrsSpec(float x) {
+      return clamp(vec3(1.5 - abs(x * 4. - 1.), 1.5 - abs(x * 4. - 2.), 1.5 - abs(x * 4. - 3.2)) , 0., 1.) * smoothstep(-.05, .1, x) * smoothstep(1.05, .9, x);
+    }`,
+  height: 'fxPrsH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxP = vLocal.xy;
+    vec2 fxQd = fxP / (uSticker.x * .97);
+    vec4 fxCr = fxPrsCrown(fxQd);
+    vec3 fxN = fxCr.xyz;
+    float fxHt = fxPrsH(fxP, vSeed);
+    // 손끝 광원
+    vec3 fxL = normalize(fxPtr - vec3(fxP, fxHt));
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVl = vec3(dot(fxV, vTx), dot(fxV, vTy), dot(fxV, vTz));
+    // 굴절해 들어간 빛의 기울기가 빛깔마다 달라, 패싯 위 자리에 따라 빛깔이 갈린다
+    vec3 fxR = refract(-fxL, fxN, .66);
+    vec2 fxTan = normalize(fxN.xy + 1e-4);
+    float fxS = dot(fxQd, fxTan) * 2.2 + dot(fxR.xy, fxTan) * 6. + dot(fxL.xy, vec2(-fxTan.y, fxTan.x)) * 1.5;
+    float fxBand = fract(fxS * .5 + vSeed);
+    vec3 fxRain = fxPrsSpec(fxBand * 1.6 - .3);
+    float fxFacing = max(dot(fxN, fxL), 0.);
+    float fxGlint = pow(max(dot(reflect(-fxL, fxN), fxVl), 0.), 60.);
+    float fxNear = smoothstep(6., 2., fxPtr.z) * step(0., fxPtr.z);
+    vec3 fxBody = fxFc * (.35 + .25 * fxN.z);
+    diffuseColor.rgb = fxBody * .5;`,
+  normal: 'normal = normalize(mat3(vTx, vTy, vTz) * fxN);',
+  surface: 'roughnessFactor = .04; metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxBody * .45 + fxRain * fxFacing * (.12 + 1. * fxNear * exp(-dot(fxPtr.xy - fxP, fxPtr.xy - fxP) / .3)) + vec3(1.) * fxGlint * (.6 + fxNear);',
+};
+B.prism = {
+  // 몸통도 맑은 수정
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .05; metalnessFactor = .2;',
+  emissive: 'totalEmissiveRadiance = vec3(.8, .85, 1.) * fxFresnel(normal, 3.) * .2;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -7758,6 +7819,7 @@ export const MOVING = new Set([
   'roomwindow',
   'lenticular',
   'well',
+  'prism',
 ]);
 
 /**

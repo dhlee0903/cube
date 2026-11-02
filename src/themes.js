@@ -3768,6 +3768,27 @@ export const THEMES = [
     motion: 'heavy',
     burst: { shape: 'drip', colors: ['#A8C8E8', '#D0E4F8'], size: 0.05, speed: 1.4, gravity: 4, drag: 1.5, life: 0.7 },
   },
+  {
+    // 프리즘. 조각 하나가 통째로 면 색으로 물든 각진 수정이다. 손끝이 광원이라 손끝에서 온 빛이 패싯마다 굴절하며 무지개
+    // 띠로 갈라지고, 손끝을 움직이면 무지개가 패싯 위를 미끄러진다
+    id: 'prism',
+    name: '프리즘',
+    bg: '#06060A',
+    ink: '#F2F2FA',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #181826, #030305)',
+    form: { bevel: 0.04, size: 0.96, radius: 0.03, grid: 48 },
+    body: { color: '#2A2E3A', roughness: 0.05 },
+    faces: ['#E83040', '#F08A20', '#E8D020', '#24B860', '#2470E8', '#A040E0'],
+    lights: {
+      sky: '#ffffff', ground: '#0a0a10', hemi: 0.8,
+      key: ['#ffffff', 2.2, [-3, 7, 5]], fill: ['#dfe6ff', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.6, [3, 4, -6]],
+    },
+    env: 1,
+    surface: 'prism',
+    sound: 'crystal',
+    motion: 'smooth',
+    burst: { shape: 'star', colors: ['#FF5050', '#FFD040', '#50FF80', '#5080FF', '#C060FF'], size: 0.08, speed: 2.2, gravity: 0, drag: 2, life: 0.7, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3796,5 +3817,5 @@ export const GROUPS = [
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
   { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops', 'liquidtimer', 'oilwater', 'mobile'] },
-  { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well'] },
+  { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism'] },
 ];
