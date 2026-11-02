@@ -3495,6 +3495,28 @@ export const THEMES = [
     motion: 'fluid',
     burst: { shape: 'bubble', colors: ['#FFFFFF', '#E0F0FF'], size: 0.06, speed: 1.6, gravity: -2, drag: 2, life: 0.8 },
   },
+  {
+    // 스노볼. 조각 하나가 통째로 물이 찬 유리 상자다. 면 색 하늘 아래 눈이 쌓이고 전나무가 서 있으며, 눈송이가 늘 아래로
+    // 가라앉는다. 층을 돌리면 눈보라가 휘몰아쳤다가 다시 가라앉는다
+    id: 'snowglobe',
+    name: '스노볼',
+    bg: '#0A0E14',
+    ink: '#F0F6FC',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #1E2A38, #05080C)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.06, grid: 40 },
+    body: { color: '#3A2618', roughness: 0.4 },
+    faces: ['#D8343A', '#E8862A', '#E2C832', '#2E9E5E', '#2E6ED8', '#9A48D0'],
+    lights: {
+      sky: '#ffffff', ground: '#121820', hemi: 1,
+      key: ['#ffffff', 2.2, [-3, 7, 5]], fill: ['#dfe6ff', 0.7, [6, 1, 4]], rim: ['#ffffff', 1.6, [3, 4, -6]],
+    },
+    env: 0.9,
+    surface: 'snowglobe',
+    sound: 'glass',
+    motion: 'fluid',
+    ambient: { mode: 'float', shape: 'flake', colors: ['#FFFFFF', '#E8F0FF'], count: 20, size: 0.04, speed: 0.2, opacity: 0.6 },
+    burst: { shape: 'flake', colors: ['#FFFFFF', '#E8F0FF'], size: 0.06, speed: 1.8, gravity: 1, drag: 2, life: 0.9 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3522,5 +3544,5 @@ export const GROUPS = [
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
-  { name: '기울기', themes: ['spiritlevel'] },
+  { name: '기울기', themes: ['spiritlevel', 'snowglobe'] },
 ];

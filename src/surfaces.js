@@ -6833,6 +6833,83 @@ B.spiritlevel = {
   surface: 'roughnessFactor = .35; metalnessFactor = .8;',
 };
 
+S.snowglobe = {
+  // 스노볼. 조각 하나가 통째로 물이 찬 유리 상자다. 뒤 벽은 면 색으로 칠한 하늘이고, 아래쪽(화면 아래)엔 눈이 소복이
+  // 쌓여 작은 전나무 둘이 서 있다. 세 깊이에 뜬 눈송이가 늘 아래로 천천히 가라앉으며 흔들리고(보는 각도 따라 깊이마다
+  // 어긋난다), 층을 돌리면 쌓인 눈이 들려 눈보라가 휘몰아쳤다가 다시 가라앉는다
+  head: `
+    float fxSgbH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float n = pow(pow(abs(q.x), 6.) + pow(abs(q.y), 6.), 1. / 6.);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .016 * sqrt(max(0., 1. - n * n)));
+    }`,
+  height: 'fxSgbH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    vec2 fxG = -vec2(vTx.y, vTy.y);
+    float fxGl = length(fxG);
+    vec2 fxGd = fxG / max(fxGl, 1e-3);
+    vec2 fxSd = vec2(-fxGd.y, fxGd.x);
+    float fxStir = uCharge;
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVl = vec3(dot(fxV, vTx), dot(fxV, vTy), max(dot(fxV, vTz), .25));
+    // 뒤 벽(깊이 .45): 면 색 하늘, 위로 갈수록 밝다
+    vec2 fxQb = fxQ - fxVl.xy / fxVl.z * .45 / uSticker.x;
+    float fxUp = -dot(fxQb, fxGd);
+    vec3 fxCol = fxFc * (.55 + .35 * fxUp * fxGl);
+    // 쌓인 눈과 전나무(깊이 .3): 아래쪽 띠
+    vec2 fxQs = fxQ - fxVl.xy / fxVl.z * .3 / uSticker.x;
+    float fxU = dot(fxQs, fxGd);
+    float fxVv = dot(fxQs, fxSd);
+    float fxDrift = -.62 + .07 * sin(fxVv * 5. + vSeed * 9.) + .05 * fxN2(vec2(fxVv * 9., vSeed * 3.)) - .25 * fxStir;
+    float fxTrees = 0.;
+    for (int k = 0; k < 2; k++) {
+      float v0 = (float(k) - .5) * .7 + (fxH1(vSeed * 7. + float(k)) - .5) * .2;
+      float tu = -fxU - fxDrift + .03;
+      float h = .55 + .12 * fxH1(vSeed * 3. + float(k));
+      float tier = fract(tu / h * 3.);
+      float w = (h - tu) * .85 * (.5 + .5 * (1. - tier));
+      fxTrees = max(fxTrees, step(0., tu) * step(tu, h) * step(abs(fxVv - v0), w));
+    }
+    fxTrees *= smoothstep(.25, .6, fxGl);
+    fxCol = mix(fxCol, vec3(.05, .22, .12) * (1. + .6 * smoothstep(.8, 1., fract(-fxU * 7.))), fxTrees);
+    float fxSnowG = smoothstep(fxDrift + .02, fxDrift - .02, -fxU) * smoothstep(.2, .5, fxGl);
+    fxCol = mix(fxCol, vec3(.93, .95, 1.), fxSnowG);
+    // 눈송이: 세 깊이, 늘 아래로. 돌리면 많아지고 휘몬다
+    float fxFl = 0.;
+    for (int k = 0; k < 3; k++) {
+      float dep = .06 + .11 * float(k);
+      vec2 qq = fxQ - fxVl.xy / fxVl.z * dep / uSticker.x;
+      vec2 fr = vec2(dot(qq, fxSd), dot(qq, fxGd));
+      float sp = (.05 + .03 * float(k)) * (1. + 3. * fxStir) * (.3 + fxGl);
+      fr.y -= uTime * sp;
+      fr.x += sin(fr.y * 3. + uTime * (1. + 4. * fxStir)) * (.03 + .15 * fxStir);
+      float sc = 6. + 2.5 * float(k);
+      vec2 c = floor(fr * sc);
+      vec2 f = fract(fr * sc) - .5 - (vec2(fxH2(c + float(k) * 3.), fxH2(c * 1.7 + float(k))) - .5) * .6;
+      float on = step(fxH2(c * 2.3 + float(k) * 9.), .18 + .7 * fxStir);
+      float rad = .1 + .08 * fxH2(c * 4.1);
+      fxFl += on * (1. - smoothstep(rad * .5, rad, length(f))) * (1. - .2 * float(k));
+    }
+    fxCol = mix(fxCol, vec3(1.), clamp(fxFl, 0., 1.) * .9);
+    diffuseColor.rgb = fxCol;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxSgbH(fxP - vec2(fxE, 0.), vSeed) - fxSgbH(fxP + vec2(fxE, 0.), vSeed),
+                               fxSgbH(fxP - vec2(0., fxE), vSeed) - fxSgbH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = .04; metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxCol * .14;',
+};
+B.snowglobe = {
+  // 몸통은 짙은 호두나무 받침
+  color: 'diffuseColor.rgb *= .8 + .3 * fxN3(vec3(vLocal.x * 4., vLocal.y * 40., vLocal.z * 4.) + vSeed);',
+  surface: 'roughnessFactor = .4;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -6852,6 +6929,7 @@ export const MOVING = new Set([
   'iris',
   'sequin',
   'spiritlevel',
+  'snowglobe',
 ]);
 
 /**
