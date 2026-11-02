@@ -3435,6 +3435,27 @@ export const THEMES = [
     motion: 'snap',
     burst: { shape: 'square', colors: 'faces', size: 0.05, speed: 2, gravity: 0, drag: 2, life: 0.6, additive: true },
   },
+  {
+    // 칠보. 조각 하나가 통째로 칠보 패다. 둥글게 간 금 철사로 여덟 잎 꽃과 구름 소용돌이를 세우고 칸마다 반투명 법랑을 녹여
+    // 채웠다. 법랑 밑 은판의 햇살 물결 새김이 보는 각도 따라 유리 속에서 반짝인다
+    id: 'enamel',
+    name: '칠보',
+    bg: '#0A0806',
+    ink: '#F6EEE2',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #241A12, #050403)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.05, grid: 72 },
+    body: { color: '#5A3424', roughness: 0.3, metalness: 0.85 },
+    faces: ['#C42838', '#E07828', '#E8C230', '#289A58', '#2856C4', '#8A3AB0'],
+    lights: {
+      sky: '#fff6ea', ground: '#120c08', hemi: 0.9,
+      key: ['#fff6ea', 2.4, [-3, 7, 5]], fill: ['#ffe6c8', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.8, [3, 4, -6]],
+    },
+    env: 1,
+    surface: 'enamel',
+    sound: 'ceramic',
+    motion: 'smooth',
+    burst: { shape: 'star', colors: ['#FFE0A0', '#FFFFFF'], size: 0.08, speed: 2, gravity: 1, drag: 2, life: 0.7, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3446,7 +3467,7 @@ export const GROUPS = [
   { name: '빛·불', themes: ['neon', 'lava', 'electric', 'plasmaball', 'disco', 'lavalamp', 'kaleido'] },
   { name: '우주', themes: ['space', 'planet', 'nebula', 'galaxy'] },
   { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'bismuth', 'druze', 'pave', 'diamond', 'ruby', 'sapphire', 'emerald', 'quartz', 'starstone', 'moonstone', 'amberstone'] },
-  { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'camo'] },
+  { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'camo', 'enamel'] },
   { name: '문양', themes: ['lantern'] },
   { name: '패턴', themes: ['houndstooth', 'glencheck', 'herringbone', 'gingham', 'argyle', 'chevron', 'tartan', 'pinstripe', 'windowpane', 'buffalo', 'madras', 'seersucker', 'birdseye'] },
   { name: '판타지', themes: ['dragon', 'phoenix', 'mithril', 'damascus', 'fairywing', 'dragonegg'] },

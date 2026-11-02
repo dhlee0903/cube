@@ -6644,6 +6644,87 @@ B.ledcube = {
   surface: 'roughnessFactor = .15;',
 };
 
+S.enamel = {
+  // 칠보. 조각 하나가 통째로 칠보 패다. 구리 바탕에 얇은 금 철사를 세워 여덟 잎 꽃(가운데 꽃술, 잎마다 잎맥), 네 귀의 구름
+  // 소용돌이, 둘레 테를 그렸고 철사는 둥글게 갈아 겉에 실제로 솟았다. 철사 사이 칸엔 반투명 유리 법랑이 녹아 채워져 철사에
+  // 붙은 가장자리만 살짝 타고 오른다. 법랑 밑 은판엔 햇살처럼 퍼지는 물결 무늬(기요셰)가 새겨져(바스타유) 보는 각도 따라
+  // 유리 속에서 무늬가 어긋나며 반짝이고, 새김이 깊은 곳일수록 유리가 두꺼워 빛깔이 짙다. 면마다 법랑 빛깔이 다르고
+  // 꽃잎은 옅게, 바탕은 짙게, 꽃술은 상아빛
+  head: `${GEM_BASE}
+    float fxElPet(float a) { return .62 * (.5 + .5 * pow(abs(cos(a * 4.)), .8)); }
+    // 금 철사까지 거리(조각 좌표 -1~1)
+    float fxElWire(vec2 q) {
+      float r = length(q), a = atan(q.y, q.x + 1e-6);
+      float pet = fxElPet(a);
+      float dPet = abs(r - pet) * .8;
+      float ac = floor(a / .785398 + .5) * .785398;
+      float dMid = max(r * abs(sin(a - ac)), max(.24 - r, r - fxElPet(ac) + .12));
+      float dIn = abs(r - .2);
+      float dRim = abs(max(abs(q.x), abs(q.y)) - .88);
+      vec2 c = abs(q) - vec2(.66);
+      float dSc = min(abs(length(c) - .12), max(abs(length(c - vec2(.035)) - .055), -c.x - c.y + .02));
+      return min(min(min(dPet, dMid), min(dIn, dRim)), dSc);
+    }
+    float fxElH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float d = fxElWire(q);
+      float w = .022;
+      float wire = sqrt(max(0., 1. - pow(d / w, 2.)));
+      float border = smoothstep(.94, .955, max(abs(q.x), abs(q.y)));
+      float enamel = .003 + .0014 * exp(-max(d - w, 0.) / .03);
+      return smoothstep(0., .04, fxEdgeAt(p)) * (.006 + max(max(enamel, .003 + .0055 * wire), .0062 * border));
+    }`,
+  height: 'fxElH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    ${GEM_LIGHTS}
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    float fxR = length(fxQ), fxA = atan(fxQ.y, fxQ.x + 1e-6);
+    float fxD = fxElWire(fxQ);
+    float fxAA = fwidth(fxD) + 1e-4;
+    float fxWire = 1. - smoothstep(.019, .019 + fxAA * 1.5, fxD);
+    float fxBorder = smoothstep(.94, .955, max(abs(fxQ.x), abs(fxQ.y)));
+    float fxGold = max(fxWire, fxBorder);
+    // 칸: 꽃술, 꽃잎, 바탕
+    float fxPet = step(fxR, fxElPet(fxA));
+    float fxCore = step(fxR, .2);
+    vec3 fxEn = fxFc * .9;
+    fxEn = mix(fxEn, mix(fxFc, vec3(1., .97, .9), .38), fxPet);
+    fxEn = mix(fxEn, mix(vec3(1., .96, .86), fxFc, .12) * 1.15, fxCore);
+    // 법랑 밑 은판의 새김: 유리 깊이만큼 보는 방향으로 어긋난다
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVt = fxV * fxTbn;
+    vec2 fxQe = fxQ - fxVt.xy / max(fxVt.z, .3) * .03;
+    float fxRe = length(fxQe), fxAe = atan(fxQe.y, fxQe.x + 1e-6);
+    float fxPh = fxAe * 36. + 3. * sin(fxRe * 22.);
+    float fxGAA = 1. - smoothstep(.3, 1., fwidth(fxPh) * .5);
+    float fxG = sin(fxPh) * fxGAA;
+    vec2 fxTang = vec2(-sin(fxAe), cos(fxAe));
+    vec3 fxNe = normalize(vec3(fxTang * cos(fxPh) * .45 * fxGAA, 1.));
+    vec3 fxNeV = normalize(fxTbn * fxNe);
+    // 새김이 깊을수록 유리가 두꺼워 짙다
+    vec3 fxTr = fxEn * (.78 + .22 * (fxG * .5 + .5));
+    vec3 fxUnder = vec3(0.);
+    for (int i = 0; i < 3; i++) {
+      vec3 fxL = normalize(fxLd[i]);
+      float lam = max(dot(fxNeV, fxL), 0.);
+      float sp = pow(max(dot(reflect(-fxL, fxNeV), fxV), 0.), 36.);
+      fxUnder += fxLc[i] * (lam * .28 + sp * 1.1);
+    }
+    fxUnder += fxGemEnv(reflect(-fxV, fxNeV)) * .3 + .05;
+    vec3 fxGlow = fxTr * fxUnder * (1. - fxGold);
+    diffuseColor.rgb = mix(fxEn * .06, vec3(1., .78, .42), fxGold);`,
+  normal: 'normal = normalize(fxTbn * FX_HNORM(fxElH, vLocal.xy, .0012));',
+  surface: 'roughnessFactor = mix(.03, .16, fxGold); metalnessFactor = fxGold;',
+  emissive: 'totalEmissiveRadiance = fxGlow;',
+};
+B.enamel = {
+  // 몸통은 짙게 그을린 구리 바탕
+  color: 'diffuseColor.rgb *= .85 + .25 * fxN3(vLocal * 12. + vSeed);',
+  surface: 'roughnessFactor = .3; metalnessFactor = .85;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
