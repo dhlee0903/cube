@@ -3748,6 +3748,26 @@ export const THEMES = [
     motion: 'snap',
     burst: { shape: 'star', colors: 'faces', size: 0.07, speed: 2, gravity: 1, drag: 2, life: 0.6 },
   },
+  {
+    // 깊은 우물. 조각마다 네모난 돌우물을 내려다본다. 면 색 돌을 쌓은 벽이 깊이 내려가 어두워지고 이끼가 끼며, 맨 밑 물엔
+    // 하늘빛과 물결이 비친다. 보는 각도가 바뀌면 반대편 벽이 깊이 드러난다
+    id: 'well',
+    name: '깊은 우물',
+    bg: '#070806',
+    ink: '#EEF0EA',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #1C2018, #040503)',
+    form: { bevel: 0.04, size: 0.96, radius: 0.03, grid: 48 },
+    body: { color: '#2A2C26', roughness: 0.85 },
+    faces: ['#C84A3A', '#D8903E', '#D8C258', '#5A9E5A', '#4A78C0', '#8C5AB0'],
+    lights: {
+      sky: '#e8eeff', ground: '#0c0e0a', hemi: 1,
+      key: ['#fff6ea', 2, [-3, 7, 5]], fill: ['#dfe6ff', 0.6, [6, 1, 4]], rim: ['#ffffff', 1, [3, 4, -6]],
+    },
+    surface: 'well',
+    sound: 'stone',
+    motion: 'heavy',
+    burst: { shape: 'drip', colors: ['#A8C8E8', '#D0E4F8'], size: 0.05, speed: 1.4, gravity: 4, drag: 1.5, life: 0.7 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3776,5 +3796,5 @@ export const GROUPS = [
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
   { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops', 'liquidtimer', 'oilwater', 'mobile'] },
-  { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular'] },
+  { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well'] },
 ];

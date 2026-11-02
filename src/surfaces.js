@@ -7657,6 +7657,75 @@ B.lenticular = {
   surface: 'roughnessFactor = .35;',
 };
 
+S.well = {
+  // 깊은 우물. 조각마다 네모난 돌우물을 내려다본다. 가장자리엔 돌 갓돌이 솟았고, 그 안으로 면 색 돌을 쌓은 벽이 깊이
+  // 내려가며(시선을 우물 상자에 쏘아 벽과 바닥에 닿는 자리를 셈한다) 아래로 갈수록 어두워지고 물기 어린 이끼가 낀다.
+  // 맨 밑엔 물이 고여 하늘빛이 비치고 동그란 물결이 번진다. 큐브를 돌려 보는 각도가 바뀌면 반대편 벽이 깊이 드러난다
+  head: `
+    float fxWlH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float m = max(abs(q.x), abs(q.y));
+      float curb = smoothstep(.7, .76, m);
+      float block = fxN2(q * 6. + seed * 9.) * .004;
+      return smoothstep(0., .04, fxEdgeAt(p)) * (.002 + (.02 + block) * curb);
+    }`,
+  height: 'fxWlH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    float fxM = max(abs(fxQ.x), abs(fxQ.y));
+    float fxCurb = smoothstep(.7, .76, fxM);
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVl = vec3(dot(fxV, vTx), dot(fxV, vTy), max(dot(fxV, vTz), .15));
+    vec3 fxDir = normalize(vec3(-fxVl.xy, -fxVl.z));
+    float fxW = .72, fxDep = 3.2;
+    vec2 fxO = fxQ;
+    float fxTx = (sign(fxDir.x) * fxW - fxO.x) / fxDir.x;
+    float fxTy = (sign(fxDir.y) * fxW - fxO.y) / fxDir.y;
+    float fxTz = fxDep / -fxDir.z;
+    float fxT = max(min(min(fxTx, fxTy), fxTz), 0.);
+    vec3 fxH = vec3(fxO, 0.) + fxDir * fxT;
+    float fxDp = -fxH.z / fxDep;
+    vec3 fxCol;
+    if (fxT >= fxTz - 1e-4) {
+      // 물: 하늘빛, 동그란 물결
+      vec2 w = fxH.xy;
+      float rip = sin(length(w - vec2(.1, -.05)) * 40. - uTime * 3.) * exp(-length(w) * 2.);
+      fxCol = mix(fxFc * .5, vec3(.7, .8, .95), .35) * (.55 + .25 * rip) + vec3(1.) * smoothstep(.12, .0, length(w - vec2(-.2, .25) + rip * .02)) * .5;
+    } else {
+      // 돌벽: 벽 위 가로 자리와 깊이로 돌 쌓기
+      float u = fxT == fxTx ? fxH.y : fxH.x;
+      float z = -fxH.z;
+      vec2 b = vec2(u * 3.2 + floor(z * 4.) * .5, z * 4.);
+      vec2 bf = fract(b);
+      float mortar = smoothstep(.0, .08, min(min(bf.x, 1. - bf.x), min(bf.y, 1. - bf.y)));
+      float tone = .7 + .3 * fxH2(floor(b) + vSeed * 3.);
+      float moss = smoothstep(.55, .9, fxDp) * smoothstep(.4, .7, fxN2(b * 1.3));
+      fxCol = fxFc * tone * (.35 + .65 * mortar);
+      fxCol = mix(fxCol, vec3(.12, .2, .08), moss * .7);
+    }
+    // 깊을수록 어둡다
+    fxCol *= exp(-(-fxH.z) * 1.7) * 1.15 + .015;
+    // 갓돌: 면 색 돌
+    vec3 fxCurbC = fxFc * (.75 + .25 * fxN2(fxQ * 18. + vSeed));
+    fxCol = mix(fxCol, fxCurbC, fxCurb);
+    diffuseColor.rgb = mix(fxCol * .1, fxCurbC, fxCurb);`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxWlH(fxP - vec2(fxE, 0.), vSeed) - fxWlH(fxP + vec2(fxE, 0.), vSeed),
+                               fxWlH(fxP - vec2(0., fxE), vSeed) - fxWlH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = mix(.5, .85, fxCurb); metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxCol * (1. - fxCurb) * .9;',
+};
+B.well = {
+  // 몸통은 이끼 낀 짙은 돌
+  color: 'diffuseColor.rgb *= .8 + .3 * fxN3(vLocal * 20. + vSeed);',
+  surface: 'roughnessFactor = .85;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -7688,6 +7757,7 @@ export const MOVING = new Set([
   'infinitymirror',
   'roomwindow',
   'lenticular',
+  'well',
 ]);
 
 /**
