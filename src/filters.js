@@ -181,7 +181,10 @@ vec3 fxTtx(vec4 s) {
   if (s.a < .5) return vec3(0.);
   vec3 c = s.rgb * uGain;
   float m = max(max(c.r, c.g), c.b);
-  return m < .12 ? vec3(0.) : step(m * .6, c);
+  float n = min(min(c.r, c.g), c.b);
+  // 어두운 회색(몸통, 틈)은 검정으로 둔다
+  if (m < .12 || (m - n < m * .25 && m < .62)) return vec3(0.);
+  return step(m * .6, c);
 }
 
 // 텔레텍스트: 글자 칸 하나가 2×3 블록. 글자 칸마다 한 색만 쓰고, 블록 둘레로 틈이 벌어진다(떨어진 모자이크)
@@ -223,9 +226,9 @@ vec4 fxBraille(vec2 g) {
   float l = me.a > .5 ? pow(clamp(fxLum(me.rgb * uGain), 0., 1.), uGamma) : 0.;
   float on = step(.5, l + fxBayer(cell) * uDither) * step(.5, me.a);
   vec3 ink = fxNearest(fg / max(max(max(fg.r, fg.g), fg.b), .05));
-  vec2 c = vec2(sub.x < .5 ? .64 : .36, .5 + (sub.y - 1.5) * .08);
-  float d = 1. - smoothstep(.2, .27, length(f - c));
-  return vec4(mix(uBg.rgb, ink, d * on), 1.);
+  vec2 c = vec2(sub.x < .5 ? .62 : .38, .5 + (sub.y - 1.5) * .06);
+  float d = 1. - smoothstep(.27, .34, length(f - c));
+  return vec4(mix(uBg.rgb, ink * (1.05 - .25 * length(f - c)), d * on), 1.);
 }
 
 // 망점 인쇄: 시안, 마젠타, 노랑, 먹 네 판을 각도를 달리한 망점으로 찍어 종이 위에 겹친다
@@ -238,7 +241,7 @@ vec4 fxHalftone(vec2 g) {
     vec2 c = floor(rp) + .5;
     vec3 s = fxAt(transpose(rot) * c);
     if (s.r < 0.) continue;
-    float kk = (1. - max(max(s.r, s.g), s.b)) * .85;
+    float kk = pow(1. - max(max(s.r, s.g), s.b), 1.4) * .9;
     float ch = k == 0 ? s.r : (k == 1 ? s.g : s.b);
     float cov = k == 3 ? kk : clamp((1. - ch - kk) / max(1. - kk, .01), 0., 1.);
     float r = sqrt(cov) * .68;
@@ -260,7 +263,7 @@ vec4 fxRiso(vec2 g) {
     vec3 s = fxAt(g + off);
     if (s.r < 0.) continue;
     vec3 d = Ai * (-log(clamp(s, .03, 1.) / paper));
-    float dk = clamp(k == 0 ? d.x : (k == 1 ? d.y : d.z), 0., 1.);
+    float dk = smoothstep(.04, .8, k == 0 ? d.x : (k == 1 ? d.y : d.z));
     float grain = fxHash(floor(gl_FragCoord.xy / (uDpr * 1.5)) + float(k) * 17.3);
     float on = step(grain, dk * 1.08 - .04);
     outc *= mix(vec3(1.), uPal[k], on * .92);
@@ -409,9 +412,10 @@ void main() {
     vec3 base = cc.a > 0. ? col : uBg.rgb;
     float k = floor(f.x * 3.);
     float fx = fract(f.x * 3.);
-    float bar = smoothstep(.08, .16, fx) * (1. - smoothstep(.8, .88, fx)) * smoothstep(.05, .12, f.y) * (1. - smoothstep(.88, .95, f.y));
+    float bar = smoothstep(.03, .1, fx) * (1. - smoothstep(.86, .94, fx)) * smoothstep(.03, .08, f.y) * (1. - smoothstep(.92, .97, f.y));
     vec3 chn = k < .5 ? vec3(base.r, 0., 0.) : (k < 1.5 ? vec3(0., base.g, 0.) : vec3(0., 0., base.b));
-    outc = chn * bar * 1.9 + base * .06;
+    // 막대 빛이 이웃으로 번져 멀리서는 섞인 색으로 보인다
+    outc = chn * bar * 1.75 + base * .24;
   } else if (uCell == 14) {
     // 빛 핀보드: 검은 종이에 꽂은 반투명 핀. 켜진 핀은 속에서 빛나고 꼭대기 면이 각지게 반짝인다
     float r = length(q);
@@ -428,7 +432,7 @@ void main() {
     vec3 base = cc.a > 0. ? col : uBg.rgb;
     float row = exp(-pow((f.y - .5) / .27, 2.));
     vec4 gh = fxCell(cell + vec2(2., 0.));
-    outc = base * row * 1.15 + (gh.a > 0. ? gh.rgb : vec3(0.)) * row * .16 + base * .07;
+    outc = base * row * 1.15 + (gh.a > 0. ? gh.rgb : vec3(0.)) * row * .12 + base * .07;
   } else {
     // 네모 화소
     if (cc.a > 0.) outc = col;
