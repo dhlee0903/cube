@@ -2590,29 +2590,7 @@ export const THEMES = [
     sound: 'cloth',
     motion: 'squish',
   },
-  {
-    // 여름 창가 커튼. 다 맞추면 면 하나가 한 폭의 얇은 면 보일이다. 면 색 성근 평직 위에 하얀 실 뭉치를 짜 넣고 잘라
-    // 보송한 물방울이 실제로 솟았다. 바탕은 얇아 살짝 비친다
-    id: 'swissdot',
-    name: '스위스 도트',
-    bg: '#F6F0E8',
-    ink: '#3A2A28',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 25%, rgba(255,255,255,.7), transparent 70%)',
-      'radial-gradient(80% 65% at 50% 45%, #FFF8F0, #E8D8C8)',
-    ].join(', '),
-    form: { bevel: 0.12, size: 0.94, radius: 0.14, grid: 48 },
-    body: { color: '#F4F0EA', roughness: 0.9 },
-    faces: ['#E88AA0', '#6AA8E0', '#F2D060', '#7AC08A', '#B080E0', '#F0A060'],
-    lights: {
-      sky: '#ffffff', ground: '#a09080', hemi: 1.5,
-      key: ['#fff6ec', 2.1, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.0, [0, 4, -6]],
-    },
-    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: -1, drag: 2.6, life: 1.4 },
-    surface: 'swissdot',
-    sound: 'cloth',
-    motion: 'squish',
-  },
+
   {
     // 이탈리아 니트 공방. 다 맞추면 면 하나가 지그재그 줄무늬 스웨터다. 면 색, 크림, 짙은 색, 옅은 면 색 줄이
     // 산 모양으로 오르내리며 번갈아 떠졌고, 비탈이 코 단위로 잘게 계단진다
@@ -3149,198 +3127,6 @@ export const THEMES = [
   },
 
   {
-    // 모로코 리아드의 젤리주 타일 벽. 다 맞추면 면 하나가 한 벽이다. 여덟 꼭지 별 타일(면 색)과 십자 타일이 맞물리고,
-    // 별 둘레를 흰 띠가 감싼다. 손으로 깎아 구운 조각마다 색과 면이 조금씩 다르고 유약에 잔금이 갔다
-    id: 'arabesque',
-    name: '아라베스크',
-    bg: '#E8DCC4',
-    ink: '#2A1E14',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 35%, rgba(255,250,235,.6), transparent 70%)',
-      'linear-gradient(180deg, #F2E6D0, #D6C2A0)',
-    ].join(', '),
-    form: { bevel: 0.05, size: 0.95, radius: 0.04, grid: 48 },
-    body: { color: '#3A3530', roughness: 0.8 },
-    faces: ['#1E4AA8', '#1EA0A0', '#F2F0E6', '#E8A82A', '#2A8A4A', '#C8502A'],
-    lights: {
-      sky: '#ffffff', ground: '#a09080', hemi: 1.8,
-      key: ['#fff6e8', 2, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1, [0, 4, -6]],
-    },
-    burst: { shape: 'square', colors: 'faces', size: 0.08, speed: 2.2, gravity: -4, drag: 1.2, life: 1.1 },
-    surface: 'arabesque',
-    sound: 'ceramic',
-    motion: 'heavy',
-  },
-  {
-    // 1920년대 호텔 로비. 다 맞추면 면 하나가 부채꼴 비늘이 줄지은 황동 판이다. 솟은 황동 테와 겹 반원,
-    // 그 사이 움푹한 칸에 녹여 채운 에나멜(면 색과 검정에 금빛 살), 햇살 결을 새긴 황동 해. 금빛 햇살 무늬 벽
-    id: 'artdeco',
-    name: '아르데코',
-    bg: '#0E0E10',
-    ink: '#F2E2B8',
-    backdrop: [
-      'repeating-conic-gradient(from 180deg at 50% 100%, rgba(220,180,90,.14) 0deg 4deg, transparent 4deg 12deg)',
-      'linear-gradient(180deg, #16161A, #060607)',
-    ].join(', '),
-    form: { bevel: 0.04, size: 0.95, radius: 0.03, grid: 48 },
-    body: { color: '#0A0A0C', roughness: 0.15, metalness: 0.3 },
-    faces: ['#1E8A5A', '#1E4AA8', '#F2EEE2', '#B82A3A', '#E8B83A', '#6A2A8A'],
-    lights: {
-      sky: '#fff4e4', ground: '#3a2a1a', hemi: 1.2,
-      key: ['#fff0dc', 2.2, [-4, 6, 5]], fill: ['#ffc890', 0.4, [6, 0, 3]], rim: ['#ffffff', 1.2, [2, 4, -6]],
-    },
-    env: 1.1,
-    burst: { shape: 'star', colors: ['#F2D27A', '#FFFFFF'], size: 0.12, speed: 2.4, gravity: 0, drag: 2.4, life: 0.8, additive: true },
-    surface: 'artdeco',
-    sound: 'metal',
-    motion: 'mechanical',
-  },
-  {
-    // 수도원 뜰의 돌 십자가. 다 맞추면 면 하나가 돌을 깊이 파서 새긴 매듭 한 판이다. 띠가 만나는 곳마다 위 띠는 솟아 넘어가고
-    // 아래 띠는 내려앉아 밑으로 들어간다. 띠엔 면 색 안료를 칠했고 닳은 데는 돌이 드러났다. 촛불
-    id: 'celtic',
-    name: '켈트 매듭',
-    bg: '#1E1812',
-    ink: '#F0E2C0',
-    backdrop: [
-      PAPER_GRAIN,
-      'radial-gradient(70% 55% at 50% 45%, #2E2418, #0E0A06)',
-    ].join(', '),
-    form: { bevel: 0.05, size: 0.95, radius: 0.04, grid: 48 },
-    body: { color: '#2A2018', roughness: 0.85 },
-    faces: ['#1E7A3A', '#C8302A', '#1E4AA8', '#E8C040', '#F0EADA', '#A03A8A'],
-    lights: {
-      sky: '#fff4e4', ground: '#3a2a1a', hemi: 1.2,
-      key: ['#fff0dc', 2.2, [-4, 6, 5]], fill: ['#ffc890', 0.4, [6, 0, 3]], rim: ['#ffffff', 1.2, [2, 4, -6]],
-    },
-    flicker: 'candle',
-    burst: { shape: 'star', colors: ['#F2D27A'], size: 0.1, speed: 2, gravity: 0, drag: 2.4, life: 0.8, additive: true },
-    surface: 'celtic',
-    sound: 'stone',
-    motion: 'heavy',
-  },
-  {
-    // 밀림 속 신전 벽. 칸마다 돌을 깎아 낸 계단 피라미드가 층층이 솟았고, 층마다 면 색과 검정 안료를 번갈아 칠했는데
-    // 군데군데 벗겨져 돌이 드러났다. 칸 둘레엔 솟은 돌 테. 한낮 햇빛
-    id: 'aztec',
-    name: '아즈텍',
-    bg: '#B8A27C',
-    ink: '#1E140C',
-    backdrop: [
-      'radial-gradient(60% 40% at 30% 12%, rgba(255,245,210,.5), transparent 70%)',
-      'repeating-linear-gradient(0deg, rgba(60,40,20,.12) 0 2px, transparent 2px 46px)',
-      'radial-gradient(80% 65% at 50% 45%, #C9B48E, #7A6648)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.08, grid: 44 },
-    body: { color: '#5A3A24', roughness: 0.9 },
-    faces: ['#C8402A', '#2A8A8A', '#E8B83A', '#1E1C1E', '#3A6AB8', '#5A8A3A'],
-    lights: {
-      sky: '#ffffff', ground: '#a09080', hemi: 1.8,
-      key: ['#fff6e8', 2, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1, [0, 4, -6]],
-    },
-    burst: { shape: 'square', colors: 'faces', size: 0.08, speed: 2.2, gravity: -4, drag: 1.2, life: 1.1 },
-    surface: 'aztec',
-    sound: 'stone',
-    motion: 'mechanical',
-  },
-  {
-    // 가죽 공방 작업대. 칸마다 면 색으로 물들인 두꺼운 가죽에 페이즐리 하나를 칼로 긋고 도구로 눌러 새겼다.
-    // 무늬는 도톰하게 솟고 바탕은 내려앉았다. 패인 데마다 짙은 안티크 물감, 솟은 데는 반들. 칸마다 무늬 방향이 조금씩 다르다
-    id: 'paisley',
-    name: '페이즐리',
-    bg: '#3A2618',
-    ink: '#F2E6D6',
-    backdrop: [
-      'repeating-linear-gradient(90deg, rgba(0,0,0,.14) 0 2px, transparent 2px 64px)',
-      'repeating-linear-gradient(0deg, rgba(255,220,170,.04) 0 1px, transparent 1px 7px)',
-      'radial-gradient(70% 55% at 50% 40%, #5A3C26, #24160C)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.08, grid: 48 },
-    body: { color: '#7A5234', roughness: 0.7 },
-    faces: ['#8A2A22', '#1E3A6A', '#2A2624', '#C08A3A', '#2E6A3A', '#6A3A7A'],
-    lights: {
-      sky: '#ffffff', ground: '#a09080', hemi: 1.8,
-      key: ['#fff6e8', 2, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1, [0, 4, -6]],
-    },
-    burst: { shape: 'dot', colors: ['#C8A070', '#8A6040'], size: 0.05, speed: 1.6, gravity: 2, drag: 1.4, life: 1 },
-    surface: 'paisley',
-    sound: 'leather',
-    motion: 'bouncy',
-  },
-  {
-    // 해 질 녘 산사 법당. 칸마다 빗살과 솟을살이 엇갈린 나무 문살이 솟았고, 살이 만나는 자리마다 깎아 붙인 꽃.
-    // 살 뒤로 물러앉은 창호지에 법당 안 등불빛이 은은히 비친다. 살엔 면 색 단청, 닳은 데는 나뭇결
-    id: 'kkotsal',
-    name: '꽃살문',
-    bg: '#1A120C',
-    ink: '#F2E6D0',
-    backdrop: [
-      'radial-gradient(50% 35% at 50% 20%, rgba(255,190,110,.25), transparent 70%)',
-      'repeating-linear-gradient(90deg, rgba(0,0,0,.18) 0 3px, transparent 3px 90px)',
-      'radial-gradient(80% 65% at 50% 45%, #3A2616, #0E0906)',
-    ].join(', '),
-    form: { bevel: 0.06, size: 0.95, radius: 0.04, grid: 52 },
-    body: { color: '#3A2618', roughness: 0.75 },
-    faces: ['#2E8B62', '#C8462C', '#2F5DAF', '#E2B23A', '#EDE7DA', '#7A2E22'],
-    lights: {
-      sky: '#fff0dc', ground: '#2a1a10', hemi: 1.0,
-      key: ['#ffe8c8', 2.2, [-4, 6, 5]], fill: ['#c8d8ff', 0.3, [6, 0, 3]], rim: ['#ffd8a0', 1.0, [2, 4, -6]],
-    },
-    ambient: { mode: 'float', shape: 'glow', colors: ['#FFD08A'], count: 18, size: 0.03, speed: 0.15, opacity: 0.5, additive: true },
-    burst: { shape: 'petal', colors: 'faces', size: 0.1, speed: 1.6, gravity: -1, drag: 2, life: 1.4 },
-    surface: 'kkotsal',
-    sound: 'wood',
-    motion: 'heavy',
-  },
-  {
-    // 보석상 진열장. 칸마다 은판에 선반으로 깎은 결 위로 투명 에나멜을 녹여 덮었고(파베르제 식), 둘레엔 줄 새긴 은테와 진주 한 줄.
-    // 면마다 결이 다르다(햇살, 물결, 보리알, 바구니, 동심원, 불꽃). 짙은 벨벳 위 조명
-    id: 'guilloche',
-    name: '기요셰',
-    bg: '#22090F',
-    ink: '#F6E8EC',
-    backdrop: [
-      'radial-gradient(45% 35% at 50% 25%, rgba(255,230,235,.18), transparent 70%)',
-      'repeating-linear-gradient(0deg, rgba(0,0,0,.08) 0 1px, transparent 1px 3px)',
-      'radial-gradient(80% 65% at 50% 45%, #4A1420, #12050A)',
-    ].join(', '),
-    form: { bevel: 0.05, size: 0.95, radius: 0.06, grid: 56 },
-    body: { color: '#8A8C94', roughness: 0.25, metalness: 0.9 },
-    faces: ['#5A9AD8', '#E2789E', '#E6C140', '#2C9A68', '#7B3FA0', '#EAE4D8'],
-    lights: {
-      sky: '#ffffff', ground: '#402028', hemi: 1.0,
-      key: ['#ffffff', 2.4, [-4, 6, 5]], fill: ['#ffe0e8', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.4, [2, 4, -6]],
-    },
-    env: 1.0,
-    burst: { shape: 'star', colors: ['#FFFFFF', '#FFE8F0'], size: 0.12, speed: 2.2, gravity: 0, drag: 2.4, life: 0.8, additive: true },
-    surface: 'guilloche',
-    sound: 'metal',
-    motion: 'smooth',
-  },
-  {
-    // 호텔 침대 머리맡. 다 맞추면 면 하나가 마름모로 누빈 새틴 한 장이다. 박음질 사이 마름모가 도톰하게 부풀고,
-    // 골엔 땀이 점점이 박혀 잔주름이 진다. 새틴 결 따라 빛이 미끄러진다
-    id: 'quilt',
-    name: '퀼팅',
-    bg: '#E8E0D6',
-    ink: '#2A2024',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 30%, rgba(255,255,255,.55), transparent 70%)',
-      'radial-gradient(80% 65% at 50% 45%, #F2ECE4, #CFC4B8)',
-    ].join(', '),
-    form: { bevel: 0.1, size: 0.95, radius: 0.1, grid: 48 },
-    body: { color: '#4A3A40', roughness: 0.6 },
-    faces: ['#B8323A', '#24356E', '#F2EEE6', '#2E7A5A', '#D8A23A', '#8A4A9A'],
-    lights: {
-      sky: '#ffffff', ground: '#a09080', hemi: 1.6,
-      key: ['#fff6ee', 2, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1, [0, 4, -6]],
-    },
-    burst: { shape: 'dot', colors: 'faces', size: 0.06, speed: 1.6, gravity: -1, drag: 2, life: 1.2 },
-    surface: 'quilt',
-    sound: 'cloth',
-    motion: 'squish',
-  },
-  {
     // 마라케시 골목 찻집. 칸마다 두드린 놋쇠판에 별과 물방울 구멍을 뚫었고, 구멍 뒤 색유리로 불빛이 새어 나와 일렁인다.
     // 구멍 둘레는 솟고 오목한 데엔 거뭇한 녹. 새어 나오는 유리 빛이 곧 면 색. 어둑한 방
     id: 'lantern',
@@ -3364,30 +3150,6 @@ export const THEMES = [
     burst: { shape: 'star', colors: 'faces', size: 0.12, speed: 2, gravity: 0, drag: 2.4, life: 0.9, additive: true },
     surface: 'lantern',
     sound: 'metal',
-    motion: 'heavy',
-  },
-  {
-    // 이스파한 양탄자 가게. 다 맞추면 면 하나가 손으로 맨 양탄자 한 장이다. 가운데 메달리온과 네 귀퉁이 조각, 바탕의 잔꽃,
-    // 겹 테두리와 그 안의 꽃. 털 한 올이 매듭 하나라 무늬가 잘게 계단지고, 무늬 윤곽은 털을 깎아 패였다.
-    // 천연 염료라 줄마다 색이 조금씩 다르다(아브라시). 바탕이 곧 면 색
-    id: 'carpet',
-    name: '페르시아 카펫',
-    bg: '#2A1A12',
-    ink: '#F2E4CC',
-    backdrop: [
-      'repeating-linear-gradient(90deg, rgba(0,0,0,.12) 0 2px, transparent 2px 72px)',
-      'radial-gradient(70% 55% at 50% 40%, #4A3020, #160C08)',
-    ].join(', '),
-    form: { bevel: 0.1, size: 0.95, radius: 0.08, grid: 44 },
-    body: { color: '#3A2A20', roughness: 0.95 },
-    faces: ['#9E2A2B', '#1F2E5A', '#E6DCC4', '#3E6B48', '#C89A3C', '#6A2F5A'],
-    lights: {
-      sky: '#fff4e4', ground: '#3a2a1a', hemi: 1.2,
-      key: ['#fff0dc', 2.2, [-4, 6, 5]], fill: ['#ffc890', 0.4, [6, 0, 3]], rim: ['#ffffff', 1.2, [2, 4, -6]],
-    },
-    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: 2, drag: 1.4, life: 1 },
-    surface: 'carpet',
-    sound: 'cloth',
     motion: 'heavy',
   },
 
@@ -3474,8 +3236,8 @@ export const GROUPS = [
   { name: '우주', themes: ['space', 'planet', 'blackhole', 'nebula', 'galaxy'] },
   { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'bismuth', 'druze', 'pave'] },
   { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'camo'] },
-  { name: '문양', themes: ['arabesque', 'artdeco', 'celtic', 'aztec', 'paisley', 'kkotsal', 'guilloche', 'quilt', 'lantern', 'carpet'] },
-  { name: '패턴', themes: ['houndstooth', 'glencheck', 'herringbone', 'gingham', 'argyle', 'swissdot', 'chevron', 'tartan'] },
+  { name: '문양', themes: ['lantern'] },
+  { name: '패턴', themes: ['houndstooth', 'glencheck', 'herringbone', 'gingham', 'argyle', 'chevron', 'tartan'] },
   { name: '판타지', themes: ['dragon', 'phoenix', 'mithril', 'damascus', 'fairywing', 'dragonegg'] },
   { name: '동물', themes: ['wool', 'hamster', 'wild', 'croc', 'python', 'calf'] },
   { name: '금속·기계', themes: ['metal', 'gauge', 'rust', 'mercury', 'circuit', 'carbon'] },
