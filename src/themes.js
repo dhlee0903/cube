@@ -3707,6 +3707,27 @@ export const THEMES = [
     motion: 'smooth',
     burst: { shape: 'glow', colors: 'faces', size: 0.07, speed: 2, gravity: 0, drag: 2, life: 0.6, additive: true },
   },
+  {
+    // 창문 속 방. 조각마다 십자 창살 창문 너머로 불 켜진 작은 방이 진짜 깊이로 들어 있다. 면 색 줄무늬 벽지, 나무 마루,
+    // 천장 등불, 뒤 벽 액자. 바닥은 늘 화면 아래쪽이고, 보는 각도 따라 방 안 다른 벽이 드러난다
+    id: 'roomwindow',
+    name: '창문 속 방',
+    bg: '#07080E',
+    ink: '#F2F2F8',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #181C2C, #040508)',
+    form: { bevel: 0.04, size: 0.96, radius: 0.02, grid: 64 },
+    body: { color: '#3A2A26', roughness: 0.85 },
+    faces: ['#D8463A', '#E8963A', '#E6CC4A', '#4AA868', '#4A7CD0', '#9A5AC8'],
+    lights: {
+      sky: '#b8c4ff', ground: '#0a0a10', hemi: 0.6,
+      key: ['#e8eaff', 1.4, [-3, 7, 5]], fill: ['#c8d0ff', 0.4, [6, 1, 4]], rim: ['#ffffff', 0.8, [3, 4, -6]],
+    },
+    env: 0.7,
+    surface: 'roomwindow',
+    sound: 'wood',
+    motion: 'smooth',
+    burst: { shape: 'glow', colors: ['#FFE2B0', '#FFC880'], size: 0.06, speed: 1.4, gravity: 0, drag: 2, life: 0.6, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3735,5 +3756,5 @@ export const GROUPS = [
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
   { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops', 'liquidtimer', 'oilwater', 'mobile'] },
-  { name: '빛과 시점', themes: ['infinitymirror'] },
+  { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow'] },
 ];

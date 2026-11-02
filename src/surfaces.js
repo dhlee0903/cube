@@ -7526,6 +7526,83 @@ B.infinitymirror = {
   surface: 'roughnessFactor = .15; metalnessFactor = .7;',
 };
 
+S.roomwindow = {
+  // 창문 속 방. 조각마다 흰 칠을 한 십자 창살이 솟은 창문이 나 있고, 그 너머로 불 켜진 작은 방이 진짜 깊이로 들어 있다
+  // (시선을 방 상자에 쏘아 벽, 바닥, 천장에 닿는 자리를 셈한다). 벽은 면 색 줄무늬 벽지, 바닥은 나무 마루, 천장엔 등불,
+  // 뒤 벽엔 액자가 걸렸다. 바닥은 늘 아래쪽(화면 아래)이고, 큐브를 돌려 보는 각도가 바뀌면 방 안 다른 벽이 드러난다
+  head: `
+    float fxRwH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float bar = max(1. - smoothstep(.035, .06, abs(q.x)), 1. - smoothstep(.035, .06, abs(q.y)));
+      float frame = smoothstep(.8, .86, max(abs(q.x), abs(q.y)));
+      return smoothstep(0., .04, fxEdgeAt(p)) * (.004 + .016 * max(bar, frame));
+    }`,
+  height: 'fxRwH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    float fxHt = fxRwH(vLocal.xy, vSeed);
+    float fxSash = smoothstep(.008, .014, fxHt);
+    // 방 좌표: 바닥이 화면 아래쪽이 되게 돌린다
+    vec2 fxGd = fxGrav;
+    vec2 fxRq = vec2(dot(fxQ, vec2(-fxGd.y, fxGd.x)), -dot(fxQ, fxGd));
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVl = vec3(dot(fxV, vTx), dot(fxV, vTy), max(dot(fxV, vTz), .15));
+    vec2 fxDv = vec2(dot(-fxVl.xy, vec2(-fxGd.y, fxGd.x)), -dot(-fxVl.xy, fxGd));
+    vec3 fxDir = normalize(vec3(fxDv, -fxVl.z));
+    float fxDep = 1.7;
+    float fxTx = (sign(fxDir.x) * .82 - fxRq.x) / fxDir.x;
+    float fxTy = (sign(fxDir.y) * .82 - fxRq.y) / fxDir.y;
+    float fxTz = fxDep / -fxDir.z;
+    float fxT = min(min(fxTx, fxTy), fxTz);
+    vec3 fxH = vec3(fxRq, 0.) + fxDir * fxT;
+    vec3 fxRoom;
+    // 등불: 천장 가운데(y = .82, 깊이 가운데)
+    vec3 fxLamp = vec3(0., .78, -fxDep * .5);
+    float fxLd = length(fxH - fxLamp);
+    float fxLit = 1.25 / (1. + fxLd * fxLd * 1.1);
+    vec3 fxWarm = vec3(1., .86, .66);
+    if (fxT == fxTz) {
+      // 뒤 벽: 줄무늬 벽지와 액자
+      vec2 w = fxH.xy;
+      float stripe = .5 + .5 * smoothstep(.3, .5, abs(fract(w.x * 3.5 + vSeed) - .5) * 2.);
+      fxRoom = fxFc * (.7 + .2 * stripe);
+      vec2 fr = abs(w - vec2((fxH1(vSeed * 3.) - .5) * .5, .1)) - vec2(.26, .2);
+      float frame = step(max(fr.x, fr.y), 0.);
+      float inner = step(max(fr.x, fr.y), -.04);
+      fxRoom = mix(fxRoom, vec3(.25, .17, .1), frame);
+      fxRoom = mix(fxRoom, mix(vec3(.85, .8, .7), fxFc * .5 + .3, step(w.y, .05 + .06 * sin(w.x * 9. + vSeed * 5.))), inner);
+    } else if (fxT == fxTy && fxDir.y < 0.) {
+      // 바닥: 나무 마루
+      float plank = fract(fxH.x * 3.);
+      fxRoom = vec3(.42, .27, .15) * (.8 + .2 * fxH1(floor(fxH.x * 3.) + vSeed)) * (1. - .3 * smoothstep(.94, 1., plank)) * (.9 + .1 * fxN2(vec2(fxH.x * 30., fxH.z * 3.)));
+    } else if (fxT == fxTy) {
+      // 천장: 면 색을 옅게 칠한 회벽, 작은 등불
+      fxRoom = mix(fxFc, vec3(.85, .83, .8), .3) * .8 + fxWarm * 1.2 * exp(-dot(fxH.xz - fxLamp.xz, fxH.xz - fxLamp.xz) * 90.);
+    } else {
+      // 옆 벽
+      float stripe = .5 + .5 * smoothstep(.3, .5, abs(fract(-fxH.z * 3.5 + vSeed) - .5) * 2.);
+      fxRoom = fxFc * (.6 + .2 * stripe);
+    }
+    fxRoom *= fxWarm * fxLit + .08;
+    // 창살과 창틀: 흰 칠 나무
+    diffuseColor.rgb = mix(fxRoom * .05, vec3(.88, .86, .82), fxSash);`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxRwH(fxP - vec2(fxE, 0.), vSeed) - fxRwH(fxP + vec2(fxE, 0.), vSeed),
+                               fxRwH(fxP - vec2(0., fxE), vSeed) - fxRwH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = mix(.05, .6, fxSash); metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxRoom * (1. - fxSash) * .9;',
+};
+B.roomwindow = {
+  // 몸통은 짙은 벽돌 외벽
+  color: 'diffuseColor.rgb *= .8 + .3 * fxN3(vLocal * 20. + vSeed);',
+  surface: 'roughnessFactor = .85;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -7555,6 +7632,7 @@ export const MOVING = new Set([
   'oilwater',
   'mobile',
   'infinitymirror',
+  'roomwindow',
 ]);
 
 /**
