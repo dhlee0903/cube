@@ -6967,6 +6967,70 @@ B.bottleink = {
   surface: 'roughnessFactor = .08;',
 };
 
+S.hourglass = {
+  // 모래시계. 조각 하나가 통째로 유리 상자이고, 속 가운데 깊이에 모래시계 꼴 유리 칸이 섰다(허리가 잘록하다). 면 색 모래가
+  // 늘 화면 아래쪽으로 허리를 지나 가는 줄기로 흘러내려 아래 칸에 언덕으로 쌓이고, 위 칸 모래는 가운데가 깔때기처럼 패인다.
+  // 큐브를 어떻게 돌려 보든 옆면마다 아래쪽으로 흐르고, 위를 향한 면에선 바닥에 깔린 모래 물결이 보인다. 층을 돌리면
+  // 줄기가 굵어지며 쏟아지고 언덕 겉이 흘러내린다
+  head: `
+    float fxHgH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float n = pow(pow(abs(q.x), 6.) + pow(abs(q.y), 6.), 1. / 6.);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .014 * sqrt(max(0., 1. - n * n)));
+    }`,
+  height: 'fxHgH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    vec2 fxG = -vec2(vTx.y, vTy.y);
+    float fxGl = length(fxG);
+    vec2 fxGd = fxG / max(fxGl, 1e-3);
+    vec2 fxSd = vec2(-fxGd.y, fxGd.x);
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVl = vec3(dot(fxV, vTx), dot(fxV, vTy), max(dot(fxV, vTz), .25));
+    vec2 fxQm = fxQ - fxVl.xy / fxVl.z * .2 / uSticker.x;
+    float fxU = dot(fxQm, fxGd);
+    float fxVv = dot(fxQm, fxSd);
+    float fxStand = smoothstep(.2, .5, fxGl);
+    // 유리 칸: 허리가 잘록한 모래시계 꼴
+    float fxW = .07 + .78 * pow(abs(fxU) / .9, 1.25);
+    float fxIn = (1. - smoothstep(fxW - .02, fxW, abs(fxVv))) * (1. - smoothstep(.86, .9, abs(fxU)));
+    float fxWall = (1. - smoothstep(.0, .025, abs(abs(fxVv) - fxW))) * (1. - smoothstep(.86, .92, abs(fxU)));
+    float fxPour = .4 + 1.2 * uCharge;
+    // 아래 칸 언덕, 위 칸 깔때기
+    float fxPile = .88 - .5 * exp(-fxVv * fxVv * 6.) - .06 * uCharge * sin(fxVv * 9. - uTime * 6.);
+    float fxLow = step(0., fxU) * smoothstep(fxPile - .01, fxPile + .01, fxU);
+    float fxTop = -.42 + .22 * exp(-fxVv * fxVv * 14.);
+    float fxUpS = step(fxU, 0.) * smoothstep(fxTop - .01, fxTop + .01, fxU);
+    // 줄기: 허리에서 언덕 꼭대기까지 알갱이가 흘러내린다
+    float fxStr = step(0., fxU) * step(fxU, fxPile) * (1. - smoothstep(.008 * fxPour, .016 * fxPour, abs(fxVv + .004 * sin(fxU * 40. + uTime * 20.))));
+    fxStr *= .6 + .4 * step(.45, fxN2(vec2(fxVv * 80., fxU * 60. - uTime * 30.)));
+    float fxSand = clamp((fxLow + fxUpS) * fxIn + fxStr, 0., 1.) * fxStand;
+    // 위를 향한 면: 바닥에 깔린 모래 물결
+    float fxRip = .5 + .5 * sin(dot(fxQ, vec2(14., 6.)) + 2. * fxN2(fxQ * 3. + vSeed));
+    float fxFlat = 1. - fxStand;
+    float fxGrain = fxN2(fxQm * 140. + vSeed * 9.);
+    vec3 fxSandC = fxFc * (.75 + .3 * fxGrain) * (.85 + .15 * fxRip * fxFlat);
+    vec3 fxAirC = fxFc * .24 + vec3(.02);
+    vec3 fxCol = mix(fxAirC, fxSandC, max(fxSand, fxFlat * .9));
+    fxCol = mix(fxCol, vec3(.75, .8, .85), fxWall * fxStand * .35);
+    diffuseColor.rgb = fxCol;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxHgH(fxP - vec2(fxE, 0.), vSeed) - fxHgH(fxP + vec2(fxE, 0.), vSeed),
+                               fxHgH(fxP - vec2(0., fxE), vSeed) - fxHgH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = .05; metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxCol * .12;',
+};
+B.hourglass = {
+  // 몸통은 짙은 호두나무 틀
+  color: 'diffuseColor.rgb *= .8 + .3 * fxN3(vec3(vLocal.x * 4., vLocal.y * 40., vLocal.z * 4.) + vSeed);',
+  surface: 'roughnessFactor = .4;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -6988,6 +7052,7 @@ export const MOVING = new Set([
   'spiritlevel',
   'snowglobe',
   'bottleink',
+  'hourglass',
 ]);
 
 /**
