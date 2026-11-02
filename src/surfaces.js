@@ -7970,6 +7970,53 @@ B.chrome = {
   surface: 'roughnessFactor = .15; metalnessFactor = 1.;',
 };
 
+S.fiberoptic = {
+  // 광섬유. 조각 겉 전체가 촘촘한 광섬유 다발을 잘라 간 끝이다. 육각으로 빽빽이 박힌 가는 섬유 끝마다 살짝 볼록한 유리
+  // 알이 빛나고, 섬유 사이는 검은 수지로 채웠다. 면 색 빛 물결이 다발을 천천히 가로질러 흐르며 알마다 밝기가 조금씩
+  // 다르고 이따금 하얗게 반짝인다. 손끝을 가져가면 그 둘레 섬유들이 하얗게 달아오른다
+  head: `
+    float fxFoH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .012 * max(0., 1. - pow(max(abs(q.x), abs(q.y)), 6.)));
+    }
+    vec2 fxFoHex(vec2 p) {
+      vec2 r = vec2(1., 1.7320508);
+      vec2 a = mod(p, r) - r * .5;
+      vec2 b = mod(p - r * .5, r) - r * .5;
+      return dot(a, a) < dot(b, b) ? a : b;
+    }`,
+  height: 'fxFoH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxP = vLocal.xy;
+    float fxS = .032;
+    vec2 fxL = fxFoHex(fxP / fxS);
+    vec2 fxC = fxP / fxS - fxL;
+    float fxR = length(fxL);
+    float fxAA = clamp(fwidth(fxP.x) / fxS * 2., 0., 1.);
+    float fxTip = mix(1. - smoothstep(.3, .38, fxR), .55, fxAA);
+    // 빛 물결
+    float fxH = fxH2(fxC + vSeed * 7.);
+    vec2 fxCw = fxC * fxS / uSticker.x;
+    float fxWave = .5 + .5 * sin(dot(fxCw, vec2(.8, .6)) * 4. - uTime * 1.6 + vSeed * 6.) * sin(dot(fxCw, vec2(-.5, .9)) * 3. + uTime * .9);
+    float fxTw = step(.985, fract(fxH * 37. + floor(uTime * 3. + fxH * 9.) * .618));
+    vec2 fxD = fxPtr.xy - fxC * fxS;
+    float fxNear = exp(-dot(fxD, fxD) / .05) * smoothstep(5., 2., fxPtr.z) * step(0., fxPtr.z);
+    float fxB = (.15 + 1.1 * fxWave * fxWave) * (.7 + .3 * fxH) + fxTw * .9 + fxNear * 1.8;
+    vec3 fxGlow = mix(fxFc, vec3(1.), clamp(fxNear * .7 + fxTw * .6 + fxWave * .15, 0., 1.)) * fxB;
+    vec3 fxNt = normalize(vec3(fxL * .9 * (1. - fxAA) * fxTip, 1.));
+    diffuseColor.rgb = mix(vec3(.015), fxFc * .2, fxTip);`,
+  normal: 'normal = normalize(mat3(vTx, vTy, vTz) * fxNt);',
+  surface: 'roughnessFactor = mix(.5, .1, fxTip); metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxGlow * fxTip * 1.1 * (1. + .6 * exp(-fxR * fxR * 18.));',
+};
+B.fiberoptic = {
+  // 몸통은 검은 수지
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .4;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -8006,6 +8053,7 @@ export const MOVING = new Set([
   'laser',
   'magnifier',
   'chrome',
+  'fiberoptic',
 ]);
 
 /**

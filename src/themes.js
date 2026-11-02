@@ -3852,6 +3852,27 @@ export const THEMES = [
     motion: 'smooth',
     burst: { shape: 'star', colors: ['#FFFFFF', '#E0E8FF'], size: 0.08, speed: 2.2, gravity: 0, drag: 2, life: 0.6, additive: true },
   },
+  {
+    // 광섬유. 조각 겉 전체가 광섬유 다발의 끝이다. 섬유 끝마다 면 색 빛이 나오고 빛 물결이 다발을 가로질러 흐르며, 손끝을
+    // 가져가면 그 둘레 섬유들이 하얗게 달아오른다
+    id: 'fiberoptic',
+    name: '광섬유',
+    bg: '#030305',
+    ink: '#EEEEF6',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #10101A, #020203)',
+    form: { bevel: 0.04, size: 0.96, radius: 0.03, grid: 32 },
+    body: { color: '#101012', roughness: 0.4 },
+    faces: ['#FF3030', '#FF9020', '#FFE030', '#30F070', '#3080FF', '#C040FF'],
+    lights: {
+      sky: '#c8ccff', ground: '#050508', hemi: 0.4,
+      key: ['#ffffff', 1.2, [-3, 7, 5]], fill: ['#c0c8ff', 0.3, [6, 1, 4]], rim: ['#ffffff', 1, [3, 4, -6]],
+    },
+    env: 0.6,
+    surface: 'fiberoptic',
+    sound: 'electric',
+    motion: 'smooth',
+    burst: { shape: 'glow', colors: 'faces', size: 0.05, speed: 2, gravity: 0, drag: 2, life: 0.6, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3880,5 +3901,5 @@ export const GROUPS = [
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
   { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops', 'liquidtimer', 'oilwater', 'mobile'] },
-  { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'laser', 'magnifier', 'chrome'] },
+  { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'laser', 'magnifier', 'chrome', 'fiberoptic'] },
 ];
