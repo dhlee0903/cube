@@ -6507,6 +6507,73 @@ B.blacklight = {
   surface: 'roughnessFactor = .95;',
 };
 
+S.fogglass = {
+  // 김 서린 유리. 조각 하나가 통째로 두꺼운 색유리 덩어리이고, 겉에 하얀 김이 서려 잔 물방울이 맺혔다. 김 너머로 색만
+  // 흐릿하게 비치다가, 손끝을 가져가면 그 둘레 김이 닦인 듯 걷혀 맑은 유리 속 깊이 떠 있는 기포와 흐름 결이 보는 각도
+  // 따라 어긋나며 또렷이 보인다. 닦인 자리엔 큰 물방울 몇 개만 남는다. 손을 떼면 다시 천천히 김이 서린다
+  head: `
+    float fxFgClear(vec2 p) {
+      vec2 d = fxPtr.xy - p;
+      return exp(-dot(d, d) / .11) * smoothstep(5., 2., fxPtr.z) * step(0., fxPtr.z);
+    }
+    float fxFgH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float n = pow(pow(abs(q.x), 6.) + pow(abs(q.y), 6.), 1. / 6.);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .016 * sqrt(max(0., 1. - n * n)));
+    }`,
+  height: 'fxFgH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxP = vLocal.xy;
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVl = vec3(dot(fxV, vTx), dot(fxV, vTy), max(dot(fxV, vTz), .25));
+    // 김이 걷힌 정도: 가장자리가 물방울 자국처럼 들쭉날쭉하다
+    float fxCl = smoothstep(.12, .42, fxFgClear(fxP) + (fxF2(fxP * 26. + vSeed) - .5) * .2);
+    // 유리 속: 세 깊이에 뜬 기포와 흐름 결(보는 각도 따라 어긋난다)
+    vec3 fxIn = vec3(0.);
+    for (int k = 0; k < 3; k++) {
+      float dep = .05 + .09 * float(k);
+      vec2 q = fxP - fxVl.xy / fxVl.z * dep / 1.5;
+      vec3 v = fxVoronoi(q * (22. - 5. * float(k)) + vSeed * 9. + float(k) * 5.);
+      float bub = (1. - smoothstep(.04, .07, v.x)) * step(.72, fxH1(v.z * 13.));
+      float rim = (1. - smoothstep(.0, .025, abs(v.x - .06))) * step(.72, fxH1(v.z * 13.));
+      fxIn += vec3(1.) * (rim * .5 + bub * .12) * (1. - .25 * float(k));
+    }
+    float fxStr = fxF2(vec2(fxP.x * 6., fxP.y * 2.) + vSeed * 3. + fxF2(fxP * 4.) * 2.);
+    vec3 fxCore = fxFc * (.55 + .6 * fxStr) + fxIn * mix(fxFc, vec3(1.), .5) * .6;
+    // 김: 고운 젖빛 막 위에 물방울. 방울은 작은 렌즈라 속 색이 맑게 비치고 둘레가 짙으며 윗녘에 빛이 맺힌다.
+    // 걷힌 자리엔 큰 방울만 드문드문
+    vec3 fxDv = fxVoronoi(fxP * mix(38., 22., fxCl) + vSeed * 3.);
+    float fxDr = fxDv.x;
+    float fxKeep = mix(step(.4, fxH1(fxDv.z * 7.)), step(.85, fxH1(fxDv.z * 7.)), fxCl);
+    float fxDrop = (1. - smoothstep(.3, .36, fxDr)) * fxKeep;
+    float fxRimD = (1. - smoothstep(.0, .05, abs(fxDr - .31))) * fxKeep;
+    float fxAA = clamp(fwidth(fxP.x) * 30., 0., 1.);
+    fxDrop *= 1. - fxAA;
+    fxRimD *= 1. - fxAA;
+    vec3 fxHaze = mix(vec3(.6, .63, .66), fxFc, .45) * (.95 + .05 * fxF2(fxP * 60.));
+    vec3 fxCol = mix(mix(fxCore, fxHaze, .55), fxCore, fxCl);
+    fxCol = mix(fxCol, fxCore * 1.05, fxDrop * (1. - fxCl * .5));
+    fxCol *= 1. - .35 * fxRimD;
+    float fxFog = (1. - fxCl);
+    diffuseColor.rgb = fxCol;`,
+  normal: `
+    float fxE = .0012;
+    vec3 fxNt = normalize(vec3(fxFgH(fxP - vec2(fxE, 0.), vSeed) - fxFgH(fxP + vec2(fxE, 0.), vSeed),
+                               fxFgH(fxP - vec2(0., fxE), vSeed) - fxFgH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    // 물방울은 작은 돔
+    vec2 fxDg = (fxVoronoi(fxP * mix(85., 40., fxCl) + vSeed * 3. + vec2(.02, 0.)).x - fxDr) * vec2(1., 0.);
+    normal = fxBump(normalize(mat3(vTx, vTy, vTz) * fxNt), fxDrop * (1. - fxDr * fxDr * 9.) * .004);`,
+  surface: 'roughnessFactor = mix(.03, .5, fxFog * (1. - fxDrop)); metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxCore * .12 * fxCl + fxIn * fxCl * .15;',
+};
+B.fogglass = {
+  // 몸통은 김 서린 젖빛 유리
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 30. + vSeed);',
+  surface: 'roughnessFactor = .5;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -6521,6 +6588,7 @@ export const MOVING = new Set([
   'shadowgarden',
   'flashlight',
   'blacklight',
+  'fogglass',
 ]);
 
 /**

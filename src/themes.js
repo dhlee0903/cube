@@ -3390,6 +3390,27 @@ export const THEMES = [
     motion: 'smooth',
     burst: { shape: 'dot', colors: ['#B060FF', '#60FFC0', '#FFE040'], size: 0.04, speed: 1.6, gravity: 0, drag: 2, life: 0.6, additive: true },
   },
+  {
+    // 김 서린 유리. 조각 하나가 통째로 색유리 덩어리이고 겉에 김과 잔 물방울이 서렸다. 손끝이 다가오면 그 둘레 김이 닦인 듯
+    // 걷혀 유리 속 기포와 흐름 결이 깊이 비친다
+    id: 'fogglass',
+    name: '김 서린 유리',
+    bg: '#0C1014',
+    ink: '#EEF4F8',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #22303A, #06080A)',
+    form: { bevel: 0.06, size: 0.96, radius: 0.07, grid: 40 },
+    body: { color: '#3A4248', roughness: 0.5 },
+    faces: ['#E2342E', '#F28A1E', '#F2CE1E', '#24B45A', '#1E6AE0', '#A43CD8'],
+    lights: {
+      sky: '#ffffff', ground: '#121820', hemi: 1,
+      key: ['#ffffff', 2.4, [-3, 7, 5]], fill: ['#dce8ff', 0.7, [6, 1, 4]], rim: ['#ffffff', 1.6, [3, 4, -6]],
+    },
+    env: 0.9,
+    surface: 'fogglass',
+    sound: 'glass',
+    motion: 'smooth',
+    burst: { shape: 'drip', colors: ['#E8F4FF', '#C8E0F0'], size: 0.05, speed: 1.4, gravity: 3, drag: 2, life: 0.7 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3416,5 +3437,5 @@ export const GROUPS = [
   { name: '명화', themes: ['oil', 'watercolor', 'ukiyoe', 'monet', 'seurat', 'gogh', 'munch', 'klimt', 'cubism', 'warhol', 'collage'] },
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
-  { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight'] },
+  { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass'] },
 ];
