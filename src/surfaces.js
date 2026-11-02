@@ -7475,6 +7475,57 @@ B.mobile = {
   surface: 'roughnessFactor = .5;',
 };
 
+S.infinitymirror = {
+  // 인피니티 미러. 조각 하나가 통째로 거울 상자다. 겉은 반만 비치는 짙은 유리, 뒤는 온 거울이라 그 사이 둘레를 따라 박힌
+  // 면 색 LED 알들이 두 거울 사이를 오가며 끝없이 되비쳐, 점점 작아지고 흐려지는 고리가 깊은 터널로 이어진다. 큐브를
+  // 돌려 비스듬히 보면 터널이 한쪽으로 휘어 들어가고, LED 빛은 천천히 고리를 따라 돈다
+  head: `
+    float fxImH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float n = pow(pow(abs(q.x), 8.) + pow(abs(q.y), 8.), 1. / 8.);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .006 * sqrt(max(0., 1. - n * n)));
+    }`,
+  height: 'fxImH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVl = vec3(dot(fxV, vTx), dot(fxV, vTy), max(dot(fxV, vTz), .2));
+    vec3 fxLed = vec3(0.);
+    float fxD = .16;
+    for (int k = 0; k < 12; k++) {
+      float fk = float(k);
+      float d = (fk + .5) * fxD;
+      // 깊이 d에 비친 고리: 보는 방향만큼 어긋나고 멀수록 작다
+      vec2 qk = (fxQ - fxVl.xy / fxVl.z * d / uSticker.x) * (1. + d * .55);
+      float m = max(abs(qk.x), abs(qk.y));
+      float ring = 1. - smoothstep(.0, .05, abs(m - .82));
+      // 고리 위 LED 알: 둘레 길이를 따라 일정 간격
+      float per = abs(qk.x) > abs(qk.y) ? (qk.x > 0. ? qk.y + 1. : 5. - qk.y) : (qk.y > 0. ? 3. - qk.x : 7. + qk.x);
+      float bead = 1. - smoothstep(.12, .36, abs(fract(per * 4.) - .5) * 2.);
+      float chase = .6 + .4 * sin(per * 1.57 - uTime * 1.6 + vSeed * 6.);
+      float fade = pow(.78, fk);
+      fxLed += fxFc * ring * mix(.25, 1., bead) * chase * fade * (1.6 + .6 * bead);
+      fxLed += mix(fxFc, vec3(1.), .5) * ring * bead * fade * .35 * step(fk, .5);
+    }
+    // 앞 유리: 짙은 반거울
+    diffuseColor.rgb = vec3(.02, .02, .025);`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxImH(fxP - vec2(fxE, 0.), vSeed) - fxImH(fxP + vec2(fxE, 0.), vSeed),
+                               fxImH(fxP - vec2(0., fxE), vSeed) - fxImH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = .05; metalnessFactor = .6;',
+  emissive: 'totalEmissiveRadiance = fxLed;',
+};
+B.infinitymirror = {
+  // 몸통은 검은 거울 상자 테
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .15; metalnessFactor = .7;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -7503,6 +7554,7 @@ export const MOVING = new Set([
   'liquidtimer',
   'oilwater',
   'mobile',
+  'infinitymirror',
 ]);
 
 /**

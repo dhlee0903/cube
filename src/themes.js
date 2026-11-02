@@ -3686,6 +3686,27 @@ export const THEMES = [
     motion: 'smooth',
     burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.6, gravity: 2, drag: 2, life: 0.6 },
   },
+  {
+    // 인피니티 미러. 조각 하나가 통째로 거울 상자다. 둘레의 면 색 LED가 두 거울 사이를 오가며 끝없이 되비쳐 깊은 터널을
+    // 이루고, 큐브를 돌려 비스듬히 보면 터널이 휘어 들어간다
+    id: 'infinitymirror',
+    name: '인피니티 미러',
+    bg: '#030305',
+    ink: '#EEEEF6',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #12121C, #020203)',
+    form: { bevel: 0.04, size: 0.96, radius: 0.03, grid: 24 },
+    body: { color: '#141418', roughness: 0.15, metalness: 0.7 },
+    faces: ['#FF2A3A', '#FF8A1A', '#FFE02A', '#2AFF7A', '#2A7AFF', '#C83AFF'],
+    lights: {
+      sky: '#c0c8ff', ground: '#050508', hemi: 0.4,
+      key: ['#ffffff', 1.2, [-3, 7, 5]], fill: ['#c0c8ff', 0.3, [6, 1, 4]], rim: ['#ffffff', 1, [3, 4, -6]],
+    },
+    env: 0.7,
+    surface: 'infinitymirror',
+    sound: 'electric',
+    motion: 'smooth',
+    burst: { shape: 'glow', colors: 'faces', size: 0.07, speed: 2, gravity: 0, drag: 2, life: 0.6, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3714,4 +3735,5 @@ export const GROUPS = [
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
   { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops', 'liquidtimer', 'oilwater', 'mobile'] },
+  { name: '빛과 시점', themes: ['infinitymirror'] },
 ];
