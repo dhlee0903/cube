@@ -4609,6 +4609,454 @@ B.pave = {
   surface: 'roughnessFactor = .25; metalnessFactor = 1.;',
 };
 
+S.pinstripe = {
+  // 핀스트라이프 수트 천. 다 맞추면 면 하나가 한 폭의 소모사 양복감이다. 면 색 날실·씨실을 2/2 능직으로 촘촘히 짜고
+  // 열여섯 올마다 밝은 날실 한 올(핀)을 끼웠다. 핀 실만 3/1로 걸어 씨실 세 올 위로 떴다가 한 올 밑으로 들어가므로, 가까이서는
+  // 능직 사선 따라 잘게 끊긴 가는 줄, 멀리서는 곧은 실금으로 보인다. 뜬 실은 가운데가 솟고 엇갈리는 자리에서 파고들어
+  // 비스듬한 능선이 도드라지고, 실마다 빛깔이 조금씩 다르며, 고운 소모사라 은은히 윤이 난다
+  head: WEAVE + `
+    // 열여섯 올마다 한 올이 핀 실
+    float fxIsPin(float i) { return 1. - step(.5, abs(mod(i, 16.) - 8.)); }
+    // 2/2 능직: 날실이 씨실 두 올 위로 떴다가 두 올 밑으로, 한 올마다 한 칸씩 밀린다. 핀 실만 3/1(세 올 위, 한 올 밑)
+    float fxUp(vec2 c) { return step(mod(c.x + c.y, 4.), 1.5 + fxIsPin(c.x)); }
+    // 짜임 속 실 한 올. x 위에 뜬 실이 날실(1)인지 씨실(0)인지, y 날실 번호, z 씨실 번호,
+    // w 높이(0 실 사이 틈 ~ 1 뜬 실 한가운데 꼭대기). 뜬 실은 가운데가 솟고, 양 끝에서 엇갈린 실 밑으로 파고든다(크림프).
+    // k는 실 단면: .5 둥근 실, 작을수록 납작하게 눌린 실
+    vec4 fxLoom(vec2 F, float n, float k) {
+      vec2 T = (F + 1.) * n * .5;
+      vec2 c = floor(T), f = fract(T);
+      float up = fxUp(c);
+      vec2 d = up > .5 ? vec2(0., 1.) : vec2(1., 0.);
+      float a = up > .5 ? f.y : f.x;
+      float b = up > .5 ? f.x : f.y;
+      float s0 = 0., s1 = 0.;
+      for (int i = 1; i < 4; i++) { if (abs(fxUp(c - d * float(i)) - up) > .5) break; s0 += 1.; }
+      for (int i = 1; i < 4; i++) { if (abs(fxUp(c + d * float(i)) - up) > .5) break; s1 += 1.; }
+      float u = (s0 + a) / (s0 + s1 + 1.);
+      float x = 2. * b - 1.;
+      return vec4(up, c.x, c.y, pow(max(1. - x * x, 0.), k) * pow(sin(3.1416 * u), .45));
+    }
+    // 주기 p마다 [s, s+w) 올에 걸친 줄이 한 픽셀 폭(fw) 안에서 차지하는 비율. 멀리서 가는 줄이 끊기거나 깜빡이지 않게
+    float fxPulseI(float t, float p, float s, float w) { float u = t - s; float q = floor(u / p); return q * w + clamp(u - q * p, 0., w); }
+    float fxCover(float x, float fw, float p, float s, float w) {
+      fw = max(fw, 1e-3);
+      return (fxPulseI(x + fw * .5, p, s, w) - fxPulseI(x - fw * .5, p, s, w)) / fw;
+    }
+    // 면마다 핀 실 빛깔: 남색엔 흰 실, 차콜엔 은회색, 갈색엔 크림, 초록엔 금빛, 와인엔 분홍빛, 밝은 회색엔 남색
+    vec3 fxPinC() {
+      return uFace < .5 ? vec3(.93, .93, .9) : uFace < 1.5 ? vec3(.8, .84, .9) : uFace < 2.5 ? vec3(.94, .86, .68)
+        : uFace < 3.5 ? vec3(.9, .74, .38) : uFace < 4.5 ? vec3(.96, .8, .8) : vec3(.1, .16, .36);
+    }`,
+  height: 'fxDrapeH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec2 fxF = fxFace();
+    float fxN = 156.;
+    vec4 fxW = fxLoom(fxF, fxN, .3);
+    vec2 fxT = (fxF + 1.) * fxN * .5;
+    float fxAA = smoothstep(.45, 1.2, max(fwidth(fxT.x), fwidth(fxT.y)));
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxPin = fxPinC();
+    float fxPinEnd = fxIsPin(fxW.y);
+    vec3 fxWarp = mix(fxBase * (.9 + .16 * fxH1(fxW.y * 1.7 + 3.1)), fxPin, fxPinEnd);
+    vec3 fxWeft = fxBase * (.8 + .1 * fxH1(fxW.z * 2.3 + 1.7));
+    // 핀 실은 굵고 윤이 나서, 묶어 누르는 씨실 한 올 양옆으로도 살짝 비친다
+    fxWeft = mix(fxWeft, fxPin * .8, fxPinEnd * .3);
+    // 멀리서: 핀 실이 픽셀 안에서 차지하는 만큼만 섞는다
+    float fxCov = fxCover(fxT.x, fwidth(fxT.x), 16., 8., 1.);
+    vec3 fxFar = mix(fxBase * .92, fxPin * .75 + fxBase * .2, fxCov);
+    vec3 fxY = mix(fxW.x > .5 ? fxWarp : fxWeft, fxFar, fxAA);
+    diffuseColor.rgb = fxThread(fxY, fxW, fxF, fxN, fxAA);
+    float fxRelief = (pow(fxW.w, .8) * (.0034 + .0008 * fxPinEnd * fxW.x) + fxPly(fxF, fxN, fxW) * .0003) * (1. - fxAA);`,
+  normal: 'normal = fxBump(normal, fxRelief);',
+  surface: 'roughnessFactor = .64;',
+  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * (fxFresnel(normal, 2.) * .14 + pow(fxW.w, 6.) * .14 * (1. - fxAA));',
+};
+
+B.pinstripe = {
+  // 양복 안감처럼 매끈한 공단
+  color: `diffuseColor.rgb *= .9 + .12 * fxN3(vLocal * vec3(6., 6., 90.) + vSeed);`,
+  surface: 'roughnessFactor = .38;',
+};
+
+S.windowpane = {
+  // 윈도페인. 다 맞추면 면 하나가 한 폭의 모직 재킷감이다. 면 색 날실과 조금 짙은 씨실을 2/2 능직으로 짠 무지 바탕에,
+  // 스물네 올마다 대비색 날실 세 올과 씨실 세 올을 걸어 커다란 창살 칸을 냈다. 줄도 능직이라 바탕 위를 지날 때는 가장자리가
+  // 사선 계단처럼 어긋나고, 날실 줄과 씨실 줄이 만나는 자리만 꽉 찬 색이 된다. 칸이 조각보다 커서 다 맞추면 창살이 면 전체로
+  // 이어진다. 섞어 자은 모사의 털빛과 잔털, 비스듬한 능선
+  head: WEAVE + `
+    float fxUp(vec2 c) { return step(mod(c.x + c.y, 4.), 1.5); }
+    // 짜임 속 실 한 올. x 위에 뜬 실이 날실(1)인지 씨실(0)인지, y 날실 번호, z 씨실 번호,
+    // w 높이(0 실 사이 틈 ~ 1 뜬 실 한가운데 꼭대기). 뜬 실은 가운데가 솟고, 양 끝에서 엇갈린 실 밑으로 파고든다(크림프).
+    // k는 실 단면: .5 둥근 실, 작을수록 납작하게 눌린 실
+    vec4 fxLoom(vec2 F, float n, float k) {
+      vec2 T = (F + 1.) * n * .5;
+      vec2 c = floor(T), f = fract(T);
+      float up = fxUp(c);
+      vec2 d = up > .5 ? vec2(0., 1.) : vec2(1., 0.);
+      float a = up > .5 ? f.y : f.x;
+      float b = up > .5 ? f.x : f.y;
+      float s0 = 0., s1 = 0.;
+      for (int i = 1; i < 4; i++) { if (abs(fxUp(c - d * float(i)) - up) > .5) break; s0 += 1.; }
+      for (int i = 1; i < 4; i++) { if (abs(fxUp(c + d * float(i)) - up) > .5) break; s1 += 1.; }
+      float u = (s0 + a) / (s0 + s1 + 1.);
+      float x = 2. * b - 1.;
+      return vec4(up, c.x, c.y, pow(max(1. - x * x, 0.), k) * pow(sin(3.1416 * u), .45));
+    }
+    // 주기 p마다 [s, s+w) 올에 걸친 줄이 한 픽셀 폭(fw) 안에서 차지하는 비율. 멀리서 가는 줄이 끊기거나 깜빡이지 않게
+    float fxPulseI(float t, float p, float s, float w) { float u = t - s; float q = floor(u / p); return q * w + clamp(u - q * p, 0., w); }
+    float fxCover(float x, float fw, float p, float s, float w) {
+      fw = max(fw, 1e-3);
+      return (fxPulseI(x + fw * .5, p, s, w) - fxPulseI(x - fw * .5, p, s, w)) / fw;
+    }
+    // 면마다 창살 실 빛깔: 회색엔 녹슨 주황, 낙타색엔 짙은 밤색, 남색엔 하늘색, 올리브엔 겨자색, 와인엔 크림, 생지엔 남색
+    vec3 fxPaneC() {
+      return uFace < .5 ? vec3(.78, .3, .12) : uFace < 1.5 ? vec3(.2, .11, .06) : uFace < 2.5 ? vec3(.6, .76, .95)
+        : uFace < 3.5 ? vec3(.9, .7, .22) : uFace < 4.5 ? vec3(.92, .84, .66) : vec3(.12, .2, .44);
+    }`,
+  height: 'fxDrapeH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec2 fxF = fxFace();
+    float fxN = 105.;
+    vec4 fxW = fxLoom(fxF, fxN, .4);
+    vec2 fxT = (fxF + 1.) * fxN * .5;
+    float fxAA = smoothstep(.45, 1.2, max(fwidth(fxT.x), fwidth(fxT.y)));
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxLine = fxPaneC();
+    // 무지 바탕도 실마다 빛깔이 조금씩 달라 섞인 털빛이 난다
+    vec3 fxWarpG = fxBase * (.9 + .16 * fxH1(fxW.y * 1.3 + 7.));
+    vec3 fxWeftG = fxBase * (.78 + .12 * fxH1(fxW.z * 2.7 + 3.));
+    // 24올마다 15~17번 올이 창살 실(면 가운데를 두고 좌우 대칭)
+    float fxLx = 1. - step(1.5, abs(mod(fxW.y, 24.) - 16.));
+    float fxLy = 1. - step(1.5, abs(mod(fxW.z, 24.) - 16.));
+    vec3 fxWarp = mix(fxWarpG, fxLine, fxLx);
+    vec3 fxWeft = mix(fxWeftG, fxLine * .92, fxLy);
+    vec2 fxFw = fwidth(fxT);
+    float fxCx = fxCover(fxT.x, fxFw.x, 24., 15., 3.);
+    float fxCy = fxCover(fxT.y, fxFw.y, 24., 15., 3.);
+    vec3 fxFar = mix(mix(fxBase * .9, (fxLine + fxBase * .84) * .5, fxCx), mix((fxBase * .98 + fxLine) * .5, fxLine, fxCx), fxCy);
+    vec3 fxY = mix(fxW.x > .5 ? fxWarp : fxWeft, fxFar, fxAA);
+    float fxHair = fxStray(vLocal.xy, vSeed) * .7;
+    diffuseColor.rgb = mix(fxThread(fxY, fxW, fxF, fxN, fxAA), fxY * 1.2 + .04, fxHair * .3);
+    float fxRelief = (pow(fxW.w, .7) * .0042 + fxPly(fxF, fxN, fxW) * .0004) * (1. - fxAA) + fxHair * .0005;`,
+  normal: 'normal = fxBump(normal, fxRelief);',
+  surface: 'roughnessFactor = .86;',
+  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * (fxFresnel(normal, 1.4) * .35 + pow(fxW.w, 8.) * .08 * (1. - fxAA));',
+};
+
+B.windowpane = {
+  color: `diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 80. + vSeed);`,
+  surface: 'roughnessFactor = .9;',
+};
+
+S.buffalo = {
+  // 버팔로 체크. 다 맞추면 면 하나가 한 폭의 나무꾼 플란넬이다. 면 색 실 스무 올과 검은 실 열네 올을 날실과 씨실에 똑같이
+  // 번갈아 걸고 2/2 능직으로 짜서, 둘 다 면 색인 칸은 꽉 찬 색, 둘 다 검은 칸은 검정, 섞인 칸은 사선 능직 결이 보이는
+  // 반반 칸이 된다. 칸이 조각보다 커서 다 맞추면 면 가운데에 큰 색 칸이 오고 검은 칸 넷이 둘러싼다. 짠 뒤 철솔로 긁어
+  // 털을 일으켜서(기모) 겉털이 실 한두 올 너비만큼 넘나들어 칸 경계가 보송하게 번지고, 실 사이 틈이 털로 메워져 능직 결이
+  // 부드럽게 흐려졌다. 한쪽으로 쓸린 겉털 결, 털끝이 빛을 받아 살짝 희끗한 검은 칸, 비스듬히 보면 보드랍게 도는 윤
+  head: WEAVE + `
+    float fxUp(vec2 c) { return step(mod(c.x + c.y, 4.), 1.5); }
+    // 짜임 속 실 한 올. x 위에 뜬 실이 날실(1)인지 씨실(0)인지, y 날실 번호, z 씨실 번호,
+    // w 높이(0 실 사이 틈 ~ 1 뜬 실 한가운데 꼭대기). 뜬 실은 가운데가 솟고, 양 끝에서 엇갈린 실 밑으로 파고든다(크림프).
+    // k는 실 단면: .5 둥근 실, 작을수록 납작하게 눌린 실
+    vec4 fxLoom(vec2 F, float n, float k) {
+      vec2 T = (F + 1.) * n * .5;
+      vec2 c = floor(T), f = fract(T);
+      float up = fxUp(c);
+      vec2 d = up > .5 ? vec2(0., 1.) : vec2(1., 0.);
+      float a = up > .5 ? f.y : f.x;
+      float b = up > .5 ? f.x : f.y;
+      float s0 = 0., s1 = 0.;
+      for (int i = 1; i < 4; i++) { if (abs(fxUp(c - d * float(i)) - up) > .5) break; s0 += 1.; }
+      for (int i = 1; i < 4; i++) { if (abs(fxUp(c + d * float(i)) - up) > .5) break; s1 += 1.; }
+      float u = (s0 + a) / (s0 + s1 + 1.);
+      float x = 2. * b - 1.;
+      return vec4(up, c.x, c.y, pow(max(1. - x * x, 0.), k) * pow(sin(3.1416 * u), .45));
+    }
+    // 서른네 올 한 벌: 면 색(1) 스무 올, 검정(0) 열네 올. 면 가운데(42번 올)가 면 색 칸 한가운데
+    float fxBlock(float i) { return step(mod(i - 32., 34.), 19.5); }`,
+  height: 'fxDrapeH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec2 fxF = fxFace();
+    float fxN = 84.;
+    vec4 fxW = fxLoom(fxF, fxN, .5);
+    vec2 fxT = (fxF + 1.) * fxN * .5;
+    float fxAA = smoothstep(.45, 1.2, max(fwidth(fxT.x), fwidth(fxT.y)));
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxBlack = vec3(.03, .028, .028);
+    // 기모: 칸 경계에서 겉털이 이웃 칸 빛깔을 실 한두 올 너비만큼 끌고 들어온다
+    vec2 fxNap = (vec2(fxN2(fxT * .9 + 3.1), fxN2(fxT * .9 + 17.7)) - .5) * 1.7 + (vec2(fxN2(fxT * 3.3), fxN2(fxT * 3.3 + 9.)) - .5) * 1.1;
+    vec3 fxWarp = mix(fxBlack, fxBase, fxBlock(fxW.y + fxNap.x));
+    vec3 fxWeft = mix(fxBlack, fxBase * .9, fxBlock(fxW.z + fxNap.y));
+    // 털이 덮여 가까이서도 날실·씨실 빛깔이 조금 섞인다
+    vec3 fxY = mix(fxW.x > .5 ? fxWarp : fxWeft, (fxWarp + fxWeft) * .5, max(fxAA, .2));
+    // 겉털 한 올 한 올: 한쪽으로 비스듬히 쓸린 가는 결
+    vec2 fxFp = fxRot(.5) * vLocal.xy;
+    float fxFib = fxN2(fxFp * vec2(260., 24.) + vSeed * 9.) * .6 + fxN2(fxFp * vec2(520., 40.) + 4.) * .4;
+    float fxFuzz = fxN2(vLocal.xy * 220. + vSeed * 3.);
+    vec4 fxWs = vec4(fxW.xyz, mix(fxW.w, .75, .45));
+    vec3 fxC = fxThread(fxY, fxWs, fxF, fxN, fxAA) * (.88 + .24 * fxFib);
+    // 겉털 안개: 실 두세 올 떨어진 자리의 섞인 빛깔이 털에 실려 와 결 위를 뿌옇게 덮는다
+    vec2 fxTh = fxT + fxNap * 1.3;
+    vec3 fxHaze = (mix(fxBlack, fxBase, fxBlock(fxTh.x)) + mix(fxBlack, fxBase * .9, fxBlock(fxTh.y))) * .5;
+    fxC = mix(fxC, fxHaze * (.9 + .2 * fxFib), (.2 + .3 * smoothstep(.35, .8, fxFib)) * (1. - fxAA));
+    // 털끝이 빛을 받아 짙은 칸도 살짝 희끗하다
+    diffuseColor.rgb = fxC + vec3(.03, .028, .026) * smoothstep(.5, .85, fxFib) + fxY * .05 * fxFuzz;
+    float fxRelief = pow(fxW.w, .7) * .0028 * (1. - fxAA) + fxFib * .0008 + fxFuzz * .0005;`,
+  normal: 'normal = fxBump(normal, fxRelief);',
+  surface: 'roughnessFactor = 1.;',
+  emissive: 'totalEmissiveRadiance = (diffuseColor.rgb * .8 + .03) * fxFresnel(normal, 1.2) * .55;',
+};
+
+B.buffalo = {
+  // 오두막 통나무
+  color: `diffuseColor.rgb *= .8 + .3 * fxN3(vLocal * vec3(4., 60., 4.) + vSeed);`,
+  surface: 'roughnessFactor = .75;',
+};
+
+S.madras = {
+  // 마드라스. 다 맞추면 면 하나가 한 폭의 인도 손베틀 면직이다. 면 색 바탕에 짙은 색, 흰색, 이웃한 두 빛깔, 밝은 가는 줄을
+  // 고르지 않은 폭으로 늘어놓은 실 순서를 날실과 씨실에 서로 다르게 걸어 칸이 들쭉날쭉한 체크가 되고, 평직이라 올이
+  // 하나 걸러 하나씩 엇갈린다. 손으로 자은 굵고 가는 마디(슬럽)가 실마다 불규칙하게 맺혀 그 자리는 실이 굵고 도톰하며,
+  // 가는 자리엔 실 사이 틈이 벌어진다. 물이 빠지는 식물 염료라 실 빛깔이 이웃 줄로 번지고 군데군데 바랬다
+  head: WEAVE + `
+    // 날실 순서(48올): 0 바탕 1 짙은 색 2 흰색 3 이웃 빛깔 4 다른 이웃 빛깔 5 밝은 가는 줄. 바탕이 열에 여섯
+    float fxSettX(float i) {
+      float s = mod(i, 48.);
+      if (s < 12.) return 0.;
+      if (s < 14.) return 2.;
+      if (s < 17.) return 0.;
+      if (s < 22.) return 1.;
+      if (s < 25.) return 3.;
+      if (s < 26.) return 5.;
+      if (s < 29.) return 3.;
+      if (s < 31.) return 1.;
+      if (s < 41.) return 0.;
+      if (s < 44.) return 4.;
+      return 0.;
+    }
+    // 씨실 순서(44올). 날실과 달라서 칸이 길쭉하고 대칭이 아니다
+    float fxSettY(float i) {
+      float s = mod(i, 44.);
+      if (s < 10.) return 0.;
+      if (s < 13.) return 1.;
+      if (s < 14.) return 2.;
+      if (s < 17.) return 1.;
+      if (s < 25.) return 0.;
+      if (s < 30.) return 4.;
+      if (s < 31.) return 5.;
+      if (s < 32.) return 4.;
+      if (s < 36.) return 3.;
+      return 0.;
+    }
+    // 빛깔 고리를 a만큼 돌린다(YIQ)
+    vec3 fxHueTurn(vec3 c, float a) {
+      float y = dot(c, vec3(.299, .587, .114));
+      vec2 iq = vec2(dot(c, vec3(.596, -.274, -.322)), dot(c, vec3(.211, -.523, .312)));
+      iq = vec2(iq.x * cos(a) - iq.y * sin(a), iq.x * sin(a) + iq.y * cos(a));
+      return clamp(vec3(y + .956 * iq.x + .621 * iq.y, y - .272 * iq.x - .647 * iq.y, y - 1.106 * iq.x + 1.703 * iq.y), 0., 1.);
+    }
+    // 실 빛깔. 짙은 색은 바탕을 짙게 물들인 것, 이웃 빛깔은 바탕에서 빛깔 고리를 조금만 돌린 것이라 면마다 바탕색이 주인이다
+    vec3 fxMadC(float k, vec3 base) {
+      if (k < .5) return base;
+      if (k < 1.5) return fxHueTurn(base, -.15) * .28;
+      if (k < 2.5) return vec3(.93, .9, .8);
+      if (k < 3.5) return mix(fxHueTurn(base, .45), vec3(1.), .15);
+      if (k < 4.5) return fxHueTurn(base, -.5) * .62;
+      return mix(fxHueTurn(base, 3.1), vec3(1.), .35);
+    }
+    // 번진 실 빛깔: 염료가 빠진 자리에서 양옆 두 올까지 빛깔이 섞인다. s는 실 길이 방향 좌표
+    vec3 fxBleed(float i, float s, vec3 base, float warp) {
+      vec3 c0 = fxMadC(warp > .5 ? fxSettX(i) : fxSettY(i), base);
+      vec3 c1 = fxMadC(warp > .5 ? fxSettX(i - 1.) : fxSettY(i - 1.), base) + fxMadC(warp > .5 ? fxSettX(i + 1.) : fxSettY(i + 1.), base);
+      vec3 c2 = fxMadC(warp > .5 ? fxSettX(i - 2.) : fxSettY(i - 2.), base) + fxMadC(warp > .5 ? fxSettX(i + 2.) : fxSettY(i + 2.), base);
+      float b = smoothstep(.3, .8, fxN2(vec2(s * .07, i * .21 + warp * 13.))) * .7 + .12;
+      return mix(c0, (c0 * 2. + c1 + c2 * .5) / 5., b);
+    }
+    // 평직 한 올: x 날실이 위인지, y 날실 번호, z 씨실 번호, w 높이. 마디(슬럽) 자리는 굵고 높으며 가는 자리엔 틈이 난다
+    vec4 fxLoomS(vec2 F, float n) {
+      vec2 T = (F + 1.) * n * .5;
+      vec2 c = floor(T), f = fract(T);
+      float up = mod(c.x + c.y, 2.);
+      float id = up > .5 ? c.x : c.y + 517.;
+      float along = up > .5 ? T.y : T.x;
+      float a = up > .5 ? f.y : f.x;
+      float b = up > .5 ? f.x : f.y;
+      float th = .74 + .24 * fxN2(vec2(along * .3, id * 1.9)) + .32 * smoothstep(.7, .92, fxN2(vec2(along * .7 + 3., id * 2.7)));
+      float x = (2. * b - 1.) / min(th, 1.06);
+      return vec4(up, c.x, c.y, pow(max(1. - x * x, 0.), .5) * pow(sin(3.1416 * a), .5) * min(th, 1.12));
+    }`,
+  height: 'fxDrapeH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec2 fxF = fxFace();
+    float fxN = 96.;
+    vec4 fxW = fxLoomS(fxF, fxN);
+    vec2 fxT = (fxF + 1.) * fxN * .5;
+    float fxAA = smoothstep(.45, 1.2, max(fwidth(fxT.x), fwidth(fxT.y)));
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxWarp = fxBleed(fxW.y, fxT.y, fxBase, 1.);
+    vec3 fxWeft = fxBleed(fxW.z, fxT.x, fxBase, 0.) * .94;
+    vec3 fxY = mix(fxW.x > .5 ? fxWarp : fxWeft, (fxWarp + fxWeft) * .5, fxAA);
+    // 빨래하며 바랜 얼룩: 군데군데 빛이 빠지고 옅어졌다
+    float fxFade = fxF2(fxF * 3.2 + uFace * 7.);
+    fxY = mix(fxY, vec3(dot(fxY, vec3(.3, .59, .11))) * 1.08 + .03, smoothstep(.45, .8, fxFade) * .35);
+    diffuseColor.rgb = fxThread(fxY, fxW, fxF, fxN, fxAA);
+    float fxRelief = (pow(fxW.w, .7) * .0042 + fxPly(fxF, fxN, fxW) * .0003) * (1. - fxAA);`,
+  normal: 'normal = fxBump(normal, fxRelief);',
+  surface: 'roughnessFactor = .82;',
+  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * (fxFresnel(normal, 1.6) * .22 + pow(clamp(fxW.w, 0., 1.), 8.) * .1 * (1. - fxAA));',
+};
+
+B.madras = {
+  // 햇볕에 바랜 등나무
+  color: `diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * vec3(70., 4., 70.) + vSeed);`,
+  surface: 'roughnessFactor = .7;',
+};
+
+S.seersucker = {
+  // 시어서커. 다 맞추면 면 하나가 한 폭의 여름 면직이다. 날실을 두 빔에 나눠 감아, 면 색 날실 아홉 올은 느슨하게,
+  // 흰 날실 일곱 올은 팽팽하게 걸고 평직으로 짰다. 바디로 씨실을 칠 때마다 느슨한 날실이 남는 길이만큼 위아래로 오글오글
+  // 접혀 올라와, 색 줄은 가로로 잔주름이 잡힌 물집처럼 실제로 부풀고(주름 골엔 그늘이 진다) 흰 줄은 납작하게 남는다.
+  // 씨실이 옅게 물든 실이라 흰 줄에도 면 색이 살짝 돈다. 주름은 면 좌표로 계산해 다 맞추면 줄과 주름이 면 전체로 이어진다
+  head: WEAVE + `
+    float fxUp(vec2 c) { return mod(c.x + c.y, 2.); }
+    // 짜임 속 실 한 올. x 위에 뜬 실이 날실(1)인지 씨실(0)인지, y 날실 번호, z 씨실 번호,
+    // w 높이(0 실 사이 틈 ~ 1 뜬 실 한가운데 꼭대기). 뜬 실은 가운데가 솟고, 양 끝에서 엇갈린 실 밑으로 파고든다(크림프).
+    // k는 실 단면: .5 둥근 실, 작을수록 납작하게 눌린 실
+    vec4 fxLoom(vec2 F, float n, float k) {
+      vec2 T = (F + 1.) * n * .5;
+      vec2 c = floor(T), f = fract(T);
+      float up = fxUp(c);
+      vec2 d = up > .5 ? vec2(0., 1.) : vec2(1., 0.);
+      float a = up > .5 ? f.y : f.x;
+      float b = up > .5 ? f.x : f.y;
+      float s0 = 0., s1 = 0.;
+      for (int i = 1; i < 4; i++) { if (abs(fxUp(c - d * float(i)) - up) > .5) break; s0 += 1.; }
+      for (int i = 1; i < 4; i++) { if (abs(fxUp(c + d * float(i)) - up) > .5) break; s1 += 1.; }
+      float u = (s0 + a) / (s0 + s1 + 1.);
+      float x = 2. * b - 1.;
+      return vec4(up, c.x, c.y, pow(max(1. - x * x, 0.), k) * pow(sin(3.1416 * u), .45));
+    }
+    // 날실 열여섯 올 한 벌 안에서 이 올이 느슨한(오글오글한) 색 줄인지
+    float fxSlack(float i) { return step(mod(i, 16.), 8.5); }
+    // 오글오글한 줄. T는 실 단위 면 좌표. x 솟은 정도, y 줄 가로 단면(줄 가장자리 0 ~ 가운데 1).
+    // 남는 날실이 씨실 서너 올마다 접혀 줄을 가로지르는 주름 골이 지고, 골 사이가 물집처럼 부푼다. 골은 줄 폭 안에서
+    // 구불구불하고 물집마다 크기가 다르다. fine이 1이면 정점 격자보다 잔 주름까지 더한다
+    vec2 fxPucker(vec2 T, float fine) {
+      float s = mod(T.x, 16.);
+      float id = floor(T.x / 16.);
+      float xs = clamp(s / 9., 0., 1.);
+      float across = pow(sin(3.1416 * xs), .5) * step(s, 9.);
+      float v = T.y / 4.2 + .9 * fxN2(vec2(xs * 1.6 + id * 3.1, T.y / 8.)) + id * .37;
+      float cell = floor(v);
+      float blister = pow(sin(3.1416 * fract(v)), .7);
+      float size = .55 + .45 * fxH2(vec2(cell, id * 7.1));
+      // 물집이 줄 폭 가운데서 둘로 갈라진 자리
+      float split = step(.62, fxH2(vec2(cell + 3.3, id))) * (1. - .55 * pow(abs(sin(3.1416 * xs * 2.)), 4.));
+      float h = .18 + .82 * blister * size * mix(1., pow(abs(sin(3.1416 * xs * 2.)), .5), split * .7);
+      h += fine * (fxN2(vec2(xs * 5. + id, T.y / 1.4 + 5.)) - .5) * .14;
+      return vec2(across * h, across);
+    }
+    float fxSuckerH(vec2 p, float seed) {
+      vec2 T = (aHome.xy + p * aHome.z + 1.) * 72.;
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.003 + .045 * fxPucker(T, 0.).x);
+    }`,
+  height: 'fxSuckerH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec2 fxF = fxFace();
+    float fxN = 144.;
+    vec4 fxW = fxLoom(fxF, fxN, .4);
+    vec2 fxT = (fxF + 1.) * fxN * .5;
+    float fxAA = smoothstep(.45, 1.2, max(fwidth(fxT.x), fwidth(fxT.y)));
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxWhite = vec3(.95, .94, .91);
+    float fxSl = fxSlack(fxW.y);
+    vec3 fxWarp = mix(fxWhite, fxBase, fxSl) * (.94 + .1 * fxH1(fxW.y * 1.9));
+    vec3 fxWeft = mix(fxWhite, fxBase, .38);
+    // 느슨한 날실이 부풀어 씨실을 덮어서 색 줄은 날실 빛깔이 더 많이 보인다
+    vec3 fxY = mix(fxW.x > .5 ? fxWarp : mix(fxWeft, fxWarp, fxSl * .4), mix(fxWarp, fxWeft, .5 - fxSl * .2), fxAA);
+    vec2 fxP = fxPucker(fxT, 1.);
+    // 주름 골에 진 그늘
+    float fxFold = mix(1., .58 + .42 * smoothstep(.15, .8, fxP.x / max(fxP.y, .05)), fxP.y);
+    // 고운 면사라 실 사이 틈이 얕다
+    diffuseColor.rgb = fxThread(fxY, vec4(fxW.xyz, .3 + .7 * fxW.w), fxF, fxN, fxAA) * fxFold;
+    float fxHt = smoothstep(0., .05, fxEdge()) * (.003 + .045 * fxP.x);
+    float fxRelief = clamp(fxHt - vLift, -.02, .02) + (pow(fxW.w, .7) * .0022 + fxPly(fxF, fxN, fxW) * .0003) * (1. - fxAA);`,
+  normal: 'normal = fxBump(normal, fxRelief);',
+  surface: 'roughnessFactor = .78;',
+  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * (fxFresnel(normal, 1.6) * .2 + pow(fxW.w, 8.) * .06 * (1. - fxAA));',
+};
+
+B.seersucker = {
+  color: `diffuseColor.rgb *= .88 + .16 * fxN3(vLocal * 80. + vSeed);`,
+  surface: 'roughnessFactor = .85;',
+};
+
+S.birdseye = {
+  // 버즈아이. 다 맞추면 면 하나가 한 폭의 소모사 양복감이다. 짙은 실 두 올·옅은 실 두 올을 날실과 씨실에 똑같이 번갈아 걸고,
+  // 짙은 씨실 두 올에서는 날실이 대각선 한 칸에만 뜨고 옅은 씨실 두 올에서는 대각선 한 칸만 빼고 다 뜨는 4×4 짜임으로 짰다.
+  // 그러면 옅은 날실과 옅은 씨실이 만나는 2×2 칸만 옅은 빛이 겉으로 나와 둥근 점이 되고, 네 올이 엇갈리는 한가운데에는
+  // 실 사이 틈이 작은 눈동자처럼 진다. 점 둘레는 짙은 실이 세 올씩 길게 떠서 테를 두른다. 멀리서는 무지처럼 보이고
+  // 가까이서 새 눈 같은 점이 촘촘히 박혀 있다(무늬를 그린 게 아니라 짜임과 실 순서를 그대로 계산했다)
+  head: WEAVE + `
+    float fxUp(vec2 c) {
+      vec2 m = mod(c, 4.);
+      float diag = 1. - step(.5, abs(m.x - m.y));
+      return m.y < 1.5 ? diag : 1. - diag;
+    }
+    // 짜임 속 실 한 올. x 위에 뜬 실이 날실(1)인지 씨실(0)인지, y 날실 번호, z 씨실 번호,
+    // w 높이(0 실 사이 틈 ~ 1 뜬 실 한가운데 꼭대기). 뜬 실은 가운데가 솟고, 양 끝에서 엇갈린 실 밑으로 파고든다(크림프).
+    // k는 실 단면: .5 둥근 실, 작을수록 납작하게 눌린 실
+    vec4 fxLoom(vec2 F, float n, float k) {
+      vec2 T = (F + 1.) * n * .5;
+      vec2 c = floor(T), f = fract(T);
+      float up = fxUp(c);
+      vec2 d = up > .5 ? vec2(0., 1.) : vec2(1., 0.);
+      float a = up > .5 ? f.y : f.x;
+      float b = up > .5 ? f.x : f.y;
+      float s0 = 0., s1 = 0.;
+      for (int i = 1; i < 4; i++) { if (abs(fxUp(c - d * float(i)) - up) > .5) break; s0 += 1.; }
+      for (int i = 1; i < 4; i++) { if (abs(fxUp(c + d * float(i)) - up) > .5) break; s1 += 1.; }
+      float u = (s0 + a) / (s0 + s1 + 1.);
+      float x = 2. * b - 1.;
+      return vec4(up, c.x, c.y, pow(max(1. - x * x, 0.), k) * pow(sin(3.1416 * u), .45));
+    }`,
+  height: 'fxDrapeH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec2 fxF = fxFace();
+    float fxN = 156.;
+    vec4 fxW = fxLoom(fxF, fxN, .4);
+    vec2 fxT = (fxF + 1.) * fxN * .5;
+    float fxAA = smoothstep(.45, 1.2, max(fwidth(fxT.x), fwidth(fxT.y)));
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxLt = mix(fxBase, vec3(.95, .93, .88), .58);
+    vec3 fxWarp = mod(fxW.y, 4.) < 1.5 ? fxBase * (.9 + .14 * fxH1(fxW.y * 1.3)) : fxLt;
+    vec3 fxWeft = mod(fxW.z, 4.) < 1.5 ? fxBase * (.84 + .1 * fxH1(fxW.z * 2.1)) : fxLt * .97;
+    // 멀리서는 겉에 나온 옅은 실이 넷에 하나
+    vec3 fxY = mix(fxW.x > .5 ? fxWarp : fxWeft, mix(fxBase * .88, fxLt, .25), fxAA);
+    // 점 자리(옅은 실끼리 엇갈린 2×2 칸)는 한 올씩만 떠서 실이 부풀어 틈을 메우고, 잔털이 둥글게 번진다
+    float fxDot = step(1.5, mod(fxW.y, 4.)) * step(1.5, mod(fxW.z, 4.));
+    vec2 fxDc = mod(fxT - 1., 4.) - 2.;
+    float fxHalo = smoothstep(1.7, .9, length(fxDc)) * (1. - fxDot) * (.5 + .5 * fxN2(vLocal.xy * 700. + vSeed));
+    vec4 fxWd = vec4(fxW.xyz, mix(fxW.w, .45 + .55 * fxW.w, fxDot));
+    diffuseColor.rgb = mix(fxThread(fxY, fxWd, fxF, fxN, fxAA), fxLt * .8, fxHalo * .3 * (1. - fxAA));
+    float fxRelief = (pow(fxW.w, .7) * .0036 + fxPly(fxF, fxN, fxW) * .0003) * (1. - fxAA);`,
+  normal: 'normal = fxBump(normal, fxRelief);',
+  surface: 'roughnessFactor = .7;',
+  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * (fxFresnel(normal, 2.) * .12 + pow(fxW.w, 6.) * .1 * (1. - fxAA));',
+};
+
+B.birdseye = {
+  color: `diffuseColor.rgb *= .9 + .12 * fxN3(vLocal * vec3(6., 6., 90.) + vSeed);`,
+  surface: 'roughnessFactor = .4;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([

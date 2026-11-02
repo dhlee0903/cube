@@ -3226,6 +3226,150 @@ export const THEMES = [
     burst: { shape: 'star', colors: ['#FFFFFF', '#FFF2C0'], size: 0.1, speed: 2, gravity: -1, drag: 2, life: 0.8, additive: true },
   },
 
+  {
+    // 새빌 로 양복점 재단실. 다 맞추면 면 하나가 한 폭의 소모사 수트 천이다. 면 색 2/2 능직 바탕에 열여섯 올마다 밝은 날실
+    // 한 올이 지나가 가까이서는 어긋난 점선, 멀리서는 가는 줄로 보인다. 촘촘한 사선 능선과 은은한 윤, 공단 안감 몸통
+    id: 'pinstripe',
+    name: '핀스트라이프',
+    bg: '#1C1E24',
+    ink: '#ECE6DA',
+    backdrop: [
+      'repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 26px)',
+      'radial-gradient(45% 35% at 50% 18%, rgba(255,236,200,.14), transparent 70%)',
+      'radial-gradient(80% 65% at 50% 45%, #3A3E48, #121318)',
+    ].join(', '),
+    form: { bevel: 0.12, size: 0.94, radius: 0.14, grid: 24 },
+    body: { color: '#B89A62', roughness: 0.38 },
+    faces: ['#1F3C82', '#3A3B40', '#6E4526', '#2C6242', '#8A1F36', '#A3A7AE'],
+    lights: {
+      sky: '#fff8ee', ground: '#3a3028', hemi: 1.4,
+      key: ['#fff2e0', 2.3, [-4, 6, 5]], fill: ['#dfe8ff', 0.45, [6, 0, 3]], rim: ['#ffffff', 1.1, [0, 4, -6]],
+    },
+    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: -1, drag: 2.6, life: 1.4 },
+    surface: 'pinstripe',
+    sound: 'cloth',
+    motion: 'squish',
+  },
+  {
+    // 가을 사냥 재킷을 걸어 둔 옷방. 다 맞추면 면 하나가 한 폭의 모직이다. 무지 능직 바탕에 스물네 올마다 대비색 실 두 올이
+    // 날실과 씨실로 지나가 조각보다 큰 창살 칸을 내고, 줄이 만나는 자리만 꽉 찬 색이 된다. 섞인 털빛과 잔털
+    id: 'windowpane',
+    name: '윈도페인',
+    bg: '#E4DCCB',
+    ink: '#2A2218',
+    backdrop: [
+      'linear-gradient(90deg, transparent 0 49.6%, rgba(90,60,40,.12) 49.6% 50.4%, transparent 50.4%)',
+      'linear-gradient(0deg, transparent 0 49.6%, rgba(90,60,40,.12) 49.6% 50.4%, transparent 50.4%)',
+      'radial-gradient(75% 60% at 50% 40%, #EEE7D9, #C8BBA2)',
+    ].join(', '),
+    form: { bevel: 0.12, size: 0.94, radius: 0.14, grid: 24 },
+    body: { color: '#2A2420', roughness: 0.9 },
+    faces: ['#7E828A', '#B4874F', '#2A4478', '#4E6A34', '#8E2E32', '#E2D9C2'],
+    lights: {
+      sky: '#ffffff', ground: '#a09080', hemi: 1.5,
+      key: ['#fff6ec', 2.1, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.0, [0, 4, -6]],
+    },
+    burst: { shape: 'square', colors: 'faces', size: 0.05, speed: 1.4, gravity: -1, drag: 2.6, life: 1.4 },
+    surface: 'windowpane',
+    sound: 'cloth',
+    motion: 'squish',
+  },
+  {
+    // 눈 덮인 숲속 통나무 오두막. 다 맞추면 면 하나가 한 폭의 나무꾼 플란넬이다. 면 색과 검정을 열네 올씩 번갈아 건 큰 칸을
+    // 능직으로 짜고 철솔로 긁어 털을 세웠다. 칸 경계와 능직 결이 털에 덮여 보송하게 번진다. 통나무 몸통
+    id: 'buffalo',
+    name: '버팔로 체크',
+    bg: '#1E2A26',
+    ink: '#F2ECE0',
+    backdrop: [
+      'radial-gradient(40% 30% at 22% 88%, rgba(255,140,60,.22), transparent 70%)',
+      'radial-gradient(60% 40% at 70% 10%, rgba(220,235,255,.18), transparent 70%)',
+      'radial-gradient(80% 65% at 50% 45%, #33463E, #0E1512)',
+    ].join(', '),
+    form: { bevel: 0.12, size: 0.94, radius: 0.14, grid: 24 },
+    body: { color: '#7A5A3E', roughness: 0.75 },
+    faces: ['#C41E24', '#1E6A38', '#2A4C9E', '#E2B21E', '#E8E4DA', '#E2661A'],
+    lights: {
+      sky: '#fff4e6', ground: '#3a2a1e', hemi: 1.5,
+      key: ['#ffe8cc', 2.2, [-4, 6, 5]], fill: ['#c8dcff', 0.5, [6, 0, 3]], rim: ['#fff4e0', 1.2, [0, 4, -6]],
+    },
+    ambient: { mode: 'float', shape: 'flake', colors: ['#FFFFFF', '#E8F0FF'], count: 22, size: 0.035, speed: 0.12, opacity: 0.5 },
+    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: -1, drag: 2.6, life: 1.4 },
+    surface: 'buffalo',
+    sound: 'cloth',
+    motion: 'bouncy',
+  },
+  {
+    // 인도 첸나이 해변 시장의 천 가게. 다 맞추면 면 하나가 한 폭의 손베틀 면직이다. 고르지 않은 폭의 여러 빛깔 줄을 날실과
+    // 씨실에 서로 다르게 걸어 평직으로 짜서 칸이 들쭉날쭉하다. 마디진 손자은 실, 이웃 줄로 번지고 바랜 식물 염료
+    id: 'madras',
+    name: '마드라스',
+    bg: '#F2E2C4',
+    ink: '#3A2410',
+    backdrop: [
+      'radial-gradient(50% 35% at 80% 12%, rgba(255,250,220,.7), transparent 70%)',
+      'repeating-linear-gradient(90deg, rgba(200,60,40,.06) 0 14px, transparent 14px 22px, rgba(40,90,170,.05) 22px 26px, transparent 26px 48px)',
+      'radial-gradient(85% 70% at 50% 45%, #F8EAD0, #D8B888)',
+    ].join(', '),
+    form: { bevel: 0.12, size: 0.94, radius: 0.14, grid: 24 },
+    body: { color: '#E6D8BC', roughness: 0.7 },
+    faces: ['#C83030', '#2E5AB4', '#E8C030', '#2E8A48', '#E070A0', '#2AA0A8'],
+    lights: {
+      sky: '#fffaf0', ground: '#b09070', hemi: 1.6,
+      key: ['#fff4e0', 2.2, [-4, 6, 5]], fill: ['#fff0d8', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.0, [0, 4, -6]],
+    },
+    burst: { shape: 'square', colors: 'faces', size: 0.05, speed: 1.6, gravity: -1.5, drag: 2.4, life: 1.3 },
+    surface: 'madras',
+    sound: 'cloth',
+    motion: 'squish',
+  },
+  {
+    // 미국 남부 한여름 정원 파티. 다 맞추면 면 하나가 한 폭의 시어서커다. 느슨하게 건 색 날실 줄은 씨실을 칠 때마다 오글오글
+    // 접혀 가로 잔주름이 잡힌 물집처럼 실제로 부풀고, 팽팽하게 건 흰 줄은 납작하다. 줄과 주름이 면 전체로 이어진다
+    id: 'seersucker',
+    name: '시어서커',
+    bg: '#DCEBF2',
+    ink: '#1C2A38',
+    backdrop: [
+      'radial-gradient(55% 40% at 50% 15%, rgba(255,255,245,.75), transparent 70%)',
+      'repeating-linear-gradient(90deg, rgba(60,100,170,.07) 0 18px, transparent 18px 32px)',
+      'radial-gradient(85% 70% at 50% 45%, #EAF4F8, #A8C4D4)',
+    ].join(', '),
+    form: { bevel: 0.12, size: 0.94, radius: 0.14, grid: 64 },
+    body: { color: '#1E2433', roughness: 0.85 },
+    faces: ['#3E6EC0', '#D04848', '#3A9A5E', '#E8BE3A', '#E87EA8', '#5A606A'],
+    lights: {
+      sky: '#ffffff', ground: '#a8b0a0', hemi: 1.5,
+      key: ['#fff8ee', 2.3, [-4, 6, 5]], fill: ['#e8f4ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.1, [0, 4, -6]],
+    },
+    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: -1, drag: 2.6, life: 1.4 },
+    surface: 'seersucker',
+    sound: 'cloth',
+    motion: 'squish',
+  },
+  {
+    // 오래된 맞춤 양복점의 진열장. 다 맞추면 면 하나가 한 폭의 소모사 양복감이다. 짙은 실 둘·옅은 실 둘을 번갈아 걸고
+    // 4×4 짜임으로 짜서 옅은 실끼리 만나는 자리만 둥근 점으로 떠오르고, 가운데 실 틈이 새 눈동자처럼 진다. 공단 안감 몸통
+    id: 'birdseye',
+    name: '버즈아이',
+    bg: '#E8E2D6',
+    ink: '#22242A',
+    backdrop: [
+      'radial-gradient(circle at 50% 50%, rgba(40,44,60,.08) 0 1.5px, transparent 2px) 0 0 / 12px 12px',
+      'radial-gradient(75% 60% at 50% 40%, #F2EDE4, #C9C0B0)',
+    ].join(', '),
+    form: { bevel: 0.12, size: 0.94, radius: 0.14, grid: 24 },
+    body: { color: '#2A2C34', roughness: 0.4 },
+    faces: ['#1E3A7A', '#8A9098', '#1F6A6A', '#6A2C60', '#9A4A22', '#6E6A2A'],
+    lights: {
+      sky: '#ffffff', ground: '#a09080', hemi: 1.5,
+      key: ['#fff6ec', 2.2, [-4, 6, 5]], fill: ['#e8f0ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.0, [0, 4, -6]],
+    },
+    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: -1, drag: 2.6, life: 1.4 },
+    surface: 'birdseye',
+    sound: 'cloth',
+    motion: 'squish',
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3239,7 +3383,7 @@ export const GROUPS = [
   { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'bismuth', 'druze', 'pave'] },
   { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'camo'] },
   { name: '문양', themes: ['lantern'] },
-  { name: '패턴', themes: ['houndstooth', 'glencheck', 'herringbone', 'gingham', 'argyle', 'chevron', 'tartan'] },
+  { name: '패턴', themes: ['houndstooth', 'glencheck', 'herringbone', 'gingham', 'argyle', 'chevron', 'tartan', 'pinstripe', 'windowpane', 'buffalo', 'madras', 'seersucker', 'birdseye'] },
   { name: '판타지', themes: ['dragon', 'phoenix', 'mithril', 'damascus', 'fairywing', 'dragonegg'] },
   { name: '동물', themes: ['wool', 'hamster', 'wild', 'croc', 'python', 'calf'] },
   { name: '금속·기계', themes: ['metal', 'gauge', 'rust', 'mercury', 'circuit', 'carbon'] },
