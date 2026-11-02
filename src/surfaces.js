@@ -6644,6 +6644,63 @@ B.ledcube = {
   surface: 'roughnessFactor = .15;',
 };
 
+S.radar = {
+  // 레이더. 조각 하나가 통째로 둥글게 부푼 레이더 화면이다. 짙은 유리 밑에서 면 색 형광이 빛나고 거리 고리 셋과 십자선이
+  // 희미하게 그어졌다. 빛줄기가 돌며 지나간 자리에 잔광 꼬리를 남기고, 지날 때마다 표적들이 밝게 찍혔다가 서서히 흐려진다.
+  // 손끝을 가져가면 그 자리가 커다란 표적으로 잡혀 빛줄기가 지날 때마다 번쩍인다
+  head: `
+    float fxRdrH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float n = pow(pow(abs(q.x), 6.) + pow(abs(q.y), 6.), 1. / 6.);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .02 * sqrt(max(0., 1. - n * n)));
+    }`,
+  height: 'fxRdrH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    float fxR = length(fxQ);
+    float fxA = atan(fxQ.y, fxQ.x + 1e-6);
+    float fxSw = uTime * 1.6 + vSeed * 6.2832;
+    float fxDa = mod(fxSw - fxA, 6.2832);
+    float fxTrail = exp(-fxDa * 2.2) * smoothstep(1.02, .95, fxR);
+    float fxBeam = exp(-fxDa * 40.) * smoothstep(1.02, .95, fxR);
+    float fxAA = fwidth(fxR) * 1.5;
+    float fxGrid = 0.;
+    for (int i = 1; i <= 3; i++) fxGrid += 1. - smoothstep(.0, .01 + fxAA, abs(fxR - float(i) * .3));
+    fxGrid += (1. - smoothstep(.0, .006 + fxAA, abs(fxQ.x))) + (1. - smoothstep(.0, .006 + fxAA, abs(fxQ.y)));
+    // 표적: 셋은 천천히 떠돌고, 손끝은 큰 표적
+    float fxBlip = 0.;
+    for (int i = 0; i < 3; i++) {
+      float fi = float(i);
+      vec2 b = (vec2(fxH1(vSeed * 7. + fi), fxH1(vSeed * 11. + fi * 3.)) - .5) * 1.5 + vec2(sin(uTime * .1 + fi), cos(uTime * .13 + fi)) * .08;
+      float ba = atan(b.y, b.x + 1e-6);
+      float age = mod(fxSw - ba, 6.2832);
+      fxBlip += exp(-dot(fxQ - b, fxQ - b) / .002) * exp(-age * .9);
+    }
+    vec2 fxTp = fxPtr.xy / uSticker.x;
+    float fxNear = smoothstep(5., 2., fxPtr.z) * step(0., fxPtr.z) * step(length(fxTp), 1.1);
+    float fxTa = mod(fxSw - atan(fxTp.y, fxTp.x + 1e-6), 6.2832);
+    fxBlip += exp(-dot(fxQ - fxTp, fxQ - fxTp) / .006) * exp(-fxTa * .7) * 2. * fxNear;
+    float fxGrain = .85 + .3 * fxH2(floor(fxQ * 160.) + floor(uTime * 24.));
+    float fxScan = .9 + .1 * sin(fxQ.y * 220.);
+    vec3 fxPh = (fxFc * (.012 + .75 * fxTrail * fxTrail + 1.8 * fxBeam + .12 * fxGrid) + mix(fxFc, vec3(1.), .5) * fxBlip * 1.8) * fxGrain * fxScan;
+    diffuseColor.rgb = vec3(.006) + fxFc * .006;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxRdrH(fxP - vec2(fxE, 0.), vSeed) - fxRdrH(fxP + vec2(fxE, 0.), vSeed),
+                               fxRdrH(fxP - vec2(0., fxE), vSeed) - fxRdrH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = .06; metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxPh;',
+};
+B.radar = {
+  // 몸통은 군청 철판 함
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .5; metalnessFactor = .5;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -6660,6 +6717,7 @@ export const MOVING = new Set([
   'chrome',
   'fiberoptic',
   'ledcube',
+  'radar',
 ]);
 
 /**

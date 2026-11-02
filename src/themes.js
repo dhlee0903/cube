@@ -3435,6 +3435,27 @@ export const THEMES = [
     motion: 'snap',
     burst: { shape: 'square', colors: 'faces', size: 0.05, speed: 2, gravity: 0, drag: 2, life: 0.6, additive: true },
   },
+  {
+    // 레이더. 조각 하나가 통째로 둥글게 부푼 레이더 화면이다. 면 색 형광 빛줄기가 돌며 잔광 꼬리를 남기고, 지날 때마다 표적이
+    // 찍혔다 흐려진다. 손끝을 가져가면 커다란 표적으로 잡힌다
+    id: 'radar',
+    name: '레이더',
+    bg: '#030504',
+    ink: '#EEF6F0',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #101A14, #020302)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.08, grid: 32 },
+    body: { color: '#2A3036', roughness: 0.5, metalness: 0.5 },
+    faces: ['#FF4040', '#FF9A30', '#FFE640', '#40FF80', '#40A0FF', '#D060FF'],
+    lights: {
+      sky: '#c8ccd0', ground: '#050606', hemi: 0.5,
+      key: ['#ffffff', 1.2, [-3, 7, 5]], fill: ['#c0c8d0', 0.3, [6, 1, 4]], rim: ['#ffffff', 0.8, [3, 4, -6]],
+    },
+    env: 0.45,
+    surface: 'radar',
+    sound: 'electric',
+    motion: 'snap',
+    burst: { shape: 'glow', colors: 'faces', size: 0.06, speed: 1.8, gravity: 0, drag: 2, life: 0.6, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3462,4 +3483,5 @@ export const GROUPS = [
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'chrome', 'fiberoptic', 'ledcube'] },
+  { name: '계기', themes: ['radar'] },
 ];
