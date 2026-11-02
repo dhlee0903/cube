@@ -3411,6 +3411,27 @@ export const THEMES = [
     motion: 'smooth',
     burst: { shape: 'drip', colors: ['#E8F4FF', '#C8E0F0'], size: 0.05, speed: 1.4, gravity: 3, drag: 2, life: 0.7 },
   },
+  {
+    // 촛불. 조각 하나가 통째로 색 기둥 양초다. 윗면 가운데 촛농 웅덩이에서 심지 위로 불꽃이 서고 불빛이 밀랍 속으로 번진다.
+    // 손끝을 대면 입김을 맞은 듯 불꽃이 반대쪽으로 눕고 떤다
+    id: 'candles',
+    name: '촛불',
+    bg: '#0A0605',
+    ink: '#F8EEE0',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #2A1A10, #060403)',
+    form: { bevel: 0.07, size: 0.95, radius: 0.08, grid: 64 },
+    body: { color: '#E8DCC8', roughness: 0.55 },
+    faces: ['#C8202A', '#E87A1E', '#F0D25A', '#2E8A4E', '#2A58B8', '#7A2E9A'],
+    lights: {
+      sky: '#ffd8b0', ground: '#100806', hemi: 0.5,
+      key: ['#ffe2c0', 1.2, [-3, 7, 5]], fill: ['#ffc890', 0.4, [6, 1, 4]], rim: ['#ffd0a0', 0.8, [3, 4, -6]],
+    },
+    surface: 'candles',
+    sound: 'molten',
+    motion: 'smooth',
+    ambient: { mode: 'float', shape: 'glow', colors: ['#FFB060', '#FFD890'], count: 14, size: 0.03, speed: 0.3, opacity: 0.4, additive: true },
+    burst: { shape: 'glow', colors: ['#FFC060', '#FF8030'], size: 0.06, speed: 1.6, gravity: -1.5, drag: 2, life: 0.8, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3437,5 +3458,5 @@ export const GROUPS = [
   { name: '명화', themes: ['oil', 'watercolor', 'ukiyoe', 'monet', 'seurat', 'gogh', 'munch', 'klimt', 'cubism', 'warhol', 'collage'] },
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
-  { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass'] },
+  { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles'] },
 ];

@@ -6574,6 +6574,84 @@ B.fogglass = {
   surface: 'roughnessFactor = .5;',
 };
 
+S.candles = {
+  // 촛불. 조각 하나가 통째로 색 기둥 양초다. 스티커 자리가 양초 윗면이라 가운데가 녹아 맑은 촛농 웅덩이가 고였고, 그 둘레
+  // 가장자리 밀랍이 둥글게 솟았다. 웅덩이 가운데 그을린 심지 위로 불꽃이 선다(불꽃은 겉 위 공간에 있어서 시선을 따라
+  // 그 공간을 짚어 그린다: 아래는 푸르고 몸통은 노랗고 끝은 주황). 불빛이 밀랍 속으로 번져 윗면이 안에서부터 달아오른다.
+  // 옆면 양초의 불꽃은 위로 휘어 솟는다. 손끝을 가져가면 입김을 맞은 듯 불꽃이 반대쪽으로 눕고 떨며 잠깐 어두워진다
+  head: `
+    float fxCdH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float r = length(q);
+      float rim = .02 * smoothstep(.55, .78, r) + .006 * (1. - smoothstep(.78, 1., r));
+      float pool = -.012 * smoothstep(.62, .4, r);
+      float wick = .02 * (1. - smoothstep(.025, .04, r));
+      // 흘러내린 밀랍 자국
+      float drip = .004 * fxN2(q * 9. + seed * 5.) * smoothstep(.5, .7, r);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.02 + rim + pool + wick + drip);
+    }`,
+  height: 'fxCdH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxP = vLocal.xy;
+    vec2 fxQ = fxP / uSticker.x;
+    float fxR = length(fxQ);
+    float fxHt = fxCdH(fxP, vSeed);
+    float fxPool = smoothstep(.6, .5, fxR) * (1. - smoothstep(.04, .03, fxR));
+    float fxWick = 1. - smoothstep(.03, .045, fxR);
+    // 입김: 손끝이 가까우면 불꽃이 반대쪽으로 눕는다
+    vec2 fxTo = fxPtr.xy;
+    float fxBl = exp(-dot(fxTo, fxTo) / .25) * smoothstep(5., 2., fxPtr.z) * step(0., fxPtr.z);
+    vec2 fxAway = -fxTo / max(length(fxTo), .05);
+    float fxT = uTime;
+    // 불꽃: 시선을 따라 겉 위 공간을 짚는다
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVl = vec3(dot(fxV, vTx), dot(fxV, vTy), dot(fxV, vTz));
+    vec3 fxFl = vec3(0.);
+    // 불꽃은 위로 솟는다: 화면 위쪽이 이 면 위에 놓인 만큼 그쪽으로 휜다
+    vec2 fxUpT = vec2(vTx.y, vTy.y);
+    if (fxVl.z > .15) {
+      float H = .2 * (1. - .25 * fxBl) * (1. - .45 * length(fxUpT));
+      float tmax = H / fxVl.z;
+      for (int k = 0; k < 18; k++) {
+        float t = (float(k) + .5) / 18. * tmax;
+        vec3 Q = vec3(fxP, fxHt) + fxVl * t;
+        float z = Q.z - .024;
+        if (z < 0.) continue;
+        float u = z / H;
+        if (u > 1.) break;
+        // 불꽃 축: 흔들리고, 입김 반대쪽으로 휜다
+        vec2 ax = vec2(sin(fxT * 7. + vSeed * 30.) , cos(fxT * 5.3 + vSeed * 17.)) * .004 * u + fxUpT * .5 * pow(u, 1.2)
+                + fxAway * fxBl * .12 * u * u + vec2(fxN2(vec2(fxT * 6., u * 3.)) - .5, fxN2(vec2(u * 3., fxT * 6.)) - .5) * .012 * u * (1. + 3. * fxBl);
+        float rad = .032 * pow(sin(3.1416 * min(u * 1.05, 1.)), .7) * (1. - .35 * u) * (1. - .3 * fxBl) + .002;
+        float d = length(Q.xy - ax);
+        float body = smoothstep(rad, rad * .35, d);
+        float glow = exp(-d * d / (rad * rad * 6.));
+        vec3 c = mix(vec3(.25, .4, 1.), vec3(1., .85, .45), smoothstep(.05, .25, u));
+        c = mix(c, vec3(1., .45, .1), smoothstep(.55, 1., u));
+        fxFl += (c * body * 1.6 + vec3(1., .55, .2) * glow * .08) * (tmax / 18.) * 22.;
+      }
+    }
+    fxFl *= 1. - .35 * fxBl;
+    // 밀랍: 불빛이 속으로 번진다
+    float fxSss = exp(-fxR * fxR * 2.5) * (1. - .3 * fxBl);
+    vec3 fxWax = fxFc * (.8 + .2 * fxN2(fxQ * 20. + vSeed));
+    diffuseColor.rgb = mix(fxWax, vec3(.05, .04, .03), fxWick);`,
+  normal: `
+    float fxE = .0012;
+    vec3 fxNt = normalize(vec3(fxCdH(fxP - vec2(fxE, 0.), vSeed) - fxCdH(fxP + vec2(fxE, 0.), vSeed),
+                               fxCdH(fxP - vec2(0., fxE), vSeed) - fxCdH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = mix(.55, .08, fxPool); metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxFl + fxWax * vec3(1., .7, .45) * fxSss * (.35 + .6 * fxPool) * (.9 + .1 * sin(uTime * 9. + vSeed * 20.));',
+};
+B.candles = {
+  // 몸통도 밀랍: 따뜻하게 비치는 옆면
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 12. + vSeed);',
+  surface: 'roughnessFactor = .55;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -6589,6 +6667,7 @@ export const MOVING = new Set([
   'flashlight',
   'blacklight',
   'fogglass',
+  'candles',
 ]);
 
 /**
