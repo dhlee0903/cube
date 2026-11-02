@@ -7853,78 +7853,6 @@ B.laser = {
   surface: 'roughnessFactor = .3; metalnessFactor = .7;',
 };
 
-S.magnifier = {
-  // 돋보기. 조각 겉 전체가 지폐처럼 정밀하게 인쇄한 종이다. 면 색 잉크로 겹겹이 그은 물결무늬(기요셰) 선이 오목판 인쇄처럼
-  // 살짝 도드라지고, 줄 사이엔 맨눈으론 회색 줄로만 보이는 깨알 글씨가 박혔다. 손끝을 가져가면 그 앞에 볼록렌즈가 떠
-  // 손끝을 따라다니며 밑을 세 배로 키워, 깨알 글씨 한 자 한 자와 잉크 결이 또렷이 보인다. 렌즈 가장자리는 상이 휘고
-  // 빛깔이 살짝 갈라지며 유리 테가 빛을 받는다
-  head: `
-    float fxMgH(vec2 p, float seed) {
-      vec2 q = p / uSticker.x;
-      float g = sin(length(q) * 46. + 3. * sin(atan(q.y, q.x + 1e-6) * 6.));
-      return smoothstep(0., .04, fxEdgeAt(p)) * (.005 + .0012 * smoothstep(.6, 1., g));
-    }
-    // 깨알 글씨: 칸마다 3×5 점 글자
-    float fxMgText(vec2 q, float seed) {
-      vec2 g = q * vec2(36., 22.);
-      vec2 c = floor(g), f = fract(g);
-      float row = mod(c.y, 3.);
-      if (row > .5) return 0.;
-      vec2 px = floor(f * vec2(4., 6.));
-      if (px.x > 2.5 || px.y > 4.5) return 0.;
-      float bit = step(.45, fxH2(c * vec2(1.3, 7.1) + px * vec2(3.7, 11.3) + seed));
-      return bit;
-    }
-    float fxMgInk(vec2 q, float seed) {
-      float r = length(q), a = atan(q.y, q.x + 1e-6);
-      float g1 = 1. - smoothstep(.0, .4, abs(sin(r * 46. + 3. * sin(a * 6.))));
-      float g2 = 1. - smoothstep(.0, .4, abs(sin(dot(q, vec2(.7, .7)) * 30. + 2. * sin(q.x * 9.))));
-      return clamp(g1 + g2 * .6, 0., 1.);
-    }`,
-  height: 'fxMgH',
-  color: `
-    if (fxEdge() < 0.) discard;
-    vec3 fxFc = diffuseColor.rgb;
-    vec2 fxQ = vLocal.xy / uSticker.x;
-    // 렌즈: 손끝을 따라다닌다
-    vec2 fxC = fxPtr.xy / uSticker.x;
-    float fxOn = smoothstep(5.5, 2.5, fxPtr.z) * step(0., fxPtr.z);
-    float fxR = .72;
-    vec2 fxD = (fxQ - fxC) / fxR;
-    float fxDl = length(fxD);
-    float fxIn = (1. - smoothstep(.97, 1., fxDl)) * fxOn;
-    // 가장자리로 갈수록 상이 휜다(술통꼴)
-    float fxMag = 3.2 * (1. - .35 * fxDl * fxDl);
-    vec2 fxQs = mix(fxQ, fxC + (fxQ - fxC) / fxMag, fxIn);
-    vec2 fxCa = (fxQ - fxC) * .012 * fxDl * fxIn;
-    float fxAA = fwidth(fxQs.x) * 22.;
-    vec3 fxPaper = vec3(.94, .91, .82) * (.95 + .05 * fxN2(fxQs * 300.));
-    float fxInk = fxMgInk(fxQs, vSeed);
-    float fxTxt = mix(fxMgText(fxQs, vSeed), .22, clamp(fxAA * 1.6 - .4, 0., 1.));
-    float fxTxtR = mix(fxMgText(fxQs + fxCa, vSeed), .22, clamp(fxAA * 1.6 - .4, 0., 1.));
-    vec3 fxCol = mix(mix(fxPaper, fxFc, .55), fxFc * .5, fxInk);
-    fxCol = mix(fxCol, fxFc * .25, max(fxTxt, fxTxtR * fxIn) * (1. - fxInk * .5) * .9);
-    // 렌즈 테
-    float fxRim = (1. - smoothstep(.0, .05, abs(fxDl - 1.))) * fxOn;
-    fxCol = mix(fxCol, vec3(.85, .88, .92), fxRim * .7);
-    diffuseColor.rgb = fxCol;`,
-  normal: `
-    float fxE = .0012;
-    vec2 fxP = vLocal.xy;
-    vec3 fxNt = normalize(vec3(fxMgH(fxP - vec2(fxE, 0.), vSeed) - fxMgH(fxP + vec2(fxE, 0.), vSeed),
-                               fxMgH(fxP - vec2(0., fxE), vSeed) - fxMgH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
-    // 렌즈 안은 매끈한 유리 겉(볼록)
-    vec3 fxNl = normalize(vec3(fxD * .5, 1.));
-    normal = normalize(mat3(vTx, vTy, vTz) * normalize(mix(fxNt, fxNl, fxIn)));`,
-  surface: 'roughnessFactor = mix(.85, .05, fxIn); metalnessFactor = 0.;',
-  emissive: 'totalEmissiveRadiance = fxCol * .08 * fxIn + vec3(1.) * fxRim * .15;',
-};
-B.magnifier = {
-  // 몸통은 짙은 녹색 가죽 책상
-  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 30. + vSeed);',
-  surface: 'roughnessFactor = .6;',
-};
-
 S.chrome = {
   // 거울 크롬. 조각 하나가 통째로 거울처럼 닦은 면 색 크롬 덩어리다. 가운데가 부푼 쿠션꼴이라 비친 상이 둥글게 휘어 흐르고,
   // 스튜디오 조명판 띠와 지평선이 겉을 따라 구부러져 비친다. 큐브를 돌려 보는 각도가 바뀌면 반사가 미끄러지고, 손끝을
@@ -8114,7 +8042,6 @@ export const MOVING = new Set([
   'well',
   'prism',
   'laser',
-  'magnifier',
   'chrome',
   'fiberoptic',
   'ledcube',
