@@ -209,28 +209,6 @@ vec4 fxTeletext(vec2 g) {
   return vec4(col, 1.);
 }
 
-// 점자 아트: 글자 칸 하나가 2×4 점. 밝은 자리만 점을 찍고, 글자마다 가장 밝은 점의 색으로 쓴다
-vec4 fxBraille(vec2 g) {
-  vec2 cell = floor(g), f = fract(g);
-  vec2 o = floor(cell / vec2(2., 4.)) * vec2(2., 4.);
-  vec2 sub = cell - o;
-  vec3 fg = vec3(0.);
-  float bl = -1.;
-  for (int i = 0; i < 8; i++) {
-    vec4 s = fxRaw(o + vec2(float(i % 2), float(i / 2)));
-    if (s.a < .5) continue;
-    float l = fxLum(s.rgb);
-    if (l > bl) { bl = l; fg = s.rgb; }
-  }
-  vec4 me = fxRaw(cell);
-  float l = me.a > .5 ? pow(clamp(fxLum(me.rgb * uGain), 0., 1.), uGamma) : 0.;
-  float on = step(.5, l + fxBayer(cell) * uDither) * step(.5, me.a);
-  vec3 ink = fxNearest(fg / max(max(max(fg.r, fg.g), fg.b), .05));
-  vec2 c = vec2(sub.x < .5 ? .62 : .38, .5 + (sub.y - 1.5) * .06);
-  float d = 1. - smoothstep(.27, .34, length(f - c));
-  return vec4(mix(uBg.rgb, ink * (1.05 - .25 * length(f - c)), d * on), 1.);
-}
-
 // 망점 인쇄: 시안, 마젠타, 노랑, 먹 네 판을 각도를 달리한 망점으로 찍어 종이 위에 겹친다
 vec4 fxHalftone(vec2 g) {
   vec3 outc = uBg.rgb * (.95 + .05 * fxHash(floor(gl_FragCoord.xy / uDpr * .5)));
@@ -310,106 +288,6 @@ vec4 fxAtL(vec2 g) {
   vec3 c01 = mix(uBg.rgb, s01.rgb, s01.a), c11 = mix(uBg.rgb, s11.rgb, s11.a);
   vec3 c = mix(mix(c00, c10, t.x), mix(c01, c11, t.x), t.y);
   return vec4(min(c * uGain, vec3(1.)), mix(mix(s00.a, s10.a, t.x), mix(s01.a, s11.a, t.x), t.y));
-}
-
-// 둥근 모서리 네모까지의 거리
-float fxRBox(vec2 p, vec2 h, float r) {
-  vec2 d = abs(p) - h + r;
-  return length(max(d, 0.)) + min(max(d.x, d.y), 0.) - r;
-}
-
-// 큐브 모자이크: 진짜 큐브를 벽에 붙여 만든 그림. 3×3 칸이 큐브 하나, 칸마다 큐브 여섯 색 가운데 하나.
-// 큐브 둘레는 검은 테가 두껍고 큐브마다 살짝 기울어 빛이 다르다
-vec4 fxCubeMosaic(vec2 g) {
-  vec2 cell = floor(g), f = fract(g);
-  vec2 cb = floor(cell / 3.);
-  vec2 sub = cell - cb * 3.;
-  float anyA = 0.;
-  for (int i = 0; i < 9; i++) anyA = max(anyA, fxRaw(cb * 3. + vec2(float(i % 3), float(i / 3))).a);
-  vec3 wall = uBg.rgb * (.9 + .1 * fxHash(floor(gl_FragCoord.xy / uDpr * .5)));
-  if (anyA < .5) return vec4(wall, 1.);
-  vec4 r = fxRaw(cell);
-  vec3 col = r.a > .5 ? fxNearest(min(r.rgb * uGain, vec3(1.)) + fxBayer(cell) * uDither) : uPal[0];
-  // 아주 어두운 칸(조각 사이 틈)은 스티커를 붙이지 않아 검은 플라스틱이 보인다
-  float bare = r.a > .5 && max(max(r.r, r.g), r.b) * uGain < .2 ? 1. : 0.;
-  vec2 lo = vec2(sub.x < .5 ? .2 : .07, sub.y < .5 ? .2 : .07);
-  vec2 hi = vec2(sub.x > 1.5 ? .8 : .93, sub.y > 1.5 ? .8 : .93);
-  vec2 c = (lo + hi) * .5;
-  float st = (1. - smoothstep(-.02, .02, fxRBox(f - c, (hi - lo) * .5, .1))) * (1. - bare);
-  float tilt = fxHash(cb) * .14 - .07;
-  vec3 sc = col * (.9 + tilt + .14 * (f.y - c.y)) + exp(-dot(f - c - vec2(-.14, .14), f - c - vec2(-.14, .14)) * 30.) * .14;
-  vec3 o = mix(vec3(.045) * (1. + tilt * 2.), sc, st);
-  vec2 cf = (sub + f) / 3.;
-  float gap = 1. - smoothstep(0., .025, min(min(cf.x, cf.y), min(1. - cf.x, 1. - cf.y)));
-  return vec4(mix(o, wall * .5, gap), 1.);
-}
-
-// 도미노 패의 점: 3×3 자리 가운데 n개(1~6)
-float fxPip(vec2 f, float n) {
-  vec2 p = (f - .5) / .27;
-  vec2 k = clamp(floor(p + .5), -1., 1.);
-  float d = length(p - k);
-  bool corner = abs(k.x) > .5 && abs(k.y) > .5;
-  bool center = abs(k.x) < .5 && abs(k.y) < .5;
-  bool mid = abs(k.x) > .5 && abs(k.y) < .5;
-  bool diag = k.x * k.y > .5;
-  bool on = n < .5 ? false : n < 1.5 ? center : n < 2.5 ? diag : n < 3.5 ? (center || diag) : n < 4.5 ? corner : n < 5.5 ? (corner || center) : (corner || mid);
-  return on ? 1. - smoothstep(.36, .45, d) : 0.;
-}
-
-// 도미노 아트: 검은 도미노 패를 세워 깔고, 반쪽마다 밝기만큼 점(1~6)을 찍는다. 점은 색점 도미노처럼 그 자리 색
-vec4 fxDomino(vec2 g) {
-  vec2 cell = floor(g), f = fract(g);
-  float hf = mod(cell.y, 2.);
-  vec2 dc = vec2(cell.x, cell.y - hf);
-  vec2 dl = vec2(f.x, f.y + hf);
-  float box = fxRBox(dl - vec2(.5, 1.), vec2(.45, .95), .1);
-  float body = 1. - smoothstep(-.015, .015, box);
-  vec4 r = fxRaw(cell);
-  float l = r.a > .5 ? pow(clamp(fxLum(r.rgb * uGain), 0., 1.), uGamma) : 0.;
-  float n = r.a > .5 ? clamp(floor(l * 6. + 1. + fxBayer(cell) * uDither), 1., 6.) : 0.;
-  vec3 c = min(r.rgb * uGain, vec3(1.));
-  vec3 pipC = fxNearest(c / max(max(max(c.r, c.g), c.b), .05));
-  vec3 tile = uLine.rgb * (.85 + .3 * fxHash(dc));
-  tile += exp(-dot(dl - vec2(.28, 1.65), dl - vec2(.28, 1.65)) * 4.) * .07;
-  float div = (1. - smoothstep(.012, .03, abs(dl.y - 1.))) * step(abs(dl.x - .5), .32);
-  tile = mix(tile, vec3(.45), div * .6);
-  float pip = fxPip(f, n);
-  tile = mix(tile, pipC * (.85 + .15 * f.y), pip);
-  vec3 table = uBg.rgb * (.85 + .15 * fxHash(floor(gl_FragCoord.xy / uDpr * vec2(.08, 1.))));
-  table *= 1. - .5 * (1. - smoothstep(0., .08, box)) * (1. - body);
-  return vec4(mix(table, tile, body), 1.);
-}
-
-// 선분까지 거리
-float fxSegD(vec2 p, vec2 a, vec2 b) {
-  vec2 pa = p - a, ba = b - a;
-  return length(pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0., 1.));
-}
-
-// 형광 표시관: 칸마다 일곱 마디 숫자 하나. 밝을수록 켜진 마디가 많고(빈칸, -, 1, 7, 4, 3, 0, 8), 마디는 제 색으로 빛나며
-// 꺼진 마디도 흐릿하게 보인다. 앞에는 가는 그물(제어 격자)이 덮였다
-vec4 fxVfd(vec2 g) {
-  vec2 cell = floor(g), f = fract(g);
-  vec4 r = fxRaw(cell);
-  float l = r.a > .5 ? pow(clamp(fxLum(r.rgb * uGain), 0., 1.), uGamma) : 0.;
-  int lv = r.a > .5 ? int(clamp(floor(l * 7. + .5 + fxBayer(cell) * uDither), 1., 7.)) : 0;
-  int mask = lv == 0 ? 0 : lv == 1 ? 64 : lv == 2 ? 6 : lv == 3 ? 7 : lv == 4 ? 102 : lv == 5 ? 79 : lv == 6 ? 63 : 127;
-  vec3 hue = r.a > .5 ? fxNearest(r.rgb / max(max(max(r.r, r.g), r.b), .05)) : vec3(0.);
-  vec2 p = vec2((f.x - .5) / .6 + .5 - (f.y - .5) * .12, (f.y - .1) / .8);
-  float lit = 0., ghost = 0.;
-  for (int s = 0; s < 7; s++) {
-    vec2 a = s == 0 ? vec2(.15, 1.) : s == 1 ? vec2(1., .92) : s == 2 ? vec2(1., .42) : s == 3 ? vec2(.15, 0.) : s == 4 ? vec2(0., .08) : s == 5 ? vec2(0., .58) : vec2(.15, .5);
-    vec2 b = s == 0 ? vec2(.85, 1.) : s == 1 ? vec2(1., .58) : s == 2 ? vec2(1., .08) : s == 3 ? vec2(.85, 0.) : s == 4 ? vec2(0., .42) : s == 5 ? vec2(0., .92) : vec2(.85, .5);
-    float d = fxSegD(p, a, b);
-    float m = 1. - smoothstep(.055, .085, d);
-    if (((mask >> s) & 1) == 1) lit = max(lit, m + exp(-d * d * 50.) * .3);
-    else ghost = max(ghost, m);
-  }
-  vec2 sp = gl_FragCoord.xy / uDpr;
-  float mesh = smoothstep(.8, 1., max(abs(fract(sp.x / 3.) - .5), abs(fract(sp.y / 3.) - .5)) * 2.);
-  vec3 o = uBg.rgb + ghost * vec3(.035, .06, .06) + hue * lit * 1.15;
-  return vec4(o * (1. - mesh * .3), 1.);
 }
 
 // ANSI 아트: 글자 칸(위아래 두 칸)마다 16색 가운데 앞·뒤 두 색과 블록 글자 하나.
@@ -594,10 +472,6 @@ void main() {
   if (uCell == 12) { gl_FragColor = fxHalftone(g); return; }
   if (uCell == 13) { gl_FragColor = fxRiso(g); return; }
   if (uCell == 15) { gl_FragColor = fxTessera(g); return; }
-  if (uCell == 16) { gl_FragColor = fxBraille(g); return; }
-  if (uCell == 18) { gl_FragColor = fxCubeMosaic(g); return; }
-  if (uCell == 19) { gl_FragColor = fxDomino(g); return; }
-  if (uCell == 20) { gl_FragColor = fxVfd(g); return; }
   if (uCell == 21) { gl_FragColor = fxAnsi(g); return; }
   if (uCell == 22) { gl_FragColor = fxTone(g); return; }
   if (uCell == 23) { gl_FragColor = fxGlassBlock(g); return; }
@@ -801,8 +675,8 @@ void main() {
 //   mode     palette 가장 가까운 색 | ramp 밝기 사다리(단색 화면) | clash 8×8 칸마다 두 색 | led 꽉 찬 색 × 네 단 밝기 | levels 채널마다 몇 단
 //   cell     square 네모 | lcd 액정 | led 전광판 알 | brick 돌기 블록 | bead 비즈 | ascii 글자 | crt 단색 모니터 | arcade 형광 줄
 //            flipdot 뒤집히는 원판 | vga 두 번 그린 줄 | teletext 2×3 모자이크 글자 | subpixel 빨강·초록·파랑 막대
-//            halftone 네 판 망점 | riso 형광 잉크 세 판 | peg 엇갈린 빛 핀 | tessera 돌·유리 조각 | braille 2×4 점자 | scope 빨간 빛줄
-//            cubemosaic 3×3 큐브 | domino 도미노 패 점 | vfd 일곱 마디 숫자 | ansi 블록 글자 | tone 만화 스크린톤 | glassblock 유리 블록
+//            halftone 네 판 망점 | riso 형광 잉크 세 판 | peg 엇갈린 빛 핀 | tessera 돌·유리 조각 | scope 빨간 빛줄
+//            ansi 블록 글자 | tone 만화 스크린톤 | glassblock 유리 블록
 //            printer 도트 프린터 | rain 디지털 비 | night 야간 투시경 | voxel 작은 정육면체
 //   animated 가만히 있어도 움직이는지(디지털 비, 야간 투시경)
 //   res      화면 짧은 쪽을 몇 칸으로 볼지(클수록 촘촘)
@@ -820,8 +694,8 @@ const PIXEL_BASE = {
 const MODES = { palette: 0, ramp: 1, clash: 2, led: 3, levels: 4 };
 const CELLS = {
   square: 0, lcd: 1, led: 2, brick: 3, bead: 4, ascii: 5, crt: 6, arcade: 7, flipdot: 8, vga: 9, teletext: 10,
-  subpixel: 11, halftone: 12, riso: 13, peg: 14, tessera: 15, braille: 16, scope: 17, cubemosaic: 18, domino: 19,
-  vfd: 20, ansi: 21, tone: 22, glassblock: 23, printer: 24, rain: 25, night: 26, voxel: 27,
+  subpixel: 11, halftone: 12, riso: 13, peg: 14, tessera: 15, scope: 17,
+  ansi: 21, tone: 22, glassblock: 23, printer: 24, rain: 25, night: 26, voxel: 27,
 };
 const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
 

@@ -999,27 +999,6 @@ export const THEMES = [
     burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.4, gravity: -8, drag: 0.6, life: 1 },
   },
   {
-    // 터미널의 점자 그림. 글자 칸 하나를 2×4 점으로 쪼개 밝은 자리만 점을 찍고, 글자마다 한 색으로 쓴다.
-    // 점이 글자 가운데로 모여 글자 사이가 벌어진다
-    id: 'braille',
-    name: '점자 아트',
-    bg: '#0C0C10',
-    ink: '#E8E8E8',
-    backdrop: '#0C0C10',
-    form: { bevel: 0.04, size: 0.9, radius: 0.02 },
-    body: { color: '#3A3A44', roughness: 0.7 },
-    faces: ['#FF5555', '#5555FF', '#FFFF55', '#55FF55', '#55FFFF', '#FF55FF'],
-    lights: {
-      sky: '#ffffff', ground: '#8890a0', hemi: 1.8,
-      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.5, [0, 3, -6]],
-    },
-    filter: { type: 'pixel', palette: ['#FF5555', '#55FF55', '#5555FF', '#FFFF55', '#55FFFF', '#FF55FF', '#FFFFFF', '#FFAA00'], cell: 'braille', res: 120, dither: 0.7, gamma: 1, gain: 1.05, bg: '#0C0C10', line: null },
-    surface: 'plain',
-    sound: 'mech',
-    motion: 'stepped',
-    burst: { shape: 'dot', colors: 'faces', size: 0.06, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
-  },
-  {
     // 빨간 고글 게임기. 검은 바탕에 네 단 빨강으로만 그리고, 화소 줄이 빨간 빛줄로 그어진다. 비껴 겹친 흐린 상이 깊이를 준다.
     // 색이 넷뿐이라 면은 블록 속 그림으로 갈린다(민무늬, 안쪽 테, 가운데 네모, 빗금, 네 칸, 가로줄)
     id: 'scope',
@@ -1039,69 +1018,6 @@ export const THEMES = [
     sound: 'pixel',
     motion: 'stepped',
     burst: { shape: 'square', colors: ['#FF1818', '#9A0000'], size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
-  },
-  {
-    // 큐브로 그린 큐브. 진짜 큐브 수백 개를 벽에 붙여 만든 모자이크처럼, 3×3 칸이 큐브 하나이고 칸마다 큐브 여섯 색 가운데
-    // 하나를 고른다. 큐브 둘레는 검은 테가 두껍고 큐브마다 살짝 기울어 빛이 다르다
-    id: 'cubemosaic',
-    name: '큐브 모자이크',
-    bg: '#2A2A30',
-    ink: '#FFD500',
-    backdrop: '#2A2A30',
-    form: { bevel: 0.05, size: 0.9, radius: 0.04 },
-    body: { color: '#141414', roughness: 0.5 },
-    faces: ['#C41E3A', '#0051BA', '#FFD500', '#009E60', '#FFFFFF', '#FF5800'],
-    lights: {
-      sky: '#ffffff', ground: '#8890b0', hemi: 1.8,
-      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.6, [0, 3, -6]],
-    },
-    filter: { type: 'pixel', palette: ['#FFFFFF', '#FFD500', '#C41E3A', '#FF5800', '#0051BA', '#009E60'], cell: 'cubemosaic', res: 120, dither: 0.12, gain: 1.15, bg: '#2A2A30', line: null },
-    surface: 'plain',
-    sound: 'cube',
-    motion: 'snap',
-    burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
-  },
-  {
-    // 도미노 그림. 검은 도미노 패를 나무 탁자 위에 빽빽이 세워 깔고, 반쪽마다 밝기만큼 점(1~6)을 찍었다.
-    // 점은 색점 도미노처럼 그 자리 색이라, 면마다 점 색이 다르다
-    id: 'domino',
-    name: '도미노 아트',
-    bg: '#3A2A1E',
-    ink: '#F4F0E6',
-    backdrop: '#3A2A1E',
-    form: { bevel: 0.04, size: 0.92, radius: 0.02 },
-    body: { color: '#202020', roughness: 0.7 },
-    faces: ['#E83A30', '#2A6AE8', '#F5D020', '#2AB050', '#F4F4F0', '#F08A1E'],
-    lights: {
-      sky: '#ffffff', ground: '#8890a0', hemi: 1.8,
-      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.5, [0, 3, -6]],
-    },
-    filter: { type: 'pixel', palette: ['#F4F0E6', '#F03A30', '#3A7AF0', '#F8D828', '#30C060', '#F8901E'], cell: 'domino', res: 40, dither: 0.4, gamma: 0.85, gain: 1.15, bg: '#3A2A1E', line: '#141416' },
-    surface: 'plain',
-    sound: 'dice',
-    motion: 'snap',
-    burst: { shape: 'square', colors: ['#141416', '#F4F0E6'], size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
-  },
-  {
-    // 옛 계산기와 오디오의 형광 표시관. 칸마다 일곱 마디 숫자 하나가 밝을수록 많은 마디를 켜고(빈칸, -, 1, 7, 4, 3, 0, 8),
-    // 마디는 제 색으로 빛나며 꺼진 마디도 흐릿하게 보인다. 앞에는 가는 그물이 덮였다
-    id: 'vfd',
-    name: '형광 표시관',
-    bg: '#030607',
-    ink: '#40FFD0',
-    backdrop: '#030607',
-    form: { bevel: 0.05, size: 0.88, radius: 0.03 },
-    body: { color: '#1A1A1E', roughness: 0.6 },
-    faces: ['#FF4848', '#4890FF', '#FFE048', '#60FF60', '#40FFD0', '#FF9A40'],
-    lights: {
-      sky: '#ffffff', ground: '#8890b0', hemi: 1.8,
-      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.6, [0, 3, -6]],
-    },
-    filter: { type: 'pixel', palette: ['#40FFD0', '#FF4848', '#4890FF', '#FFE048', '#60FF60', '#FF9A40', '#FF60E0'], cell: 'vfd', res: 62, aspect: 1.6, dither: 0.3, gamma: 0.8, gain: 1.2, bg: '#030607', line: null },
-    surface: 'plain',
-    sound: 'electric',
-    motion: 'stepped',
-    burst: { shape: 'glow', colors: 'faces', size: 0.08, speed: 2.4, gravity: -6, drag: 0.8, life: 1 },
   },
   {
     // 옛 PC 통신 게시판의 ANSI 그림. 글자 칸마다 열여섯 색 가운데 앞·뒤 두 색과 블록 글자 하나를 고른다.
@@ -2373,33 +2289,6 @@ export const THEMES = [
     burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.4, gravity: -5, drag: 1, life: 1 },
   },
   {
-    // 가르강튀아 같은 블랙홀. 다 맞추면 면 하나에 블랙홀이 하나씩 들어앉는다. 거의 옆에서 본 원반이 그림자를 가로지르고
-    // 뒤편 원반이 휘어 그림자 위아래로 굵은 빛 고리가 된다. 광자 고리, 렌즈로 밀려난 별, 물 흐르듯 돈다
-    id: 'blackhole',
-    name: '블랙홀',
-    bg: '#020206',
-    ink: '#E8ECFF',
-    backdrop: [
-      stars(150, 61),
-      'radial-gradient(45% 30% at 30% 70%, rgba(255,140,60,.08), transparent 70%)',
-      'radial-gradient(40% 30% at 75% 25%, rgba(90,120,255,.1), transparent 70%)',
-      '#020206',
-    ].join(', '),
-    form: { bevel: 0.05, size: 0.94, radius: 0.05, grid: 24 },
-    body: { color: '#08080C', roughness: 0.3, metalness: 0.6, glow: '#FF9A4A' },
-    faces: ['#FF8A2A', '#3A7AFF', '#F2EEE4', '#E83AA0', '#3AE08A', '#FFD23A'],
-    lights: {
-      sky: '#30304a', ground: '#000000', hemi: 0.4,
-      key: ['#ffffff', 1, [-5, 4, 5]], fill: ['#ff9a4a', 0.3, [6, -1, 3]], rim: ['#8aa8ff', 1, [0, 4, -6]],
-    },
-    env: 0.35,
-    surface: 'blackhole',
-    sound: 'space',
-    motion: 'fluid',
-    ambient: { mode: 'orbit', shape: 'glow', colors: ['#FFFFFF', '#FFD8A8'], count: 90, size: 0.035, speed: 1.3, opacity: 0.8, additive: true },
-    burst: { shape: 'glow', colors: 'faces', size: 0.12, speed: 2.6, gravity: 0, drag: 2, life: 0.9, additive: true },
-  },
-  {
     // 보석상 진열대의 블랙 오팔. 짙은 바탕 속 색 조각이 보는 각도에 따라 조각마다 켜졌다 꺼지며 번쩍인다.
     // 큰 조각은 할리퀸처럼 모나고, 사이엔 핀파이어. 면마다 도는 빛깔이 다르다. 금 테두리 몸통
     id: 'opal',
@@ -3590,7 +3479,7 @@ export const GROUPS = [
   { name: '기본', themes: ['classic', 'candy', 'brick', 'dice', 'jelly', 'clay', 'bubblewrap', 'paper', 'box', 'slime'] },
   { name: '자연', themes: ['forest', 'grass', 'soil', 'timber', 'pebble', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert'] },
   { name: '빛·불', themes: ['neon', 'lava', 'electric', 'plasmaball', 'disco', 'lavalamp', 'kaleido'] },
-  { name: '우주', themes: ['space', 'planet', 'blackhole', 'nebula', 'galaxy'] },
+  { name: '우주', themes: ['space', 'planet', 'nebula', 'galaxy'] },
   { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'bismuth', 'druze', 'pave', 'diamond', 'ruby', 'sapphire', 'emerald', 'quartz', 'starstone', 'moonstone', 'amberstone'] },
   { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'camo'] },
   { name: '문양', themes: ['lantern'] },
@@ -3601,7 +3490,7 @@ export const GROUPS = [
   {
     name: '픽셀',
     themes: ['pixel', 'handheld', 'cga', 'onebit', 'clash', 'arcade', 'amber', 'led', 'ascii', 'bricks', 'beads', 'flipdot', 'vga',
-      'teletext', 'subpixel', 'halftone', 'riso', 'pegs', 'tessera', 'braille', 'scope', 'cubemosaic', 'domino', 'vfd',
+      'teletext', 'subpixel', 'halftone', 'riso', 'pegs', 'tessera', 'scope',
       'ansi', 'screentone', 'glassblock', 'dotprinter', 'coderain', 'nightvision', 'voxel'],
   },
   { name: '명화', themes: ['oil', 'watercolor', 'ukiyoe', 'monet', 'seurat', 'gogh', 'munch', 'klimt', 'cubism', 'warhol', 'collage'] },

@@ -2614,70 +2614,6 @@ B.flip = {
   surface: 'roughnessFactor = .5; metalnessFactor = .3;',
 };
 
-S.blackhole = {
-  // 블랙홀(영화 「인터스텔라」의 가르강튀아처럼). 다 맞추면 면 하나에 블랙홀 하나가 들어앉는다. 거의 옆에서 본 얇은 강착 원반이
-  // 그림자 한가운데를 가로지르고, 그림자 뒤편 원반은 중력에 휘어 그림자 위로 굵은 빛 고리, 아래로 가는 고리가 되어 넘어온다.
-  // 그림자 가장자리엔 가는 광자 고리. 원반은 안쪽이 하얗게 달고 바깥으로 갈수록 면 색으로 식으며, 가스 실이 결을 이루며 흐른다.
-  // 둘레 별빛과 성운은 렌즈처럼 밀려나 휜다. 스티커는 둥근 유리 렌즈 같아 그 속에 상이 맺힌다
-  head: `
-    float fxLensH(vec2 p, float seed) {
-      vec2 q = p / uSticker.x;
-      return smoothstep(0., .05, fxEdgeAt(p)) * (.008 + .016 * (1. - dot(q, q) * .5));
-    }`,
-  height: 'fxLensH',
-  color: `
-    if (fxEdge() < 0.) discard;
-    vec2 fxF = fxFace() * 1.06;
-    float fxT = uTime;
-    vec3 fxHot = diffuseColor.rgb;
-    float fxRs = .27;
-    float fxR = length(fxF);
-    float fxA = atan(fxF.y, fxF.x);
-    // 배경: 렌즈로 밀려난 별과 면 색 성운
-    vec2 fxLens = fxF * (1. + fxRs * fxRs * 1.4 / max(fxR * fxR, .03));
-    vec2 fxSg = fxLens * 85.;
-    float fxStar = step(.986, fxH2(floor(fxSg))) * (.35 + .65 * fxH2(floor(fxSg) + 3.)) * (1. - smoothstep(0., .32, length(fract(fxSg) - .5)));
-    vec3 fxBg = vec3(.78, .84, 1.) * fxStar + fxHot * (.06 + .16 * fxF2(fxLens * 2.2 + uFace * 3.)) * (.55 + .45 * smoothstep(1.5, .4, fxR));
-    // 앞쪽 원반: 거의 옆에서 본 얇은 띠. 가로로 흐르는 가스 실
-    float fxIn = fxRs * 1.45, fxOut = fxRs * 3.9;
-    float fxX = abs(fxF.x);
-    float fxThk = .026 + .04 * smoothstep(fxIn, fxOut, fxX);
-    // 원반이 아주 조금 기울어 앞쪽이 가운데보다 살짝 아래로 지난다
-    float fxBy = fxF.y + .035 * sqrt(max(0., 1. - fxX * fxX / (fxOut * fxOut)));
-    float fxBand = exp(-pow(fxBy / fxThk, 2.)) + .35 * exp(-pow(fxBy / (fxThk * 2.6), 2.));
-    // 원반 앞쪽은 그림자 앞을 지나가므로 가운데서도 끊기지 않는다
-    float fxRad = 1. - smoothstep(fxOut * .6, fxOut, fxX);
-    float fxFil = .45 + .55 * (fxN2(vec2(fxF.x * 9. - fxT * .7, fxBy * 110.)) * .6 + fxN2(vec2(fxF.x * 26. - fxT * 1.3, fxBy * 240.)) * .4);
-    float fxTd = smoothstep(fxIn, fxOut, fxX);
-    float fxDop = 1. - .22 * fxF.x / fxOut;
-    float fxDisk = fxBand * fxRad * pow(fxIn / max(fxX, fxIn), 1.5) * fxFil * fxDop;
-    // 뒤쪽 원반이 휘어 넘어온 고리: 위는 굵고 밝게, 아래는 가늘게
-    float fxUp = smoothstep(-.02, .02, fxF.y);
-    float fxS = pow(abs(sin(fxA)), .8) * mix(.7, 1., fxUp);
-    float fxRi = fxRs * 1.07;
-    float fxRo = fxRs * (1.14 + 1.45 * fxS);
-    float fxRd = (fxR - fxRi) / max(fxRo - fxRi, .01);
-    float fxArc = smoothstep(-.03, .06, fxRd) * (1. - smoothstep(.75, 1., fxRd)) * pow(1. - clamp(fxRd, 0., 1.) * .6, 1.5);
-    float fxArcF = .45 + .55 * (fxN2(vec2(fxA * 2.5 - fxT * .25, fxRd * 38.)) * .6 + fxN2(vec2(fxA * 7. - fxT * .5, fxRd * 90.)) * .4);
-    fxArc *= mix(.5, 1., fxUp) * fxArcF * (1. + .18 * cos(fxA - 3.1416));
-    float fxPhoton = exp(-pow((fxR - fxRs * 1.025) / .005, 2.)) + .35 * exp(-pow((fxR - fxRs * 1.025) / .016, 2.));
-    float fxShadow = 1. - smoothstep(fxRs * .985, fxRs * 1.01, fxR);
-    vec3 fxWhite = vec3(1., .95, .86);
-    vec3 fxCol = fxBg * (1. - fxShadow);
-    fxCol += mix(fxWhite, fxHot, smoothstep(.0, .85, fxRd)) * fxArc * mix(2.6, 4.2, fxUp) * (1. - fxShadow);
-    fxCol += mix(fxWhite, fxHot, .35) * fxPhoton * 1.6 * (1. - fxShadow * .8);
-    fxCol += mix(fxWhite, fxHot, smoothstep(.05, .8, fxTd)) * fxDisk * 4.;
-    diffuseColor.rgb = vec3(.006);`,
-  normal: 'normal = fxBump(normal, fxN2(fxFace() * 400.) * .00005);',
-  surface: 'roughnessFactor = .06;',
-  emissive: 'totalEmissiveRadiance = fxCol + vec3(1.) * fxFresnel(normal, 4.) * .05;',
-};
-B.blackhole = {
-  color: `float fxRim = smoothstep(.9, 1., fxBodyRim());`,
-  surface: 'roughnessFactor = .3; metalnessFactor = .6;',
-  emissive: 'totalEmissiveRadiance = uBodyGlow * fxRim * .3;',
-};
-
 S.opal = {
   // 블랙 오팔. 짙은 바탕 속에서 색 얼룩이 일렁이고, 보는 각도가 바뀌면 빛 얼룩이 굴러가듯 자리를 옮긴다(롤링 플래시).
   // 사이사이 바늘 끝 같은 핀파이어가 반짝이고, 색이 빠진 젖빛 자리도 있다. 면마다 도는 빛깔이 다르다
@@ -6246,7 +6182,7 @@ export const SURFACES = Object.keys(S);
 export const MOVING = new Set([
   'neon', 'lava', 'water', 'forest', 'space', 'candy', 'ice', 'electric', 'flesh', 'eldritch', 'gem',
   'circuit', 'aurora', 'stained', 'najeon', 'rain', 'mercury', 'gauge', 'clay', 'holo', 'jelly', 'planet',
-  'disco', 'ink', 'lavalamp', 'glass', 'bubblewrap', 'thermal', 'kaleido', 'flip', 'blackhole', 'opal',
+  'disco', 'ink', 'lavalamp', 'glass', 'bubblewrap', 'thermal', 'kaleido', 'flip', 'opal',
   'dragon', 'nebula', 'galaxy', 'slime', 'lantern', 'eyeball', 'hamster', 'phoenix', 'fairywing',
   'dragonegg', 'druze', 'pave', 'diamond', 'ruby', 'sapphire', 'emerald', 'quartz', 'starstone', 'moonstone', 'plasmaball',
 ]);
