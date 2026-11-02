@@ -6652,6 +6652,72 @@ B.candles = {
   surface: 'roughnessFactor = .55;',
 };
 
+S.iris = {
+  // 조리개. 조각 겉 전체가 카메라 조리개 날개다. 면 색으로 아노다이징한 얇은 금속 날개 아홉 장이 기와처럼 겹쳐 휘어진
+  // 솔기를 그리며 스티커 가장자리까지 덮고, 가운데에 작게 열린 구멍 너머로 조각 속 깊이에서 면 색 빛이 비친다. 손끝이
+  // 다가오면 날개들이 함께 돌며 물러나 구멍이 크게 열리고, 속 깊은 빛과 렌즈 고리가 보는 각도 따라 어긋나며 드러난다
+  head: `
+    float fxIrOpen(vec2 p) {
+      vec2 d = fxPtr.xy - p;
+      return exp(-dot(d, d) / .25) * smoothstep(5., 2., fxPtr.z) * step(0., fxPtr.z);
+    }
+    // 날개 솔기 위치(0~1)와 구멍 반지름
+    vec2 fxIrBlade(vec2 q, float open) {
+      float r = length(q), a = atan(q.y, q.x + 1e-6);
+      float N = 9.;
+      float rot = open * 1.3;
+      float s = fract((a + rot - 1.6 * log(max(r, .05))) * N / 6.2832);
+      // 구멍은 휜 아홉모꼴
+      float sec = fract((a + rot) * N / 6.2832) - .5;
+      float R = mix(.2, .82, open) * (1. - .035 * cos(sec * 6.2832));
+      return vec2(s, R);
+    }
+    float fxIrH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float op = fxIrOpen(vec2(0.));
+      vec2 b = fxIrBlade(q, op);
+      float r = length(q);
+      // 날개는 겹친 차례대로 조금씩 높다(솔기에서 한 단 내려앉는다)
+      float blades = .01 + .006 * b.x * (1. - smoothstep(.86, 1., b.x));
+      return smoothstep(0., .04, fxEdgeAt(p)) * blades * smoothstep(b.y - .05, b.y + .07, r);
+    }`,
+  height: 'fxIrH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxP = vLocal.xy;
+    vec2 fxQ = fxP / uSticker.x;
+    float fxOp = fxIrOpen(vec2(0.));
+    vec2 fxB = fxIrBlade(fxQ, fxOp);
+    float fxR = length(fxQ);
+    float fxHole = 1. - smoothstep(fxB.y - .005, fxB.y + .005, fxR);
+    // 조각 속: 깊이 0.35에 빛나는 렌즈, 0.18에 검은 렌즈 고리
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVl = vec3(dot(fxV, vTx), dot(fxV, vTy), max(dot(fxV, vTz), .25));
+    vec2 fxQ1 = fxQ - fxVl.xy / fxVl.z * .18 / uSticker.x;
+    vec2 fxQ2 = fxQ - fxVl.xy / fxVl.z * .35 / uSticker.x;
+    float fxRing = smoothstep(.03, .0, abs(length(fxQ1) - .62)) + smoothstep(.02, .0, abs(length(fxQ1) - .5)) * .6;
+    vec3 fxDeep = fxFc * (1.6 * exp(-dot(fxQ2, fxQ2) * 1.3) + .25) * (1. - .7 * fxRing);
+    fxDeep += vec3(1.) * exp(-dot(fxQ2 - vec2(-.15, .15), fxQ2 - vec2(-.15, .15)) * 60.) * .35;
+    // 날개: 결 따라 빛나는 아노다이징, 솔기 쪽은 아래 날개 그늘
+    float fxSeam = smoothstep(.0, .06, fxB.x) * (1. - smoothstep(.9, 1., fxB.x));
+    float fxBr = fxN2(vec2(fxB.x * 30., fxR * 4.) + vSeed);
+    vec3 fxBlade = fxFc * (.42 + .3 * fxB.x) * (.6 + .4 * fxSeam) * (.92 + .1 * fxBr);
+    diffuseColor.rgb = mix(fxBlade, vec3(0.), fxHole);`,
+  normal: `
+    float fxE = .0012;
+    vec3 fxNt = normalize(vec3(fxIrH(fxP - vec2(fxE, 0.), vSeed) - fxIrH(fxP + vec2(fxE, 0.), vSeed),
+                               fxIrH(fxP - vec2(0., fxE), vSeed) - fxIrH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = mix(.32, .9, fxHole); metalnessFactor = mix(.75, 0., fxHole);',
+  emissive: 'totalEmissiveRadiance = fxDeep * fxHole + fxFc * .03 * (1. - fxHole);',
+};
+B.iris = {
+  // 몸통은 검은 아노다이징 알루미늄
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .35; metalnessFactor = .8;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -6668,6 +6734,7 @@ export const MOVING = new Set([
   'blacklight',
   'fogglass',
   'candles',
+  'iris',
 ]);
 
 /**

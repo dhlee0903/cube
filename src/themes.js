@@ -3432,6 +3432,27 @@ export const THEMES = [
     ambient: { mode: 'float', shape: 'glow', colors: ['#FFB060', '#FFD890'], count: 14, size: 0.03, speed: 0.3, opacity: 0.4, additive: true },
     burst: { shape: 'glow', colors: ['#FFC060', '#FF8030'], size: 0.06, speed: 1.6, gravity: -1.5, drag: 2, life: 0.8, additive: true },
   },
+  {
+    // 조리개. 조각 겉 전체가 면 색으로 아노다이징한 조리개 날개 아홉 장이다. 손끝이 다가오면 날개가 돌며 물러나 구멍이 크게
+    // 열리고, 조각 속 깊이의 면 색 빛과 렌즈 고리가 드러난다
+    id: 'iris',
+    name: '조리개',
+    bg: '#08090C',
+    ink: '#EEF0F6',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #1C1F28, #050608)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.04, grid: 64 },
+    body: { color: '#16181C', roughness: 0.35, metalness: 0.8 },
+    faces: ['#F0402E', '#F59A22', '#F2D82E', '#34C46A', '#2E86F0', '#B85AF0'],
+    lights: {
+      sky: '#ffffff', ground: '#121418', hemi: 0.9,
+      key: ['#ffffff', 2.4, [-3, 7, 5]], fill: ['#dfe6ff', 0.7, [6, 1, 4]], rim: ['#ffffff', 1.6, [3, 4, -6]],
+    },
+    env: 0.8,
+    surface: 'iris',
+    sound: 'mech',
+    motion: 'mechanical',
+    burst: { shape: 'glow', colors: 'faces', size: 0.06, speed: 1.6, gravity: 0, drag: 2, life: 0.6, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3458,5 +3479,5 @@ export const GROUPS = [
   { name: '명화', themes: ['oil', 'watercolor', 'ukiyoe', 'monet', 'seurat', 'gogh', 'munch', 'klimt', 'cubism', 'warhol', 'collage'] },
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
-  { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles'] },
+  { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris'] },
 ];
