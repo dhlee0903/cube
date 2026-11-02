@@ -3665,6 +3665,27 @@ export const THEMES = [
     motion: 'fluid',
     burst: { shape: 'bubble', colors: 'faces', size: 0.07, speed: 1.6, gravity: -2, drag: 2, life: 0.8 },
   },
+  {
+    // 모빌. 조각 하나가 통째로 유리 상자이고 속에 칼더풍 모빌이 매달렸다. 면 색 벽 앞 철사 막대에 검정·흰색 금속 원판이 늘 화면 아래쪽으로
+    // 드리우고 천천히 돈다. 뒤 벽엔 그림자, 층을 돌리면 막대째 크게 흔들린다
+    id: 'mobile',
+    name: '모빌',
+    bg: '#0E0D0C',
+    ink: '#F6F2EC',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #2A2622, #080706)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.05, grid: 40 },
+    body: { color: '#D8D2C8', roughness: 0.5 },
+    faces: ['#E02A22', '#F08A10', '#E8C410', '#1E9E4A', '#1E5AC8', '#8C34C0'],
+    lights: {
+      sky: '#ffffff', ground: '#141210', hemi: 1,
+      key: ['#ffffff', 2.2, [-3, 7, 5]], fill: ['#f0ece6', 0.7, [6, 1, 4]], rim: ['#ffffff', 1.2, [3, 4, -6]],
+    },
+    env: 0.8,
+    surface: 'mobile',
+    sound: 'metal',
+    motion: 'smooth',
+    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.6, gravity: 2, drag: 2, life: 0.6 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3692,5 +3713,5 @@ export const GROUPS = [
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
-  { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops', 'liquidtimer', 'oilwater'] },
+  { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops', 'liquidtimer', 'oilwater', 'mobile'] },
 ];

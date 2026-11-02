@@ -7396,6 +7396,85 @@ B.oilwater = {
   surface: 'roughnessFactor = .08;',
 };
 
+S.mobile = {
+  // 모빌. 조각 하나가 통째로 유리 상자이고, 속에 칼더풍 모빌이 매달렸다. 위 고리에서 내려온 철사 막대 끝마다 가는 철사로
+  // 금속 원판 셋(가장 큰 것은 검정, 나머지는 흰색과 짙은 면 색)이 늘 아래쪽(화면 아래)으로 드리운다. 원판은 천천히 돌아 폭이
+  // 좁아졌다 넓어지고, 면 색으로 칠한 뒤 벽엔 원판 그림자가 비친다. 층을 돌리면 막대째 크게 흔들리다 잦아든다
+  head: `
+    float fxMoBH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float n = pow(pow(abs(q.x), 6.) + pow(abs(q.y), 6.), 1. / 6.);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .012 * sqrt(max(0., 1. - n * n)));
+    }
+    float fxMoSeg(vec2 p, vec2 a, vec2 b) {
+      vec2 pa = p - a, ba = b - a;
+      return length(pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0., 1.));
+    }
+    // 모빌 그림: x 철사, y 원판 번호(0 없음, 1~3), z 원판 안쪽 정도
+    vec3 fxMoDraw(vec2 uv, float sway, float seed, float t) {
+      vec2 hook = vec2(0., -.86);
+      vec2 piv = vec2(0., -.55);
+      vec2 dir = vec2(cos(sway), sin(sway));
+      vec2 bl = piv - dir * .62, br = piv + dir * .5;
+      float wire = min(fxMoSeg(uv, hook, piv), fxMoSeg(uv, bl, br));
+      float disc = 0., inside = 0.;
+      for (int i = 0; i < 3; i++) {
+        float fi = float(i);
+        vec2 top = i == 0 ? bl : (i == 1 ? br : mix(bl, br, .62));
+        float L = i == 0 ? .55 : (i == 1 ? .78 : .35);
+        float sw = sway * (1.6 + fi * .4);
+        vec2 hang = vec2(sin(sw), cos(sw));
+        vec2 c = top + hang * L;
+        wire = min(wire, fxMoSeg(uv, top, c - hang * (.1 + .06 * fi)));
+        float r = i == 0 ? .36 : (i == 1 ? .25 : .19);
+        float spin = .45 + .55 * abs(cos(t * (.3 + .17 * fi) + seed * 6. + fi * 2.));
+        vec2 d = (uv - c) / vec2(r * spin, r);
+        float k = 1. - smoothstep(.95, 1.02, length(d));
+        if (k > inside) { inside = k; disc = fi + 1.; }
+      }
+      return vec3(wire, disc, inside);
+    }`,
+  height: 'fxMoBH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    vec2 fxGd = fxGrav;
+    float fxSt = smoothstep(.15, .5, fxGravL);
+    vec2 fxSd = vec2(-fxGd.y, fxGd.x);
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVl = vec3(dot(fxV, vTx), dot(fxV, vTy), max(dot(fxV, vTz), .25));
+    float fxSway = uCharge * .45 * sin(uTime * 3.1 + vSeed * 7.) + .05 * sin(uTime * .9 + vSeed * 4.);
+    vec2 fxQm = fxQ - fxVl.xy / fxVl.z * .22 / uSticker.x;
+    vec2 fxUV = vec2(dot(fxQm, fxSd), dot(fxQm, fxGd));
+    vec2 fxQw = fxQ - fxVl.xy / fxVl.z * .42 / uSticker.x;
+    vec2 fxUVs = vec2(dot(fxQw, fxSd), dot(fxQw, fxGd)) - vec2(.1, .08);
+    vec3 fxM = fxMoDraw(fxUV, fxSway, vSeed, uTime);
+    vec3 fxSh = fxMoDraw(fxUVs, fxSway, vSeed, uTime);
+    // 뒤 벽: 따뜻한 회색, 원판 그림자
+    vec3 fxWall = fxFc * (.78 + .1 * fxN2(fxQw * 6.));
+    fxWall *= 1. - .35 * max(fxSh.z, 1. - smoothstep(.006, .016, fxSh.x)) * fxSt;
+    vec3 fxCol = mix(fxWall, fxFc * .75, 1. - fxSt);
+    vec3 fxDiscC = fxM.y < 1.5 ? vec3(.04) : (fxM.y < 2.5 ? vec3(.92, .9, .86) : fxFc * .45);
+    fxDiscC *= .9 + .1 * fxN2(fxUV * 40.);
+    fxCol = mix(fxCol, fxDiscC, fxM.z * fxSt);
+    fxCol = mix(fxCol, vec3(.04), (1. - smoothstep(.005, .012, fxM.x)) * fxSt);
+    diffuseColor.rgb = fxCol;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxMoBH(fxP - vec2(fxE, 0.), vSeed) - fxMoBH(fxP + vec2(fxE, 0.), vSeed),
+                               fxMoBH(fxP - vec2(0., fxE), vSeed) - fxMoBH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = .05; metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxCol * .12;',
+};
+B.mobile = {
+  // 몸통은 흰 칠 나무 틀
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .5;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -7423,6 +7502,7 @@ export const MOVING = new Set([
   'raindrops',
   'liquidtimer',
   'oilwater',
+  'mobile',
 ]);
 
 /**
