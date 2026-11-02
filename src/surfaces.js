@@ -5211,24 +5211,19 @@ const ROUND_BRILLIANT = /* glsl */ `
   }
 `;
 
-// 프린세스 컷(네모 브릴리언트). 거들은 정사각형(반폭 1, 두께 0.012), 테이블 반폭 0.66 높이 0.24, 크라운은 네 옆면과 네 귀
-// 패싯, 파빌리온은 변마다 세 갈래 셰브론(가운데 48°, 양옆 44°) 아래로 깊이가 엇갈린 안쪽 열여섯 패싯과 작은 평평한 큘릿.
-// 조각 한 면이 통째로 이 돌 하나다
+// 프린세스 컷(네모 브릴리언트). 거들은 정사각형(반폭 1, 두께 0.012), 테이블 반폭 0.66 높이 0.24, 크라운은 네 옆면이
+// 대각선에서 맞닿아 귀가 뾰족하다(귀를 따로 깎지 않는다). 파빌리온은 변마다 세 갈래 셰브론(가운데 48°, 양옆 44°) 아래로
+// 깊이가 엇갈린 안쪽 열여섯 패싯과 작은 평평한 큘릿. 조각 한 면이 통째로 이 돌 하나다
 const PRINCESS = /* glsl */ `
   vec4 fxPrPlane(int i) {
-    // 0~3 크라운 옆, 4~7 크라운 귀: xyz 바깥 법선, w 상수
-    if (i < 4) {
-      float az = float(i) * 1.570796;
-      vec3 n = normalize(vec3(cos(az) * .228, sin(az) * .228, .34));
-      return vec4(n, dot(n, vec3(cos(az), sin(az), .012)));
-    }
-    float az = float(i - 4) * 1.570796 + .785398;
-    vec3 n = normalize(vec3(cos(az) * .42, sin(az) * .42, .5));
-    return vec4(n, dot(n, vec3(cos(az) * 1.3, sin(az) * 1.3, .012)) - .03);
+    // 크라운 옆면 0~3: xyz 바깥 법선, w 상수
+    float az = float(i) * 1.570796;
+    vec3 n = normalize(vec3(cos(az) * .228, sin(az) * .228, .34));
+    return vec4(n, dot(n, vec3(cos(az), sin(az), .012)));
   }
   vec4 fxPrCrown(vec2 p) {
     vec4 best = vec4(0., 0., 1., .24);
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 4; i++) {
       vec4 P = fxPrPlane(i);
       float h = (P.w - dot(P.xy, p)) / P.z;
       if (h < best.w) best = vec4(P.xyz, h);
@@ -5238,7 +5233,7 @@ const PRINCESS = /* glsl */ `
   vec4 fxPrHit(vec3 o, vec3 d) {
     vec4 hit = vec4(0., 0., 1., 1e4);
     fxTry(o, d, vec3(0., 0., 1.), .24, hit);
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 4; i++) {
       vec4 P = fxPrPlane(i);
       fxTry(o, d, P.xyz, P.w, hit);
     }
