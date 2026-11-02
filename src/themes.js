@@ -3601,6 +3601,28 @@ export const THEMES = [
     motion: 'heavy',
     burst: { shape: 'dot', colors: ['#E8C070', '#FFE0A0'], size: 0.04, speed: 1.6, gravity: 3, drag: 2, life: 0.6 },
   },
+  {
+    // 창 빗방울. 조각 하나가 통째로 비 오는 밤 유리창이다. 창 너머 면 색 불빛이 흐릿하게 번지고, 굵은 방울이 늘 화면 아래쪽으로
+    // 꺾이며 미끄러져 닦인 자국을 남긴다. 방울은 렌즈라 불빛을 뒤집어 비추고, 층을 돌리면 우르르 흘러내린다
+    id: 'raindrops',
+    name: '창 빗방울',
+    bg: '#06080C',
+    ink: '#EEF2F8',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #141A26, #030406)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.04, grid: 32 },
+    body: { color: '#1C1E22', roughness: 0.25 },
+    faces: ['#FF4040', '#FF9A2A', '#FFE04A', '#3AE07A', '#3A8AFF', '#C060FF'],
+    lights: {
+      sky: '#c8d4ff', ground: '#0a0c10', hemi: 0.35,
+      key: ['#e0e8ff', 1.0, [-3, 7, 5]], fill: ['#c0ccff', 0.5, [6, 1, 4]], rim: ['#ffffff', 1.2, [3, 4, -6]],
+    },
+    env: 0.6,
+    surface: 'raindrops',
+    sound: 'water',
+    motion: 'fluid',
+    ambient: { mode: 'fall', shape: 'rain', colors: ['#A8C0E0'], count: 30, size: 0.05, speed: 2.5, opacity: 0.35 },
+    burst: { shape: 'drip', colors: ['#D0E4FF', '#FFFFFF'], size: 0.05, speed: 1.8, gravity: 4, drag: 1.5, life: 0.7 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3628,5 +3650,5 @@ export const GROUPS = [
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
-  { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum'] },
+  { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops'] },
 ];

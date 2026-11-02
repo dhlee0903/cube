@@ -7175,6 +7175,93 @@ B.pendulum = {
   surface: 'roughnessFactor = .35;',
 };
 
+S.raindrops = {
+  // 창 빗방울. 조각 하나가 통째로 비 오는 밤의 두꺼운 유리창이다. 창 너머엔 면 색 거리 불빛이 흐릿한 동그라미(보케)로
+  // 번지고, 유리엔 잔 물방울이 맺혔다. 굵은 방울이 늘 아래쪽(화면 아래)으로 이리저리 꺾이며 미끄러져 내려가고 지나간
+  // 자리는 물이 닦여 불빛이 또렷해지며 잔 방울 줄이 남는다. 방울은 작은 렌즈라 뒤 불빛을 뒤집어 비춘다. 층을 돌리면
+  // 방울이 우르르 흘러내린다
+  head: `
+    float fxRdH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float n = pow(pow(abs(q.x), 6.) + pow(abs(q.y), 6.), 1. / 6.);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .01 * sqrt(max(0., 1. - n * n)));
+    }
+    // 창 너머 불빛(흐림 정도 b)
+    vec3 fxRdBg(vec2 q, vec3 fc, float b, float seed) {
+      vec3 c = fc * .05 + vec3(.006, .008, .014);
+      for (int i = 0; i < 6; i++) {
+        float fi = float(i);
+        vec2 o = (vec2(fxH1(seed * 7. + fi * 1.3), fxH1(seed * 11. + fi * 2.9)) - .5) * 2.2;
+        float r = .16 + .2 * fxH1(fi * 5.7 + seed);
+        float d = length(q - o);
+        vec3 lc = fi < 4. ? fc : mix(fc, vec3(1., .85, .6), .45);
+        c += lc * (1. - smoothstep(r * (1. - b * .6), r * (1. + b), d)) * (.22 + .22 * fxH1(fi + seed * 3.)) * (1. - .35 * b);
+      }
+      return c;
+    }`,
+  height: 'fxRdH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    vec2 fxGd = fxGrav;
+    float fxSt = smoothstep(.15, .5, fxGravL);
+    vec2 fxSd = vec2(-fxGd.y, fxGd.x);
+    vec2 fxUV = vec2(dot(fxQ, fxSd), dot(fxQ, fxGd));
+    float fxT = uTime * (1. + 2.5 * uCharge);
+    // 미끄러지는 굵은 방울: 세로 줄마다 하나
+    vec2 fxDn = vec2(0.);
+    float fxDrop = 0., fxTrail = 0.;
+    float fxCw = .28;
+    float fxCol = floor(fxUV.x / fxCw);
+    for (int k = -1; k <= 1; k++) {
+      float cx = fxCol + float(k);
+      float hs = fxH1(cx * 7.3 + vSeed * 13.);
+      float y = fract(fxT * (.12 + .1 * hs) * fxSt + hs) * 2.6 - 1.3;
+      float x = (cx + .5) * fxCw + sin(y * 9. + hs * 20.) * .05 + sin(y * 23. + hs * 7.) * .015;
+      vec2 d = (fxUV - vec2(x, y)) / vec2(.065, .08);
+      float r = length(d);
+      float dr = 1. - smoothstep(.85, 1., r);
+      if (dr > fxDrop) { fxDrop = dr; fxDn = d * .9; }
+      // 지나간 자리: 위쪽으로 닦인 띠
+      float tr = (1. - smoothstep(.02, .05, abs(fxUV.x - x))) * step(fxUV.y, y) * smoothstep(-1.3, y, fxUV.y) * fxSt;
+      fxTrail = max(fxTrail, tr);
+    }
+    // 잔 방울
+    vec2 fxSg = fxUV * 9. + vSeed * 5.;
+    vec2 fxSc = floor(fxSg);
+    vec2 fxSf = fract(fxSg) - .5 - (vec2(fxH2(fxSc), fxH2(fxSc * 1.7)) - .5) * .5;
+    float fxSr = .1 + .12 * fxH2(fxSc * 3.1);
+    float fxSmall = (1. - smoothstep(fxSr * .8, fxSr, length(fxSf))) * step(.45, fxH2(fxSc * 2.3)) * (1. - fxTrail * .7);
+    float fxAny = max(fxDrop, fxSmall);
+    vec2 fxRef = fxDrop > fxSmall ? -fxDn * .5 : -fxSf / fxSr * .1;
+    // 김 서린 유리: 닦인 자리와 방울 속은 또렷, 그 밖은 흐리다
+    float fxBlur = 1. - max(fxTrail * .8, fxAny);
+    vec3 fxBack = fxRdBg(fxQ + fxRef * fxAny, fxFc, fxBlur, vSeed);
+    vec3 fxColr = fxBack * (1. + .3 * fxAny) + vec3(.012, .015, .02) * fxBlur;
+    // 방울 테두리는 짙고 위쪽에 빛이 맺힌다
+    float fxRim = fxDrop * smoothstep(.55, .95, length(fxDn / .9));
+    fxColr *= 1. - .5 * fxRim;
+    fxColr += vec3(1.) * fxDrop * smoothstep(.3, .0, length(fxDn / .9 - vec2(-.3, -.45))) * .5;
+    vec3 fxNd = normalize(vec3(fxDrop > fxSmall ? fxDn * fxDrop : fxSf / fxSr * fxSmall * .8, 1.));
+    diffuseColor.rgb = fxColr * .06;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxRdH(fxP - vec2(fxE, 0.), vSeed) - fxRdH(fxP + vec2(fxE, 0.), vSeed),
+                               fxRdH(fxP - vec2(0., fxE), vSeed) - fxRdH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    // 방울 방향(옆, 아래)을 면 좌표로 되돌린다
+    vec3 fxNdF = normalize(vec3(fxNd.x * fxSd + fxNd.y * fxGd, fxNd.z));
+    normal = normalize(mat3(vTx, vTy, vTz) * normalize(fxNt + vec3(fxNdF.xy, 0.)));`,
+  surface: 'roughnessFactor = mix(.04, .16, fxBlur * (1. - fxAny)); metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxColr * 1.1;',
+};
+B.raindrops = {
+  // 몸통은 젖은 검은 창틀
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .25;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -7199,6 +7286,7 @@ export const MOVING = new Set([
   'hourglass',
   'marbles',
   'pendulum',
+  'raindrops',
 ]);
 
 /**
