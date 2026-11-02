@@ -7603,6 +7603,60 @@ B.roomwindow = {
   surface: 'roughnessFactor = .85;',
 };
 
+S.lenticular = {
+  // 렌티큘러. 조각 겉 전체가 세로 줄 볼록 렌즈판이다. 렌즈 줄 밑에 두 그림(면 색 바탕의 흰 별, 짙은 면 색 바탕의 초승달)이
+  // 가늘게 번갈아 인쇄돼 있어, 보는 각도가 바뀌면 렌즈가 한쪽 띠만 키워 보여 그림이 휙 넘어간다(넘어가는 동안 줄을 따라
+  // 두 그림이 겹쳐 반짝인다). 큐브를 조금만 돌려도 면마다 그림이 바뀐다. 렌즈 줄마다 세로로 빛이 맺힌다
+  head: `
+    float fxLnH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      return smoothstep(0., .04, fxEdgeAt(p)) * (.006 + .004 * (1. - dot(q, q) * .3));
+    }
+    float fxLnStar(vec2 q) {
+      float r = length(q), a = atan(q.y, q.x + 1e-6);
+      float R = .5 * (.55 + .45 * pow(abs(cos(a * 2.5)), 8.));
+      return 1. - smoothstep(R - .02, R + .02, r);
+    }
+    float fxLnMoon(vec2 q) {
+      float d1 = length(q) - .5;
+      float d2 = length(q - vec2(.22, .14)) - .42;
+      return (1. - smoothstep(-.02, .02, d1)) * smoothstep(-.02, .02, d2);
+    }`,
+  height: 'fxLnH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVl = vec3(dot(fxV, vTx), dot(fxV, vTy), max(dot(fxV, vTz), .2));
+    // 렌즈 줄(세로): 줄 안 자리 s, 렌즈 표면 기울기
+    float fxW = .085;
+    float fxS = fract(fxQ.x / fxW) - .5;
+    float fxCyl = sqrt(max(1. - 4. * fxS * fxS, 0.));
+    vec3 fxNl = normalize(vec3(-fxS * 2.2, 0., 1.));
+    // 보는 각도가 렌즈 밑 띠를 고른다
+    float fxAng = fxVl.x / fxVl.z;
+    float fxPick = fract(fxS * .35 + fxAng * 1.4 + .25 + fxQ.x * .05);
+    float fxB = smoothstep(.42, .58, fxPick);
+    float fxA = fxLnStar(fxQ);
+    float fxM = fxLnMoon(fxQ);
+    vec3 fxImgA = mix(fxFc, vec3(.98, .97, .94), fxA);
+    vec3 fxImgB = mix(fxFc * .55, vec3(.98, .96, .85), fxM);
+    vec3 fxImg = mix(fxImgA, fxImgB, fxB);
+    // 넘어가는 띠에선 두 그림이 섞여 반짝인다
+    float fxEdgeMix = 1. - abs(fxB * 2. - 1.);
+    fxImg += vec3(.15) * fxEdgeMix;
+    diffuseColor.rgb = fxImg * (.88 + .12 * fxCyl);`,
+  normal: 'normal = normalize(mat3(vTx, vTy, vTz) * fxNl);',
+  surface: 'roughnessFactor = .12; metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxImg * .12;',
+};
+B.lenticular = {
+  // 몸통은 흰 플라스틱 테
+  color: 'diffuseColor.rgb *= .9 + .15 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .35;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -7633,6 +7687,7 @@ export const MOVING = new Set([
   'mobile',
   'infinitymirror',
   'roomwindow',
+  'lenticular',
 ]);
 
 /**
