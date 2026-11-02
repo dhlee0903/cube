@@ -851,7 +851,222 @@ export const THEMES = [
     sound: 'candy',
     motion: 'bouncy',
     burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
+  },  {
+    // 버스 행선판 같은 플립닷 판. 칸마다 한쪽은 형광 노랑, 한쪽은 검정인 원판이 축에 매달려 뒤집힌다.
+    // 두 색뿐이라 면은 블록 속 그림으로 갈린다(민무늬, 안쪽 테, 가운데 네모, 빗금, 네 칸, 가로줄). 원판 아래로 그림자
+    id: 'flipdot',
+    name: '플립닷',
+    bg: '#0C0C0C',
+    ink: '#FFD21A',
+    backdrop: '#0C0C0C',
+    form: { bevel: 0.04, size: 0.92, radius: 0.02 },
+    body: { color: '#202020', roughness: 0.7 },
+    faces: ['#D84040', '#4080D8', '#E8C040', '#40B060', '#A060D0', '#E08040'],
+    lights: {
+      sky: '#ffffff', ground: '#8890a0', hemi: 1.8,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.5, [0, 3, -6]],
+    },
+    filter: { type: 'pixel', palette: ['#1C1C1C', '#FFD21A'], mode: 'ramp', cell: 'flipdot', res: 70, dither: 0.75, gamma: 0.6, gain: 1.35, bg: '#0C0C0C', line: null },
+    surface: 'blocks',
+    sound: 'flip',
+    motion: 'stepped',
+    burst: { shape: 'dot', colors: ['#FFD21A', '#1C1C1C'], size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
   },
+  {
+    // 옛 PC 게임의 256색 화면. 빨강·초록·파랑을 여섯 단씩 섞은 색으로 줄이고 그늘은 바둑판 점으로 섞는다.
+    // 화소는 세로로 조금 길고, 줄을 두 번 그려 화소 줄 사이로 가는 어두운 틈이 진다
+    id: 'vga',
+    name: 'VGA',
+    bg: '#0A0A2A',
+    ink: '#FFFF55',
+    backdrop: 'linear-gradient(180deg, #000040 0%, #2020A0 55%, #A040A0 80%, #F08040 100%)',
+    form: { bevel: 0.05, size: 0.86, radius: 0.04 },
+    body: { color: '#202028', roughness: 0.6 },
+    faces: ['#E83030', '#3050E0', '#F0D030', '#30B040', '#F0F0F0', '#F08020'],
+    lights: {
+      sky: '#ffffff', ground: '#8890b0', hemi: 1.8,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.6, [0, 3, -6]],
+    },
+    filter: { type: 'pixel', mode: 'levels', levels: 6, cell: 'vga', res: 105, aspect: 1.2, dither: 0.45, bg: null, line: null },
+    surface: 'plain',
+    sound: 'pixel',
+    motion: 'stepped',
+    burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
+  },
+  {
+    // 텔레비전 문자 방송. 검은 화면에 여덟 색뿐이고, 글자 칸 하나를 2×3 블록으로 쪼개 그림을 짓는다.
+    // 글자 칸마다 한 색만 쓰며 블록 둘레로 틈이 벌어진다(떨어진 모자이크)
+    id: 'teletext',
+    name: '텔레텍스트',
+    bg: '#000000',
+    ink: '#FFFF00',
+    backdrop: '#000000',
+    form: { bevel: 0.04, size: 0.9, radius: 0.02 },
+    body: { color: '#202020', roughness: 0.7 },
+    faces: ['#FF2020', '#2040FF', '#FFFF20', '#20E020', '#20FFFF', '#FF20FF'],
+    lights: {
+      sky: '#ffffff', ground: '#8890a0', hemi: 1.8,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.5, [0, 3, -6]],
+    },
+    filter: { type: 'pixel', cell: 'teletext', res: 130, gain: 1.2, bg: '#000000', line: null },
+    surface: 'plain',
+    sound: 'pixel',
+    motion: 'stepped',
+    burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
+  },
+  {
+    // 휴대폰 화면을 돋보기로 들여다본 모습. 화소 하나가 빨강·초록·파랑 막대 셋이고 사이는 검은 격자다.
+    // 노랑은 빨강과 초록 막대가, 흰색은 세 막대가 함께 켜져 멀리서 보면 섞인다
+    id: 'subpixel',
+    name: '액정 확대',
+    bg: '#000000',
+    ink: '#FFFFFF',
+    backdrop: '#000000',
+    form: { bevel: 0.05, size: 0.88, radius: 0.03 },
+    body: { color: '#181818', roughness: 0.6 },
+    faces: ['#FF3030', '#3060FF', '#FFE030', '#30E050', '#FFFFFF', '#FF9020'],
+    lights: {
+      sky: '#ffffff', ground: '#8890b0', hemi: 1.8,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.6, [0, 3, -6]],
+    },
+    filter: { type: 'pixel', mode: 'levels', levels: 8, cell: 'subpixel', res: 62, dither: 0.2, bg: '#000000', line: null },
+    surface: 'plain',
+    sound: 'electric',
+    motion: 'stepped',
+    burst: { shape: 'square', colors: ['#FF2020', '#20FF20', '#2040FF'], size: 0.08, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
+  },
+  {
+    // 옛 만화책과 신문의 컬러 인쇄. 시안, 마젠타, 노랑, 먹 네 판을 각도를 달리한 망점으로 찍어 누런 종이 위에 겹친다.
+    // 밝은 데는 점이 작고 어두운 데는 점이 커서 이웃 점과 붙는다
+    id: 'halftone',
+    name: '망점 인쇄',
+    bg: '#F2ECDD',
+    ink: '#1A1A1A',
+    backdrop: '#F2ECDD',
+    form: { bevel: 0.05, size: 0.88, radius: 0.04 },
+    body: { color: '#202020', roughness: 0.6 },
+    faces: ['#E8302A', '#2A5AD8', '#F5D820', '#2AA048', '#F4F4F0', '#F08A1E'],
+    lights: {
+      sky: '#ffffff', ground: '#8890b0', hemi: 1.8,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.6, [0, 3, -6]],
+    },
+    filter: { type: 'pixel', cell: 'halftone', res: 95, gain: 1.05, bg: '#F2ECDD', line: null },
+    surface: 'plain',
+    sound: 'paper',
+    motion: 'smooth',
+    burst: { shape: 'dot', colors: ['#00A0E8', '#E8148A', '#FFE600', '#202020'], size: 0.08, speed: 2.4, gravity: -6, drag: 0.8, life: 1 },
+  },
+  {
+    // 리소그래프 인쇄. 형광 분홍, 파랑, 노랑 잉크 세 판을 거친 알갱이로 찍어 겹친다. 판마다 살짝 어긋나
+    // 가장자리로 다른 잉크가 비어져 나오고, 겹친 곳은 보라, 초록, 주황이 된다
+    id: 'riso',
+    name: '리소 인쇄',
+    bg: '#F4EFE4',
+    ink: '#2A2A6A',
+    backdrop: '#F4EFE4',
+    form: { bevel: 0.05, size: 0.88, radius: 0.04 },
+    body: { color: '#2A2A3A', roughness: 0.6 },
+    faces: ['#FF5AB8', '#2A7CC8', '#FFE838', '#7A4AA8', '#3AA860', '#FF7A3A'],
+    lights: {
+      sky: '#ffffff', ground: '#8890b0', hemi: 1.8,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.6, [0, 3, -6]],
+    },
+    filter: { type: 'pixel', palette: ['#FF48B0', '#0078BF', '#FFE800'], cell: 'riso', res: 170, gain: 1.05, bg: '#F4EFE4', line: null },
+    surface: 'plain',
+    sound: 'paper',
+    motion: 'smooth',
+    burst: { shape: 'dot', colors: ['#FF48B0', '#0078BF', '#FFE800'], size: 0.09, speed: 2.4, gravity: -6, drag: 0.8, life: 1 },
+  },
+  {
+    // 빛 핀보드. 검은 종이에 반 칸씩 엇갈린 구멍마다 반투명 플라스틱 핀을 꽂았다. 켜진 핀은 속에서 빛나고
+    // 꼭대기 면이 각지게 반짝이며, 어두운 데는 핀을 빼 구멍만 남는다
+    id: 'pegs',
+    name: '빛 핀보드',
+    bg: '#08080A',
+    ink: '#FFE030',
+    backdrop: '#08080A',
+    form: { bevel: 0.05, size: 0.88, radius: 0.04 },
+    body: { color: '#202024', roughness: 0.6 },
+    faces: ['#FF3030', '#3070FF', '#FFE030', '#30E050', '#FFFFFF', '#FF50C0'],
+    lights: {
+      sky: '#ffffff', ground: '#8890b0', hemi: 1.8,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.6, [0, 3, -6]],
+    },
+    filter: { type: 'pixel', palette: ['#FF2A2A', '#FF8A1A', '#FFE82A', '#2AE84A', '#2A8AFF', '#FF4AC8', '#A04AFF', '#FFFFFF'], mode: 'led', cell: 'peg', res: 58, dither: 0.4, bg: '#0A0A0C', line: null },
+    surface: 'plain',
+    sound: 'pop',
+    motion: 'snap',
+    burst: { shape: 'glow', colors: 'faces', size: 0.1, speed: 2.4, gravity: -6, drag: 0.8, life: 1 },
+  },
+  {
+    // 비잔틴 성당 벽의 모자이크. 손으로 쪼갠 네모난 대리석과 색유리 조각(스몰티)을 회색 줄눈 사이로 박았다.
+    // 조각은 조금씩 비뚤고 빛깔이 저마다 다르며 유리 조각은 반짝인다. 큐브 둘레는 짙푸른 밤하늘 조각
+    id: 'tessera',
+    name: '모자이크 타일',
+    bg: '#B8B0A0',
+    ink: '#1E2A4A',
+    backdrop: '#1E2A4A',
+    form: { bevel: 0.05, size: 0.88, radius: 0.04 },
+    body: { color: '#1A1A1E', roughness: 0.6 },
+    faces: ['#C02A26', '#2A5AB0', '#F0C030', '#2E8048', '#F0EAD8', '#E07A2A'],
+    lights: {
+      sky: '#ffffff', ground: '#8890b0', hemi: 1.8,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.6, [0, 3, -6]],
+    },
+    filter: {
+      type: 'pixel',
+      palette: ['#F0EAD8', '#C8C0B0', '#1A1A1E', '#B02A26', '#7A1A18', '#E07A2A', '#F0C030', '#B08A20',
+        '#2E7A44', '#1A4A2A', '#2A5AA8', '#1A3060', '#6A9AD0', '#8A5A3A', '#D8A080', '#4A4A50'],
+      cell: 'tessera', res: 60, gain: 1.1, bg: '#B8B0A0', line: '#1E2A4A',
+    },
+    surface: 'plain',
+    sound: 'stone',
+    motion: 'heavy',
+    burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.4, gravity: -8, drag: 0.6, life: 1 },
+  },
+  {
+    // 터미널의 점자 그림. 글자 칸 하나를 2×4 점으로 쪼개 밝은 자리만 점을 찍고, 글자마다 한 색으로 쓴다.
+    // 점이 글자 가운데로 모여 글자 사이가 벌어진다
+    id: 'braille',
+    name: '점자 아트',
+    bg: '#0C0C10',
+    ink: '#E8E8E8',
+    backdrop: '#0C0C10',
+    form: { bevel: 0.04, size: 0.9, radius: 0.02 },
+    body: { color: '#3A3A44', roughness: 0.7 },
+    faces: ['#FF5555', '#5555FF', '#FFFF55', '#55FF55', '#55FFFF', '#FF55FF'],
+    lights: {
+      sky: '#ffffff', ground: '#8890a0', hemi: 1.8,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.5, [0, 3, -6]],
+    },
+    filter: { type: 'pixel', palette: ['#FF5555', '#55FF55', '#5555FF', '#FFFF55', '#55FFFF', '#FF55FF', '#FFFFFF', '#FFAA00'], cell: 'braille', res: 150, dither: 0.6, gamma: 0.7, gain: 1.3, bg: '#0C0C10', line: null },
+    surface: 'plain',
+    sound: 'mech',
+    motion: 'stepped',
+    burst: { shape: 'dot', colors: 'faces', size: 0.06, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
+  },
+  {
+    // 빨간 고글 게임기. 검은 바탕에 네 단 빨강으로만 그리고, 화소 줄이 빨간 빛줄로 그어진다. 비껴 겹친 흐린 상이 깊이를 준다.
+    // 색이 넷뿐이라 면은 블록 속 그림으로 갈린다(민무늬, 안쪽 테, 가운데 네모, 빗금, 네 칸, 가로줄)
+    id: 'scope',
+    name: '빨간 고글',
+    bg: '#000000',
+    ink: '#FF2020',
+    backdrop: '#000000',
+    form: { bevel: 0.04, size: 0.92, radius: 0.02 },
+    body: { color: '#202020', roughness: 0.7 },
+    faces: ['#D84040', '#4080D8', '#E8C040', '#40B060', '#A060D0', '#E08040'],
+    lights: {
+      sky: '#ffffff', ground: '#8890a0', hemi: 1.8,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.5, [0, 3, -6]],
+    },
+    filter: { type: 'pixel', palette: ['#000000', '#4A0000', '#9A0000', '#FF1818'], mode: 'ramp', cell: 'scope', res: 100, dither: 0.5, gamma: 0.65, gain: 1.2, bg: '#000000', line: null },
+    surface: 'blocks',
+    sound: 'pixel',
+    motion: 'stepped',
+    burst: { shape: 'square', colors: ['#FF1818', '#9A0000'], size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
+  },
+
   {
     // 화실의 유화. 장면 전체를 넓적한 붓질로 다시 칠한다. 붓질은 색이 바뀌는 경계를 따라 길게 눕고 끝이 뭉툭하며,
     // 두껍게 오른 물감에 붓털 자국이 나 왼쪽 위 빛을 받는다. 캔버스 올, 누렇게 바랜 니스, 어둑한 배경과 가장자리 그늘
@@ -3472,7 +3687,11 @@ export const GROUPS = [
   { name: '판타지', themes: ['dragon', 'phoenix', 'mithril', 'damascus', 'fairywing', 'dragonegg'] },
   { name: '동물', themes: ['wool', 'hamster', 'wild', 'croc', 'python', 'calf'] },
   { name: '금속·기계', themes: ['metal', 'gauge', 'rust', 'mercury', 'circuit', 'carbon'] },
-  { name: '픽셀', themes: ['pixel', 'handheld', 'cga', 'onebit', 'clash', 'arcade', 'amber', 'led', 'ascii', 'bricks', 'beads'] },
+  {
+    name: '픽셀',
+    themes: ['pixel', 'handheld', 'cga', 'onebit', 'clash', 'arcade', 'amber', 'led', 'ascii', 'bricks', 'beads', 'flipdot', 'vga',
+      'teletext', 'subpixel', 'halftone', 'riso', 'pegs', 'tessera', 'braille', 'scope'],
+  },
   { name: '명화', themes: ['oil', 'watercolor', 'ukiyoe', 'monet', 'seurat', 'gogh', 'munch', 'klimt', 'cubism', 'warhol', 'collage'] },
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
