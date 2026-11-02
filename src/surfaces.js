@@ -6387,6 +6387,60 @@ B.shadowgarden = {
   surface: 'roughnessFactor = .85;',
 };
 
+S.flashlight = {
+  // 손전등. 어두운 방의 돌 부조. 조각마다 테두리 띠를 두르고 가운데에 꽃잎 수가 저마다 다른 꽃무늬(로제트)를 깊이 새겼다.
+  // 면마다 돌이 다르다(붉은 사암, 황토, 석회암, 사문석, 청금석, 반암). 평소엔 희미하게 색만 보이다가, 손끝을 가져가면
+  // 따뜻한 손전등 빛이 둥글게 비춰 새김의 골과 끌 자국, 돌 알갱이가 또렷이 드러나고 빛 가장자리는 부드럽게 스러진다
+  head: `
+    float fxFlH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float r = length(q), a = atan(q.y, q.x + 1e-6);
+      float N = 6. + 2. * floor(fxH1(seed * 7.) * 3.);
+      // 테두리 띠
+      float m = max(abs(q.x), abs(q.y));
+      float band = smoothstep(.74, .78, m) * (1. - smoothstep(.86, .9, m));
+      // 꽃잎: 끝이 둥근 잎이 N장, 잎마다 가운데 잎맥 골
+      float pet = .62 * (.55 + .45 * pow(abs(cos(a * N * .5)), 1.4));
+      float leaf = smoothstep(.04, -.06, r - pet);
+      float vein = 1. - smoothstep(.0, .05, abs(sin(a * N * .5)) * r);
+      float heart = smoothstep(.2, .14, r);
+      float ring = 1. - smoothstep(.015, .04, abs(r - .7));
+      float h = .004 + .028 * band + .034 * leaf * (1. - .45 * vein) * (.6 + .4 * smoothstep(.62, .2, r)) + .02 * heart * (1. - smoothstep(.0, .14, r) * .3) + .012 * ring;
+      return smoothstep(0., .04, fxEdgeAt(p)) * h;
+    }`,
+  height: 'fxFlH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxP = vLocal.xy;
+    float fxHt = fxFlH(fxP, vSeed);
+    float fxE = .0012;
+    vec3 fxNt = normalize(vec3(fxFlH(fxP - vec2(fxE, 0.), vSeed) - fxFlH(fxP + vec2(fxE, 0.), vSeed),
+                               fxFlH(fxP - vec2(0., fxE), vSeed) - fxFlH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    // 끌 자국과 돌 알갱이
+    float fxGr = fxF2(fxP * 90. + vSeed * 5.);
+    float fxChis = fxN2(vec2(dot(fxP, vec2(.8, .6)) * 180., dot(fxP, vec2(-.6, .8)) * 20.) + vSeed);
+    float fxPh = (fxGr - .5) * .0016 + (fxChis - .5) * .0008 * (1. - smoothstep(.006, .012, fxHt));
+    vec3 fxStone = fxFc * (.75 + .35 * fxGr) * (1. - .25 * smoothstep(.5, .8, fxF2(fxP * 14. + vSeed * 2.)));
+    // 손전등: 손끝에서 겉으로 비치는 둥근 빛. 가운데가 밝고 가장자리는 부드럽게 스러진다
+    vec3 fxL = fxPtr - vec3(fxP, fxHt);
+    float fxLd = length(fxL);
+    fxL /= fxLd;
+    vec2 fxSp = fxPtr.xy - fxP;
+    float fxCone = (exp(-dot(fxSp, fxSp) / .1) + .5 * exp(-dot(fxSp, fxSp) / .012)) * smoothstep(5., 2., fxPtr.z) * step(0., fxPtr.z);
+    diffuseColor.rgb = fxStone * .35;`,
+  normal: 'normal = fxBump(normalize(mat3(vTx, vTy, vTz) * fxNt), fxPh);',
+  surface: 'roughnessFactor = .85; metalnessFactor = 0.;',
+  emissive: `
+    float fxLamb = max(dot(normal, normalize(mat3(vTx, vTy, vTz) * fxL)), 0.);
+    totalEmissiveRadiance = fxStone * vec3(1., .82, .55) * fxCone * (.25 + 2.4 * pow(fxLamb, 1.5)) + fxStone * .03;`,
+};
+B.flashlight = {
+  // 몸통은 어두운 현무암
+  color: 'diffuseColor.rgb *= .8 + .3 * fxN3(vLocal * 20. + vSeed);',
+  surface: 'roughnessFactor = .85;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -6399,6 +6453,7 @@ export const MOVING = new Set([
   'pinart',
   'memoryfoam',
   'shadowgarden',
+  'flashlight',
 ]);
 
 /**

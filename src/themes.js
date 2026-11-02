@@ -3350,6 +3350,26 @@ export const THEMES = [
     motion: 'heavy',
     burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.6, gravity: 3, drag: 2, life: 0.6 },
   },
+  {
+    // 손전등. 어두운 방의 돌 부조. 조각마다 꽃무늬를 깊이 새겼고 면마다 돌이 다르다. 손끝을 따라 따뜻한 손전등 빛이 둥글게
+    // 비춰 새김과 끌 자국이 또렷이 드러난다
+    id: 'flashlight',
+    name: '손전등',
+    bg: '#050404',
+    ink: '#EEE6DA',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #14100C, #030202)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.04, grid: 80 },
+    body: { color: '#1E1C1A', roughness: 0.85 },
+    faces: ['#C8553A', '#D8963E', '#E2D6B8', '#4E9A62', '#3A64C0', '#8A3C78'],
+    lights: {
+      sky: '#9aa4c8', ground: '#0a0806', hemi: 0.5,
+      key: ['#c8d0ff', 0.45, [-3, 7, 5]], fill: ['#a0a8d0', 0.2, [6, 1, 4]], rim: ['#c0c8ff', 0.4, [3, 4, -6]],
+    },
+    surface: 'flashlight',
+    sound: 'stone',
+    motion: 'heavy',
+    burst: { shape: 'dot', colors: ['#FFE0A8', '#FFC870'], size: 0.04, speed: 1.4, gravity: 2, drag: 2, life: 0.6, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3376,5 +3396,5 @@ export const GROUPS = [
   { name: '명화', themes: ['oil', 'watercolor', 'ukiyoe', 'monet', 'seurat', 'gogh', 'munch', 'klimt', 'cubism', 'warhol', 'collage'] },
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
-  { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden'] },
+  { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight'] },
 ];
