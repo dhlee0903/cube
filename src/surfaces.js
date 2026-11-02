@@ -8201,6 +8201,70 @@ B.musicbox = {
   surface: 'roughnessFactor = .35;',
 };
 
+S.fireworks = {
+  // 불꽃놀이. 조각마다 지평선 쪽이 면 색으로 물든 밤하늘 유리판이고 잔별이 박혔다. 가만히 두면 이따금 작은 불꽃이 터지고,
+  // 층을 돌리면 그 자리에서 큰 불꽃이 피어난다. 불꽃은 가운데서 면 색 빛줄기 스물넷이 퍼져 나가며 끝에 하얀 불티가 맺히고,
+  // 퍼질수록 아래(화면 아래)로 처지며 스러지고, 둘레엔 금빛 잔 불티가 반짝이다 꺼진다
+  head: `
+    float fxFwH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float n = pow(pow(abs(q.x), 8.) + pow(abs(q.y), 8.), 1. / 8.);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .008 * sqrt(max(0., 1. - n * n)));
+    }
+    // 불꽃 하나: c 가운데, age 0~1, R 크기
+    vec3 fxFwBurst(vec2 q, vec2 c, float age, float R, vec3 col, float seed, vec2 gd) {
+      if (age <= 0. || age >= 1.) return vec3(0.);
+      vec2 d = q - c - gd * age * age * .25 * R;
+      float r = length(d);
+      float a = atan(d.y, d.x + 1e-6);
+      float N = 24.;
+      float k = floor(a / 6.2832 * N + .5);
+      float ka = k / N * 6.2832 + (fxH1(k + seed) - .5) * .12;
+      vec2 dir = vec2(cos(ka), sin(ka));
+      float s = dot(d, dir);
+      float perp = abs(dot(d, vec2(-dir.y, dir.x)));
+      float tip = R * (1. - pow(1. - age, 3.)) * (.8 + .3 * fxH1(k * 3.1 + seed));
+      float trail = step(tip * .35, s) * step(s, tip) * (1. - smoothstep(.006, .018, perp)) * smoothstep(tip * .35, tip, s);
+      float head = exp(-(pow(s - tip, 2.) + perp * perp) / .0006);
+      float fade = 1. - smoothstep(.55, 1., age);
+      float spark = step(.93, fxH2(floor(d * 40.) + floor(age * 12.) + seed)) * exp(-pow(r - tip * .9, 2.) / .01) * (1. - age);
+      return (col * trail * .9 + mix(col, vec3(1.), .7) * head * 1.6) * fade + vec3(1., .8, .4) * spark;
+    }`,
+  height: 'fxFwH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    vec2 fxGd = fxGrav;
+    float fxUp = -dot(fxQ, fxGd);
+    // 밤하늘: 지평선(아래)이 면 색으로 물든다
+    vec3 fxSky = mix(fxFc * .65, vec3(.02, .025, .06), smoothstep(-1., .7, fxUp));
+    vec2 fxSg = fxQ * 14.;
+    float fxStar = step(.94, fxH2(floor(fxSg) + vSeed * 7.)) * (1. - smoothstep(.05, .14, length(fract(fxSg) - .5))) * (.6 + .4 * sin(uTime * 3. + fxH2(floor(fxSg)) * 30.));
+    fxSky += vec3(.8, .85, 1.) * fxStar * smoothstep(-.2, .4, fxUp) * .6;
+    // 이따금 작은 불꽃, 돌리면 큰 불꽃
+    float fxCyc = uTime / 3.4 + vSeed * 5.;
+    float fxAge0 = fract(fxCyc) * 1.6;
+    vec2 fxC0 = (vec2(fxH1(floor(fxCyc) * 3.1 + vSeed), fxH1(floor(fxCyc) * 5.7 + vSeed)) - .5) * .9;
+    vec3 fxB = fxFwBurst(fxQ, fxC0, fxAge0, .45, fxFc, floor(fxCyc), fxGd);
+    vec2 fxC1 = (vec2(fxH1(vSeed * 9.), fxH1(vSeed * 13.)) - .5) * .5;
+    fxB += fxFwBurst(fxQ, fxC1, 1. - uCharge, .8, mix(fxFc, vec3(1., .9, .6), .15), vSeed * 31., fxGd);
+    diffuseColor.rgb = fxSky * .25;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxFwH(fxP - vec2(fxE, 0.), vSeed) - fxFwH(fxP + vec2(fxE, 0.), vSeed),
+                               fxFwH(fxP - vec2(0., fxE), vSeed) - fxFwH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = .08; metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxSky * .7 + fxB;',
+};
+B.fireworks = {
+  // 몸통은 검은 유리 테
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .2;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -8241,6 +8305,7 @@ export const MOVING = new Set([
   'ledcube',
   'pinwheel',
   'musicbox',
+  'fireworks',
 ]);
 
 /**

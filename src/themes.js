@@ -3935,6 +3935,28 @@ export const THEMES = [
     motion: 'mechanical',
     burst: { shape: 'star', colors: ['#FFE0A0', '#FFFFFF'], size: 0.06, speed: 1.8, gravity: -.5, drag: 2, life: 0.8, additive: true },
   },
+  {
+    // 불꽃놀이. 조각마다 지평선이 면 색으로 물든 밤하늘이다. 이따금 작은 불꽃이 터지고, 층을 돌리면 큰 불꽃이 피어나
+    // 면 색 빛줄기가 퍼지며 아래로 처지고 금빛 불티가 반짝인다
+    id: 'fireworks',
+    name: '불꽃놀이',
+    bg: '#020308',
+    ink: '#EEF0FA',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #0E1226, #010104)',
+    form: { bevel: 0.04, size: 0.96, radius: 0.03, grid: 24 },
+    body: { color: '#0C0C12', roughness: 0.2 },
+    faces: ['#FF3040', '#FF9A20', '#FFE030', '#30E070', '#3088FF', '#C850FF'],
+    lights: {
+      sky: '#a0a8ff', ground: '#040408', hemi: 0.4,
+      key: ['#e0e4ff', 1, [-3, 7, 5]], fill: ['#a0a8ff', 0.3, [6, 1, 4]], rim: ['#ffffff', 0.8, [3, 4, -6]],
+    },
+    env: 0.6,
+    surface: 'fireworks',
+    sound: 'pop',
+    motion: 'snap',
+    ambient: { mode: 'float', shape: 'star', colors: ['#FFFFFF', '#FFE8A0'], count: 16, size: 0.03, speed: 0.2, opacity: 0.6, additive: true },
+    burst: { shape: 'star', colors: 'faces', size: 0.1, speed: 3.5, gravity: 2, drag: 1.5, life: 1, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3964,5 +3986,5 @@ export const GROUPS = [
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
   { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops', 'liquidtimer', 'oilwater', 'mobile'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'laser', 'magnifier', 'chrome', 'fiberoptic', 'ledcube'] },
-  { name: '돌리면', themes: ['pinwheel', 'musicbox'] },
+  { name: '돌리면', themes: ['pinwheel', 'musicbox', 'fireworks'] },
 ];
