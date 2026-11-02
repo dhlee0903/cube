@@ -7,7 +7,8 @@
 // uTime    초      uIntro  테마를 고른 뒤 지난 초
 // uCharge  방금 돌린 만큼 차올랐다 빠지는 값(0~1)
 // uBlink   조각을 잡는 순간 1, 곧 0으로
-// uPointer 손가락·마우스가 가리키는 곳(시점 공간)
+// uPointer 손가락·마우스가 가리키는 곳(시점 공간). fxPtr는 같은 자리를 조각 안쪽 좌표로, fxGrav는 스티커 평면의 중력 방향
+//          (둘 다 높이 함수에서도 쓸 수 있다). 손가락에 반응하는 질감은 MOVING에 넣어야 가만히 있을 때도 다시 그린다
 // vHome    스티커가 원래 있던 면 위 칸 자리. xy 면 전체를 -1~1로 본 칸 가운데, z 조각 한 칸이 면 좌표로 얼마인지.
 //          fxFace()가 면 전체 좌표를 준다. 면 하나에 그림 한 장을 그리면 다 맞췄을 때 그림이 이어진다
 //
@@ -38,6 +39,13 @@ varying vec3 vTz;
 varying vec3 vHome;
 // 높이 함수로 솟은 만큼(벽면이면 바닥과 꼭대기 사이 값)
 varying float vLift;
+// 손가락·마우스 자리(조각 안쪽 좌표)와 이 면에서 중력이 당기는 쪽
+varying vec3 vPtr;
+varying vec2 vGrav;
+// 정점·조각 셰이더 양쪽에서 쓴다. fxPtr: 손가락 자리(조각 안쪽 좌표, 스티커 평면이 xy, z는 겉에서 떨어진 정도),
+// fxGrav: 스티커 평면에서 화면 아래쪽(중력) 방향
+vec3 fxPtr;
+vec2 fxGrav;
 `;
 
 // 정점·조각 셰이더 양쪽에서 쓰는 것
@@ -2514,38 +2522,59 @@ B.flip = {
 };
 
 S.blackhole = {
-  // 블랙홀. 다 맞추면 면 하나에 블랙홀 하나가 들어앉는다. 가운데 그림자와 그 둘레의 가는 광자 고리,
-  // 뒤편 원반이 중력에 휘어 그림자 위아래로 넘어온 빛 고리, 앞을 가로지르는 얇은 강착 원반.
-  // 다가오는 왼쪽이 더 밝고(도플러 빔), 원반이 돌며 뜨거운 가스 줄기가 흐른다. 둘레 별빛은 휘어 늘어진다.
-  // 원반 빛이 곧 면 색
+  // 블랙홀(영화 「인터스텔라」의 가르강튀아처럼). 다 맞추면 면 하나에 블랙홀 하나가 들어앉는다. 거의 옆에서 본 얇은 강착 원반이
+  // 그림자 한가운데를 가로지르고, 그림자 뒤편 원반은 중력에 휘어 그림자 위로 굵은 빛 고리, 아래로 가는 고리가 되어 넘어온다.
+  // 그림자 가장자리엔 가는 광자 고리. 원반은 안쪽이 하얗게 달고 바깥으로 갈수록 면 색으로 식으며, 가스 실이 결을 이루며 흐른다.
+  // 둘레 별빛과 성운은 렌즈처럼 밀려나 휜다. 스티커는 둥근 유리 렌즈 같아 그 속에 상이 맺힌다
+  head: `
+    float fxLensH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.008 + .016 * (1. - dot(q, q) * .5));
+    }`,
+  height: 'fxLensH',
   color: `
-    vec2 fxF = fxFace();
-    float fxR = length(fxF);
-    float fxA = atan(fxF.y, fxF.x);
+    if (fxEdge() < 0.) discard;
+    vec2 fxF = fxFace() * 1.06;
     float fxT = uTime;
     vec3 fxHot = diffuseColor.rgb;
-    vec2 fxLens = fxF * (1. + .05 / (fxR * fxR + .03));
-    float fxStar = step(.985, fxH2(floor(fxLens * 70.))) * (.5 + .5 * sin(fxT * 3. + fxH2(floor(fxLens * 70.) + 3.) * 20.));
-    vec3 fxBg = fxHot * .1 * exp(-fxR * 1.4) + vec3(.6, .7, 1.) * fxStar * .6 + fxHot * .03 * fxN2(fxF * 3.);
-    float fxShadow = 1. - smoothstep(.18, .195, fxR);
-    float fxPhoton = exp(-pow((fxR - .205) / .011, 2.));
-    float fxSwirl = fxN2(vec2(fxA * 3. - fxT * .5 / max(fxR, .2), fxR * 14.));
-    float fxHalo = smoothstep(.2, .23, fxR) * exp(-pow(max(fxR - .23, 0.) / .14, 1.4)) * (.6 + .6 * fxSwirl);
-    vec2 fxDp = vec2(fxF.x, fxF.y / .14);
-    float fxDr = length(fxDp);
-    float fxDa = atan(fxDp.y, fxDp.x);
-    float fxGas = fxN2(vec2(fxDa * 4. - fxT * .9 / max(fxDr, .25), fxDr * 9.)) * .6 + fxN2(vec2(fxDa * 9. - fxT * 1.4 / max(fxDr, .25), fxDr * 22.)) * .4;
-    float fxDop = 1. + .6 * clamp(-fxDp.x / max(fxDr, .01), -1., 1.);
-    float fxDisk = smoothstep(.26, .32, fxDr) * (1. - smoothstep(.75, 1.02, fxDr)) * pow(.32 / max(fxDr, .32), 1.2) * (.45 + .8 * fxGas) * fxDop;
-    float fxFront = step(fxF.y, 0.);
-    vec3 fxHeat = mix(vec3(1., .97, .9), fxHot, smoothstep(.28, .7, fxDr));
-    vec3 fxCol = fxBg + fxHot * fxHalo * 1.1 + fxHeat * fxDisk * (1. - fxFront) * 1.6;
-    fxCol *= 1. - fxShadow;
-    fxCol += mix(vec3(1.), fxHot, .4) * fxPhoton * 1.4;
-    fxCol += fxHeat * fxDisk * fxFront * 1.8;
-    diffuseColor.rgb = vec3(.005);`,
-  surface: 'roughnessFactor = .2;',
-  emissive: 'totalEmissiveRadiance = fxCol;',
+    float fxRs = .25;
+    float fxR = length(fxF);
+    float fxA = atan(fxF.y, fxF.x);
+    // 배경: 렌즈로 밀려난 별과 면 색 성운
+    vec2 fxLens = fxF * (1. + fxRs * fxRs * 1.4 / max(fxR * fxR, .03));
+    vec2 fxSg = fxLens * 85.;
+    float fxStar = step(.986, fxH2(floor(fxSg))) * (.35 + .65 * fxH2(floor(fxSg) + 3.)) * (1. - smoothstep(0., .32, length(fract(fxSg) - .5)));
+    vec3 fxBg = vec3(.78, .84, 1.) * fxStar + fxHot * (.06 + .16 * fxF2(fxLens * 2.2 + uFace * 3.)) * (.55 + .45 * smoothstep(1.5, .4, fxR));
+    // 앞쪽 원반: 거의 옆에서 본 얇은 띠. 가로로 흐르는 가스 실
+    float fxIn = fxRs * 1.45, fxOut = fxRs * 3.9;
+    float fxX = abs(fxF.x);
+    float fxThk = .01 + .022 * smoothstep(fxIn, fxOut, fxX);
+    float fxBand = exp(-pow(fxF.y / fxThk, 2.));
+    float fxRad = smoothstep(fxIn * .92, fxIn * 1.12, fxX) * (1. - smoothstep(fxOut * .65, fxOut, fxX));
+    float fxFil = .45 + .55 * (fxN2(vec2(fxF.x * 9. - fxT * .7, fxF.y * 140.)) * .6 + fxN2(vec2(fxF.x * 26. - fxT * 1.3, fxF.y * 300.)) * .4);
+    float fxTd = smoothstep(fxIn, fxOut, fxX);
+    float fxDop = 1. - .22 * fxF.x / fxOut;
+    float fxDisk = fxBand * fxRad * pow(fxIn / max(fxX, fxIn), 1.5) * fxFil * fxDop;
+    // 뒤쪽 원반이 휘어 넘어온 고리: 위는 굵고 밝게, 아래는 가늘게
+    float fxUp = smoothstep(-.02, .02, fxF.y);
+    float fxS = pow(abs(sin(fxA)), .7);
+    float fxRi = fxRs * 1.07;
+    float fxRo = mix(fxRs * 1.5, fxRs * 2.35, fxUp * fxS + (1. - fxS) * .6);
+    float fxRd = (fxR - fxRi) / max(fxRo - fxRi, .01);
+    float fxArc = smoothstep(-.03, .08, fxRd) * (1. - smoothstep(.7, 1., fxRd)) * pow(1. - clamp(fxRd, 0., 1.) * .75, 2.);
+    float fxArcF = .45 + .55 * (fxN2(vec2(fxA * 2.5 - fxT * .25, fxRd * 38.)) * .6 + fxN2(vec2(fxA * 7. - fxT * .5, fxRd * 90.)) * .4);
+    fxArc *= mix(.5, 1., fxUp) * fxArcF * (1. + .18 * cos(fxA - 3.1416));
+    float fxPhoton = exp(-pow((fxR - fxRs * 1.025) / .005, 2.)) + .35 * exp(-pow((fxR - fxRs * 1.025) / .016, 2.));
+    float fxShadow = 1. - smoothstep(fxRs * .985, fxRs * 1.01, fxR);
+    vec3 fxWhite = vec3(1., .95, .86);
+    vec3 fxCol = fxBg * (1. - fxShadow);
+    fxCol += mix(fxWhite, fxHot, smoothstep(.0, .85, fxRd)) * fxArc * 1.5 * (1. - fxShadow);
+    fxCol += mix(fxWhite, fxHot, .35) * fxPhoton * 1.6 * (1. - fxShadow * .8);
+    fxCol += mix(fxWhite, fxHot, smoothstep(.05, .8, fxTd)) * fxDisk * 2.4;
+    diffuseColor.rgb = vec3(.006);`,
+  normal: 'normal = fxBump(normal, fxN2(fxFace() * 400.) * .00005);',
+  surface: 'roughnessFactor = .06;',
+  emissive: 'totalEmissiveRadiance = fxCol + vec3(1.) * fxFresnel(normal, 4.) * .05;',
 };
 B.blackhole = {
   color: `float fxRim = smoothstep(.9, 1., fxBodyRim());`,
@@ -4442,6 +4471,16 @@ export function wear(material, part, uniforms, face = -1) {
         ${NOISE}
         ${head}`)
       .replace('#include <beginnormal_vertex>', `#include <beginnormal_vertex>
+        #ifdef USE_INSTANCING
+          mat4 fxIM4 = instanceMatrix;
+        #else
+          mat4 fxIM4 = mat4(1.);
+        #endif
+        fxPtr = (inverse(modelViewMatrix * fxIM4) * vec4(uPointer, 1.)).xyz;
+        vec2 fxGd = -vec2((normalMatrix * (mat3(fxIM4) * vec3(1., 0., 0.))).y, (normalMatrix * (mat3(fxIM4) * vec3(0., 1., 0.))).y);
+        fxGrav = length(fxGd) > .05 ? normalize(fxGd) : vec2(0., -1.);
+        vPtr = fxPtr;
+        vGrav = fxGrav;
         vSeed = aSeed;
         vHome = ${part === 'sticker' ? 'aHome' : 'vec3(0., 0., 1.)'};
         ${lift}`)
@@ -4465,7 +4504,7 @@ export function wear(material, part, uniforms, face = -1) {
         ${NOISE}
         ${FRAG}
         ${head}`)
-      .replace('#include <color_fragment>', `#include <color_fragment>\n${fx.color ?? ''}`)
+      .replace('#include <color_fragment>', `#include <color_fragment>\nfxPtr = vPtr;\nfxGrav = vGrav;\n${fx.color ?? ''}`)
       .replace('#include <metalnessmap_fragment>', `#include <metalnessmap_fragment>\n${fx.surface ?? ''}`)
       .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>\n${fx.normal ?? ''}`)
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>\n${fx.emissive ?? ''}
