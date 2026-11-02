@@ -3370,6 +3370,26 @@ export const THEMES = [
     motion: 'heavy',
     burst: { shape: 'dot', colors: ['#FFE0A8', '#FFC870'], size: 0.04, speed: 1.4, gravity: 2, drag: 2, life: 0.6, additive: true },
   },
+  {
+    // 블랙라이트. 조각 겉이 보안 용지다. 평소엔 무광 색종이에 도장이 눌려 돋았을 뿐인데, 손끝 둘레만 자외선 등이 비친 듯
+    // 숨은 형광 섬유와 물결무늬 선, 도장 속 별이 빛을 내며 떠오른다
+    id: 'blacklight',
+    name: '블랙라이트',
+    bg: '#0A0710',
+    ink: '#F2ECFA',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #1E1630, #050408)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.03, grid: 48 },
+    body: { color: '#18161C', roughness: 0.95 },
+    faces: ['#C8504A', '#D8904A', '#D8C870', '#5A9E78', '#5878B8', '#A85CA8'],
+    lights: {
+      sky: '#e8e4ff', ground: '#0e0a14', hemi: 0.8,
+      key: ['#fff8f0', 1.6, [-3, 7, 5]], fill: ['#d8d0ff', 0.5, [6, 1, 4]], rim: ['#ffffff', 0.8, [3, 4, -6]],
+    },
+    surface: 'blacklight',
+    sound: 'paper',
+    motion: 'smooth',
+    burst: { shape: 'dot', colors: ['#B060FF', '#60FFC0', '#FFE040'], size: 0.04, speed: 1.6, gravity: 0, drag: 2, life: 0.6, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3396,5 +3416,5 @@ export const GROUPS = [
   { name: '명화', themes: ['oil', 'watercolor', 'ukiyoe', 'monet', 'seurat', 'gogh', 'munch', 'klimt', 'cubism', 'warhol', 'collage'] },
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
-  { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight'] },
+  { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight'] },
 ];

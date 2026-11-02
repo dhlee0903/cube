@@ -6441,6 +6441,72 @@ B.flashlight = {
   surface: 'roughnessFactor = .85;',
 };
 
+S.blacklight = {
+  // 블랙라이트. 조각 겉이 지폐 같은 보안 용지다. 평소엔 무광 색종이에 가운데 도장이 하얗게 눌려 돋아(블라인드 엠보싱)
+  // 있을 뿐이다. 손끝을 가져가면 자외선 등이 비친 듯 그 둘레가 보랏빛으로 물들고, 숨어 있던 형광 섬유(빨강, 노랑, 파랑
+  // 잔 실), 겹겹의 물결무늬(기요셰) 선, 도장 속 별 무늬가 빛을 내며 떠오른다
+  head: `
+    float fxBlUv(vec2 p) {
+      vec2 d = fxPtr.xy - p;
+      return exp(-dot(d, d) / .08) * smoothstep(5., 2., fxPtr.z) * step(0., fxPtr.z);
+    }
+    float fxBlH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float r = length(q), a = atan(q.y, q.x + 1e-6);
+      float seal = (1. - smoothstep(.02, .05, abs(r - .42))) + (1. - smoothstep(.015, .035, abs(r - .34)));
+      float star = smoothstep(.02, -.02, r - .26 * (.55 + .45 * pow(abs(cos(a * 2.5)), 6.)));
+      return smoothstep(0., .04, fxEdgeAt(p)) * (.005 + .006 * max(seal, star) + .004 * (1. - dot(q, q) * .5));
+    }`,
+  height: 'fxBlH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxP = vLocal.xy;
+    vec2 fxQ = fxP / uSticker.x;
+    float fxK = fxBlUv(fxP);
+    float fxAA = fwidth(fxP.x);
+    // 형광 섬유: 칸마다 짧게 굽은 실 한 올
+    vec3 fxFib = vec3(0.);
+    vec2 fxCg = floor(fxP / .045);
+    for (int y = -1; y <= 1; y++) for (int x = -1; x <= 1; x++) {
+      vec2 c = fxCg + vec2(float(x), float(y));
+      float hs = fxH2(c + vSeed * 17.);
+      if (hs < .45) continue;
+      vec2 o = (c + vec2(fxH2(c * 1.3), fxH2(c * 2.7))) * .045;
+      float an = fxH2(c * 3.1) * 6.2832;
+      vec2 dir = vec2(cos(an), sin(an));
+      vec2 rel = fxP - o;
+      float t = clamp(dot(rel, dir), -.022, .022);
+      vec2 cp = dir * t + vec2(-dir.y, dir.x) * t * t * 9.;
+      float d = length(rel - cp);
+      float g = exp(-d * d / (.0009 * .0009 + fxAA * fxAA));
+      float pick = fract(hs * 7.);
+      fxFib += g * (pick < .33 ? vec3(1., .2, .3) : (pick < .66 ? vec3(1., .9, .2) : vec3(.3, .6, 1.)));
+    }
+    // 기요셰: 동심 물결 선
+    float fxR = length(fxQ), fxA = atan(fxQ.y, fxQ.x + 1e-6);
+    float fxW = sin(fxR * 70. + 3. * sin(fxA * 7. + fxR * 6.)) ;
+    float fxGu = (1. - smoothstep(.0, .25 + fxAA * 60., abs(fxW))) * smoothstep(.95, .7, max(abs(fxQ.x), abs(fxQ.y)));
+    float fxSeal = smoothstep(.006, .009, fxBlH(fxP, vSeed) - .004 * (1. - dot(fxQ, fxQ) * .5));
+    // 종이: 잔 섬유 결
+    float fxPap = fxF2(fxP * 160. + vSeed * 4.);
+    diffuseColor.rgb = fxFc * (.88 + .14 * fxPap) * (1. + .08 * fxSeal);`,
+  normal: `
+    float fxE = .0012;
+    vec3 fxNt = normalize(vec3(fxBlH(fxP - vec2(fxE, 0.), vSeed) - fxBlH(fxP + vec2(fxE, 0.), vSeed),
+                               fxBlH(fxP - vec2(0., fxE), vSeed) - fxBlH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = fxBump(normalize(mat3(vTx, vTy, vTz) * fxNt), (fxPap - .5) * .0006);`,
+  surface: 'roughnessFactor = .95; metalnessFactor = 0.;',
+  emissive: `
+    vec3 fxUvGlow = vec3(.32, .08, .6) * .22 + fxFib * 1.6 + vec3(.2, 1., .75) * fxGu * .55 + vec3(.85, .95, 1.) * fxSeal * .9;
+    totalEmissiveRadiance = fxUvGlow * fxK + fxFc * .02;`,
+};
+B.blacklight = {
+  // 몸통은 검은 무광 판지
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 40. + vSeed);',
+  surface: 'roughnessFactor = .95;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -6454,6 +6520,7 @@ export const MOVING = new Set([
   'memoryfoam',
   'shadowgarden',
   'flashlight',
+  'blacklight',
 ]);
 
 /**
