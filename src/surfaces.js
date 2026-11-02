@@ -5211,87 +5211,85 @@ const ROUND_BRILLIANT = /* glsl */ `
   }
 `;
 
-// 프린세스 컷(네모 브릴리언트). 거들은 정사각형(반폭 1, 두께 0.012), 테이블 반폭 0.66 높이 0.24, 크라운은 네 옆면과 네 귀
-// 패싯, 파빌리온은 변마다 세 갈래 셰브론(가운데 48°, 양옆 44°)이 큘릿으로 모인다. 조각 한 면이 통째로 이 돌 하나다
-const PRINCESS = /* glsl */ `
-  vec4 fxPrPlane(int i) {
-    // 0~3 크라운 옆, 4~7 크라운 귀: xyz 바깥 법선, w 상수
-    if (i < 4) {
-      float az = float(i) * 1.570796;
-      vec3 n = normalize(vec3(cos(az) * .228, sin(az) * .228, .34));
-      return vec4(n, dot(n, vec3(cos(az), sin(az), .012)));
-    }
-    float az = float(i - 4) * 1.570796 + .785398;
-    vec3 n = normalize(vec3(cos(az) * .42, sin(az) * .42, .5));
-    return vec4(n, dot(n, vec3(cos(az) * 1.3, sin(az) * 1.3, .012)) - .03);
-  }
-  vec4 fxPrCrown(vec2 p) {
-    vec4 best = vec4(0., 0., 1., .24);
-    for (int i = 0; i < 8; i++) {
-      vec4 P = fxPrPlane(i);
-      float h = (P.w - dot(P.xy, p)) / P.z;
-      if (h < best.w) best = vec4(P.xyz, h);
-    }
-    return best;
-  }
-  vec4 fxPrHit(vec3 o, vec3 d) {
+// 다이아몬드 덩어리 조각. 돌 단위: 스티커 반폭이 1, 조각(정육면체)은 반폭 1.2, 겉(스티커 면)이 z = 0이고 속은 z = -2.4까지.
+// 겉 말고 다섯 벽과 위쪽 모서리 네 빗면에서 빛이 되튕긴다
+const DIAMOND_CUBE = /* glsl */ `
+  vec4 fxDcHit(vec3 o, vec3 d) {
     vec4 hit = vec4(0., 0., 1., 1e4);
-    fxTry(o, d, vec3(0., 0., 1.), .24, hit);
-    for (int i = 0; i < 8; i++) {
-      vec4 P = fxPrPlane(i);
-      fxTry(o, d, P.xyz, P.w, hit);
-    }
+    fxTry(o, d, vec3(0., 0., 1.), 0., hit);
+    fxTry(o, d, vec3(0., 0., -1.), 2.4, hit);
+    fxTry(o, d, vec3(1., 0., 0.), 1.2, hit);
+    fxTry(o, d, vec3(-1., 0., 0.), 1.2, hit);
+    fxTry(o, d, vec3(0., 1., 0.), 1.2, hit);
+    fxTry(o, d, vec3(0., -1., 0.), 1.2, hit);
     for (int k = 0; k < 4; k++) {
-      float a0 = float(k) * 1.570796;
-      vec2 e = vec2(cos(a0), sin(a0));
-      vec2 al = vec2(-e.y, e.x);
-      for (int j = -1; j <= 1; j++) {
-        float az = a0 + float(j) * .34;
-        float ph = j == 0 ? .8378 : .768;
-        vec3 n = vec3(vec2(cos(az), sin(az)) * sin(ph), -cos(ph));
-        vec3 p0 = vec3(e + al * float(j) * .55, 0.);
-        fxTry(o, d, n, dot(n, p0), hit);
-      }
+      float a = float(k) * 1.570796;
+      vec3 n = normalize(vec3(cos(a), sin(a), 1.));
+      fxTry(o, d, n, dot(n, vec3(cos(a), sin(a), 0.) * 1.2) - .1, hit);
     }
     return hit;
+  }
+  // 잔 패싯 컷: 면 전체를 크기와 기울기가 제각각인 다각형 패싯으로 고르게 깎았다(낮은 둥근 지붕에 닿는 평면들 가운데
+  // 가장 낮은 것). 한 점으로 모이는 데가 없다. xyz 패싯 법선, w 높이(돌 단위)
+  vec4 fxDcFacet(vec2 q) {
+    vec2 g = q * 2.7;
+    vec2 i0 = floor(g);
+    float best = 1e9;
+    vec2 bg = vec2(0.);
+    for (int y = -1; y <= 1; y++) {
+      for (int x = -1; x <= 1; x++) {
+        vec2 ic = i0 + vec2(float(x), float(y));
+        vec2 cq = (ic + .5 + (vec2(fxH2(ic), fxH2(ic + 7.)) - .5) * .85) / 2.7;
+        float z0 = .2 * (1. - .4 * dot(cq, cq));
+        vec2 gr = -.16 * cq + (vec2(fxH2(ic * 3.1 + 1.), fxH2(ic * 5.7 + 2.)) - .5) * .75;
+        float h = z0 + dot(gr, q - cq);
+        if (h < best) { best = h; bg = gr; }
+      }
+    }
+    return vec4(normalize(vec3(-bg, 1.)), best);
   }
 `;
 
 S.diamond = {
-  // 다이아몬드. 조각 하나가 통째로 다이아몬드다. 스티커 자리마다 면 전체가 프린세스 컷(네모 브릴리언트)으로 깎여 테이블과
-  // 크라운 패싯이 실제로 솟았고, 속으로 들어간 빛이 셰브론 파빌리온에 되튕겨 흑백 대비로 번쩍이며 빛깔마다 다르게 꺾여
-  // 무지갯빛 불꽃이 튄다. 몸통도 맑은 다이아몬드라 모서리마다 빛이 맺힌다.
-  // 면마다 컬러 다이아몬드가 다르다(핑크, 코냑, 무색, 카나리, 그린, 블루)
-  head: `${GEM_BASE}${PRINCESS}
-    #define fxCutHit fxPrHit
+  // 다이아몬드. 조각 하나가 통째로 다이아몬드 덩어리다. 스티커 자리 면 전체가 크기와 기울기가 제각각인 잔 패싯으로 낮고
+  // 둥글게 깎였고, 패싯마다 빛이 다른 쪽으로 꺾여 들어가 덩어리 속 벽에 되튕겨 나오므로 잔 패싯마다 흰빛, 어둠, 무지갯빛
+  // 불꽃이 제각각 번쩍인다. 몸통도 맑은 다이아몬드. 면마다 컬러 다이아몬드가 다르다(핑크, 코냑, 무색, 카나리, 그린, 블루)
+  head: `${GEM_BASE}${DIAMOND_CUBE}
+    #define fxCutHit fxDcHit
     ${GEM_TRACE}
     float fxDiaH(vec2 p, float seed) {
-      vec2 q = p / (uSticker.x * .97);
-      return smoothstep(0., .04, fxEdgeAt(p)) * (.006 + uSticker.x * .97 * fxPrCrown(clamp(q, -1., 1.)).w);
+      vec2 q = clamp(p / uSticker.x, -1., 1.);
+      return smoothstep(0., .04, fxEdgeAt(p)) * (.008 + uSticker.x * .3 * fxDcFacet(q).w);
     }`,
   height: 'fxDiaH',
   color: `
     if (fxEdge() < 0.) discard;
     ${GEM_LIGHTS}
-    vec2 fxQd = clamp(vLocal.xy / (uSticker.x * .97), -1., 1.);
-    vec4 fxCr = fxPrCrown(fxQd);
+    vec2 fxQd = clamp(vLocal.xy / uSticker.x, -1., 1.);
+    vec4 fxCr = fxDcFacet(fxQd);
     vec3 fxBody = diffuseColor.rgb;
     diffuseColor.rgb = vec3(0.);`,
   normal: 'normal = normalize(fxTbn * fxCr.xyz);',
   surface: 'roughnessFactor = .02; metalnessFactor = 0.;',
   emissive: `
     vec3 fxVt = normalize(-vViewPosition) * fxTbn;
-    vec3 fxO = vec3(fxQd, fxCr.w);
-    vec3 fxAl = -log(clamp(fxBody, .02, 1.)) * .55;
-    totalEmissiveRadiance = fxGemShade(fxO, fxCr.xyz, fxVt, vec3(2.40, 2.42, 2.46), fxAl, fxBody * .12 + .04);`,
+    vec3 fxO = vec3(fxQd, -.001);
+    vec3 fxAl = -log(clamp(fxBody, .02, 1.)) * 1.3;
+    vec3 fxG = fxGemShade(fxO, fxCr.xyz, fxVt, vec3(2.40, 2.42, 2.46), fxAl, fxBody * .12 + .02);
+    // 다이아몬드다운 대비: 밝은 패싯은 더 하얗게, 어두운 패싯은 더 깊게, 군데군데 무지갯빛 불꽃
+    float fxL = dot(fxG, vec3(.3, .5, .2));
+    fxG = fxG * smoothstep(.0, .45, fxL) * 1.7 + vec3(1.) * smoothstep(.6, 1.2, fxL) * .35 + fxBody * (.16 + .2 * fxL);
+    vec3 fxFire = .5 + .5 * cos(6.2832 * (dot(fxCr.xy, vec2(3.1, 2.3)) + dot(fxVt.xy, vec2(4., 3.)) + vec3(0., .33, .67)));
+    fxG += fxFire * fxGlint(fxQd * 7. + fxCr.xy * 5., .35, 1.3) * 1.3;
+    totalEmissiveRadiance = fxG;`,
 };
 B.diamond = {
-  // 몸통도 맑은 다이아몬드: 비친 빛과 속에서 튀는 잔 불꽃
-  color: `diffuseColor.rgb *= .8 + .3 * fxN3(vLocal * 8. + vSeed);`,
-  surface: 'roughnessFactor = .03; metalnessFactor = .2;',
+  // 몸통도 맑은 다이아몬드: 어둡게 비치는 속에 잔 불꽃이 튄다
+  color: `diffuseColor.rgb *= .7 + .3 * fxN3(vLocal * 8. + vSeed);`,
+  surface: 'roughnessFactor = .03; metalnessFactor = .1;',
   emissive: `
     vec3 fxSp = .5 + .5 * cos(6.2832 * (fxN3(vLocal * 6. + vSeed) * 2. + vec3(0., .33, .67)));
-    totalEmissiveRadiance = fxSp * fxGlint(fxBodyUV() * 40. + vSeed * 7., .18, 1.2) * 1.4 + vec3(.8, .85, 1.) * fxFresnel(normal, 3.) * .25;`,
+    totalEmissiveRadiance = fxSp * fxGlint(fxBodyUV() * 40. + vSeed * 7., .18, 1.2) * 1.2;`,
 };
 
 // 쿠션 믹스드 컷(거들은 초타원 지수 3, 가로세로 반지름 1, 거들 두께 0.024). 크라운은 브릴리언트식(테이블, 카이트 36°,
