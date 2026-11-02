@@ -3269,6 +3269,27 @@ export const THEMES = [
     ambient: { mode: 'float', shape: 'dot', colors: ['#FFE2B8', '#FFC880'], count: 26, size: 0.025, speed: 0.12, opacity: 0.35 },
     burst: { shape: 'star', colors: ['#FFE6B0', '#FFB040', '#FFFFFF'], size: 0.1, speed: 2, gravity: -1, drag: 2, life: 0.8, additive: true },
   },
+  {
+    // 페로플루이드. 조각 겉 전체가 검은 자성 액체다. 늘 낮은 가시가 깔려 있고, 손끝(자석)을 대면 그 아래 가시가 거울처럼
+    // 매끈한 원뿔로 높이 솟아 손끝 쪽으로 기운다. 검은 겉에 면 색 빛이 비친다
+    id: 'ferrofluid',
+    name: '페로플루이드',
+    bg: '#07070A',
+    ink: '#EEEEF4',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #1A1A22, #040406)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.05, grid: 72 },
+    body: { color: '#18181C', roughness: 0.3, metalness: 0.7 },
+    faces: ['#FF3B30', '#FF9F0A', '#FFE14A', '#30D158', '#2E7BFF', '#C05CFF'],
+    lights: {
+      sky: '#ffffff', ground: '#101014', hemi: 0.8,
+      key: ['#ffffff', 2.6, [-3, 7, 5]], fill: ['#dfe6ff', 0.7, [6, 1, 4]], rim: ['#ffffff', 2.2, [3, 4, -6]],
+    },
+    env: 0.9,
+    surface: 'ferrofluid',
+    sound: 'molten',
+    motion: 'fluid',
+    burst: { shape: 'drip', colors: 'faces', size: 0.08, speed: 2, gravity: 4, drag: 1.5, life: 0.8 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3295,4 +3316,5 @@ export const GROUPS = [
   { name: '명화', themes: ['oil', 'watercolor', 'ukiyoe', 'monet', 'seurat', 'gogh', 'munch', 'klimt', 'cubism', 'warhol', 'collage'] },
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
+  { name: '손끝', themes: ['ferrofluid'] },
 ];

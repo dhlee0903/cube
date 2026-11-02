@@ -6177,6 +6177,60 @@ B.amber = {
   emissive: 'totalEmissiveRadiance = vec3(1., .62, .3) * fxFresnel(normal, 3.) * .18;',
 };
 
+S.ferrofluid = {
+  // 페로플루이드. 조각 겉 전체가 검은 자성 액체로 덮였다. 조각 속 자석 위 가운데에 가시가 육각으로 모여 고슴도치처럼
+  // 서고 잔잔히 떨린다. 손끝(자석)을 가져가면 그 아래 가시들이 거울처럼 매끈한 원뿔로 높이 솟아 손끝 쪽으로 기울고, 액체 전체도
+  // 그쪽으로 봉긋 끌려온다. 손을 떼면 천천히 가라앉는다. 검은 겉에 면 색 빛이 거울처럼 비치고 가시 옆구리가 면 색으로 빛난다
+  head: `
+    // 손끝이 끄는 힘(0~1): 손끝이 겉에 가깝고 그 바로 위일수록 세다
+    float fxFfPull(vec2 p) {
+      vec2 d = fxPtr.xy - p;
+      return exp(-dot(d, d) / .12) * smoothstep(4.5, 2., fxPtr.z);
+    }
+    // 정육각 격자에서 가장 가까운 점
+    vec2 fxFfHex(vec2 p) {
+      vec2 r = vec2(1., 1.7320508);
+      vec2 a = mod(p, r) - r * .5;
+      vec2 b = mod(p - r * .5, r) - r * .5;
+      return dot(a, a) < dot(b, b) ? p - a : p - b;
+    }
+    float fxFfH(vec2 p, float seed) {
+      float S = .085;
+      vec2 c = fxFfHex(p / S) * S;
+      float k = fxFfPull(c);
+      // 가시는 손끝 쪽으로 기운다: 뿌리에서 멀수록 손끝 쪽으로 밀린 자리를 잰다
+      vec2 lean = (fxPtr.xy - c) * .18 * k;
+      float r = length(p - c - lean * .5) / (S * .56);
+      float hgt = .085 * exp(-dot(c, c) / .05) * (1. + .08 * sin(uTime * 3. + seed * 40. + c.x * 30.)) + k * (.2 + .04 * fxH2(c * 17.));
+      hgt *= smoothstep(.008, .025, hgt);
+      float spike = hgt * pow(max(0., 1. - r), 1.7);
+      // 액체 전체가 손끝 쪽으로 봉긋 끌려온다
+      float mound = .006 + .03 * fxFfPull(p);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (mound + spike * smoothstep(0., .08, fxEdgeAt(p)));
+    }`,
+  height: 'fxFfH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxP = vLocal.xy;
+    float fxE = .0012;
+    vec3 fxNt = normalize(vec3(fxFfH(fxP - vec2(fxE, 0.), vSeed) - fxFfH(fxP + vec2(fxE, 0.), vSeed),
+                               fxFfH(fxP - vec2(0., fxE), vSeed) - fxFfH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    float fxK = fxFfPull(fxP);
+    // 검은 액체: 비친 빛만 면 색으로 물든다
+    diffuseColor.rgb = fxFc * .15 + .008;`,
+  normal: 'normal = normalize(mat3(vTx, vTy, vTz) * fxNt);',
+  surface: 'roughnessFactor = .05; metalnessFactor = 1.;',
+  emissive: `
+    float fxSide = 1. - fxNt.z;
+    totalEmissiveRadiance = fxFc * (.015 + .3 * fxFresnel(normal, 2.) * fxFresnel(normal, 2.) + .7 * fxSide * fxSide * (.3 + fxK));`,
+};
+B.ferrofluid = {
+  // 몸통은 검게 칠한 자석 강철
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .3; metalnessFactor = .7;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -6185,6 +6239,7 @@ export const MOVING = new Set([
   'disco', 'ink', 'lavalamp', 'glass', 'bubblewrap', 'thermal', 'kaleido', 'flip', 'opal',
   'dragon', 'nebula', 'galaxy', 'slime', 'lantern', 'eyeball', 'hamster', 'phoenix', 'fairywing',
   'dragonegg', 'druze', 'pave', 'diamond', 'ruby', 'sapphire', 'emerald', 'quartz', 'starstone', 'moonstone', 'plasmaball',
+  'ferrofluid',
 ]);
 
 /**
