@@ -3311,6 +3311,25 @@ export const THEMES = [
     motion: 'snap',
     burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 2.5, gravity: 2, drag: 2, life: 0.6 },
   },
+  {
+    // 메모리폼. 조각 하나가 통째로 잔구멍 숭숭한 폼 덩어리다. 손끝이 누른 자리가 움푹 들어가고, 손을 떼면 천천히 차오른다
+    id: 'memoryfoam',
+    name: '메모리폼',
+    bg: '#14131A',
+    ink: '#F2F0F6',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #2A2834, #0A0A0E)',
+    form: { bevel: 0.08, size: 0.95, radius: 0.08, grid: 56 },
+    body: { color: '#2A2A30', roughness: 0.95 },
+    faces: ['#F05A50', '#F5A23E', '#F0DC5A', '#5CC88A', '#4C8EE8', '#A57AE8'],
+    lights: {
+      sky: '#ffffff', ground: '#1a1820', hemi: 1,
+      key: ['#fff8f0', 2.4, [-4, 6, 5]], fill: ['#e0e6ff', 0.7, [6, 1, 4]], rim: ['#ffffff', 1.2, [3, 4, -6]],
+    },
+    surface: 'memoryfoam',
+    sound: 'squish',
+    motion: 'squish',
+    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: 1, drag: 2.5, life: 0.6 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3337,5 +3356,5 @@ export const GROUPS = [
   { name: '명화', themes: ['oil', 'watercolor', 'ukiyoe', 'monet', 'seurat', 'gogh', 'munch', 'klimt', 'cubism', 'warhol', 'collage'] },
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
-  { name: '손끝', themes: ['ferrofluid', 'pinart'] },
+  { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam'] },
 ];

@@ -6284,6 +6284,47 @@ B.pinart = {
   surface: 'roughnessFactor = .35; metalnessFactor = .8;',
 };
 
+S.memoryfoam = {
+  // 메모리폼. 조각 하나가 통째로 잔구멍이 숭숭한 폼 덩어리라 가장자리가 둥글게 부풀었다. 손끝이 다가오면 그 자리가 손가락
+  // 모양으로 움푹 눌려 들어가고, 눌린 곳은 구멍이 납작하게 눌려 빛깔이 짙어진다. 손을 떼면 손끝이 멀어지는 대로 천천히
+  // 차오른다
+  head: `
+    float fxMfPress(vec2 p) {
+      vec2 d = fxPtr.xy - p;
+      return exp(-dot(d, d) / .035) * smoothstep(4.6, 2.1, fxPtr.z);
+    }
+    float fxMfH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float pillow = .045 * pow(max(0., 1. - pow(max(abs(q.x), abs(q.y)), 6.)), .5);
+      return smoothstep(0., .07, fxEdgeAt(p)) * max(.004, pillow - .07 * fxMfPress(p));
+    }`,
+  height: 'fxMfH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxP = vLocal.xy;
+    float fxK = fxMfPress(fxP);
+    // 열린 기포: 크고 작은 구멍 두 겹. 눌린 곳은 구멍이 납작하다
+    vec3 fxV1 = fxVoronoi(fxP * 48. + vSeed * 7.);
+    vec3 fxV2 = fxVoronoi(fxP * 105. + 3.1);
+    float fxAA = clamp(fwidth(fxP.x) * 70., 0., 1.);
+    float fxPore = mix((1. - smoothstep(.0, .38 - .14 * fxK, fxV1.x)) * .8 + (1. - smoothstep(.0, .3, fxV2.x)) * .4, .35, fxAA);
+    float fxPh = -fxPore * .0025;
+    diffuseColor.rgb = fxFc * (1. - .55 * fxPore) * (1. - .28 * fxK) * (.92 + .08 * fxF2(fxP * 30. + vSeed));`,
+  normal: `
+    float fxE = .0012;
+    vec3 fxNt = normalize(vec3(fxMfH(fxP - vec2(fxE, 0.), vSeed) - fxMfH(fxP + vec2(fxE, 0.), vSeed),
+                               fxMfH(fxP - vec2(0., fxE), vSeed) - fxMfH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = fxBump(normalize(mat3(vTx, vTy, vTz) * fxNt), fxPh);`,
+  surface: 'roughnessFactor = .92; metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxFc * .04 * (1. - fxPore);',
+};
+B.memoryfoam = {
+  // 몸통은 짙은 회색 폼
+  color: 'diffuseColor.rgb *= .8 + .3 * fxN3(vLocal * 60. + vSeed);',
+  surface: 'roughnessFactor = .95;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -6294,6 +6335,7 @@ export const MOVING = new Set([
   'dragonegg', 'druze', 'pave', 'diamond', 'ruby', 'sapphire', 'emerald', 'quartz', 'starstone', 'moonstone', 'plasmaball',
   'ferrofluid',
   'pinart',
+  'memoryfoam',
 ]);
 
 /**
