@@ -3999,6 +3999,27 @@ export const THEMES = [
     motion: 'mechanical',
     burst: { shape: 'dot', colors: ['#E8C070', '#D0D4DA'], size: 0.04, speed: 1.8, gravity: 3, drag: 2, life: 0.5 },
   },
+  {
+    // 풍경. 조각 하나가 통째로 유리 상자이고 속 나무 막대에 길이가 다른 면 색 금속 관 다섯이 늘 화면 아래쪽으로 드리운다.
+    // 층을 돌리면 관들이 저마다 흔들리며 빛이 관을 따라 미끄러진다
+    id: 'windchime',
+    name: '풍경',
+    bg: '#0A0C10',
+    ink: '#F2F4FA',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #1E2430, #050608)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.05, grid: 40 },
+    body: { color: '#3A2618', roughness: 0.4 },
+    faces: ['#E8343A', '#F5922A', '#EED22E', '#30B860', '#2E78E8', '#A84EE0'],
+    lights: {
+      sky: '#ffffff', ground: '#12141a', hemi: 1,
+      key: ['#ffffff', 2.2, [-3, 7, 5]], fill: ['#e6ecff', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.4, [3, 4, -6]],
+    },
+    env: 0.8,
+    surface: 'windchime',
+    sound: 'crystal',
+    motion: 'smooth',
+    burst: { shape: 'star', colors: ['#FFFFFF', '#E0F0FF'], size: 0.06, speed: 1.8, gravity: 0, drag: 2, life: 0.8, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -4028,5 +4049,5 @@ export const GROUPS = [
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
   { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops', 'liquidtimer', 'oilwater', 'mobile'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'laser', 'magnifier', 'chrome', 'fiberoptic', 'ledcube'] },
-  { name: '돌리면', themes: ['pinwheel', 'musicbox', 'fireworks', 'chladni', 'safedial'] },
+  { name: '돌리면', themes: ['pinwheel', 'musicbox', 'fireworks', 'chladni', 'safedial', 'windchime'] },
 ];

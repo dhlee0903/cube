@@ -8383,6 +8383,77 @@ B.safedial = {
   surface: 'roughnessFactor = .4; metalnessFactor = .8;',
 };
 
+S.windchime = {
+  // 풍경. 조각 하나가 통째로 유리 상자이고, 속 위쪽(화면 위) 나무 막대에 길이가 다른 면 색 아노다이징 금속 관 다섯이 줄에
+  // 매달려 늘 아래로 드리운다. 관 사이엔 둥근 추가, 그 밑엔 바람받이 판이 달렸다. 관은 둥근 원통이라 세로로 빛이 맺히고,
+  // 층을 돌리면 관들이 저마다 다른 박자로 흔들리며 빛이 관을 따라 미끄러지고, 추와 바람받이도 흔들리다 잦아든다
+  head: `
+    float fxWcH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float n = pow(pow(abs(q.x), 8.) + pow(abs(q.y), 8.), 1. / 8.);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .01 * sqrt(max(0., 1. - n * n)));
+    }`,
+  height: 'fxWcH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    vec2 fxGd = fxGrav;
+    float fxSt = smoothstep(.15, .5, fxGravL);
+    vec2 fxSd = vec2(-fxGd.y, fxGd.x);
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVl = vec3(dot(fxV, vTx), dot(fxV, vTy), max(dot(fxV, vTz), .25));
+    vec2 fxQm = fxQ - fxVl.xy / fxVl.z * .22 / uSticker.x;
+    vec2 fxUV = vec2(dot(fxQm, fxSd), dot(fxQm, fxGd));
+    vec2 fxQw = fxQ - fxVl.xy / fxVl.z * .42 / uSticker.x;
+    vec3 fxCol = fxFc * (.3 + .08 * fxN2(fxQw * 5.));
+    // 나무 막대
+    float fxBar = step(abs(fxUV.x), .78) * step(abs(fxUV.y + .74), .05);
+    fxCol = mix(fxCol, vec3(.42, .27, .14) * (.8 + .3 * fxN2(vec2(fxUV.x * 30., fxUV.y * 3.))), fxBar * fxSt);
+    float fxTube = 0., fxShine = 0.;
+    for (int i = 0; i < 5; i++) {
+      float fi = float(i);
+      float x0 = (fi - 2.) * .3;
+      float L = .95 - abs(fi - 2.) * .12 - fxH1(fi + vSeed * 7.) * .08;
+      float sw = uCharge * .35 * sin(uTime * (4. + fi * .7) + fi * 2.1 + vSeed * 9.) + .02 * sin(uTime * 1.1 + fi);
+      vec2 top = vec2(x0, -.7);
+      vec2 dir = vec2(sin(sw), cos(sw));
+      vec2 rel = fxUV - top;
+      float along = dot(rel, dir);
+      float across = dot(rel, vec2(dir.y, -dir.x));
+      // 줄
+      float str = step(0., along) * step(along, .12) * (1. - smoothstep(.004, .01, abs(across)));
+      // 관: 원통이라 가운데가 밝고 가장자리가 짙다
+      float tb = step(.12, along) * step(along, .12 + L) * (1. - smoothstep(.045, .055, abs(across)));
+      if (tb > fxTube) { fxTube = tb; fxShine = 1. - abs(across) / .05; }
+      fxCol = mix(fxCol, vec3(.08), str * fxSt);
+    }
+    // 추와 바람받이
+    float fxSwc = uCharge * .3 * sin(uTime * 3.3 + vSeed * 4.);
+    vec2 fxCl = vec2(sin(fxSwc), cos(fxSwc)) * .55 + vec2(0., -.7);
+    float fxClap = 1. - smoothstep(.09, .1, length(fxUV - fxCl));
+    vec2 fxSail = vec2(sin(fxSwc * 1.4), cos(fxSwc * 1.4)) * 1.05 + vec2(0., -.7);
+    float fxSailM = step(abs(fxUV.x - fxSail.x), .12) * step(abs(fxUV.y - fxSail.y), .1);
+    vec3 fxTubeC = fxFc * (.55 + .6 * pow(fxShine, 2.)) + vec3(1.) * pow(fxShine, 16.) * (.4 + .5 * uCharge);
+    fxCol = mix(fxCol, fxTubeC, fxTube * fxSt);
+    fxCol = mix(fxCol, vec3(.42, .27, .14), max(fxClap, fxSailM) * fxSt);
+    fxCol = mix(fxCol, fxFc * .7, 1. - fxSt);
+    diffuseColor.rgb = fxCol;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxWcH(fxP - vec2(fxE, 0.), vSeed) - fxWcH(fxP + vec2(fxE, 0.), vSeed),
+                               fxWcH(fxP - vec2(0., fxE), vSeed) - fxWcH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = .05; metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxCol * .15;',
+};
+B.windchime = {
+  // 몸통은 짙은 나무 틀
+  color: 'diffuseColor.rgb *= .8 + .3 * fxN3(vec3(vLocal.x * 4., vLocal.y * 40., vLocal.z * 4.) + vSeed);',
+  surface: 'roughnessFactor = .4;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -8426,6 +8497,7 @@ export const MOVING = new Set([
   'fireworks',
   'chladni',
   'safedial',
+  'windchime',
 ]);
 
 /**
