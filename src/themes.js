@@ -3623,6 +3623,27 @@ export const THEMES = [
     ambient: { mode: 'fall', shape: 'rain', colors: ['#A8C0E0'], count: 30, size: 0.05, speed: 2.5, opacity: 0.35 },
     burst: { shape: 'drip', colors: ['#D0E4FF', '#FFFFFF'], size: 0.05, speed: 1.8, gravity: 4, drag: 1.5, life: 0.7 },
   },
+  {
+    // 오일 타이머. 조각 하나가 통째로 맑은 액체가 찬 유리 상자다. 위에 고인 면 색 기름이 깔때기 구멍 셋에서 방울로 맺혀
+    // 늘 화면 아래쪽으로 줄지어 떨어지고 바닥에 고인다. 층을 돌리면 방울이 빨라진다
+    id: 'liquidtimer',
+    name: '오일 타이머',
+    bg: '#06090C',
+    ink: '#EEF4F8',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #16222C, #030506)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.05, grid: 40 },
+    body: { color: '#3A4A56', roughness: 0.1 },
+    faces: ['#FF3040', '#FF9020', '#FFE030', '#20D070', '#2080FF', '#C040FF'],
+    lights: {
+      sky: '#ffffff', ground: '#0e1418', hemi: 1,
+      key: ['#ffffff', 2.4, [-3, 7, 5]], fill: ['#dfe6ff', 0.7, [6, 1, 4]], rim: ['#ffffff', 1.6, [3, 4, -6]],
+    },
+    env: 0.9,
+    surface: 'liquidtimer',
+    sound: 'water',
+    motion: 'fluid',
+    burst: { shape: 'bubble', colors: 'faces', size: 0.06, speed: 1.6, gravity: 2, drag: 2, life: 0.8 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3650,5 +3671,5 @@ export const GROUPS = [
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
-  { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops'] },
+  { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops', 'liquidtimer'] },
 ];
