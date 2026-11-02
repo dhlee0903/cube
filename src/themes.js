@@ -3394,30 +3394,46 @@ export const THEMES = [
 
 
   {
-    // 보석상 진열장의 루비·사파이어. 칸마다 쿠션 믹스드 컷 한 알이 금 베젤에 물려 솟았고, 속엔 비단 같은 금홍석 실크.
-    // 면마다 강옥이 다르다(피전 블러드 루비, 파파라차, 핑크, 옐로, 퍼플, 로열 블루). 기요셰를 새긴 금판, 자줏빛 옻칠 몸통
-    id: 'corundum',
-    name: '루비·사파이어',
-    bg: '#0E080C',
-    ink: '#F6ECE4',
-    backdrop: [
-      'radial-gradient(30% 42% at 50% 0%, rgba(255,236,214,.14), transparent 70%)',
-      'repeating-linear-gradient(100deg, rgba(255,255,255,.025) 0 4%, rgba(0,0,0,.14) 7% 12%)',
-      'radial-gradient(80% 60% at 50% 45%, #2A1220, #08040A)',
-    ].join(', '),
-    form: { bevel: 0.07, size: 0.92, radius: 0.1, grid: 64 },
-    body: { color: '#2A1424', roughness: 0.18 },
-    faces: ['#C8102E', '#F7967A', '#F25AAA', '#F6C514', '#9A34D0', '#2446C8'],
+    // 루비. 조각 하나가 통째로 루비다. 스티커 자리마다 면 전체가 귀가 둥근 쿠션 컷으로 깎여 크라운 패싯이 솟고, 속엔 비단
+    // 같은 금홍석 실크와 붉은 형광. 면마다 루비 빛깔(피전 블러드, 핫 핑크, 오렌지 레드, 라즈베리, 검붉은 루비, 연분홍)
+    id: 'ruby',
+    name: '루비',
+    bg: '#0A0507',
+    ink: '#F6ECEC',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #241016, #050304)',
+    form: { bevel: 0.06, size: 0.96, radius: 0.1, grid: 56 },
+    body: { color: '#24262C', roughness: 0.04 },
+    faces: ['#D0102C', '#FF5FA2', '#F2581E', '#8C1C6C', '#3A0610', '#F7BCD0'],
     lights: {
-      sky: '#fff6ee', ground: '#2a1018', hemi: 0.9,
-      key: ['#fff8ee', 2.6, [-3, 7, 5]], fill: ['#ffe2c8', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.6, [3, 4, -6]],
+      sky: '#fff6f2', ground: '#200c12', hemi: 1,
+      key: ['#fff8f2', 2.8, [-3, 7, 5]], fill: ['#ffe2dc', 0.7, [6, 1, 4]], rim: ['#ffffff', 1.8, [3, 4, -6]],
     },
-    env: 1,
-    surface: 'corundum',
+    env: 1.05,
+    surface: 'ruby',
     sound: 'crystal',
     motion: 'smooth',
-    ambient: { mode: 'float', shape: 'star', colors: ['#FFFFFF', '#FFE8D8', '#FFD0D8'], count: 24, size: 0.09, speed: 0.4, opacity: 0.8, additive: true },
-    burst: { shape: 'star', colors: 'faces', size: 0.13, speed: 2.3, gravity: -1, drag: 2, life: 0.9, additive: true },
+    burst: { shape: 'star', colors: ['#FFFFFF', '#FFD0D8', '#FF6070', '#FFB0C8'], size: 0.14, speed: 2.4, gravity: -1, drag: 2, life: 0.9, additive: true },
+  },
+  {
+    // 사파이어. 조각 하나가 통째로 사파이어다. 스티커 자리마다 면 전체가 귀가 뾰족한 네모 포르투갈 컷으로 깎여 크라운 세 단이
+    // 엇갈려 잘게 솟는다. 면마다 사파이어 빛깔(로열 블루, 파파라차, 핑크, 옐로, 퍼플, 틸)
+    id: 'sapphire',
+    name: '사파이어',
+    bg: '#04060C',
+    ink: '#EEF2FA',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #121A2E, #030407)',
+    form: { bevel: 0.05, size: 0.98, radius: 0.02, grid: 56 },
+    body: { color: '#141A2A', roughness: 0.04 },
+    faces: ['#2446C8', '#F7967A', '#F25AAA', '#F6C514', '#9A34D0', '#1E9E8C'],
+    lights: {
+      sky: '#f4f8ff', ground: '#0c1020', hemi: 1,
+      key: ['#ffffff', 2.8, [-3, 7, 5]], fill: ['#dce8ff', 0.7, [6, 1, 4]], rim: ['#ffffff', 1.8, [3, 4, -6]],
+    },
+    env: 1.05,
+    surface: 'sapphire',
+    sound: 'crystal',
+    motion: 'smooth',
+    burst: { shape: 'star', colors: ['#FFFFFF', '#D0E0FF', '#6088FF', '#B0C8FF'], size: 0.14, speed: 2.4, gravity: -1, drag: 2, life: 0.9, additive: true },
   },
   {
     // 에메랄드 컷 녹주석. 귀를 깎은 직사각형에 계단이 겹겹이 져 넓은 빛 조각이 거울 복도처럼 비치고, 에메랄드엔 이끼 같은
@@ -3529,7 +3545,7 @@ export const GROUPS = [
   { name: '자연', themes: ['forest', 'grass', 'soil', 'timber', 'pebble', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert'] },
   { name: '빛·불', themes: ['neon', 'lava', 'electric', 'disco', 'lavalamp', 'kaleido'] },
   { name: '우주', themes: ['space', 'planet', 'blackhole', 'nebula', 'galaxy'] },
-  { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'bismuth', 'druze', 'pave', 'diamond', 'corundum', 'emerald', 'quartz', 'starstone', 'moonstone'] },
+  { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'bismuth', 'druze', 'pave', 'diamond', 'ruby', 'sapphire', 'emerald', 'quartz', 'starstone', 'moonstone'] },
   { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'camo'] },
   { name: '문양', themes: ['lantern'] },
   { name: '패턴', themes: ['houndstooth', 'glencheck', 'herringbone', 'gingham', 'argyle', 'chevron', 'tartan', 'pinstripe', 'windowpane', 'buffalo', 'madras', 'seersucker', 'birdseye'] },

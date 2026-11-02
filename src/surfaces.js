@@ -5057,7 +5057,7 @@ B.birdseye = {
   surface: 'roughnessFactor = .4;',
 };
 
-// 보석 광학 공용. 깎은 보석 질감(다이아몬드, 루비·사파이어, 에메랄드, 자수정)이 head 앞에 붙여 쓴다.
+// 보석 광학 공용. 깎은 보석 질감(다이아몬드, 루비, 사파이어, 에메랄드, 자수정)이 head 앞에 붙여 쓴다.
 // 보석상 진열장의 빛(환경), 프레넬 반사, 깎인 돌 속에서 빛이 튕기는 길을 따라가는 함수가 들었다.
 // 깎은 모양(컷)마다 fxCutHit(o, d)을 정의한다: 돌 안 o에서 d로 가는 빛이 처음 닿는 패싯의 바깥 법선(xyz)과 거리(w)
 const GEM_BASE = /* glsl */ `
@@ -5298,133 +5298,186 @@ B.diamond = {
     totalEmissiveRadiance = fxSp * fxGlint(fxBodyUV() * 40. + vSeed * 7., .18, 1.2) * 1.4 + vec3(.8, .85, 1.) * fxFresnel(normal, 3.) * .25;`,
 };
 
-// 쿠션 믹스드 컷(거들은 초타원 지수 3, 가로세로 반지름 1, 거들 두께 0.024). 크라운은 브릴리언트식(테이블, 카이트 36°,
-// 스타 21°, 어퍼 거들 44°), 파빌리온은 계단식 두 단(거들 쪽 52°, 가운데 38°). 루비·사파이어를 흔히 이렇게 깎는다
-const CUSHION_MIXED = /* glsl */ `
-  // 크라운 패싯 i(방위각 순서 0~4: 카이트, 어퍼 거들, 스타, 어퍼 거들, 카이트) → x 방위각, y sinθ, z cosθ, w 상수
-  vec4 fxCuP(float az, int type) {
-    float r = fxSupR(az, 3.);
-    if (type == 0) return vec4(az, .58779, .80902, .58779 * r + .80902 * .012);
-    if (type == 1) return vec4(az, .69466, .71934, .69466 * r + .71934 * .012);
-    return vec4(az, .35837, .93358, .35837 * .62 * r + .93358 * .317);
+// 네모난 돌의 거들(반폭 1, 귀 반지름 FX_GR인 둥근 네모)과 패싯 평면. 패싯마다 정한 자리를 지나되 거들 밖으로는 내려가지
+// 않게 평면을 들어 올린다. 그래서 크라운이 거들에서 끊김 없이 시작하고 귀가 따로 패이지 않는 볼록한 돌이 된다
+const SQ_CUT = /* glsl */ `
+  // 거들의 지지 함수: 방위 u 쪽으로 거들이 가장 멀리 나간 거리
+  float fxSqS(vec2 u) { return (1. - FX_GR) * (abs(u.x) + abs(u.y)) + FX_GR; }
+  // 방위 u 쪽으로 가운데에서 거들까지 거리
+  float fxSqR(vec2 u) {
+    u = abs(u) + 1e-5;
+    float t = 1. / max(u.x, u.y);
+    if (t * min(u.x, u.y) <= 1. - FX_GR) return t;
+    vec2 c = vec2(1. - FX_GR);
+    float b = dot(u, c);
+    return b + sqrt(max(b * b - dot(c, c) + FX_GR * FX_GR, 0.));
   }
-  // 크라운 겉: xyz 패싯 법선, w 높이. 4각 대칭이라 1/8 조각으로 접는다
-  vec4 fxCuCrown(vec2 p) {
-    float r = length(p);
-    float a = atan(p.y, p.x + 1e-7) + 6.2832;
-    float k = floor(a / 1.570796);
-    float b = a - k * 1.570796;
-    float m = step(.785398, b);
-    b = mix(b, 1.570796 - b, m);
-    vec4 best = vec4(0., 0., 1., .317);
-    float hb = .317;
-    for (int i = 0; i < 5; i++) {
-      float az = float(i) * .19635;
-      vec4 P = fxCuP(az, i == 2 ? 2 : (i == 1 || i == 3 ? 1 : 0));
-      float h = (P.w - P.y * r * cos(b - P.x)) / P.z;
-      if (h < hb) { hb = h; best = P; }
+  // 크라운 패싯: 방위각 az, 기울기 th(라디안). 거들 거리의 k배 자리에서 높이 h를 지난다(k = 0이면 거들에 닿는다)
+  vec4 fxSqUp(float az, float th, float k, float h) {
+    vec2 u = vec2(cos(az), sin(az));
+    return vec4(u * sin(th), cos(th), max(sin(th) * k * fxSqR(u) + cos(th) * h, sin(th) * fxSqS(u) + cos(th) * .012));
+  }
+  // 파빌리온 패싯: 방위각 az, 기울기 th. 거들 거리의 k배 자리에서 깊이 z(음수)를 지난다
+  vec4 fxSqDn(float az, float th, float k, float z) {
+    vec2 u = vec2(cos(az), sin(az));
+    return vec4(u * sin(th), -cos(th), max(sin(th) * k * fxSqR(u) - cos(th) * z, sin(th) * fxSqS(u) + cos(th) * .012));
+  }
+  float fxSqH(vec4 P, vec2 p) { return (P.w - dot(P.xy, p)) / P.z; }
+  void fxSqMin(vec4 P, vec2 p, inout vec4 best) { float h = fxSqH(P, p); if (h < best.w) best = vec4(P.xyz, h); }
+`;
+
+// 쿠션 컷(루비). 귀가 둥근 네모 거들, 크라운은 브릴리언트식: 테이블(높이 0.3), 카이트 여덟(36°), 테이블 가장자리의 스타
+// 여덟(21°), 어퍼 거들 열여섯(44°). 파빌리온은 계단 두 단(거들 쪽 51°, 가운데 38°)과 작은 큘릿. 루비를 가장 흔히 이렇게 깎는다
+const RUBY_CUT = /* glsl */ `
+  #define FX_GR .19
+  ${SQ_CUT}
+  vec4 fxRbCrown(vec2 p) {
+    vec4 best = vec4(0., 0., 1., .3);
+    for (int k = 0; k < 16; k++) {
+      float az = float(k) * .392699;
+      fxSqMin((k / 2) * 2 == k ? fxSqUp(az, .628, 0., .012) : fxSqUp(az, .367, .6, .3), p, best);
+      fxSqMin(fxSqUp(az + .19635, .768, 0., .012), p, best);
     }
-    float az = k * 1.570796 + mix(best.x, 1.570796 - best.x, m);
-    return vec4(best.y * cos(az), best.y * sin(az), best.z, hb);
+    return best;
   }
-  vec4 fxCuHit(vec3 o, vec3 d) {
+  vec4 fxRbHit(vec3 o, vec3 d) {
     vec4 hit = vec4(0., 0., 1., 1e4);
-    fxTry(o, d, vec3(0., 0., 1.), .317, hit);
-    for (int i = 0; i < 16; i++) {
-      float az = float(i) * .392699;
-      vec2 u = vec2(cos(az), sin(az));
-      vec2 v = vec2(cos(az + .19635), sin(az + .19635));
-      vec4 P = fxCuP(az, (i / 2) * 2 == i ? 0 : 2);
-      fxTry(o, d, vec3(u * P.y, P.z), P.w, hit);
-      vec4 Q = fxCuP(az + .19635, 1);
-      fxTry(o, d, vec3(v * Q.y, Q.z), Q.w, hit);
-      float r = fxSupR(az, 3.);
-      fxTry(o, d, vec3(u * .78801, -.61566), .78801 * r + .61566 * .012, hit);
-      fxTry(o, d, vec3(u * .61566, -.78801), .61566 * .5 * r + .78801 * (.012 + .64 * r), hit);
+    fxTry(o, d, vec3(0., 0., 1.), .3, hit);
+    for (int k = 0; k < 16; k++) {
+      float az = float(k) * .392699;
+      vec4 P = (k / 2) * 2 == k ? fxSqUp(az, .628, 0., .012) : fxSqUp(az, .367, .6, .3);
+      fxTry(o, d, P.xyz, P.w, hit);
+      P = fxSqUp(az + .19635, .768, 0., .012); fxTry(o, d, P.xyz, P.w, hit);
+      P = fxSqDn(az, .89, 0., -.012); fxTry(o, d, P.xyz, P.w, hit);
+      P = fxSqDn(az, .663, .5, -.62); fxTry(o, d, P.xyz, P.w, hit);
     }
+    fxTry(o, d, vec3(0., 0., -1.), .96, hit);
     return hit;
   }
 `;
 
-S.corundum = {
-  // 루비·사파이어. 칸마다 쿠션 믹스드 컷 한 알이 금 베젤에 물려 솟았다. 크라운은 브릴리언트식 패싯으로 빛을 잘게 가르고,
-  // 파빌리온은 계단식이라 속에서 넓은 빛 조각이 비친다. 돌 속엔 금홍석 바늘(실크)이 60°씩 엇갈려 비단 같은 결이 빛을 받아
-  // 흐르고, 빛깔이 짙고 맑다. 루비는 크롬 형광으로 붉게 달아오른다. 판은 엔진 터닝(기요셰) 무늬를 새긴 금.
-  // 면마다 강옥이 다르다(피전 블러드 루비, 파파라차, 핑크, 옐로, 퍼플, 로열 블루)
-  head: `${GEM_BASE}${CUSHION_MIXED}
-    #define fxCutHit fxCuHit
-    ${GEM_TRACE}
-    float fxCoH(vec2 p, float seed) {
-      float R = uSticker.x * .68;
-      vec2 q = p / R;
-      float a = atan(q.y, q.x + 1e-7);
-      float d = length(q) - fxSupR(a, 3.);
-      float st = d < 0. ? .02 + R * fxCuCrown(q).w : 0.;
-      return smoothstep(0., .05, fxEdgeAt(p)) * max(max(.008, fxBezH(d)), st);
+// 포르투갈 컷(사파이어). 귀가 뾰족한 네모 거들에 크라운 세 단(40°, 29°, 17°)과 파빌리온 세 단(49°, 42°, 35°)이 단마다
+// 반 칸씩 엇갈려 돌아가며 잘게 깎이고, 작은 테이블과 작은 큘릿. 패싯이 많아 빛이 비늘처럼 잘게 갈린다
+const SAPPHIRE_CUT = /* glsl */ `
+  #define FX_GR .02
+  ${SQ_CUT}
+  vec4 fxSpUp(int t, float az) {
+    if (t == 0) return fxSqUp(az, .698, 0., .012);
+    if (t == 1) return fxSqUp(az + .19635, .506, .78, .17);
+    return fxSqUp(az, .297, .58, .27);
+  }
+  vec4 fxSpCrown(vec2 p) {
+    vec4 best = vec4(0., 0., 1., .31);
+    for (int k = 0; k < 16; k++) {
+      float az = float(k) * .392699;
+      for (int t = 0; t < 3; t++) fxSqMin(fxSpUp(t, az), p, best);
     }
-    // 조각 셰이더용: 판에 새긴 기요셰(물결 친 동심 무늬)까지 더한 높이
-    float fxGuAA;
-    float fxCoHf(vec2 p, float seed) {
-      vec2 q = p / uSticker.x;
-      float g = sin(length(q) * 130. + sin(atan(q.y, q.x) * 24.) * .5);
-      return fxCoH(p, seed) + g * .00016 * fxGuAA * step(fxCoH(p, seed), .0081);
+    return best;
+  }
+  vec4 fxSpHit(vec3 o, vec3 d) {
+    vec4 hit = vec4(0., 0., 1., 1e4);
+    fxTry(o, d, vec3(0., 0., 1.), .31, hit);
+    for (int k = 0; k < 16; k++) {
+      float az = float(k) * .392699;
+      for (int t = 0; t < 3; t++) { vec4 P = fxSpUp(t, az); fxTry(o, d, P.xyz, P.w, hit); }
+      vec4 P = fxSqDn(az, .855, 0., -.012); fxTry(o, d, P.xyz, P.w, hit);
+      P = fxSqDn(az + .19635, .733, .66, -.32); fxTry(o, d, P.xyz, P.w, hit);
+      P = fxSqDn(az, .611, .34, -.58); fxTry(o, d, P.xyz, P.w, hit);
+    }
+    fxTry(o, d, vec3(0., 0., -1.), .78, hit);
+    return hit;
+  }
+`;
+
+S.ruby = {
+  // 루비. 조각 하나가 통째로 루비다. 스티커 자리마다 면 전체가 귀가 둥근 쿠션 컷으로 깎여 브릴리언트식 크라운 패싯이
+  // 실제로 솟고, 속에선 계단식 파빌리온이 넓은 빛 조각을 되비친다. 돌 속엔 금홍석 바늘(실크)이 60°씩 엇갈려 빛을 받은
+  // 줄만 비단처럼 흐르고, 크롬 형광으로 붉게 달아오른다. 면마다 루비 빛깔이 다르다
+  head: `${GEM_BASE}${RUBY_CUT}
+    #define fxCutHit fxRbHit
+    ${GEM_TRACE}
+    float fxRbH(vec2 p, float seed) {
+      float R = uSticker.x * .97;
+      return smoothstep(0., .04, fxEdgeAt(p)) * (.006 + R * max(fxRbCrown(p / R).w, .012));
     }`,
-  height: 'fxCoH',
+  height: 'fxRbH',
   color: `
     if (fxEdge() < 0.) discard;
     ${GEM_LIGHTS}
-    float fxR = uSticker.x * .68;
-    vec2 fxQd = vLocal.xy / fxR;
-    float fxDo = length(fxQd) - fxSupR(atan(fxQd.y, fxQd.x + 1e-7), 3.);
-    vec4 fxCr = fxCuCrown(fxQd);
-    float fxHt = fxCoH(vLocal.xy, vSeed);
-    float fxStone = step(fxDo, 0.) * step(fxHt - .0004, .02 + fxR * fxCr.w);
-    float fxBezel = (1. - fxStone) * smoothstep(-.06, -.03, fxDo) * (1. - smoothstep(.16, .19, fxDo));
+    vec2 fxQd = vLocal.xy / (uSticker.x * .97);
+    vec4 fxCr = fxRbCrown(fxQd);
     vec3 fxBody = diffuseColor.rgb;
-    fxGuAA = 1. - smoothstep(.3, .7, fwidth(length(vLocal.xy / uSticker.x)) * 130. / 6.2832);
-    float fxSat = fxN2(vLocal.xy * 300. + vSeed * 9.);
-    // 18K 옐로 골드: 판은 기요셰를 새겨 결 따라 빛이 돌고, 베젤은 거울처럼 닦았다
-    diffuseColor.rgb = mix(vec3(1., .74, .36) * mix(.82 + .08 * fxSat, 1., fxBezel), vec3(0.), fxStone);`,
-  normal: `
-    normal = normalize(fxTbn * (fxStone > .5 ? fxCr.xyz : FX_HNORM(fxCoHf, vLocal.xy, .0012)));`,
-  surface: `
-    roughnessFactor = mix(mix(.26, .09, fxBezel), .02, fxStone);
-    metalnessFactor = 1. - fxStone;`,
+    diffuseColor.rgb = vec3(0.);`,
+  normal: 'normal = normalize(fxTbn * fxCr.xyz);',
+  surface: 'roughnessFactor = .02; metalnessFactor = 0.;',
   emissive: `
-    vec3 fxGlow = vec3(0.);
-    if (fxStone > .5) {
-      vec3 fxVt = normalize(-vViewPosition) * fxTbn;
-      vec3 fxO = vec3(fxQd, fxCr.w);
-      vec3 fxAl = -log(clamp(fxBody, .015, 1.)) * .32;
-      fxGlow = fxGemShade(fxO, fxCr.xyz, fxVt, vec3(1.757, 1.766, 1.787), fxAl, vec3(.03));
-      // 실크: 금홍석 바늘 세 갈래(60°). 바늘은 빛을 축에 수직인 원뿔로 되쏘아, 빛과 눈의 자리가 맞는 줄에서만 비단처럼 빛난다
-      vec3 fxIn = refract(fxVt, fxCr.xyz, .5663);
-      float fxSilk = 0.;
-      float fxSAA = 1. - smoothstep(.2, .6, fwidth(fxQd.x) * 30.);
-      for (int i = 0; i < 3; i++) {
-        float fa = float(i) * 1.0472 + vSeed * 6.2832;
-        vec2 fxT = vec2(cos(fa), sin(fa));
-        vec3 fxSp = fxO + fxIn * (.18 + .1 * float(i));
-        float fxAc = dot(fxSp.xy, vec2(-fxT.y, fxT.x)) * 30.;
-        float fxAl2 = dot(fxSp.xy, fxT) * 9. + fxH1(floor(fxAc)) * 7.;
-        float fxNeedle = (1. - smoothstep(.04, .12, abs(fract(fxAc) - .5))) * step(.74, fxH2(vec2(floor(fxAc), floor(fxAl2))));
-        float fxNl = mix(fxNeedle, .1, 1. - fxSAA);
-        vec3 fxBi = -fxIn;
-        for (int j = 0; j < 3; j++) {
-          vec3 fxAi = refract(-normalize(fxLd[j] * fxTbn), fxCr.xyz, .5663);
-          float fxF = dot(fxBi - fxAi, vec3(fxT, 0.));
-          fxSilk += fxNl * exp(-fxF * fxF * 60.) * dot(fxLc[j], vec3(.3));
-        }
+    vec3 fxVt = normalize(-vViewPosition) * fxTbn;
+    vec3 fxO = vec3(fxQd, fxCr.w);
+    vec3 fxGlow = fxGemShade(fxO, fxCr.xyz, fxVt, vec3(1.757, 1.766, 1.787), -log(clamp(fxBody, .015, 1.)) * .34, fxBody * .06 + .02);
+    // 실크: 금홍석 바늘 세 갈래(60°). 바늘은 빛을 축에 수직인 원뿔로 되쏘아, 빛과 눈의 자리가 맞는 줄에서만 비단처럼 빛난다
+    vec3 fxIn = refract(fxVt, fxCr.xyz, .5663);
+    float fxSilk = 0.;
+    float fxSAA = 1. - smoothstep(.2, .6, fwidth(fxQd.x) * 30.);
+    for (int i = 0; i < 3; i++) {
+      float fa = float(i) * 1.0472 + vSeed * 6.2832;
+      vec2 fxT = vec2(cos(fa), sin(fa));
+      vec3 fxSp = fxO + fxIn * (.18 + .1 * float(i));
+      float fxAc = dot(fxSp.xy, vec2(-fxT.y, fxT.x)) * 30.;
+      float fxAl2 = dot(fxSp.xy, fxT) * 9. + fxH1(floor(fxAc)) * 7.;
+      float fxNeedle = (1. - smoothstep(.04, .12, abs(fract(fxAc) - .5))) * step(.86, fxH2(vec2(floor(fxAc), floor(fxAl2))));
+      float fxNl = mix(fxNeedle, .05, 1. - fxSAA);
+      for (int j = 0; j < 3; j++) {
+        vec3 fxAi = refract(-normalize(fxLd[j] * fxTbn), fxCr.xyz, .5663);
+        float fxF = dot(-fxIn - fxAi, vec3(fxT, 0.));
+        fxSilk += fxNl * exp(-fxF * fxF * 60.) * dot(fxLc[j], vec3(.3));
       }
-      float fxRuby = step(uFace, .5);
-      fxGlow += mix(fxBody, vec3(1.), .4) * fxSilk * .22 + fxBody * (.1 + .08 * fxRuby) + vec3(.3, 0., .015) * fxRuby * .4;
     }
-    totalEmissiveRadiance = fxGlow;`,
+    // 크롬 형광: 빛을 받으면 속에서 붉게 달아오른다
+    totalEmissiveRadiance = fxGlow + mix(fxBody, vec3(1.), .4) * fxSilk * .07 + fxBody * .1 + vec3(.12, 0., .006);`,
 };
-B.corundum = {
-  // 몸통은 짙은 자줏빛 옻칠
-  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 7. + vSeed);',
-  surface: 'roughnessFactor = .18;',
+B.ruby = {
+  // 몸통도 짙은 루비: 비친 빛과 속에서 튀는 붉은 잔 불꽃
+  color: 'diffuseColor.rgb *= .8 + .3 * fxN3(vLocal * 8. + vSeed);',
+  surface: 'roughnessFactor = .04; metalnessFactor = .15;',
+  emissive: `
+    totalEmissiveRadiance = vec3(1., .25, .3) * fxGlint(fxBodyUV() * 40. + vSeed * 7., .16, 1.2) * 1.2 + vec3(1., .7, .72) * fxFresnel(normal, 3.) * .22;`,
+};
+
+S.sapphire = {
+  // 사파이어. 조각 하나가 통째로 사파이어다. 스티커 자리마다 면 전체가 귀가 뾰족한 네모 포르투갈 컷으로 깎여, 크라운 세 단이
+  // 반 칸씩 엇갈려 돌아가며 잘게 솟고, 속에선 파빌리온 세 단이 빛을 비늘처럼 잘게 가른다. 빛깔은 짙고 맑으며 가운데로
+  // 갈수록 조금 진한 색띠가 진다. 면마다 사파이어 빛깔이 다르다(로열 블루, 파파라차, 핑크, 옐로, 퍼플, 틸)
+  head: `${GEM_BASE}${SAPPHIRE_CUT}
+    #define fxCutHit fxSpHit
+    ${GEM_TRACE}
+    float fxSpH(vec2 p, float seed) {
+      float R = uSticker.x * .97;
+      return smoothstep(0., .04, fxEdgeAt(p)) * (.006 + R * max(fxSpCrown(p / R).w, .012));
+    }`,
+  height: 'fxSpH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    ${GEM_LIGHTS}
+    vec2 fxQd = vLocal.xy / (uSticker.x * .97);
+    vec4 fxCr = fxSpCrown(fxQd);
+    vec3 fxBody = diffuseColor.rgb;
+    diffuseColor.rgb = vec3(0.);`,
+  normal: 'normal = normalize(fxTbn * fxCr.xyz);',
+  surface: 'roughnessFactor = .02; metalnessFactor = 0.;',
+  emissive: `
+    vec3 fxVt = normalize(-vViewPosition) * fxTbn;
+    vec3 fxO = vec3(fxQd, fxCr.w);
+    // 색띠: 결정이 자라며 남긴 육각 띠라 가운데가 조금 더 짙다
+    float fxZone = .85 + .3 * smoothstep(.9, .2, max(abs(fxQd.x), abs(fxQd.y)) + .06 * sin(fxQd.x * 9. + fxQd.y * 5. + vSeed * 6.));
+    vec3 fxAl = -log(clamp(fxBody, .015, 1.)) * .34 * fxZone;
+    totalEmissiveRadiance = fxGemShade(fxO, fxCr.xyz, fxVt, vec3(1.757, 1.766, 1.787), fxAl, fxBody * .06 + .02) + fxBody * .08;`,
+};
+B.sapphire = {
+  // 몸통도 짙은 사파이어: 비친 빛과 속에서 튀는 푸른 잔 불꽃
+  color: 'diffuseColor.rgb *= .8 + .3 * fxN3(vLocal * 8. + vSeed);',
+  surface: 'roughnessFactor = .04; metalnessFactor = .15;',
+  emissive: `
+    totalEmissiveRadiance = vec3(.5, .65, 1.) * fxGlint(fxBodyUV() * 40. + vSeed * 7., .16, 1.2) * 1.2 + vec3(.75, .82, 1.) * fxFresnel(normal, 3.) * .22;`,
 };
 
 // 에메랄드 컷(계단 컷). 거들은 귀를 깎은 직사각형(반길이 1.2, 반폭 1, 귀 0.2). 크라운은 세 단(42°, 32°, 22°)과 넓은 테이블,
@@ -5867,7 +5920,7 @@ export const MOVING = new Set([
   'circuit', 'aurora', 'stained', 'najeon', 'rain', 'mercury', 'gauge', 'clay', 'holo', 'jelly', 'planet',
   'disco', 'ink', 'lavalamp', 'glass', 'bubblewrap', 'thermal', 'kaleido', 'flip', 'blackhole', 'opal',
   'dragon', 'nebula', 'galaxy', 'slime', 'lantern', 'eyeball', 'hamster', 'phoenix', 'fairywing',
-  'dragonegg', 'druze', 'pave', 'diamond', 'corundum', 'emerald', 'quartz', 'starstone', 'moonstone',
+  'dragonegg', 'druze', 'pave', 'diamond', 'ruby', 'sapphire', 'emerald', 'quartz', 'starstone', 'moonstone',
 ]);
 
 /**
