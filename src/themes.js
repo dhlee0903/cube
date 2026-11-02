@@ -3831,6 +3831,27 @@ export const THEMES = [
     motion: 'smooth',
     burst: { shape: 'dot', colors: 'faces', size: 0.04, speed: 1.4, gravity: 1, drag: 2, life: 0.6 },
   },
+  {
+    // 거울 크롬. 조각 하나가 통째로 거울처럼 닦은 면 색 크롬 덩어리다. 부푼 겉을 따라 스튜디오 조명판과 지평선이 휘어 비치고,
+    // 보는 각도 따라 반사가 미끄러지며 손끝 불빛이 별처럼 맺혀 따라다닌다
+    id: 'chrome',
+    name: '거울 크롬',
+    bg: '#06060A',
+    ink: '#F2F2FA',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #1A1A24, #030305)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.06, grid: 48 },
+    body: { color: '#2A2A30', roughness: 0.15, metalness: 1 },
+    faces: ['#E83A3A', '#F09A30', '#E8D040', '#40C070', '#3A80F0', '#B058F0'],
+    lights: {
+      sky: '#ffffff', ground: '#101014', hemi: 0.8,
+      key: ['#ffffff', 2.2, [-3, 7, 5]], fill: ['#dfe6ff', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.6, [3, 4, -6]],
+    },
+    env: 1,
+    surface: 'chrome',
+    sound: 'metal',
+    motion: 'smooth',
+    burst: { shape: 'star', colors: ['#FFFFFF', '#E0E8FF'], size: 0.08, speed: 2.2, gravity: 0, drag: 2, life: 0.6, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3859,5 +3880,5 @@ export const GROUPS = [
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
   { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops', 'liquidtimer', 'oilwater', 'mobile'] },
-  { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'laser', 'magnifier'] },
+  { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'laser', 'magnifier', 'chrome'] },
 ];

@@ -7925,6 +7925,51 @@ B.magnifier = {
   surface: 'roughnessFactor = .6;',
 };
 
+S.chrome = {
+  // 거울 크롬. 조각 하나가 통째로 거울처럼 닦은 면 색 크롬 덩어리다. 가운데가 부푼 쿠션꼴이라 비친 상이 둥글게 휘어 흐르고,
+  // 스튜디오 조명판 띠와 지평선이 겉을 따라 구부러져 비친다. 큐브를 돌려 보는 각도가 바뀌면 반사가 미끄러지고, 손끝을
+  // 가져가면 손끝의 불빛이 별처럼 맺혀 따라다닌다
+  head: `
+    float fxCrH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float n = pow(pow(abs(q.x), 4.) + pow(abs(q.y), 4.), .25);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .05 * pow(max(0., 1. - n * n), .7));
+    }
+    // 스튜디오: 어두운 방, 위 큰 조명판, 옆 세로 띠, 밝은 바닥 지평선
+    vec3 fxCrEnv(vec3 d) {
+      float a = atan(d.x, d.z);
+      vec3 c = mix(vec3(.05), vec3(.25), smoothstep(-.1, .1, d.y));
+      c += vec3(1.4) * smoothstep(.55, .6, d.y) * (1. - smoothstep(.85, .9, d.y));
+      c += vec3(1.1) * (1. - smoothstep(.04, .07, abs(sin(a * 2.) ))) * smoothstep(-.2, .1, d.y) * (1. - smoothstep(.4, .5, d.y));
+      c += vec3(.7, .75, .8) * (1. - smoothstep(.0, .04, abs(d.y + .02)));
+      return c;
+    }`,
+  height: 'fxCrH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxP = vLocal.xy;
+    float fxE = .0012;
+    vec3 fxNt = normalize(vec3(fxCrH(fxP - vec2(fxE, 0.), vSeed) - fxCrH(fxP + vec2(fxE, 0.), vSeed),
+                               fxCrH(fxP - vec2(0., fxE), vSeed) - fxCrH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    vec3 fxNv = normalize(mat3(vTx, vTy, vTz) * fxNt);
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxR = reflect(-fxV, fxNv);
+    // 손끝 불빛
+    vec3 fxLv = normalize(uPointer + vViewPosition);
+    float fxSpark = pow(max(dot(fxR, fxLv), 0.), 400.) * 6. + pow(max(dot(fxR, fxLv), 0.), 30.) * .3;
+    vec3 fxRefl = fxCrEnv(fxR) * mix(fxFc, vec3(1.), .25) + mix(fxFc, vec3(1.), .6) * fxSpark;
+    diffuseColor.rgb = fxFc * .9;`,
+  normal: 'normal = fxNv;',
+  surface: 'roughnessFactor = .08; metalnessFactor = 1.;',
+  emissive: 'totalEmissiveRadiance = fxRefl * .75;',
+};
+B.chrome = {
+  // 몸통은 검은 크롬
+  color: 'diffuseColor.rgb *= .9;',
+  surface: 'roughnessFactor = .15; metalnessFactor = 1.;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -7960,6 +8005,7 @@ export const MOVING = new Set([
   'prism',
   'laser',
   'magnifier',
+  'chrome',
 ]);
 
 /**
