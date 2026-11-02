@@ -301,6 +301,317 @@ vec4 fxTessera(vec2 g) {
   return vec4(mix(grout, tile, smoothstep(.05, .1, edge)), 1.);
 }
 
+// 이웃 네 칸을 섞어 부드럽게 읽는다(빈 칸은 바탕색)
+vec4 fxAtL(vec2 g) {
+  vec2 p = g - .5;
+  vec2 i = floor(p), t = fract(p);
+  vec4 s00 = fxRaw(i), s10 = fxRaw(i + vec2(1., 0.)), s01 = fxRaw(i + vec2(0., 1.)), s11 = fxRaw(i + vec2(1., 1.));
+  vec3 c00 = mix(uBg.rgb, s00.rgb, s00.a), c10 = mix(uBg.rgb, s10.rgb, s10.a);
+  vec3 c01 = mix(uBg.rgb, s01.rgb, s01.a), c11 = mix(uBg.rgb, s11.rgb, s11.a);
+  vec3 c = mix(mix(c00, c10, t.x), mix(c01, c11, t.x), t.y);
+  return vec4(min(c * uGain, vec3(1.)), mix(mix(s00.a, s10.a, t.x), mix(s01.a, s11.a, t.x), t.y));
+}
+
+// 둥근 모서리 네모까지의 거리
+float fxRBox(vec2 p, vec2 h, float r) {
+  vec2 d = abs(p) - h + r;
+  return length(max(d, 0.)) + min(max(d.x, d.y), 0.) - r;
+}
+
+// 큐브 모자이크: 진짜 큐브를 벽에 붙여 만든 그림. 3×3 칸이 큐브 하나, 칸마다 큐브 여섯 색 가운데 하나.
+// 큐브 둘레는 검은 테가 두껍고 큐브마다 살짝 기울어 빛이 다르다
+vec4 fxCubeMosaic(vec2 g) {
+  vec2 cell = floor(g), f = fract(g);
+  vec2 cb = floor(cell / 3.);
+  vec2 sub = cell - cb * 3.;
+  float anyA = 0.;
+  for (int i = 0; i < 9; i++) anyA = max(anyA, fxRaw(cb * 3. + vec2(float(i % 3), float(i / 3))).a);
+  vec3 wall = uBg.rgb * (.9 + .1 * fxHash(floor(gl_FragCoord.xy / uDpr * .5)));
+  if (anyA < .5) return vec4(wall, 1.);
+  vec4 r = fxRaw(cell);
+  vec3 col = r.a > .5 ? fxNearest(min(r.rgb * uGain, vec3(1.)) + fxBayer(cell) * uDither) : uPal[0];
+  vec2 lo = vec2(sub.x < .5 ? .2 : .07, sub.y < .5 ? .2 : .07);
+  vec2 hi = vec2(sub.x > 1.5 ? .8 : .93, sub.y > 1.5 ? .8 : .93);
+  vec2 c = (lo + hi) * .5;
+  float st = 1. - smoothstep(-.02, .02, fxRBox(f - c, (hi - lo) * .5, .1));
+  float tilt = fxHash(cb) * .14 - .07;
+  vec3 sc = col * (.9 + tilt + .14 * (f.y - c.y)) + exp(-dot(f - c - vec2(-.14, .14), f - c - vec2(-.14, .14)) * 30.) * .14;
+  vec3 o = mix(vec3(.045) * (1. + tilt * 2.), sc, st);
+  vec2 cf = (sub + f) / 3.;
+  float gap = 1. - smoothstep(0., .025, min(min(cf.x, cf.y), min(1. - cf.x, 1. - cf.y)));
+  return vec4(mix(o, wall * .5, gap), 1.);
+}
+
+// 도미노 패의 점: 3×3 자리 가운데 n개(1~6)
+float fxPip(vec2 f, float n) {
+  vec2 p = (f - .5) / .27;
+  vec2 k = clamp(floor(p + .5), -1., 1.);
+  float d = length(p - k);
+  bool corner = abs(k.x) > .5 && abs(k.y) > .5;
+  bool center = abs(k.x) < .5 && abs(k.y) < .5;
+  bool mid = abs(k.x) > .5 && abs(k.y) < .5;
+  bool diag = k.x * k.y > .5;
+  bool on = n < .5 ? false : n < 1.5 ? center : n < 2.5 ? diag : n < 3.5 ? (center || diag) : n < 4.5 ? corner : n < 5.5 ? (corner || center) : (corner || mid);
+  return on ? 1. - smoothstep(.3, .38, d) : 0.;
+}
+
+// 도미노 아트: 검은 도미노 패를 세워 깔고, 반쪽마다 밝기만큼 하얀 점(0~6)을 찍는다
+vec4 fxDomino(vec2 g) {
+  vec2 cell = floor(g), f = fract(g);
+  float hf = mod(cell.y, 2.);
+  vec2 dc = vec2(cell.x, cell.y - hf);
+  vec2 dl = vec2(f.x, f.y + hf);
+  float box = fxRBox(dl - vec2(.5, 1.), vec2(.45, .95), .1);
+  float body = 1. - smoothstep(-.015, .015, box);
+  vec4 r = fxRaw(cell);
+  float l = r.a > .5 ? pow(clamp(fxLum(r.rgb * uGain), 0., 1.), uGamma) : 0.;
+  float n = clamp(floor(l * 7. + fxBayer(cell) * uDither), 0., 6.);
+  vec3 tile = uPal[0] * (.85 + .3 * fxHash(dc));
+  tile += exp(-dot(dl - vec2(.28, 1.65), dl - vec2(.28, 1.65)) * 4.) * .07;
+  float div = (1. - smoothstep(.012, .03, abs(dl.y - 1.))) * step(abs(dl.x - .5), .32);
+  tile = mix(tile, uPal[1] * .5, div * .6);
+  float pip = fxPip(f, n);
+  tile = mix(tile, uPal[1], pip);
+  vec3 table = uBg.rgb * (.85 + .15 * fxHash(floor(gl_FragCoord.xy / uDpr * vec2(.08, 1.))));
+  table *= 1. - .5 * (1. - smoothstep(0., .08, box)) * (1. - body);
+  return vec4(mix(table, tile, body), 1.);
+}
+
+// 선분까지 거리
+float fxSegD(vec2 p, vec2 a, vec2 b) {
+  vec2 pa = p - a, ba = b - a;
+  return length(pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0., 1.));
+}
+
+// 형광 표시관: 칸마다 일곱 마디 숫자 하나. 밝을수록 켜진 마디가 많고(빈칸, -, 1, 7, 4, 3, 0, 8), 마디는 제 색으로 빛나며
+// 꺼진 마디도 흐릿하게 보인다. 앞에는 가는 그물(제어 격자)이 덮였다
+vec4 fxVfd(vec2 g) {
+  vec2 cell = floor(g), f = fract(g);
+  vec4 r = fxRaw(cell);
+  float l = r.a > .5 ? pow(clamp(fxLum(r.rgb * uGain), 0., 1.), uGamma) : 0.;
+  int lv = r.a > .5 ? int(clamp(floor(l * 7. + .5 + fxBayer(cell) * uDither), 1., 7.)) : 0;
+  int mask = lv == 0 ? 0 : lv == 1 ? 64 : lv == 2 ? 6 : lv == 3 ? 7 : lv == 4 ? 102 : lv == 5 ? 79 : lv == 6 ? 63 : 127;
+  vec3 hue = r.a > .5 ? fxNearest(r.rgb / max(max(max(r.r, r.g), r.b), .05)) : vec3(0.);
+  vec2 p = vec2((f.x - .5) / .6 + .5 - (f.y - .5) * .12, (f.y - .1) / .8);
+  float lit = 0., ghost = 0.;
+  for (int s = 0; s < 7; s++) {
+    vec2 a = s == 0 ? vec2(.15, 1.) : s == 1 ? vec2(1., .92) : s == 2 ? vec2(1., .42) : s == 3 ? vec2(.15, 0.) : s == 4 ? vec2(0., .08) : s == 5 ? vec2(0., .58) : vec2(.15, .5);
+    vec2 b = s == 0 ? vec2(.85, 1.) : s == 1 ? vec2(1., .58) : s == 2 ? vec2(1., .08) : s == 3 ? vec2(.85, 0.) : s == 4 ? vec2(0., .42) : s == 5 ? vec2(0., .92) : vec2(.85, .5);
+    float d = fxSegD(p, a, b);
+    float m = 1. - smoothstep(.055, .085, d);
+    if (((mask >> s) & 1) == 1) lit = max(lit, m + exp(-d * d * 50.) * .3);
+    else ghost = max(ghost, m);
+  }
+  vec2 sp = gl_FragCoord.xy / uDpr;
+  float mesh = smoothstep(.8, 1., max(abs(fract(sp.x / 3.) - .5), abs(fract(sp.y / 3.) - .5)) * 2.);
+  vec3 o = uBg.rgb + ghost * vec3(.035, .06, .06) + hue * lit * 1.15;
+  return vec4(o * (1. - mesh * .3), 1.);
+}
+
+// ANSI 아트: 글자 칸(위아래 두 칸)마다 16색 가운데 앞·뒤 두 색과 블록 글자 하나.
+// 위아래 색이 다르면 반 블록(▀), 같으면 실제 색에 맞춰 둘째 색을 그늘 글자(░ ▒ ▓)로 섞는다
+vec4 fxAnsi(vec2 g) {
+  vec2 cell = floor(g), f = fract(g);
+  vec2 ch = vec2(cell.x, floor(cell.y / 2.) * 2.);
+  vec4 tp = fxRaw(ch + vec2(0., 1.)), bt = fxRaw(ch);
+  vec3 ct = tp.a > .5 ? min(tp.rgb * uGain, vec3(1.)) : uBg.rgb;
+  vec3 cb = bt.a > .5 ? min(bt.rgb * uGain, vec3(1.)) : uBg.rgb;
+  vec3 pt = fxNearest(ct), pb = fxNearest(cb);
+  vec2 lc = vec2(f.x, (f.y + mod(cell.y, 2.)) * .5);
+  vec2 px = floor(lc * vec2(8., 16.));
+  if (distance(pt, pb) > .05) return vec4(lc.y > .5 ? pt : pb, 1.);
+  vec3 avg = (ct + cb) * .5;
+  vec3 p2 = pt;
+  float bd = 1e9;
+  for (int i = 0; i < 16; i++) {
+    if (i >= uPalN) break;
+    if (distance(uPal[i], pt) < .01) continue;
+    vec3 e = (avg - uPal[i]) * vec3(.9, 1.2, .7);
+    float d = dot(e, e);
+    if (d < bd) { bd = d; p2 = uPal[i]; }
+  }
+  float t = clamp(dot(avg - pt, p2 - pt) / max(dot(p2 - pt, p2 - pt), 1e-4), 0., 1.);
+  float lvl = floor(t * 4. + .3);
+  float odd = mod(px.y, 2.);
+  float sparse = (odd < .5 ? mod(px.x, 4.) < .5 : mod(px.x + 2., 4.) < .5) ? 1. : 0.;
+  float on = lvl < .5 ? 0. : lvl < 1.5 ? sparse : lvl < 2.5 ? (mod(px.x + px.y, 2.) < .5 ? 1. : 0.) : lvl < 3.5 ? 1. - sparse : 1.;
+  return vec4(mix(pt, p2, on), 1.);
+}
+
+// 만화 스크린톤: 흰 종이에 먹. 색마다 다른 톤을 붙이고(노랑 잔 망점, 주황 굵은 망점, 빨강 빗금, 초록 가로줄, 파랑 십자 빗금,
+// 보라 세로줄, 흰색은 종이), 짙을수록 촘촘하며 아주 어두운 데는 먹으로 칠한다. 색과 밝기가 바뀌는 경계엔 먹선
+vec4 fxTone(vec2 g) {
+  vec4 r = fxAtL(g);
+  vec3 c = r.rgb;
+  vec2 sp = gl_FragCoord.xy / uDpr;
+  vec3 paper = uBg.rgb, ink = uPal[0];
+  float e = .6;
+  vec4 rx1 = fxAtL(g + vec2(e, 0.)), rx0 = fxAtL(g - vec2(e, 0.)), ry1 = fxAtL(g + vec2(0., e)), ry0 = fxAtL(g - vec2(0., e));
+  float edge = length(vec2(fxLum(rx1.rgb) - fxLum(rx0.rgb), fxLum(ry1.rgb) - fxLum(ry0.rgb))) * 2.2
+    + length(vec2(rx1.a - rx0.a, ry1.a - ry0.a)) + (distance(rx1.rgb, rx0.rgb) + distance(ry1.rgb, ry0.rgb)) * .6;
+  float mx = max(max(c.r, c.g), c.b), mn = min(min(c.r, c.g), c.b);
+  float sat = (mx - mn) / max(mx, .01);
+  float h = 0.;
+  if (mx - mn > .001) {
+    if (mx == c.r) h = mod((c.g - c.b) / (mx - mn), 6.);
+    else if (mx == c.g) h = (c.b - c.r) / (mx - mn) + 2.;
+    else h = (c.r - c.g) / (mx - mn) + 4.;
+  }
+  h /= 6.;
+  float dark = clamp(1. - mx, 0., 1.);
+  float o = 0.;
+  if (r.a > .3) {
+    vec2 rd = mat2(.7071, .7071, -.7071, .7071) * sp / 5.;
+    float dotD = length(fract(rd) - .5);
+    float diag = abs(fract((sp.x + sp.y) / 6.) - .5);
+    float hor = abs(fract(sp.y / 5.) - .5);
+    float ver = abs(fract(sp.x / 5.) - .5);
+    float anti = abs(fract((sp.x - sp.y) / 6.) - .5);
+    if (sat < .3) o = mx > .72 ? 0. : 1. - smoothstep(.22, .26, dotD + (mx - .72) * .5);
+    else if (h < .04 || h > .93) o = 1. - smoothstep(.12 + dark * .25, .16 + dark * .25, diag);
+    else if (h < .11) o = 1. - smoothstep(.3 + dark * .15, .34 + dark * .15, dotD);
+    else if (h < .21) o = 1. - smoothstep(.16 + dark * .2, .2 + dark * .2, dotD);
+    else if (h < .47) o = 1. - smoothstep(.12 + dark * .25, .16 + dark * .25, hor);
+    else if (h < .75) o = max(1. - smoothstep(.09 + dark * .2, .13 + dark * .2, diag), 1. - smoothstep(.09 + dark * .2, .13 + dark * .2, anti));
+    else o = 1. - smoothstep(.12 + dark * .25, .16 + dark * .25, ver);
+    o = max(o, smoothstep(.82, .9, dark));
+  }
+  o = max(o, smoothstep(.35, .6, edge));
+  return vec4(mix(paper * (.97 + .03 * fxHash(floor(sp))), ink, o), 1.);
+}
+
+// 유리 블록: 줄눈 사이로 쌓은 두꺼운 유리 블록. 블록마다 가운데 동심 물결이 뒤의 장면을 뒤집고 일그러뜨리며,
+// 가장자리는 두꺼워 짙고 비스듬한 반사 줄이 지나간다
+vec4 fxGlassBlock(vec2 g) {
+  float B = 6.;
+  vec2 bp = g / B;
+  vec2 bi = floor(bp), q = fract(bp) - .5;
+  float rr = length(q);
+  float box = max(abs(q.x), abs(q.y));
+  vec2 lens = -q * .55 + normalize(q + 1e-4) * sin(rr * 44.) * .03;
+  vec4 s = fxAtL((bi + .5 + lens) * B);
+  vec3 glass = s.rgb * vec3(.9, 1., .96) * (.8 + .25 * smoothstep(.45, .1, rr));
+  float rim = smoothstep(.33, .43, box);
+  glass = mix(glass, glass * .55 + vec3(.1, .13, .12), rim * .6);
+  glass += (1. - smoothstep(.0, .03, abs(q.x + q.y + .12))) * .12 * (1. - rim);
+  glass += smoothstep(.43, .45, box) * (1. - smoothstep(.45, .46, box)) * .25 * step(0., q.y - q.x);
+  float mortar = smoothstep(.45, .47, box);
+  vec3 mt = uLine.rgb * (.85 + .15 * fxHash(floor(gl_FragCoord.xy / uDpr)));
+  return vec4(mix(glass, mt, mortar), 1.);
+}
+
+// 도트 프린터: 양옆에 송곳 구멍이 난 초록 줄 연속 용지에, 네 색 리본으로 점을 찍어 그린다.
+// 헤드가 지나간 줄마다 살짝 어긋나고 리본 진하기가 다르며, 줄 사이엔 가는 틈
+vec4 fxPrinter(vec2 g) {
+  vec2 sp = gl_FragCoord.xy / uDpr;
+  float W = uRes.x / uDpr;
+  float margin = min(sp.x, W - sp.x);
+  vec3 paper = mod(floor(sp.y / 36.), 2.) > .5 ? vec3(.84, .93, .85) : uBg.rgb;
+  paper = mix(paper, uBg.rgb, step(margin, 34.));
+  paper *= .97 + .03 * fxHash(floor(sp / 2.));
+  float pass = floor(g.y / 8.);
+  vec2 gg = g + vec2((fxHash(vec2(pass, 3.)) - .5) * .35, 0.);
+  vec2 c2 = floor(gg), f2 = fract(gg);
+  vec4 r = fxRaw(c2);
+  vec3 o = paper;
+  if (r.a > .5) {
+    vec3 ink = fxNearest(min(r.rgb * uGain, vec3(1.)) + fxBayer(c2) * uDither);
+    float dt = 1. - smoothstep(.4, .56, length(f2 - .5 + (vec2(fxHash(c2), fxHash(c2 + 3.)) - .5) * .08));
+    float wear = .82 + .18 * fxHash(vec2(pass, 9.));
+    o = mix(o, o * mix(vec3(1.), ink, wear), dt * step(fxLum(ink), .97));
+  }
+  o *= 1. - .06 * (1. - smoothstep(0., .1, fract(gg.y / 8.)));
+  float hole = 1. - smoothstep(4., 5., length(vec2(margin - 15., mod(sp.y, 20.) - 10.)));
+  float perf = (1. - smoothstep(.4, 1., abs(margin - 32.))) * step(mod(sp.y, 6.), 3.);
+  o = mix(o, o * .8, perf);
+  return vec4(mix(o, vec3(.18, .17, .16), hole), 1.);
+}
+
+// 디지털 비: 칸마다 낯선 글자가 바뀌고, 줄마다 빛나는 머리가 위에서 아래로 떨어지며 꼬리를 끈다.
+// 큐브는 제 색 글자로 늘 보이고 비가 지나갈 때 더 밝아진다
+vec4 fxRain(vec2 g) {
+  vec2 cell = floor(g), f = fract(g);
+  float spd = .6 + fxHash(vec2(cell.x, 1.)) * 1.2;
+  float span = uLow.y * 1.6;
+  float head = mod(uTime * spd * 9. + fxHash(vec2(cell.x, 2.)) * span, span);
+  float dy = head - (uLow.y - cell.y);
+  float trail = dy >= 0. ? exp(-dy * .13) : 0.;
+  float isHead = dy >= 0. && dy < 1. ? 1. : 0.;
+  float gid = floor(fxHash(cell) * 64. + floor(uTime * (1. + fxHash(cell + 4.) * 3.)) * step(.75, fxHash(cell + 8.)));
+  vec2 gp = floor(vec2(f.x * 7. - 1., f.y * 9. - 1.));
+  float bit = gp.x >= 0. && gp.x < 5. && gp.y >= 0. && gp.y < 7. ? step(.48, fxHash(vec2(min(gp.x, 4. - gp.x) * 3.1 + gp.y * 7.7, gid))) : 0.;
+  vec4 r = fxRaw(cell);
+  vec3 o;
+  if (r.a > .5) {
+    vec3 c = min(r.rgb * uGain, vec3(1.));
+    float m = max(max(c.r, c.g), c.b);
+    vec3 hue = c / max(m, .05);
+    o = hue * bit * (.2 + .55 * m + .35 * trail + .4 * isHead) + hue * .05;
+  } else {
+    o = uPal[0] * bit * trail * .85 + vec3(.75, 1., .8) * bit * isHead;
+  }
+  return vec4(uBg.rgb + o, 1.);
+}
+
+// 야간 투시경: 초록 형광 한 빛깔로 증폭한 상. 알갱이 잡음이 쉬지 않고 끓고, 밝은 데는 번지며 가끔 흰 점이 튄다.
+// 광섬유판의 벌집 무늬가 비치고 둘레는 둥글게 어둡다
+vec4 fxNight(vec2 g) {
+  vec2 sp = gl_FragCoord.xy / uDpr;
+  vec4 r = fxAtL(g);
+  float l = fxLum(r.rgb);
+  float bl = 0.;
+  for (int i = 0; i < 8; i++) {
+    float a = float(i) * .785;
+    bl += fxLum(fxAtL(g + vec2(cos(a), sin(a)) * 2.5).rgb);
+  }
+  bl /= 8.;
+  float n = fxHash(floor(sp / 1.5) + floor(uTime * 24.) * 1.37) - .5;
+  float v = pow(clamp(l, 0., 1.), uGamma) + bl * .3 * smoothstep(.45, 1., bl) + n * .2;
+  v += step(.9988, fxHash(floor(sp / 2.) + floor(uTime * 12.) * 3.1)) * .9;
+  vec2 hp = sp / 2.6;
+  float hc = cos(hp.x * 6.2832) * cos((hp.y * 1.1547 + hp.x * .5) * 6.2832) + cos((hp.y * 1.1547 - hp.x * .5) * 6.2832);
+  v *= .93 + .03 * hc;
+  vec2 uv = (gl_FragCoord.xy - uRes * .5) / min(uRes.x, uRes.y);
+  float vig = 1. - smoothstep(.52, .7, length(uv));
+  v = clamp(v, 0., 1.4) * vig;
+  vec3 o = mix(uPal[0], uPal[1], clamp(v, 0., 1.)) + uPal[2] * smoothstep(.9, 1.4, v);
+  return vec4(o, 1.);
+}
+
+// 직소 퍼즐 조각: 조각마다 네 변에 꼭지가 이웃 쪽이나 내 쪽으로 튀어나온다. 이웃 꼭지가 들어온 자리는 이웃 조각
+vec2 fxPiece(vec2 P) {
+  vec2 b = floor(P), u = fract(P);
+  for (int k = 0; k < 4; k++) {
+    vec2 nrm = k == 0 ? vec2(1., 0.) : k == 1 ? vec2(-1., 0.) : k == 2 ? vec2(0., 1.) : vec2(0., -1.);
+    vec2 key = b + max(nrm, 0.);
+    float hz = abs(nrm.x);
+    float dir = fxHash(key * 1.3 + hz * 17.) > .5 ? 1. : -1.;
+    float intrude = nrm.x + nrm.y > 0. ? step(dir, 0.) : step(0., dir);
+    if (intrude > .5) {
+      vec2 c = vec2(.5) + nrm * .4 + vec2(abs(nrm.y), abs(nrm.x)) * (fxHash(key + 5.3 + hz) - .5) * .14;
+      if (length(u - c) < .16) return b + nrm;
+    }
+  }
+  return b;
+}
+
+// 직소 퍼즐: 장면을 다 맞춘 퍼즐 한 판처럼 조각 이음매가 지나간다. 조각마다 판지 결과 빛이 조금씩 다르고
+// 이음매 위쪽 가장자리는 밝게, 아래쪽은 그늘지게 도톰하다
+vec4 fxJigsaw(vec2 g) {
+  vec2 P = g / 7.;
+  vec2 id = fxPiece(P);
+  vec2 ex = vec2(fwidth(P.x) * 1.3, 0.), ey = vec2(0., fwidth(P.y) * 1.3);
+  float lft = fxPiece(P - ex) != id ? 1. : 0., rgt = fxPiece(P + ex) != id ? 1. : 0.;
+  float up = fxPiece(P + ey) != id ? 1. : 0., dn = fxPiece(P - ey) != id ? 1. : 0.;
+  vec4 r = fxAtL(g);
+  vec3 o = r.rgb * (.95 + .08 * fxHash(id));
+  o *= .96 + .04 * fxHash(floor(gl_FragCoord.xy / uDpr));
+  o = mix(o, o * 1.25 + .05, max(lft, up) * .6);
+  o = mix(o, o * .55, max(rgt, dn) * .7);
+  float seam = max(max(lft, rgt), max(up, dn));
+  return vec4(mix(o, o * .35, seam * .35), 1.);
+}
+
 float fxGlyph(int ch, vec2 f) {
   vec2 g = floor(vec2(f.x * 7. - 1., (1. - f.y) * 10. - 1.5));
   if (g.x < 0. || g.x > 4. || g.y < 0. || g.y > 6.) return 0.;
@@ -314,6 +625,16 @@ void main() {
   if (uCell == 13) { gl_FragColor = fxRiso(g); return; }
   if (uCell == 15) { gl_FragColor = fxTessera(g); return; }
   if (uCell == 16) { gl_FragColor = fxBraille(g); return; }
+  if (uCell == 18) { gl_FragColor = fxCubeMosaic(g); return; }
+  if (uCell == 19) { gl_FragColor = fxDomino(g); return; }
+  if (uCell == 20) { gl_FragColor = fxVfd(g); return; }
+  if (uCell == 21) { gl_FragColor = fxAnsi(g); return; }
+  if (uCell == 22) { gl_FragColor = fxTone(g); return; }
+  if (uCell == 23) { gl_FragColor = fxGlassBlock(g); return; }
+  if (uCell == 24) { gl_FragColor = fxPrinter(g); return; }
+  if (uCell == 25) { gl_FragColor = fxRain(g); return; }
+  if (uCell == 26) { gl_FragColor = fxNight(g); return; }
+  if (uCell == 27) { gl_FragColor = fxJigsaw(g); return; }
   // 핀보드는 줄마다 반 칸씩 엇갈린다
   if (uCell == 14) g.x -= mod(floor(g.y), 2.) * .5;
   vec2 cell = floor(g);
@@ -493,6 +814,9 @@ void main() {
 //   cell     square 네모 | lcd 액정 | led 전광판 알 | brick 돌기 블록 | bead 비즈 | ascii 글자 | crt 단색 모니터 | arcade 형광 줄
 //            flipdot 뒤집히는 원판 | vga 두 번 그린 줄 | teletext 2×3 모자이크 글자 | subpixel 빨강·초록·파랑 막대
 //            halftone 네 판 망점 | riso 형광 잉크 세 판 | peg 엇갈린 빛 핀 | tessera 돌·유리 조각 | braille 2×4 점자 | scope 빨간 빛줄
+//            cubemosaic 3×3 큐브 | domino 도미노 패 점 | vfd 일곱 마디 숫자 | ansi 블록 글자 | tone 만화 스크린톤 | glassblock 유리 블록
+//            printer 도트 프린터 | rain 디지털 비 | night 야간 투시경 | jigsaw 직소 퍼즐
+//   animated 가만히 있어도 움직이는지(디지털 비, 야간 투시경)
 //   res      화면 짧은 쪽을 몇 칸으로 볼지(클수록 촘촘)
 //   aspect   칸 세로/가로 비(아스키 글자 칸)
 //   gamma    밝기 사다리와 아스키 글자 고르기의 밝기 곡선(1보다 작으면 밝게)
@@ -503,12 +827,13 @@ const PICO = ['#000000', '#1D2B53', '#7E2553', '#008751', '#AB5236', '#5F574F', 
   '#FF004D', '#FFA300', '#FFEC27', '#00E436', '#29ADFF', '#83769C', '#FF77A8', '#FFCCAA'];
 const PIXEL_BASE = {
   palette: PICO, mode: 'palette', cell: 'square', res: 125, aspect: 1, dither: 0.2, gamma: 1, levels: 6, gain: 1,
-  bg: null, line: '#000000',
+  bg: null, line: '#000000', animated: false,
 };
 const MODES = { palette: 0, ramp: 1, clash: 2, led: 3, levels: 4 };
 const CELLS = {
   square: 0, lcd: 1, led: 2, brick: 3, bead: 4, ascii: 5, crt: 6, arcade: 7, flipdot: 8, vga: 9, teletext: 10,
-  subpixel: 11, halftone: 12, riso: 13, peg: 14, tessera: 15, braille: 16, scope: 17,
+  subpixel: 11, halftone: 12, riso: 13, peg: 14, tessera: 15, braille: 16, scope: 17, cubemosaic: 18, domino: 19,
+  vfd: 20, ansi: 21, tone: 22, glassblock: 23, printer: 24, rain: 25, night: 26, jigsaw: 27,
 };
 const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
 
@@ -629,7 +954,7 @@ export class Filter {
       u.uLine.value.set(...(p.line ? rgb(p.line) : [0, 0, 0]), p.line ? 1 : 0);
     }
     this.tiles = 1;
-    this.animated = next === 'glitch';
+    this.animated = next === 'glitch' || (next === 'pixel' && Boolean(this.pixel.animated));
     if (PAINT_TYPES.includes(next)) {
       const p = { ...PAINT_BASE, ...spec };
       const u = this.paintUniforms;
