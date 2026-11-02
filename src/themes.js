@@ -4041,6 +4041,27 @@ export const THEMES = [
     motion: 'mechanical',
     burst: { shape: 'star', colors: ['#FFD890', '#FFFFFF'], size: 0.06, speed: 1.8, gravity: 0, drag: 2, life: 0.8, additive: true },
   },
+  {
+    // 레코드판. 조각 하나가 위에서 본 턴테이블이다. 면 색 반투명 컬러 비닐 판의 홈마다 빛이 부채꼴 띠로 맺히고 은빛 톤암이
+    // 걸쳤다. 판은 33회전으로 돌고, 층을 돌리면 빨라져 라벨이 흐려진다
+    id: 'vinyl',
+    name: '레코드판',
+    bg: '#08080A',
+    ink: '#F2F2F6',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #1E1E26, #040405)',
+    form: { bevel: 0.04, size: 0.96, radius: 0.03, grid: 64 },
+    body: { color: '#141416', roughness: 0.3, metalness: 0.3 },
+    faces: ['#F0303A', '#FF8A1A', '#F5D820', '#24C860', '#2A7AF0', '#B03AF0'],
+    lights: {
+      sky: '#ffffff', ground: '#101012', hemi: 1,
+      key: ['#ffffff', 2.4, [-3, 7, 5]], fill: ['#e6ecff', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.4, [3, 4, -6]],
+    },
+    env: 0.9,
+    surface: 'vinyl',
+    sound: 'disco',
+    motion: 'smooth',
+    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 2, gravity: 0, drag: 2, life: 0.6, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -4070,5 +4091,5 @@ export const GROUPS = [
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
   { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops', 'liquidtimer', 'oilwater', 'mobile'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'laser', 'magnifier', 'chrome', 'fiberoptic', 'ledcube'] },
-  { name: '돌리면', themes: ['pinwheel', 'musicbox', 'fireworks', 'chladni', 'safedial', 'windchime', 'orrery'] },
+  { name: '돌리면', themes: ['pinwheel', 'musicbox', 'fireworks', 'chladni', 'safedial', 'windchime', 'orrery', 'vinyl'] },
 ];

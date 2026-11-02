@@ -8541,6 +8541,78 @@ B.orrery = {
   surface: 'roughnessFactor = .35;',
 };
 
+S.vinyl = {
+  // 레코드판. 조각 하나가 위에서 본 턴테이블이다. 검은 받침 위에 면 색 반투명 컬러 비닐 판이 얹혀 촘촘한 홈마다 빛이
+  // 부채꼴 띠로 맺히고(홈과 직각인 자리만 반짝인다), 가운데 흰 라벨과 은빛 축, 한쪽엔 은빛 톤암이 판 위로 걸쳤다. 판은
+  // 33회전으로 돌아 라벨 글씨가 돌고, 층을 돌리면 빨라져 라벨이 흐려졌다 잦아든다
+  head: `
+    float fxVnH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float r = length(q);
+      float disc = .012 * (1. - smoothstep(.84, .86, r));
+      float label = .004 * (1. - smoothstep(.3, .31, r));
+      float spindle = .02 * (1. - smoothstep(.03, .04, r));
+      // 톤암: 오른쪽 위 축에서 판 위로
+      vec2 pv = vec2(.82, .78);
+      vec2 tip = vec2(.18, .42);
+      vec2 pa = q - pv, ba = tip - pv;
+      float hh = clamp(dot(pa, ba) / dot(ba, ba), 0., 1.);
+      float arm = .026 * (1. - smoothstep(.02, .035, length(pa - ba * hh)));
+      float pivot = .03 * (1. - smoothstep(.07, .09, length(q - pv)));
+      float groove = disc > 0. ? .0006 * sin(r * 260.) : 0.;
+      return smoothstep(0., .04, fxEdgeAt(p)) * (.004 + max(max(disc + label + groove, spindle), max(arm, pivot)));
+    }`,
+  height: 'fxVnH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    float fxR = length(fxQ);
+    float fxA = atan(fxQ.y, fxQ.x + 1e-6);
+    float fxDisc = 1. - smoothstep(.84, .86, fxR);
+    float fxLabel = 1. - smoothstep(.3, .31, fxR);
+    // 홈의 비등방 반짝임: 빛·눈 가운데 방향과 홈이 직각인 자리
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVl = vec3(dot(fxV, vTx), dot(fxV, vTy), dot(fxV, vTz));
+    vec2 fxHv = normalize(fxVl.xy + vec2(-.3, .5) + 1e-4);
+    vec2 fxRad = fxQ / max(fxR, 1e-3);
+    float fxAniso = pow(abs(dot(fxRad, fxHv)), 24.) * smoothstep(.32, .4, fxR) * fxDisc;
+    float fxGrooveL = .85 + .15 * sin(fxR * 260.);
+    float fxGap = 1. - smoothstep(.0, .01, abs(fxR - .55)) * .6;
+    // 라벨: 돌아가는 글씨 줄과 무늬
+    float fxSpin = uTime * 3.46 * (1. + 4. * uCharge);
+    float fxLa = fxA - fxSpin;
+    float fxBlur = smoothstep(.1, .5, uCharge);
+    float fxPrint = (1. - smoothstep(.0, .05, abs(fxR - .2))) * step(.5, fract(fxLa * 6. / 6.2832)) + step(fxR, .13) * step(fract(fxLa / 6.2832 + .1), .3) * step(.06, fxR);
+    fxPrint = mix(fxPrint, .25, fxBlur);
+    vec3 fxVinyl = fxFc * (.55 * fxGrooveL) * fxGap;
+    vec3 fxLabelC = mix(vec3(.94, .92, .86), fxFc * .6, fxPrint);
+    vec3 fxPlinth = vec3(.05) + fxFc * .04;
+    vec3 fxCol = mix(fxPlinth, fxVinyl, fxDisc);
+    fxCol = mix(fxCol, fxLabelC, fxLabel);
+    float fxSp = 1. - smoothstep(.03, .04, fxR);
+    // 톤암
+    vec2 fxPv = vec2(.82, .78), fxTip = vec2(.18, .42);
+    vec2 fxPa = fxQ - fxPv, fxBa = fxTip - fxPv;
+    float fxHh = clamp(dot(fxPa, fxBa) / dot(fxBa, fxBa), 0., 1.);
+    float fxArm = max(1. - smoothstep(.02, .035, length(fxPa - fxBa * fxHh)), 1. - smoothstep(.07, .09, length(fxQ - fxPv)));
+    fxCol = mix(fxCol, vec3(.78, .8, .84), max(fxArm, fxSp));
+    diffuseColor.rgb = fxCol;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxVnH(fxP - vec2(fxE, 0.), vSeed) - fxVnH(fxP + vec2(fxE, 0.), vSeed),
+                               fxVnH(fxP - vec2(0., fxE), vSeed) - fxVnH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = mix(mix(.5, .15, fxDisc), .2, max(fxArm, fxSp)); metalnessFactor = max(fxArm, fxSp) * .9;',
+  emissive: 'totalEmissiveRadiance = mix(fxFc, vec3(1.), .5) * fxAniso * .9 + fxFc * fxDisc * (1. - fxLabel) * .12;',
+};
+B.vinyl = {
+  // 몸통은 검은 턴테이블 받침
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .3; metalnessFactor = .3;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -8586,6 +8658,7 @@ export const MOVING = new Set([
   'safedial',
   'windchime',
   'orrery',
+  'vinyl',
 ]);
 
 /**
