@@ -2018,7 +2018,7 @@ export const THEMES = [
       '#04040C',
     ].join(', '),
     drift: 'radial-gradient(30% 22% at 65% 70%, rgba(255,120,200,.1), transparent 70%)',
-    form: { bevel: 0.05, size: 0.94, radius: 0.06, grid: 72 },
+    form: { bevel: 0.05, size: 0.94, radius: 0.06, grid: 56 },
     body: { color: '#2A2C36', roughness: 0.45, metalness: 0.6 },
     faces: ['#D89A5A', '#2A78B8', '#E8EEF4', '#C8502A', '#E0C84A', '#3A48C0'],
     lights: {
