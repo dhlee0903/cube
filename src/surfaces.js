@@ -7139,6 +7139,80 @@ B.compass = {
   surface: 'roughnessFactor = .3; metalnessFactor = .9;',
 };
 
+S.vumeter = {
+  // VU 미터. 조각 겉 전체가 뒤에서 불을 밝힌 네모 VU 미터다. 검은 테두리 안쪽 문자판이 면 색으로 은은히 빛나고, 검은 눈금 호와
+  // 끝의 빨간 구간이 찍혔고, 계기는 늘 바로 선다(화면 아래쪽이 아래). 아래 축에서 뻗은 검은 바늘이 솟아 있어 평소엔 잔잔한 음악에 맞춰 가볍게 흔들리고,
+  // 층을 돌리면 빨간 구간까지 확 튀어 올랐다가 떨며 내려온다
+  head: `
+    float fxVuAng(float seed) {
+      float t = uTime;
+      float music = .5 + .5 * fxN2(vec2(t * 3.1, seed * 9.)) * (.6 + .4 * sin(t * 7.3 + seed * 4.));
+      float base = mix(-.72, -.25, music);
+      float kick = uCharge * (1.25 + .12 * sin(t * 18.) * uCharge);
+      return clamp(base + kick, -.8, .82);
+    }
+    float fxVuNeedle(vec2 q, float a) {
+      vec2 piv = vec2(0., -.78);
+      vec2 dir = vec2(sin(a), cos(a));
+      vec2 rel = q - piv;
+      float along = dot(rel, dir);
+      float across = abs(dot(rel, vec2(dir.y, -dir.x)));
+      return step(-.05, along) * step(along, 1.35) * (1. - smoothstep(.016, .026, across + along * .006));
+    }
+    // 계기는 늘 바로 선다: 화면 아래쪽(중력)이 계기의 아래
+    vec2 fxVuUp(vec2 q) { vec2 g = fxGrav; return vec2(dot(q, vec2(-g.y, g.x)), -dot(q, g)); }
+    float fxVuH(vec2 p, float seed) {
+      vec2 q0 = p / uSticker.x;
+      vec2 q = fxVuUp(q0);
+      float m = max(abs(q0.x), abs(q0.y));
+      float bezel = .02 * smoothstep(.8, .86, m);
+      float needle = .016 * fxVuNeedle(q, fxVuAng(seed));
+      float pivot = .024 * (1. - smoothstep(.1, .12, length(q - vec2(0., -.78))));
+      return smoothstep(0., .04, fxEdgeAt(p)) * (.004 + max(max(bezel, needle), pivot));
+    }`,
+  height: 'fxVuH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ0 = vLocal.xy / uSticker.x;
+    vec2 fxQ = fxVuUp(fxQ0);
+    float fxM = max(abs(fxQ0.x), abs(fxQ0.y));
+    float fxBez = smoothstep(.8, .84, fxM);
+    vec2 fxRel = fxQ - vec2(0., -.78);
+    float fxR = length(fxRel);
+    float fxA = atan(fxRel.x, fxRel.y);
+    // 눈금 호: 반지름 1.05~1.12, 각도 -.8 ~ .8
+    float fxIn = step(abs(fxA), .82);
+    float fxArc = (1. - smoothstep(.0, .01, abs(fxR - 1.08))) * fxIn;
+    float fxTk = (1. - smoothstep(.0, .12, abs(fract(fxA / .1) - .5) * 2. - .82)) * step(1.08, fxR) * step(fxR, mix(1.15, 1.2, step(.5, fract(fxA / .2 + .25)))) * fxIn;
+    float fxRed = step(.42, fxA) * fxIn * step(1.08, fxR) * step(fxR, 1.14);
+    float fxNum = 0.;
+    // 문자판: 면 색으로 비치는 뒷불, 가운데가 밝다
+    vec3 fxFaceC = mix(fxFc, vec3(1., .96, .86), .12) * (.75 + .3 * exp(-dot(fxQ, fxQ) * .8));
+    vec3 fxCol = mix(fxFaceC, vec3(.05), clamp(fxArc + fxTk + fxNum * .8, 0., 1.));
+    fxCol = mix(fxCol, vec3(.8, .08, .06), fxRed);
+    float fxNd = fxVuNeedle(fxQ, fxVuAng(vSeed));
+    fxCol = mix(fxCol, vec3(.03), fxNd);
+    float fxPv = 1. - smoothstep(.1, .12, length(fxQ - vec2(0., -.78)));
+    fxCol = mix(fxCol, vec3(.08), fxPv);
+    fxCol = mix(fxCol, vec3(.06), fxBez);
+    float fxLit = (1. - fxBez) * (1. - fxPv);
+    diffuseColor.rgb = fxCol * .4;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxVuH(fxP - vec2(fxE, 0.), vSeed) - fxVuH(fxP + vec2(fxE, 0.), vSeed),
+                               fxVuH(fxP - vec2(0., fxE), vSeed) - fxVuH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = mix(.08, .4, fxBez); metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxCol * fxLit * .85;',
+};
+B.vumeter = {
+  // 몸통은 결 따라 깎은 알루미늄 앞판
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vec3(vLocal.x * 40., vLocal.y * 2., vLocal.z * 40.) + vSeed);',
+  surface: 'roughnessFactor = .3; metalnessFactor = .9;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -7162,6 +7236,7 @@ export const MOVING = new Set([
   'seismograph',
   'sonar',
   'compass',
+  'vumeter',
 ]);
 
 /**

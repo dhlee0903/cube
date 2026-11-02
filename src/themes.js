@@ -3582,6 +3582,27 @@ export const THEMES = [
     motion: 'smooth',
     burst: { shape: 'dot', colors: ['#E8C878', '#D02818'], size: 0.04, speed: 1.6, gravity: 2, drag: 2, life: 0.5 },
   },
+  {
+    // VU 미터. 조각 겉 전체가 뒤에서 불을 밝힌 네모 VU 미터다. 면 색으로 빛나는 문자판에 검은 눈금 호와 빨간 구간, 솟은 바늘.
+    // 평소엔 잔잔한 음악에 맞춰 흔들리고, 층을 돌리면 빨간 구간까지 확 튀었다가 떨며 내려온다
+    id: 'vumeter',
+    name: 'VU 미터',
+    bg: '#08080A',
+    ink: '#F4F2EE',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #1E1C20, #040405)',
+    form: { bevel: 0.04, size: 0.96, radius: 0.03, grid: 48 },
+    body: { color: '#B4B6BA', roughness: 0.3, metalness: 0.9 },
+    faces: ['#F04A40', '#FF9A30', '#F8D84A', '#4ACA70', '#4A8AF0', '#B85AF0'],
+    lights: {
+      sky: '#ffffff', ground: '#101012', hemi: 0.8,
+      key: ['#ffffff', 2, [-3, 7, 5]], fill: ['#e6ecff', 0.5, [6, 1, 4]], rim: ['#ffffff', 1.2, [3, 4, -6]],
+    },
+    env: 0.8,
+    surface: 'vumeter',
+    sound: 'mech',
+    motion: 'snap',
+    burst: { shape: 'glow', colors: 'faces', size: 0.06, speed: 1.8, gravity: 0, drag: 2, life: 0.5, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3609,5 +3630,5 @@ export const GROUPS = [
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'chrome', 'fiberoptic', 'ledcube'] },
-  { name: '계기', themes: ['radar', 'clockface', 'oscilloscope', 'theremin', 'seismograph', 'sonar', 'compass'] },
+  { name: '계기', themes: ['radar', 'clockface', 'oscilloscope', 'theremin', 'seismograph', 'sonar', 'compass', 'vumeter'] },
 ];
