@@ -6231,6 +6231,59 @@ B.ferrofluid = {
   surface: 'roughnessFactor = .3; metalnessFactor = .7;',
 };
 
+S.pinart = {
+  // 핀 아트. 조각 겉 전체에 아노다이징한 금속 핀이 빽빽이 꽂혀 있다. 평소엔 핀이 가운데가 살짝 부푼 채 가지런히 서 있고,
+  // 손끝을 가져가면 그 아래 핀들이 뒤에서 손바닥이 미는 듯 볼록하게 밀려 나온다. 솟은 핀 사이로 반짝이는 핀 대가 드러나고
+  // 핀 머리마다 둥근 빛이 맺힌다. 핀 머리 색이 곧 면 색
+  head: `
+    float fxPaPush(vec2 p) {
+      vec2 d = fxPtr.xy - p;
+      return exp(-dot(d, d) / .09) * smoothstep(4.5, 2., fxPtr.z);
+    }
+    float fxPaEnv(vec2 p) {
+      vec2 q = p / uSticker.x;
+      return .008 + .012 * max(0., 1. - dot(q, q) * .8) + .11 * fxPaPush(p);
+    }
+    // 핀 하나하나가 제 높이로 선다: 칸 가운데에서 잰 높이에 낮은 돔 머리, 핀 사이 틈은 한 단 낮다
+    float fxPaH(vec2 p, float seed) {
+      float S = .05;
+      vec2 c = (floor(p / S) + .5) * S;
+      float r = length(p - c) / S;
+      float hd = smoothstep(.47, .39, r);
+      float h = fxPaEnv(c) - .01 * (1. - hd) + .005 * hd * max(0., 1. - r * r / .17);
+      return smoothstep(0., .05, fxEdgeAt(p)) * h;
+    }`,
+  height: 'fxPaH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxP = vLocal.xy;
+    float fxS = .05;
+    vec2 fxCl = floor(fxP / fxS);
+    vec2 fxF = fract(fxP / fxS) - .5;
+    vec2 fxCc = (fxCl + .5) * fxS;
+    float fxHc = fxPaEnv(fxCc);
+    float fxR = length(fxF);
+    float fxAA = clamp(fwidth(fxP.x) / fxS * 2.5, 0., 1.);
+    float fxHead = mix(smoothstep(.47, .39, fxR), .7, fxAA);
+    float fxE = .0012;
+    vec3 fxNt = normalize(vec3(fxPaH(fxP - vec2(fxE, 0.), vSeed) - fxPaH(fxP + vec2(fxE, 0.), vSeed),
+                               fxPaH(fxP - vec2(0., fxE), vSeed) - fxPaH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    // 핀 사이 틈: 솟을수록 금속 대가 드러나 빛나고, 깊은 바닥은 어둡다
+    float fxRaise = clamp((fxHc - .012) / .1, 0., 1.);
+    float fxShaft = (1. - fxHead) * fxRaise;
+    vec3 fxGap = mix(fxFc * .06, vec3(.6, .62, .66), fxShaft * .6);
+    diffuseColor.rgb = mix(fxGap, fxFc * (.88 + .12 * fxH2(fxCl + vSeed * 9.)), fxHead);`,
+  normal: 'normal = normalize(mat3(vTx, vTy, vTz) * fxNt);',
+  surface: 'roughnessFactor = mix(.45, .2, fxHead); metalnessFactor = mix(.4, .85, fxHead);',
+  emissive: 'totalEmissiveRadiance = fxFc * fxHead * .05 * (1. + fxRaise);',
+};
+B.pinart = {
+  // 몸통은 검은 아노다이징 알루미늄 틀
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .35; metalnessFactor = .8;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -6240,6 +6293,7 @@ export const MOVING = new Set([
   'dragon', 'nebula', 'galaxy', 'slime', 'lantern', 'eyeball', 'hamster', 'phoenix', 'fairywing',
   'dragonegg', 'druze', 'pave', 'diamond', 'ruby', 'sapphire', 'emerald', 'quartz', 'starstone', 'moonstone', 'plasmaball',
   'ferrofluid',
+  'pinart',
 ]);
 
 /**

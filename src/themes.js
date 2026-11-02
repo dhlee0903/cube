@@ -3290,6 +3290,27 @@ export const THEMES = [
     motion: 'fluid',
     burst: { shape: 'drip', colors: 'faces', size: 0.08, speed: 2, gravity: 4, drag: 1.5, life: 0.8 },
   },
+  {
+    // 핀 아트. 조각 겉 전체에 아노다이징한 금속 핀이 빽빽이 꽂혀 있고, 손끝을 대면 그 아래 핀들이 볼록하게 밀려 나온다.
+    // 핀 머리 색이 곧 면 색
+    id: 'pinart',
+    name: '핀 아트',
+    bg: '#0B0C10',
+    ink: '#EEF0F6',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #20232C, #06070A)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.04, grid: 80 },
+    body: { color: '#1C1E24', roughness: 0.35, metalness: 0.8 },
+    faces: ['#E8402A', '#F29A1E', '#F2D23A', '#3CC46A', '#2F7BE8', '#B455E8'],
+    lights: {
+      sky: '#ffffff', ground: '#14161c', hemi: 0.9,
+      key: ['#ffffff', 2.6, [-3, 7, 5]], fill: ['#dfe6ff', 0.7, [6, 1, 4]], rim: ['#ffffff', 1.8, [3, 4, -6]],
+    },
+    env: 0.9,
+    surface: 'pinart',
+    sound: 'metal',
+    motion: 'snap',
+    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 2.5, gravity: 2, drag: 2, life: 0.6 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3316,5 +3337,5 @@ export const GROUPS = [
   { name: '명화', themes: ['oil', 'watercolor', 'ukiyoe', 'monet', 'seurat', 'gogh', 'munch', 'klimt', 'cubism', 'warhol', 'collage'] },
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
-  { name: '손끝', themes: ['ferrofluid'] },
+  { name: '손끝', themes: ['ferrofluid', 'pinart'] },
 ];
