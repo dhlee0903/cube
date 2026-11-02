@@ -653,49 +653,6 @@ export const THEMES = [
     burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
   },
   {
-    // 흑백 두 색뿐인 옛 컴퓨터 화면. 흰 종이 같은 바탕에 검은 점만으로 그늘과 빛을 바둑판 점으로 나타낸다.
-    // 면은 블록 속 그림으로 갈린다(민무늬, 안쪽 테, 가운데 네모, 빗금, 네 칸, 가로줄)
-    id: 'onebit',
-    name: '1비트',
-    bg: '#FFFFFF',
-    ink: '#000000',
-    backdrop: '#FFFFFF',
-    form: { bevel: 0.04, size: 0.92, radius: 0.02 },
-    body: { color: '#202020', roughness: 0.7 },
-    faces: ['#D84040', '#4080D8', '#E8C040', '#40B060', '#A060D0', '#E08040'],
-    lights: {
-      sky: '#ffffff', ground: '#8890a0', hemi: 1.8,
-      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.5, [0, 3, -6]],
-    },
-    filter: { type: 'pixel', palette: ['#000000', '#FFFFFF'], mode: 'ramp', res: 150, dither: 0.85, gamma: 0.5, gain: 1.7, bg: '#FFFFFF', line: '#000000' },
-    surface: 'blocks',
-    sound: 'paper',
-    motion: 'stepped',
-    burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
-  },
-  {
-    // 8×8 칸마다 두 색만 쓸 수 있던 8비트 컴퓨터 화면. 열다섯 색 팔레트, 색이 다른 스티커가 한 칸 묶음에 걸치면
-    // 한쪽 색이 옆으로 번져 덮인다(컬러 클래시). 도톰한 블록 스티커
-    id: 'clash',
-    name: '8비트 컴퓨터',
-    bg: '#D7D7D7',
-    ink: '#000000',
-    backdrop: '#D7D7D7',
-    form: { bevel: 0.05, size: 0.86, radius: 0.04, depth: 0.06 },
-    body: { color: '#000000', roughness: 0.6 },
-    faces: ['#FF0000', '#0000FF', '#FFFF00', '#00FF00', '#00FFFF', '#FF00FF'],
-    lights: {
-      sky: '#ffffff', ground: '#8890a0', hemi: 1.8,
-      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.5, [0, 3, -6]],
-    },
-    filter: { type: 'pixel', palette: ['#000000', '#0000D7', '#D70000', '#D700D7', '#00D700', '#00D7D7', '#D7D700', '#D7D7D7', '#0000FF', '#FF0000', '#FF00FF', '#00FF00', '#00FFFF', '#FFFF00', '#FFFFFF'], mode: 'clash', res: 120, dither: 0.25, line: '#000000' },
-    sticker: { roughness: 0.45 },
-    surface: 'plain',
-    sound: 'pixel',
-    motion: 'stepped',
-    burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
-  },
-  {
     // 오락실 브라운관. 색을 채널마다 여섯 단으로 끊고, 화소마다 빨강·초록·파랑 형광 줄과 주사선이 보이며 옆 화소로 빛이 번진다.
     // 스프라이트 검은 테두리, 도톰한 블록 스티커
     id: 'arcade',
@@ -735,28 +692,6 @@ export const THEMES = [
     filter: { type: 'pixel', palette: ['#0A0500', '#4A2400', '#9A5200', '#E88E00', '#FFC040'], mode: 'ramp', cell: 'crt', res: 100, dither: 0.5, bg: '#0A0500', line: null },
     surface: 'blocks',
     sound: 'mech',
-    motion: 'stepped',
-    burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
-  },
-  {
-    // 경기장 LED 전광판. 화소 하나가 둥근 LED 알 하나다. 일곱 가지 꽉 찬 색을 네 단 밝기로 켜고, 꺼진 알은 어둡게 보이며,
-    // 켜진 알은 둘레로 빛이 번진다
-    id: 'led',
-    name: 'LED 전광판',
-    bg: '#050505',
-    ink: '#FFD02A',
-    backdrop: '#050505',
-    form: { bevel: 0.05, size: 0.86, radius: 0.04, depth: 0.06 },
-    body: { color: '#202020', roughness: 0.6 },
-    faces: ['#FF2A2A', '#2AFF4A', '#3A6AFF', '#FFD02A', '#2AE0FF', '#FF3AD8'],
-    lights: {
-      sky: '#ffffff', ground: '#8890a0', hemi: 1.8,
-      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.5, [0, 3, -6]],
-    },
-    filter: { type: 'pixel', palette: ['#FF2A2A', '#2AFF4A', '#3A6AFF', '#FFD02A', '#2AE0FF', '#FF3AD8', '#FFFFFF'], mode: 'led', cell: 'led', res: 80, dither: 0.5, bg: '#1C1C20', line: null },
-    sticker: { roughness: 0.4 },
-    surface: 'plain',
-    sound: 'electric',
     motion: 'stepped',
     burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
   },
@@ -826,27 +761,6 @@ export const THEMES = [
     burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
   },
   {
-    // 버스 행선판 같은 플립닷 판. 칸마다 한쪽은 형광 노랑, 한쪽은 검정인 원판이 축에 매달려 뒤집힌다.
-    // 두 색뿐이라 면은 블록 속 그림으로 갈린다(민무늬, 안쪽 테, 가운데 네모, 빗금, 네 칸, 가로줄). 원판 아래로 그림자
-    id: 'flipdot',
-    name: '플립닷',
-    bg: '#0C0C0C',
-    ink: '#FFD21A',
-    backdrop: '#0C0C0C',
-    form: { bevel: 0.04, size: 0.92, radius: 0.02 },
-    body: { color: '#202020', roughness: 0.7 },
-    faces: ['#D84040', '#4080D8', '#E8C040', '#40B060', '#A060D0', '#E08040'],
-    lights: {
-      sky: '#ffffff', ground: '#8890a0', hemi: 1.8,
-      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.5, [0, 3, -6]],
-    },
-    filter: { type: 'pixel', palette: ['#1C1C1C', '#FFD21A'], mode: 'ramp', cell: 'flipdot', res: 96, dither: 0.6, gamma: 0.72, gain: 1.2, bg: '#0C0C0C', line: null },
-    surface: 'blocks',
-    sound: 'flip',
-    motion: 'stepped',
-    burst: { shape: 'dot', colors: ['#FFD21A', '#1C1C1C'], size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
-  },
-  {
     // 옛 PC 게임의 256색 화면. 빨강·초록·파랑을 여섯 단씩 섞은 색으로 줄이고 그늘은 바둑판 점으로 섞는다.
     // 화소는 세로로 조금 길고, 줄을 두 번 그려 화소 줄 사이로 가는 어두운 틈이 진다
     id: 'vga',
@@ -889,27 +803,6 @@ export const THEMES = [
     burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
   },
   {
-    // 휴대폰 화면을 돋보기로 들여다본 모습. 화소 하나가 빨강·초록·파랑 막대 셋이고 사이는 검은 격자다.
-    // 노랑은 빨강과 초록 막대가, 흰색은 세 막대가 함께 켜져 멀리서 보면 섞인다
-    id: 'subpixel',
-    name: '액정 확대',
-    bg: '#000000',
-    ink: '#FFFFFF',
-    backdrop: '#000000',
-    form: { bevel: 0.05, size: 0.88, radius: 0.03 },
-    body: { color: '#181818', roughness: 0.6 },
-    faces: ['#FF3030', '#3060FF', '#FFE030', '#30E050', '#FFFFFF', '#FF9020'],
-    lights: {
-      sky: '#ffffff', ground: '#8890b0', hemi: 1.8,
-      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.6, [0, 3, -6]],
-    },
-    filter: { type: 'pixel', mode: 'levels', levels: 8, cell: 'subpixel', res: 62, dither: 0.2, bg: '#000000', line: null },
-    surface: 'plain',
-    sound: 'electric',
-    motion: 'stepped',
-    burst: { shape: 'square', colors: ['#FF2020', '#20FF20', '#2040FF'], size: 0.08, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
-  },
-  {
     // 옛 만화책과 신문의 컬러 인쇄. 시안, 마젠타, 노랑, 먹 네 판을 각도를 달리한 망점으로 찍어 누런 종이 위에 겹친다.
     // 밝은 데는 점이 작고 어두운 데는 점이 커서 이웃 점과 붙는다
     id: 'halftone',
@@ -950,100 +843,6 @@ export const THEMES = [
     sound: 'paper',
     motion: 'smooth',
     burst: { shape: 'dot', colors: ['#FF48B0', '#0078BF', '#FFE800'], size: 0.09, speed: 2.4, gravity: -6, drag: 0.8, life: 1 },
-  },
-  {
-    // 빛 핀보드. 검은 종이에 반 칸씩 엇갈린 구멍마다 반투명 플라스틱 핀을 꽂았다. 켜진 핀은 속에서 빛나고
-    // 꼭대기 면이 각지게 반짝이며, 어두운 데는 핀을 빼 구멍만 남는다
-    id: 'pegs',
-    name: '빛 핀보드',
-    bg: '#08080A',
-    ink: '#FFE030',
-    backdrop: '#08080A',
-    form: { bevel: 0.05, size: 0.88, radius: 0.04 },
-    body: { color: '#202024', roughness: 0.6 },
-    faces: ['#FF3030', '#3070FF', '#FFE030', '#30E050', '#FFFFFF', '#FF50C0'],
-    lights: {
-      sky: '#ffffff', ground: '#8890b0', hemi: 1.8,
-      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.6, [0, 3, -6]],
-    },
-    filter: { type: 'pixel', palette: ['#FF2A2A', '#FF8A1A', '#FFE82A', '#2AE84A', '#2A8AFF', '#FF4AC8', '#A04AFF', '#FFFFFF'], mode: 'led', cell: 'peg', res: 58, dither: 0.4, bg: '#0A0A0C', line: null },
-    surface: 'plain',
-    sound: 'pop',
-    motion: 'snap',
-    burst: { shape: 'glow', colors: 'faces', size: 0.1, speed: 2.4, gravity: -6, drag: 0.8, life: 1 },
-  },
-  {
-    // 비잔틴 성당 벽의 모자이크. 손으로 쪼갠 네모난 대리석과 색유리 조각(스몰티)을 회색 줄눈 사이로 박았다.
-    // 조각은 조금씩 비뚤고 빛깔이 저마다 다르며 유리 조각은 반짝인다. 큐브 둘레는 짙푸른 밤하늘 조각
-    id: 'tessera',
-    name: '모자이크 타일',
-    bg: '#B8B0A0',
-    ink: '#1E2A4A',
-    backdrop: '#1E2A4A',
-    form: { bevel: 0.05, size: 0.88, radius: 0.04 },
-    body: { color: '#1A1A1E', roughness: 0.6 },
-    faces: ['#C02A26', '#2A5AB0', '#F0C030', '#2E8048', '#F0EAD8', '#E07A2A'],
-    lights: {
-      sky: '#ffffff', ground: '#8890b0', hemi: 1.8,
-      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.6, [0, 3, -6]],
-    },
-    filter: {
-      type: 'pixel',
-      palette: ['#F0EAD8', '#C8C0B0', '#1A1A1E', '#B02A26', '#7A1A18', '#E07A2A', '#F0C030', '#B08A20',
-        '#2E7A44', '#1A4A2A', '#2A5AA8', '#1A3060', '#6A9AD0', '#A84A1A', '#F0A050', '#4A4A50'],
-      cell: 'tessera', res: 60, gain: 1.1, bg: '#B8B0A0', line: '#1E2A4A',
-    },
-    surface: 'plain',
-    sound: 'stone',
-    motion: 'heavy',
-    burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.4, gravity: -8, drag: 0.6, life: 1 },
-  },
-  {
-    // 빨간 고글 게임기. 검은 바탕에 네 단 빨강으로만 그리고, 화소 줄이 빨간 빛줄로 그어진다. 비껴 겹친 흐린 상이 깊이를 준다.
-    // 색이 넷뿐이라 면은 블록 속 그림으로 갈린다(민무늬, 안쪽 테, 가운데 네모, 빗금, 네 칸, 가로줄)
-    id: 'scope',
-    name: '빨간 고글',
-    bg: '#000000',
-    ink: '#FF2020',
-    backdrop: '#000000',
-    form: { bevel: 0.04, size: 0.92, radius: 0.02 },
-    body: { color: '#202020', roughness: 0.7 },
-    faces: ['#D84040', '#4080D8', '#E8C040', '#40B060', '#A060D0', '#E08040'],
-    lights: {
-      sky: '#ffffff', ground: '#8890a0', hemi: 1.8,
-      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.5, [0, 3, -6]],
-    },
-    filter: { type: 'pixel', palette: ['#000000', '#4A0000', '#9A0000', '#FF1818'], mode: 'ramp', cell: 'scope', res: 100, dither: 0.45, gamma: 0.78, gain: 1.12, bg: '#000000', line: null },
-    surface: 'blocks',
-    sound: 'pixel',
-    motion: 'stepped',
-    burst: { shape: 'square', colors: ['#FF1818', '#9A0000'], size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
-  },
-  {
-    // 옛 PC 통신 게시판의 ANSI 그림. 글자 칸마다 열여섯 색 가운데 앞·뒤 두 색과 블록 글자 하나를 고른다.
-    // 위아래 색이 다르면 반 블록(▀), 같으면 그늘 글자(░ ▒ ▓)로 두 색을 섞는다
-    id: 'ansi',
-    name: 'ANSI 아트',
-    bg: '#000000',
-    ink: '#55FFFF',
-    backdrop: '#000000',
-    form: { bevel: 0.05, size: 0.88, radius: 0.03 },
-    body: { color: '#555555', roughness: 0.7 },
-    faces: ['#FF5555', '#5555FF', '#FFFF55', '#55FF55', '#55FFFF', '#FF55FF'],
-    lights: {
-      sky: '#ffffff', ground: '#8890a0', hemi: 1.8,
-      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.5, [0, 3, -6]],
-    },
-    filter: {
-      type: 'pixel',
-      palette: ['#000000', '#AA0000', '#00AA00', '#AA5500', '#0000AA', '#AA00AA', '#00AAAA', '#AAAAAA',
-        '#555555', '#FF5555', '#55FF55', '#FFFF55', '#5555FF', '#FF55FF', '#55FFFF', '#FFFFFF'],
-      cell: 'ansi', res: 64, gain: 1.25, bg: '#000000', line: null,
-    },
-    surface: 'plain',
-    sound: 'pixel',
-    motion: 'stepped',
-    burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
   },
   {
     // 흑백 만화 원고. 흰 종이에 먹 하나로, 색마다 다른 스크린톤을 붙인다(노랑 잔 망점, 주황 굵은 망점, 빨강 빗금,
@@ -3489,9 +3288,9 @@ export const GROUPS = [
   { name: '금속·기계', themes: ['metal', 'gauge', 'rust', 'mercury', 'circuit', 'carbon'] },
   {
     name: '픽셀',
-    themes: ['pixel', 'handheld', 'cga', 'onebit', 'clash', 'arcade', 'amber', 'led', 'ascii', 'bricks', 'beads', 'flipdot', 'vga',
-      'teletext', 'subpixel', 'halftone', 'riso', 'pegs', 'tessera', 'scope',
-      'ansi', 'screentone', 'glassblock', 'dotprinter', 'coderain', 'nightvision', 'voxel'],
+    themes: ['pixel', 'handheld', 'cga', 'arcade', 'amber', 'ascii', 'bricks', 'beads', 'vga',
+      'teletext', 'halftone', 'riso',
+      'screentone', 'glassblock', 'dotprinter', 'coderain', 'nightvision', 'voxel'],
   },
   { name: '명화', themes: ['oil', 'watercolor', 'ukiyoe', 'monet', 'seurat', 'gogh', 'munch', 'klimt', 'cubism', 'warhol', 'collage'] },
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
