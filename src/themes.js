@@ -3873,6 +3873,27 @@ export const THEMES = [
     motion: 'smooth',
     burst: { shape: 'glow', colors: 'faces', size: 0.05, speed: 2, gravity: 0, drag: 2, life: 0.6, additive: true },
   },
+  {
+    // 3D LED 큐브. 조각 하나가 통째로 투명한 상자이고 속에 6×6×6 LED 격자가 떠 있다. 면 색 LED가 물결 면, 공 껍질, 돌아가는
+    // 기둥을 그리며, 층마다 깊이가 달라 보는 각도 따라 입체로 어긋난다. 층을 돌리면 도형이 바뀐다
+    id: 'ledcube',
+    name: '3D LED 큐브',
+    bg: '#030304',
+    ink: '#EEEEF6',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #10101A, #020203)',
+    form: { bevel: 0.04, size: 0.96, radius: 0.03, grid: 24 },
+    body: { color: '#101012', roughness: 0.15 },
+    faces: ['#FF3030', '#FF9020', '#FFE030', '#30F070', '#3080FF', '#C040FF'],
+    lights: {
+      sky: '#c8ccff', ground: '#050508', hemi: 0.4,
+      key: ['#ffffff', 1.2, [-3, 7, 5]], fill: ['#c0c8ff', 0.3, [6, 1, 4]], rim: ['#ffffff', 1, [3, 4, -6]],
+    },
+    env: 0.7,
+    surface: 'ledcube',
+    sound: 'electric',
+    motion: 'snap',
+    burst: { shape: 'square', colors: 'faces', size: 0.05, speed: 2, gravity: 0, drag: 2, life: 0.6, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3901,5 +3922,5 @@ export const GROUPS = [
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
   { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops', 'liquidtimer', 'oilwater', 'mobile'] },
-  { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'laser', 'magnifier', 'chrome', 'fiberoptic'] },
+  { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'laser', 'magnifier', 'chrome', 'fiberoptic', 'ledcube'] },
 ];

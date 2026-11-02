@@ -8017,6 +8017,69 @@ B.fiberoptic = {
   surface: 'roughnessFactor = .4;',
 };
 
+S.ledcube = {
+  // 3D LED 큐브. 조각 하나가 통째로 투명한 아크릴 상자이고, 속에 6×6×6 LED 알이 가는 다리에 매달려 격자로 떠 있다. 면 색
+  // LED들이 켜졌다 꺼지며 입체 도형을 그린다: 출렁이는 물결 면, 부풀었다 줄어드는 공 껍질, 돌아가는 기둥이 차례로 바뀐다.
+  // 층마다 깊이가 달라 보는 각도 따라 어긋나 진짜 입체로 보이고, 꺼진 알도 희미하게 보인다. 층을 돌리면 도형이 바뀐다
+  head: `
+    float fxLcH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float n = pow(pow(abs(q.x), 8.) + pow(abs(q.y), 8.), 1. / 8.);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .006 * sqrt(max(0., 1. - n * n)));
+    }
+    // 이 자리(-1~1 상자 좌표)의 LED가 켜졌는지
+    float fxLcOn(vec3 c, float t, float mode) {
+      if (mode < 1.) return 1. - smoothstep(.12, .3, abs(c.z - .55 * sin(c.x * 2.2 + t * 2.) * cos(c.y * 1.8 - t * 1.3)));
+      if (mode < 2.) { float r = .55 + .4 * sin(t * 1.6); return 1. - smoothstep(.1, .28, abs(length(c) - r)); }
+      vec2 a = vec2(cos(t * 1.4), sin(t * 1.4)) * .55;
+      return max(1. - smoothstep(.15, .35, length(c.xy - a)), 1. - smoothstep(.15, .35, length(c.xy + a)));
+    }`,
+  height: 'fxLcH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVl = vec3(dot(fxV, vTx), dot(fxV, vTy), max(dot(fxV, vTz), .2));
+    float fxT = uTime + vSeed * 9.;
+    float fxMode = mod(floor(fxT / 7.) + floor(uCharge * 2.9), 3.);
+    vec3 fxLed = vec3(0.);
+    float fxN = 6.;
+    for (int k = 0; k < 6; k++) {
+      float fk = float(k);
+      float zc = (fk + .5) / fxN * 2. - 1.;
+      float dep = (.08 + .62 * (fk + .5) / fxN);
+      vec2 qk = fxQ - fxVl.xy / fxVl.z * dep / uSticker.x;
+      vec2 g = (qk * .5 + .5) * fxN * 1.08 - .04 * fxN;
+      vec2 cell = floor(g);
+      if (cell.x < 0. || cell.y < 0. || cell.x > fxN - 1. || cell.y > fxN - 1.) continue;
+      vec2 f = fract(g) - .5;
+      vec3 c = vec3((cell + .5) / fxN * 2. - 1., zc);
+      float on = fxLcOn(c, fxT, fxMode);
+      float d = length(f);
+      float bead = exp(-d * d * 60.);
+      float halo = exp(-d * d * 9.) * .25;
+      float far = 1. - .45 * fk / fxN;
+      fxLed += (mix(vec3(.05), fxFc * 1.6, on) * bead + fxFc * halo * on) * far;
+      // 다리: 세로 철사
+      fxLed += vec3(.06) * (1. - smoothstep(.0, .03, abs(f.x))) * step(f.y, 0.) * .6 * far;
+    }
+    diffuseColor.rgb = vec3(.015) + fxFc * .02;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxLcH(fxP - vec2(fxE, 0.), vSeed) - fxLcH(fxP + vec2(fxE, 0.), vSeed),
+                               fxLcH(fxP - vec2(0., fxE), vSeed) - fxLcH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = .05; metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxLed + fxFc * .04;',
+};
+B.ledcube = {
+  // 몸통은 검은 아크릴 받침
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .15;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -8054,6 +8117,7 @@ export const MOVING = new Set([
   'magnifier',
   'chrome',
   'fiberoptic',
+  'ledcube',
 ]);
 
 /**
