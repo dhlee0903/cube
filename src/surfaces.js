@@ -6725,6 +6725,59 @@ B.enamel = {
   surface: 'roughnessFactor = .3; metalnessFactor = .85;',
 };
 
+S.candypaint = {
+  // 캔디 메탈플레이크 도장. 조각 하나가 통째로 커스텀 자동차의 도장 패널이다. 가운데가 봉긋한 쿠션꼴 판 위에 은빛 금속 조각
+  // (메탈플레이크)을 깔고, 그 위를 면 색 캔디(투명 물감) 층과 두꺼운 투명 코팅이 덮었다. 금속 조각은 저마다 조금씩 기울어
+  // 있어서 큐브를 돌리면 빛과 각이 맞는 조각만 차례로 번쩍이고, 코팅 깊이만큼 조각 층이 보는 각도 따라 살짝 어긋난다.
+  // 빛은 캔디 층을 두 번 지나므로 비스듬히 볼수록 길을 더 걸어 빛깔이 짙어진다(도장의 플롭)
+  head: `${GEM_BASE}
+    float fxCpH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float n = pow(pow(abs(q.x), 5.) + pow(abs(q.y), 5.), .2);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .03 * pow(max(0., 1. - n * n), .6));
+    }`,
+  height: 'fxCpH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    ${GEM_LIGHTS}
+    vec3 fxFc = diffuseColor.rgb;
+    vec3 fxNt = FX_HNORM(fxCpH, vLocal.xy, .0012);
+    vec3 fxNv = normalize(fxTbn * fxNt);
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVt = fxV * fxTbn;
+    float fxCos = max(dot(fxNv, fxV), .05);
+    // 코팅 밑 금속 조각 층
+    vec2 fxP = vLocal.xy - fxVt.xy / max(fxVt.z, .3) * .004;
+    vec3 fxVo = fxVoronoi(fxP * 48. + vSeed * 31.);
+    float fxId = fxVo.z;
+    vec2 fxJ = (vec2(fxH1(fxId * 13.1), fxH1(fxId * 7.7)) - .5) * 1.3;
+    vec3 fxNf = normalize(fxTbn * normalize(fxNt + vec3(fxJ, 0.)));
+    float fxAA = clamp(1. - fwidth(fxP.x) * 48. * .6, 0., 1.);
+    float fxEdgeF = smoothstep(.0, .06, fxVo.y);
+    // 캔디 층: 빛이 두 번 지나고, 비스듬할수록 길다
+    vec3 fxAbs = -log(clamp(fxFc, .03, 1.));
+    vec3 fxCandy = exp(-fxAbs * (.55 + .45 / fxCos));
+    vec3 fxSpark = vec3(0.);
+    for (int i = 0; i < 3; i++) {
+      vec3 fxL = normalize(fxLd[i]);
+      float sp = pow(max(dot(reflect(-fxL, fxNf), fxV), 0.), 70.);
+      float sh = pow(max(dot(reflect(-fxL, fxNv), fxV), 0.), 12.);
+      fxSpark += fxLc[i] * (sp * 9. * fxAA + sh * .35);
+    }
+    vec3 fxEnvF = fxGemEnv(reflect(-fxV, normalize(mix(fxNv, fxNf, fxAA)))) * 1.1;
+    float fxBright = fxH1(fxId * 3.3) * .35 + .65;
+    vec3 fxPaint = (fxSpark + fxEnvF + .05) * mix(1., fxBright * (.55 + .45 * fxEdgeF), fxAA) * fxCandy;
+    diffuseColor.rgb = fxFc * .05;`,
+  normal: 'normal = fxNv;',
+  surface: 'roughnessFactor = .02; metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxPaint;',
+};
+B.candypaint = {
+  // 몸통은 검게 칠한 광택 차체
+  color: 'diffuseColor.rgb *= .9;',
+  surface: 'roughnessFactor = .08; metalnessFactor = .3;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([

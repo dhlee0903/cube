@@ -3456,6 +3456,27 @@ export const THEMES = [
     motion: 'smooth',
     burst: { shape: 'star', colors: ['#FFE0A0', '#FFFFFF'], size: 0.08, speed: 2, gravity: 1, drag: 2, life: 0.7, additive: true },
   },
+  {
+    // 캔디 메탈플레이크 도장. 조각 하나가 통째로 커스텀 자동차 도장 패널이다. 은빛 금속 조각 위에 면 색 캔디 층과 두꺼운 투명
+    // 코팅을 올려, 돌리면 빛과 각이 맞는 조각이 차례로 번쩍이고 비스듬히 볼수록 빛깔이 짙어진다
+    id: 'candypaint',
+    name: '캔디 도장',
+    bg: '#060608',
+    ink: '#F2F2F8',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #1A1A22, #030304)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.08, grid: 48 },
+    body: { color: '#0C0C0E', roughness: 0.08, metalness: 0.3 },
+    faces: ['#D0102A', '#F06A10', '#E8B818', '#18A048', '#1450D8', '#8A20C0'],
+    lights: {
+      sky: '#ffffff', ground: '#0c0c10', hemi: 0.8,
+      key: ['#ffffff', 2.8, [-3, 7, 5]], fill: ['#dfe6ff', 0.6, [6, 1, 4]], rim: ['#ffffff', 2.2, [3, 4, -6]],
+    },
+    env: 1.1,
+    surface: 'candypaint',
+    sound: 'metal',
+    motion: 'snap',
+    burst: { shape: 'star', colors: ['#FFFFFF', '#E8EEFF'], size: 0.08, speed: 2.6, gravity: 0, drag: 2.4, life: 0.6, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3472,7 +3493,7 @@ export const GROUPS = [
   { name: '패턴', themes: ['houndstooth', 'glencheck', 'herringbone', 'gingham', 'argyle', 'chevron', 'tartan', 'pinstripe', 'windowpane', 'buffalo', 'madras', 'seersucker', 'birdseye'] },
   { name: '판타지', themes: ['dragon', 'phoenix', 'mithril', 'damascus', 'fairywing', 'dragonegg'] },
   { name: '동물', themes: ['wool', 'hamster', 'wild', 'croc', 'python', 'calf'] },
-  { name: '금속·기계', themes: ['metal', 'gauge', 'rust', 'mercury', 'circuit', 'carbon'] },
+  { name: '금속·기계', themes: ['metal', 'gauge', 'rust', 'mercury', 'circuit', 'carbon', 'candypaint'] },
   {
     name: '픽셀',
     themes: ['pixel', 'handheld', 'cga', 'arcade', 'amber', 'ascii', 'bricks', 'beads', 'vga',
