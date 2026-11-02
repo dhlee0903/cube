@@ -3540,6 +3540,27 @@ export const THEMES = [
     motion: 'stutter',
     burst: { shape: 'dot', colors: ['#202030', '#E8C070'], size: 0.04, speed: 2, gravity: 2, drag: 2, life: 0.5 },
   },
+  {
+    // 소나 물결. 조각 하나가 통째로 면 색 물이 찬 얕은 돌 웅덩이다. 손끝 자리에서 동그란 물결이 실제로 일렁이며 퍼지고 네 벽에
+    // 부딪혀 메아리처럼 되돌아온다. 손끝이 없으면 가끔 물방울이 떨어진다
+    id: 'sonar',
+    name: '소나 물결',
+    bg: '#06090C',
+    ink: '#EEF4F8',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #18222C, #030506)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.05, grid: 96 },
+    body: { color: '#4A4A46', roughness: 0.8 },
+    faces: ['#D8343A', '#F08A2A', '#E8C83A', '#2EA05E', '#2E6ED8', '#9A48D0'],
+    lights: {
+      sky: '#ffffff', ground: '#10141a', hemi: 1,
+      key: ['#ffffff', 2.4, [-3, 7, 5]], fill: ['#dfe8ff', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.6, [3, 4, -6]],
+    },
+    env: 1,
+    surface: 'sonar',
+    sound: 'water',
+    motion: 'fluid',
+    burst: { shape: 'drip', colors: ['#D0E8FF', '#FFFFFF'], size: 0.05, speed: 1.6, gravity: 3, drag: 1.5, life: 0.7 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3567,5 +3588,5 @@ export const GROUPS = [
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'chrome', 'fiberoptic', 'ledcube'] },
-  { name: '계기', themes: ['radar', 'clockface', 'oscilloscope', 'theremin', 'seismograph'] },
+  { name: '계기', themes: ['radar', 'clockface', 'oscilloscope', 'theremin', 'seismograph', 'sonar'] },
 ];

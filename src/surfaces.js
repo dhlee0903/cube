@@ -6999,6 +6999,65 @@ B.seismograph = {
   surface: 'roughnessFactor = .45; metalnessFactor = .5;',
 };
 
+S.sonar = {
+  // 소나 물결. 조각 하나가 통째로 면 색 물이 찬 얕은 돌 웅덩이다. 손끝을 가져가면 그 자리에서 동그란 물결이 실제로 일렁이며
+  // 퍼져 나가고, 네 벽에 부딪혀 되돌아오는 메아리 물결이 겹쳐 무늬를 짠다. 손끝이 없으면 가끔 떨어지는 물방울이 작은
+  // 물결을 낸다. 물결 따라 하늘빛이 일렁이고 바닥엔 빛 그물이 어른거린다
+  head: `
+    float fxSnWave(vec2 q, vec2 s, float t, float amp) {
+      float d = length(q - s);
+      return amp * sin(d * 28. - t * 7.) * exp(-d * 1.6) * smoothstep(.0, .08, d + .02);
+    }
+    float fxSnField(vec2 q, float seed) {
+      vec2 tp = fxPtr.xy / uSticker.x;
+      float near = smoothstep(5., 2.2, fxPtr.z) * step(0., fxPtr.z) * step(length(tp), 1.4);
+      float t = uTime;
+      float w = 0.;
+      // 손끝과 네 벽에 비친 거울 자리(메아리)
+      w += fxSnWave(q, tp, t, 1.) * near;
+      w += (fxSnWave(q, vec2(2. - tp.x, tp.y), t, .55) + fxSnWave(q, vec2(-2. - tp.x, tp.y), t, .55)
+          + fxSnWave(q, vec2(tp.x, 2. - tp.y), t, .55) + fxSnWave(q, vec2(tp.x, -2. - tp.y), t, .55)) * near;
+      // 물방울
+      float cyc = t * .45 + seed * 7.;
+      vec2 dp = (vec2(fxH1(floor(cyc) * 3.1 + seed), fxH1(floor(cyc) * 7.3 + seed)) - .5) * 1.4;
+      float age = fract(cyc);
+      float dd = length(q - dp);
+      w += .6 * sin(dd * 30. - age * 14.) * exp(-pow(dd - age * 1.6, 2.) * 30.) * (1. - age) * (1. - near * .7);
+      return w;
+    }
+    float fxSnH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float rim = .018 * smoothstep(.82, .9, max(abs(q.x), abs(q.y)));
+      return smoothstep(0., .04, fxEdgeAt(p)) * (.012 + .007 * fxSnField(q, seed) * (1. - smoothstep(.75, .85, max(abs(q.x), abs(q.y)))) + rim);
+    }`,
+  height: 'fxSnH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    float fxM = max(abs(fxQ.x), abs(fxQ.y));
+    float fxRim = smoothstep(.82, .88, fxM);
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxSnH(fxP - vec2(fxE, 0.), vSeed) - fxSnH(fxP + vec2(fxE, 0.), vSeed),
+                               fxSnH(fxP - vec2(0., fxE), vSeed) - fxSnH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    // 바닥: 면 색 돌, 물결이 꺾은 빛 그물
+    vec2 fxBq = fxQ + fxNt.xy * 1.5;
+    float fxCa = pow(1. - abs(sin(fxBq.x * 9. + fxN2(fxBq * 3.) * 3.) * sin(fxBq.y * 9. + fxN2(fxBq.yx * 3.) * 3.)), 5.);
+    vec3 fxBottom = fxFc * (.45 + .1 * fxN2(fxBq * 20.)) * (1. - .35 * fxM * fxM) + fxFc * fxCa * .35;
+    vec3 fxStone = vec3(.24, .23, .21) * (.8 + .3 * fxN2(fxQ * 18. + vSeed));
+    vec3 fxCol = mix(fxBottom, fxStone, fxRim);
+    diffuseColor.rgb = fxCol;`,
+  normal: 'normal = normalize(mat3(vTx, vTy, vTz) * fxNt);',
+  surface: 'roughnessFactor = mix(.03, .8, fxRim); metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxBottom * (1. - fxRim) * .25;',
+};
+B.sonar = {
+  // 몸통은 이끼 낀 회색 돌
+  color: 'diffuseColor.rgb *= .8 + .3 * fxN3(vLocal * 20. + vSeed);',
+  surface: 'roughnessFactor = .8;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -7020,6 +7079,7 @@ export const MOVING = new Set([
   'oscilloscope',
   'theremin',
   'seismograph',
+  'sonar',
 ]);
 
 /**
