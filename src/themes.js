@@ -1274,7 +1274,7 @@ export const THEMES = [
       sky: '#ffffff', ground: '#8890b0', hemi: 1.8,
       key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.6, [0, 3, -6]],
     },
-    filter: { type: 'pixel', cell: 'jigsaw', res: 120, gain: 1.05, bg: '#1E5A6A', line: null },
+    filter: { type: 'pixel', cell: 'jigsaw', res: 230, gain: 1.05, bg: '#1E5A6A', line: null },
     surface: 'plain',
     sound: 'paper',
     motion: 'snap',

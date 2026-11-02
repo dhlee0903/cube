@@ -602,7 +602,7 @@ vec2 fxPiece(vec2 P) {
 // 직소 퍼즐: 장면을 다 맞춘 퍼즐 한 판처럼 조각 이음매가 지나간다. 조각마다 판지 결과 빛이 조금씩 다르고
 // 이음매 위쪽 가장자리는 밝게, 아래쪽은 그늘지게 도톰하다
 vec4 fxJigsaw(vec2 g) {
-  vec2 P = g / 7.;
+  vec2 P = g / 13.;
   vec2 id = fxPiece(P);
   vec2 ex = vec2(fwidth(P.x) * 1.3, 0.), ey = vec2(0., fwidth(P.y) * 1.3);
   float lft = fxPiece(P - ex) != id ? 1. : 0., rgt = fxPiece(P + ex) != id ? 1. : 0.;
