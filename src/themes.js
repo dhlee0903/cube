@@ -2018,7 +2018,7 @@ export const THEMES = [
       '#04040C',
     ].join(', '),
     drift: 'radial-gradient(30% 22% at 65% 70%, rgba(255,120,200,.1), transparent 70%)',
-    form: { bevel: 0.05, size: 0.94, radius: 0.06, grid: 32 },
+    form: { bevel: 0.05, size: 0.94, radius: 0.06, grid: 72 },
     body: { color: '#2A2C36', roughness: 0.45, metalness: 0.6 },
     faces: ['#D89A5A', '#2A78B8', '#E8EEF4', '#C8502A', '#E0C84A', '#3A48C0'],
     lights: {
@@ -2256,7 +2256,7 @@ export const THEMES = [
       '#1A0E24',
     ].join(', '),
     drift: 'radial-gradient(35% 28% at 40% 60%, rgba(255,80,160,.12), transparent 70%)',
-    form: { bevel: 0.07, size: 0.92, radius: 0.18 },
+    form: { bevel: 0.07, size: 0.94, radius: 0.12, grid: 40 },
     body: { color: '#B8BCC4', roughness: 0.18, metalness: 1 },
     sticker: { roughness: 0.08 },
     faces: ['#FF7A1E', '#FF3A8A', '#FFD83A', '#6AE03A', '#2AC8F0', '#9A5AFF'],
@@ -2373,8 +2373,8 @@ export const THEMES = [
     burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.4, gravity: -5, drag: 1, life: 1 },
   },
   {
-    // 우주 저편의 블랙홀. 다 맞추면 면 하나에 블랙홀이 하나씩 들어앉는다. 그림자, 광자 고리, 휘어 넘어온 원반 빛,
-    // 앞을 가로지르는 강착 원반. 다가오는 쪽이 더 밝고 가스 줄기가 돈다. 별빛이 휘고, 물 흐르듯 돈다
+    // 가르강튀아 같은 블랙홀. 다 맞추면 면 하나에 블랙홀이 하나씩 들어앉는다. 거의 옆에서 본 원반이 그림자를 가로지르고
+    // 뒤편 원반이 휘어 그림자 위아래로 굵은 빛 고리가 된다. 광자 고리, 렌즈로 밀려난 별, 물 흐르듯 돈다
     id: 'blackhole',
     name: '블랙홀',
     bg: '#020206',
@@ -2437,13 +2437,14 @@ export const THEMES = [
       PAPER_GRAIN,
       'linear-gradient(180deg, #22202A, #0C0B10)',
     ].join(', '),
-    form: { bevel: 0.06, size: 0.94, radius: 0.05, depth: 0.02 },
+    form: { bevel: 0.06, size: 0.94, radius: 0.05, depth: 0.02, grid: 48 },
     body: { color: '#3A332E', roughness: 0.85 },
     faces: ['#6A9AD8', '#D8582A', '#4AA06A', '#9A5AC8', '#E890B0', '#E8B848'],
     lights: {
       sky: '#fff4e8', ground: '#141018', hemi: 0.9,
       key: ['#fff4e8', 2.2, [-4, 6, 5]], fill: ['#d8c8ff', 0.4, [6, 0, 3]], rim: ['#ffffff', 1.2, [0, 4, -6]],
     },
+    env: 0.5,
     surface: 'agate',
     sound: 'stone',
     motion: 'heavy',
@@ -2909,7 +2910,7 @@ export const THEMES = [
       'radial-gradient(45% 35% at 50% 35%, rgba(255,255,255,.12), transparent 70%)',
       'linear-gradient(180deg, #1C1C24, #08080C)',
     ].join(', '),
-    form: { bevel: 0.05, size: 0.94, radius: 0.04, grid: 44 },
+    form: { bevel: 0.05, size: 0.94, radius: 0.04, grid: 64 },
     body: { color: '#3A3C44', roughness: 0.25, metalness: 1 },
     faces: ['#E8B83A', '#C83A9A', '#3A6AD8', '#3AB86A', '#2AC0D8', '#8A4AD0'],
     lights: {

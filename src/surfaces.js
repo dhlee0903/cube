@@ -1857,15 +1857,74 @@ S.planet = {
   // 해왕성(짙은 하늘빛의 옅은 띠, 대암점과 그 곁의 하얀 구름, 빠르게 흐르는 메탄 구름 줄).
   // 지표가 천천히 자전하고, 낮밤 경계가 면을 가로질러 오가며, 면 테두리를 따라 대기가 빛난다
   head: `
+    // 지형 높이(행성마다 다르다): 지구 대륙과 산맥, 유로파 이중 능선, 화성 구덩이·협곡·방패 화산, 이오 화산 웅덩이와 산,
+    // 목성·해왕성 구름 띠와 폭풍의 부푼 자리
+    float fxTerrain(vec2 F) {
+      vec2 S = F + vec2(uTime * .02, 0.);
+      float wx = mod(S.x + 1., 2.) - 1.;
+      float h = 0.;
+      if (uFace < .5) {
+        float yb = F.y + (fxF2(vec2(S.x * 1.3, F.y * 2.6)) - .5) * .14;
+        h = .004 * sin(yb * 9.5) + .003 * fxN2(vec2(S.x * 7., F.y * 11.));
+        vec2 sp = vec2(wx - .15, F.y + .3) / vec2(.3, .17);
+        h += .012 * (1. - smoothstep(.6, 1.1, length(sp)));
+      } else if (uFace < 1.5) {
+        float e = fxF2(S * 1.1 + 7.);
+        float land = smoothstep(.52, .56, e);
+        float ridge = 1. - abs(2. * fxN2(S * 5. + 3.) - 1.);
+        float ridge2 = 1. - abs(2. * fxN2(S * 13. + 9.) - 1.);
+        h = land * (.006 + .03 * smoothstep(.56, .8, e) * (ridge * ridge * .75 + ridge2 * .25));
+      } else if (uFace < 2.5) {
+        float lin = 0.;
+        for (int i = 0; i < 7; i++) {
+          float fi = float(i);
+          float ang = fxH1(fi + 3.) * 3.1416;
+          vec2 n = vec2(cos(ang), sin(ang));
+          float dd = dot(S, n) - (fxH1(fi * 7. + 1.) - .5) * 1.8 + sin(dot(S, vec2(-n.y, n.x)) * 1.4 + fi) * .1;
+          float wid = .012 + .016 * fxH1(fi * 3.);
+          lin = max(lin, (1. - smoothstep(.0, wid * 1.6, abs(abs(dd) - wid))) * (.6 + .4 * fxH1(fi + 9.)));
+        }
+        vec3 v = fxVoronoi(S * 6. + 5.);
+        float chaos = smoothstep(.66, .72, fxN2(S * 1.1 + 2.));
+        h = .012 * lin + chaos * .008 * smoothstep(.02, .08, v.y) * (.5 + v.z);
+      } else if (uFace < 3.5) {
+        vec3 v = fxVoronoi(S * 4. + 5.);
+        float big = step(.55, v.z);
+        float bowl = (1. - smoothstep(.0, .2, v.x));
+        float rim = exp(-pow((v.x - .2) / .035, 2.));
+        h = big * (-.016 * bowl * bowl + .009 * rim);
+        vec3 v2 = fxVoronoi(S * 11. + 3.);
+        h += step(.6, v2.z) * (-.005 * (1. - smoothstep(0., .18, v2.x)) + .003 * exp(-pow((v2.x - .18) / .03, 2.)));
+        float cy = abs(S.y + .05 + fxN2(vec2(S.x * 2.4, 3.)) * .2 - .1);
+        h -= .03 * (1. - smoothstep(.0, .06, cy));
+        vec2 om = vec2(wx + .45, F.y - .35);
+        float r = length(om);
+        h += .045 * max(0., 1. - r / .17) - .02 * (1. - smoothstep(.02, .04, r));
+        h += .004 * fxF2(S * 9.);
+      } else if (uFace < 4.5) {
+        vec3 v = fxVoronoi(S * 3. + 5.);
+        float pr = .03 + .08 * fract(v.z * 7.3);
+        h = -.01 * step(.45, v.z) * (1. - smoothstep(pr - .01, pr + .02, v.x));
+        vec3 m = fxVoronoi(S * 2.3 + 17.);
+        h += .025 * step(.82, m.z) * smoothstep(.0, .25, m.y) * (1. - smoothstep(.1, .35, m.x));
+        h += .004 * fxF2(S * 6.);
+      } else {
+        h = .003 * sin(F.y * 8. + fxF2(S * vec2(.8, 3.)) * 2.);
+        vec2 ds = vec2(wx + .1, F.y + .2) / vec2(.28, .15);
+        h -= .008 * (1. - smoothstep(.6, 1.1, length(ds)));
+      }
+      return h;
+    }
     float fxPlanetH(vec2 p, float seed) {
       vec2 q = p / uSticker.x;
       vec2 w = 1. - pow(abs(q), vec2(8.));
-      return .016 * w.x * w.y + .004;
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.016 * w.x * w.y + .03 + fxTerrain(aHome.xy + p * aHome.z));
     }`,
   height: 'fxPlanetH',
   color: `
     if (fxEdge() < 0.) discard;
     vec2 fxF = fxFace();
+    float fxHt = fxPlanetH(vLocal.xy, vSeed);
     float fxSpin = uTime * .02;
     vec2 fxS = fxF + vec2(fxSpin, 0.);
     vec2 fxCl = fxF + vec2(fxSpin * 1.6, 0.);
@@ -2000,12 +2059,14 @@ S.planet = {
       fxAtm = vec3(.4, .65, 1.);
     }
     float fxDay = smoothstep(-.3, .3, fxF.x * .8 + fxF.y * .3 + .75 + .5 * sin(uTime * .05 + uFace * 1.7));
+    fxC *= .9 + .2 * fxF2(fxS * 18. + uFace * 5.) * (1. - fxSea) + .08 * (fxN2(fxS * 70.) - .5);
     fxC = mix(fxC, vec3(1.), fxCloud * .9);
     fxC *= mix(.38, 1., fxDay);
     float fxCity = (1. - fxDay) * fxLand * (1. - fxCloud) * step(.82, fxH2(floor(fxS * 60.))) * step(.5, uFace) * step(uFace, 1.5);
     vec2 fxGl = fxF - vec2(-.4, .35);
     float fxSunGlint = fxSea * fxDay * exp(-dot(fxGl, fxGl) * 5.) * (1. - fxCloud);
     diffuseColor.rgb = fxC;`,
+  normal: 'normal = fxBump(normal, clamp(fxHt - vLift, -.012, .012) + fxF2(fxFace() * 40. + uFace * 3.) * .0012 * (1. - fxSea));',
   surface: 'roughnessFactor = mix(.6, .12, fxSea);',
   emissive: `
     float fxRim = 1. - smoothstep(0., .1, fxBorder);
@@ -2274,47 +2335,74 @@ B.marquetry = {
 };
 
 S.lavalamp = {
-  // 70년대 거실의 라바램프. 다 맞추면 면 하나가 램프 한 개의 유리창이 된다. 아래서 데워진 밀랍 덩어리가 천천히 떠올랐다 가라앉고,
-  // 서로 붙었다 갈라지며, 바닥엔 녹은 밀랍이 고여 있다. 덩어리는 둥글게 볼록해 윗면에 빛이 맺히고 가장자리가 밝게 비치며,
-  // 속은 더 짙게 달아올랐다. 밀랍 색이 곧 면 색이고, 둘레 액체는 바닥 전구 빛을 받아 아래가 밝다.
-  // 유리관에 세로로 빛줄이 맺히고 작은 기포가 오른다
-  color: `
-    vec2 fxF = fxFace();
-    float fxT = uTime * .2;
-    float fxField = 0.;
-    vec2 fxGrad = vec2(0.);
-    for (int i = 0; i < 7; i++) {
-      float fi = float(i);
-      float h = fxH1(fi * 7.3 + uFace * 3.1);
-      vec2 c = vec2((h - .5) * 1.3 + .15 * sin(fxT * .7 + fi * 2.), sin(fxT * (.35 + h * .4) + fi * 1.7) * .82);
-      float r = .15 + .13 * fxH1(fi * 3.1 + uFace);
-      vec2 d = fxF - c;
-      float dd = max(dot(d, d), 1e-4);
-      fxField += r * r / dd;
-      fxGrad += -2. * r * r * d / (dd * dd);
+  // 70년대 거실의 라바램프. 다 맞추면 면 하나가 램프 한 개의 둥근 유리관이 된다(면이 실제로 원통처럼 볼록하고, 가장자리로 갈수록
+  // 속이 굴절돼 눌려 보인다). 바닥 전구에 데워진 밀랍이 길쭉하게 늘어나며 떠오르다 목이 가늘어지며 갈라지고, 식어 둥글게
+  // 가라앉는다. 바닥엔 물결치는 밀랍 웅덩이, 꼭대기엔 붙어 늘어진 밀랍. 빛은 아래서 오므로 덩어리 아랫면이 가장 밝게
+  // 달아오르고 속이 두꺼울수록 짙게 비친다. 액체는 밀랍과 대비되는 빛깔로 물들었고, 잔 기포가 오르며, 유리관엔 세로 빛줄이 맺힌다.
+  // 밀랍 색이 곧 면 색
+  head: `
+    float fxTubeH(vec2 p, float seed) {
+      vec2 F = aHome.xy + p * aHome.z;
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.012 + .05 * sqrt(max(0., 1. - F.x * F.x * .8)));
     }
-    float fxYb = fxF.y + 1.18;
-    fxField += .05 / max(fxYb * fxYb, 1e-3);
-    fxGrad.y += -.1 / max(fxYb * fxYb * fxYb, 1e-3);
-    float fxBlob = smoothstep(.96, 1.04, fxField);
-    vec3 fxN = normalize(vec3(-fxGrad * .06, 1.));
-    vec3 fxLd = normalize(vec3(-.4, .6, .7));
-    float fxDiff = max(dot(fxN, fxLd), 0.);
-    float fxSpec = pow(max(dot(reflect(-fxLd, fxN), vec3(0., 0., 1.)), 0.), 30.);
+    // 밀랍 장: x 세기, yz 기울기
+    vec3 fxWaxField(vec2 F, float t) {
+      float fld = 0.;
+      vec2 g = vec2(0.);
+      for (int i = 0; i < 9; i++) {
+        float fi = float(i);
+        float h = fxH1(fi * 7.3 + uFace * 3.1);
+        float ph = t * (.3 + h * .35) + fi * 1.7;
+        float y = sin(ph) * .85;
+        float vy = cos(ph);
+        vec2 c = vec2((h - .5) * 1.25 + .12 * sin(t * .6 + fi * 2.), y);
+        float r = .11 + .12 * fxH1(fi * 3.1 + uFace);
+        // 오를 때는 세로로 길쭉, 가라앉을 때는 둥글게
+        vec2 sc = vec2(1. + .25 * max(vy, 0.), 1. / (1. + .55 * max(vy, 0.)));
+        vec2 d = (F - c) * sc;
+        float dd = max(dot(d, d), 1e-4);
+        fld += r * r / dd;
+        g += -2. * r * r * d * sc / (dd * dd);
+      }
+      float yb = F.y + 1.12 + .035 * sin(F.x * 7. + t * 1.3) + .02 * sin(F.x * 13. - t * 2.);
+      fld += .045 / max(yb * yb, 1e-3);
+      g.y += -.09 / max(yb * yb * yb, 1e-3);
+      float yt = 1.16 - F.y + .03 * sin(F.x * 5. + 2.);
+      fld += .02 / max(yt * yt, 1e-3);
+      g.y += .04 / max(yt * yt * yt, 1e-3);
+      return vec3(fld, g);
+    }`,
+  height: 'fxTubeH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec2 fxF = fxFace();
+    float fxHt = fxTubeH(vLocal.xy, vSeed);
+    float fxT = uTime * .2;
+    // 둥근 유리관 굴절: 가장자리로 갈수록 속이 눌려 보인다
+    vec2 fxR = vec2(fxF.x * (1. + .22 * fxF.x * fxF.x), fxF.y);
+    vec3 fxW = fxWaxField(fxR, fxT);
+    float fxBlob = smoothstep(.95, 1.05, fxW.x);
+    vec3 fxN = normalize(vec3(-fxW.yz * .05, 1.));
+    float fxBottom = max(-fxN.y, 0.);
     float fxRim = 1. - fxN.z;
-    float fxCore = smoothstep(1.3, 3., fxField);
-    float fxHeat = 1. - smoothstep(-1., .3, fxF.y);
+    float fxCore = smoothstep(1.2, 3.2, fxW.x);
+    float fxHeat = 1. - smoothstep(-1.1, .4, fxF.y);
     vec3 fxWax = diffuseColor.rgb;
-    vec3 fxWaxC = fxWax * (.45 + .55 * fxDiff) + fxWax * fxCore * .45 + mix(fxWax, vec3(1.), .4) * fxRim * .5 + vec3(1.) * fxSpec * .7;
-    vec3 fxLiquid = mix(vec3(.04, .02, .06), fxWax * .2, .5) + fxWax * fxHeat * .22;
-    fxLiquid *= .85 + .3 * fxN2(vec2(fxF.x * 3., fxF.y * .8 - uTime * .05));
-    vec2 fxBg = fract(vec2(fxF.x * 9., fxF.y * 6. - uTime * .25)) - .5;
-    float fxBubble = (1. - smoothstep(.04, .07, length(fxBg))) * step(.88, fxH2(floor(vec2(fxF.x * 9., fxF.y * 6. - uTime * .25))));
-    fxLiquid += vec3(.5) * fxBubble * (1. - fxBlob) * .5;
-    float fxGlassHi = (1. - smoothstep(0., .05, abs(fxF.x + .62))) * .45 + (1. - smoothstep(0., .025, abs(fxF.x - .7))) * .25;
-    vec3 fxCol = mix(fxLiquid, fxWaxC, fxBlob) + vec3(fxGlassHi);
-    diffuseColor.rgb = fxCol * .15;`,
-  surface: 'roughnessFactor = .06;',
+    vec3 fxWaxC = fxWax * (.42 + .35 * fxCore + .55 * fxBottom * (.5 + fxHeat))
+      + mix(fxWax, vec3(1., .95, .85), .45) * fxRim * fxBottom * .6
+      + mix(fxWax, vec3(1.), .3) * pow(fxRim, 3.) * .25;
+    vec3 fxTint = mix(vec3(1.) - fxWax, vec3(.5), .45);
+    vec3 fxLiquid = fxTint * (.05 + .2 * fxHeat) * (.85 + .3 * fxN2(vec2(fxR.x * 3., fxR.y * .8 - uTime * .05)));
+    fxLiquid += fxWax * .1 * exp(-fxW.x * .6) * fxW.x;
+    vec2 fxBq = vec2(fxR.x * 11., fxR.y * 7. - uTime * .3);
+    float fxBubble = (1. - smoothstep(.04, .08, length(fract(fxBq) - .5))) * step(.9, fxH2(floor(fxBq)));
+    fxLiquid += vec3(.6) * fxBubble * (1. - fxBlob) * (.3 + .5 * fxHeat);
+    float fxGlass = (1. - smoothstep(0., .06, abs(fxF.x + .58))) * .4 + (1. - smoothstep(0., .03, abs(fxF.x - .68))) * .22
+      + (1. - smoothstep(.0, .1, abs(fxF.x + .3))) * .06;
+    vec3 fxCol = mix(fxLiquid, fxWaxC, fxBlob) + vec3(fxGlass) * vec3(1., .97, .92);
+    diffuseColor.rgb = fxCol * .12;`,
+  normal: 'normal = fxBump(normal, clamp(fxHt - vLift, -.01, .01));',
+  surface: 'roughnessFactor = .05;',
   emissive: 'totalEmissiveRadiance = fxCol * (1. + fxHeat * .25);',
 };
 B.lavalamp = {
@@ -2537,7 +2625,7 @@ S.blackhole = {
     vec2 fxF = fxFace() * 1.06;
     float fxT = uTime;
     vec3 fxHot = diffuseColor.rgb;
-    float fxRs = .25;
+    float fxRs = .27;
     float fxR = length(fxF);
     float fxA = atan(fxF.y, fxF.x);
     // 배경: 렌즈로 밀려난 별과 면 색 성운
@@ -2548,29 +2636,32 @@ S.blackhole = {
     // 앞쪽 원반: 거의 옆에서 본 얇은 띠. 가로로 흐르는 가스 실
     float fxIn = fxRs * 1.45, fxOut = fxRs * 3.9;
     float fxX = abs(fxF.x);
-    float fxThk = .01 + .022 * smoothstep(fxIn, fxOut, fxX);
-    float fxBand = exp(-pow(fxF.y / fxThk, 2.));
-    float fxRad = smoothstep(fxIn * .92, fxIn * 1.12, fxX) * (1. - smoothstep(fxOut * .65, fxOut, fxX));
-    float fxFil = .45 + .55 * (fxN2(vec2(fxF.x * 9. - fxT * .7, fxF.y * 140.)) * .6 + fxN2(vec2(fxF.x * 26. - fxT * 1.3, fxF.y * 300.)) * .4);
+    float fxThk = .026 + .04 * smoothstep(fxIn, fxOut, fxX);
+    // 원반이 아주 조금 기울어 앞쪽이 가운데보다 살짝 아래로 지난다
+    float fxBy = fxF.y + .035 * sqrt(max(0., 1. - fxX * fxX / (fxOut * fxOut)));
+    float fxBand = exp(-pow(fxBy / fxThk, 2.)) + .35 * exp(-pow(fxBy / (fxThk * 2.6), 2.));
+    // 원반 앞쪽은 그림자 앞을 지나가므로 가운데서도 끊기지 않는다
+    float fxRad = 1. - smoothstep(fxOut * .6, fxOut, fxX);
+    float fxFil = .45 + .55 * (fxN2(vec2(fxF.x * 9. - fxT * .7, fxBy * 110.)) * .6 + fxN2(vec2(fxF.x * 26. - fxT * 1.3, fxBy * 240.)) * .4);
     float fxTd = smoothstep(fxIn, fxOut, fxX);
     float fxDop = 1. - .22 * fxF.x / fxOut;
     float fxDisk = fxBand * fxRad * pow(fxIn / max(fxX, fxIn), 1.5) * fxFil * fxDop;
     // 뒤쪽 원반이 휘어 넘어온 고리: 위는 굵고 밝게, 아래는 가늘게
     float fxUp = smoothstep(-.02, .02, fxF.y);
-    float fxS = pow(abs(sin(fxA)), .7);
+    float fxS = pow(abs(sin(fxA)), .8) * mix(.7, 1., fxUp);
     float fxRi = fxRs * 1.07;
-    float fxRo = mix(fxRs * 1.5, fxRs * 2.35, fxUp * fxS + (1. - fxS) * .6);
+    float fxRo = fxRs * (1.14 + 1.45 * fxS);
     float fxRd = (fxR - fxRi) / max(fxRo - fxRi, .01);
-    float fxArc = smoothstep(-.03, .08, fxRd) * (1. - smoothstep(.7, 1., fxRd)) * pow(1. - clamp(fxRd, 0., 1.) * .75, 2.);
+    float fxArc = smoothstep(-.03, .06, fxRd) * (1. - smoothstep(.75, 1., fxRd)) * pow(1. - clamp(fxRd, 0., 1.) * .6, 1.5);
     float fxArcF = .45 + .55 * (fxN2(vec2(fxA * 2.5 - fxT * .25, fxRd * 38.)) * .6 + fxN2(vec2(fxA * 7. - fxT * .5, fxRd * 90.)) * .4);
     fxArc *= mix(.5, 1., fxUp) * fxArcF * (1. + .18 * cos(fxA - 3.1416));
     float fxPhoton = exp(-pow((fxR - fxRs * 1.025) / .005, 2.)) + .35 * exp(-pow((fxR - fxRs * 1.025) / .016, 2.));
     float fxShadow = 1. - smoothstep(fxRs * .985, fxRs * 1.01, fxR);
     vec3 fxWhite = vec3(1., .95, .86);
     vec3 fxCol = fxBg * (1. - fxShadow);
-    fxCol += mix(fxWhite, fxHot, smoothstep(.0, .85, fxRd)) * fxArc * 1.5 * (1. - fxShadow);
+    fxCol += mix(fxWhite, fxHot, smoothstep(.0, .85, fxRd)) * fxArc * 3. * (1. - fxShadow);
     fxCol += mix(fxWhite, fxHot, .35) * fxPhoton * 1.6 * (1. - fxShadow * .8);
-    fxCol += mix(fxWhite, fxHot, smoothstep(.05, .8, fxTd)) * fxDisk * 2.4;
+    fxCol += mix(fxWhite, fxHot, smoothstep(.05, .8, fxTd)) * fxDisk * 4.;
     diffuseColor.rgb = vec3(.006);`,
   normal: 'normal = fxBump(normal, fxN2(fxFace() * 400.) * .00005);',
   surface: 'roughnessFactor = .06;',
@@ -2608,34 +2699,65 @@ B.opal = {
 };
 
 S.agate = {
-  // 마노 단면. 다 맞추면 면 하나가 반으로 가른 마노 한 덩이다. 가운데 동굴엔 반짝이는 수정이 빽빽이 돋았고,
-  // 그 둘레로 굵고 가는 띠가 겹겹이 물결치며, 가장 바깥은 거친 껍질. 매끈하게 갈아 빛이 비쳐 든다
+  // 마노 단면. 다 맞추면 면 하나가 반으로 가른 요새 마노 한 덩이다. 띠는 동굴 모양을 따라 끊김 없이 겹겹이 이어지며
+  // 각진 요새처럼 꺾이고, 두께가 천천히 달라진다. 흰 띠, 맑은 띠, 짙은 띠가 번갈아 들고 반투명해 띠가 살짝 깊이 비친다.
+  // 가운데 동굴은 실제로 패인 정동이라 뾰족한 수정이 돋았고, 가장 바깥은 거친 껍질. 매끈하게 갈아 빛이 맺힌다
+  head: `
+    // 동굴 모양을 따르는 거리: 휜 좌표에서 둥근 네모와 원을 섞고 각을 살짝 세운다
+    float fxAgD(vec2 F) {
+      vec2 w = F + (vec2(fxF2(F * 1.3 + 1.), fxF2(F * 1.3 + 7.)) - .5) * .45;
+      w += (vec2(fxN2(w * 3.1 + 4.), fxN2(w * 3.1 + 9.)) - .5) * .08;
+      float a = atan(w.y, w.x);
+      float lobe = 1. + .12 * sin(a * 3. + 1.3) + .07 * sin(a * 5. + 4.1);
+      return (max(abs(w.x), abs(w.y)) * .45 + length(w) * .55) * lobe;
+    }
+    float fxAgateH(vec2 p, float seed) {
+      vec2 F = aHome.xy + p * aHome.z;
+      float d = fxAgD(F);
+      float cav = .2 + .04 * fxN2(F * 4.);
+      float inC = 1. - smoothstep(cav - .015, cav + .015, d);
+      vec3 cr = fxVoronoi(F * 26.);
+      float spike = (1. - smoothstep(0., .45, cr.x)) * (.5 + .5 * cr.z);
+      float border = 1. - max(abs(F.x), abs(F.y));
+      float rind = 1. - smoothstep(.03, .07, border);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.016 - inC * (.022 - .018 * spike) + rind * .006 * fxN2(F * 30.));
+    }`,
+  height: 'fxAgateH',
   color: `
+    if (fxEdge() < 0.) discard;
     vec2 fxF = fxFace();
-    vec2 fxWp = fxF + (vec2(fxN2(fxF * 2. + 1.), fxN2(fxF * 2. + 7.)) - .5) * .28;
-    float fxD = max(abs(fxWp.x), abs(fxWp.y)) * .55 + length(fxWp) * .45;
-    float fxCav = .2 + .05 * fxN2(vec2(atan(fxF.y, fxF.x) * 2., 3.));
-    float fxIn = 1. - smoothstep(fxCav - .01, fxCav + .01, fxD);
-    float fxBandP = (fxD - fxCav) * 22. + fxN2(fxF * 8.) * .6;
-    float fxBand = fract(fxBandP);
-    float fxBandId = floor(fxBandP);
-    float fxWhite = step(.7, fxH1(fxBandId * 1.7));
-    float fxThin = 1. - smoothstep(0., .12, abs(fxBand - .5) - .36);
+    float fxHt = fxAgateH(vLocal.xy, vSeed);
+    // 반투명: 보는 각도만큼 속 띠를 살짝 밀어 깊이 비치게
+    vec3 fxV = normalize(vViewPosition);
+    vec2 fxPar = vec2(dot(fxV, vTx), dot(fxV, vTy)) * .02;
+    float fxD = fxAgD(fxF);
+    float fxD2 = fxAgD(fxF + fxPar);
+    float fxCav = .2 + .04 * fxN2(fxF * 4.);
+    float fxIn = 1. - smoothstep(fxCav - .012, fxCav + .012, fxD);
+    // 띠 위상: 두께가 천천히 달라지도록 거리를 비틀어 늘인다
+    float fxPh = (fxD - fxCav) * 26. + 2.2 * sin((fxD - fxCav) * 9.) + 1.1 * sin((fxD - fxCav) * 23. + 1.);
+    float fxPh2 = (fxD2 - fxCav) * 26. + 2.2 * sin((fxD2 - fxCav) * 9.) + 1.1 * sin((fxD2 - fxCav) * 23. + 1.);
+    float fxAA = max(fwidth(fxPh), .02);
+    float fxLines = 1. - smoothstep(.08, .08 + fxAA * 1.5, abs(fract(fxPh * 2.) - .5) * 2. - .82);
+    float fxWhiteB = smoothstep(.55 - fxAA, .55 + fxAA, .5 + .5 * sin(fxPh * .9 + 1.2) * sin(fxPh * .37 + 2.));
+    float fxDark = .5 + .5 * sin(fxPh * .6 + .4);
     vec3 fxBase = diffuseColor.rgb;
-    vec3 fxCol = fxBase * (.55 + .65 * fxH1(fxBandId * 3.1));
-    fxCol = mix(fxCol, vec3(.95, .95, .92), fxWhite * .75);
-    fxCol = mix(fxCol, fxCol * .65, fxThin * .45);
+    vec3 fxCol = fxBase * (.38 + .55 * fxDark);
+    fxCol = mix(fxCol, vec3(.93, .92, .88), fxWhiteB * .8);
+    fxCol = mix(fxCol, fxCol * .7, fxLines * .35 * (1. - fxWhiteB));
+    vec3 fxDeep = fxBase * (.3 + .5 * (.5 + .5 * sin(fxPh2 * .6 + .4)));
+    fxCol = mix(fxCol, fxDeep, .25 * (1. - fxWhiteB));
     float fxBorder = 1. - max(abs(fxF.x), abs(fxF.y));
-    float fxRind = 1. - smoothstep(.03, .06, fxBorder + (fxN2(fxF * 12.) - .5) * .025);
-    fxCol = mix(fxCol, vec3(.42, .36, .3) * (.75 + .35 * fxN2(fxF * 40.)), fxRind);
-    vec3 fxCr = fxVoronoi(fxF * 30.);
-    float fxFacet = 1. - smoothstep(0., .1, fxCr.y);
-    vec3 fxDruzy = mix(fxBase * .5 + .45, vec3(1.), .3) * (.7 + .5 * fxCr.z) * (1. - fxFacet * .4);
+    float fxRind = 1. - smoothstep(.03, .07, fxBorder + (fxN2(fxF * 12.) - .5) * .025);
+    fxCol = mix(fxCol, vec3(.42, .36, .3) * (.7 + .4 * fxN2(fxF * 40.)), fxRind);
+    vec3 fxCr = fxVoronoi(fxF * 26.);
+    float fxFacet = 1. - smoothstep(0., .12, fxCr.y);
+    vec3 fxDruzy = mix(fxBase * .45 + .45, vec3(1.), .35) * (.65 + .5 * fxCr.z) * (1. - fxFacet * .35);
     fxCol = mix(fxCol, fxDruzy, fxIn);
     diffuseColor.rgb = fxCol;`,
-  normal: 'normal = fxBump(normal, fxIn * (fxCr.z * .003 - fxFacet * .002) + fxRind * fxN2(fxF * 50.) * .003);',
-  surface: 'roughnessFactor = mix(mix(.07, .25, fxIn), .8, fxRind);',
-  emissive: 'totalEmissiveRadiance = fxCol * .2 * (1. - fxWhite * .5) * (1. - fxRind) + vec3(1.) * fxGlint(fxF * 30., .25, 2.) * fxIn * 1.2;',
+  normal: 'normal = fxBump(normal, clamp(fxHt - vLift, -.01, .01) + fxIn * (fxCr.z * .002 - fxFacet * .0015) + fxRind * fxN2(fxF * 50.) * .003);',
+  surface: 'roughnessFactor = mix(mix(.05, .2, fxIn), .8, fxRind);',
+  emissive: 'totalEmissiveRadiance = fxCol * .18 * (1. - fxWhiteB * .5) * (1. - fxRind) + vec3(1.) * fxGlint(fxF * 26., .3, 2.) * fxIn * 1.2;',
 };
 B.agate = {
   color: `diffuseColor.rgb *= .75 + .35 * fxN3(vLocal * 30. + vSeed);`,
@@ -3108,10 +3230,20 @@ S.mithril = {
   // 엮었다. 실제 중세 갑옷처럼 줄마다 번갈아, 한 줄은 판에서 찍어 낸 납작한 통고리, 한 줄은 둥근 철사 끝을 겹쳐 쐐기
   // 리벳으로 박은 고리다. 고리는 줄마다 번갈아 기울어 이웃 고리 위아래로 지나가며 실제로 겹겹이 솟고, 고리 틈 깊숙이
   // 마름모로 누빈 짙은 누비옷이 비친다. 높은 데는 닳아 반짝이고 겹친 그늘은 거뭇하다. 미스릴은 은빛에 희미한 푸른 윤이
-  // 돌고, 면마다 고리를 다른 빛깔로 물들였다(양극 산화한 금속처럼)
+  // 돌고, 면마다 고리를 다른 빛깔로 물들였다(양극 산화한 금속처럼). 철사는 단면이 둥글어 빛이 철사를 따라 가늘게 맺히고,
+  // 철사 결을 따라 닦인 자국이 나 있으며, 위로 지나는 고리 아래엔 그늘이 진다. 리벳 고리엔 동그란 리벳 머리가 도드라진다
   head: `
+    // 맨 위 고리 철사의 단면 방향(면 좌표)과 철사를 가로지른 자리(-1 안쪽 ~ 1 바깥쪽), 이웃 고리가 드리운 그늘, 철사를 따라간 각도
+    vec2 fxRgDir;
+    float fxRgU;
+    float fxRgSh;
+    float fxRgAng;
     // 가장 위 고리: x 철사 단면 볼록함, y 높이(겹 순서 포함, 0 ~ 1), z 고리마다 난수, w 리벳
     vec4 fxRing(vec2 F) {
+      fxRgDir = vec2(0.);
+      fxRgU = 0.;
+      fxRgAng = 0.;
+      float nearH = -9.;
       vec2 g = F * vec2(3.4, 6.8);
       vec4 best = vec4(0., -9., 0., 0.);
       float row0 = floor(g.y);
@@ -3129,15 +3261,30 @@ S.mithril = {
           float r = length(e);
           float hw = odd < .5 ? .13 : .105;
           float band = abs(r - .44);
-          if (band > hw) continue;
+          float hp = clamp((d.x * sign(tilt) * 1.3 + d.y * .45 + .9) / 1.8, 0., 1.);
+          if (band > hw) {
+            // 철사 바로 바깥: 이 고리가 더 높으면 그 아래로 그늘이 진다
+            if (band < hw * 2.) nearH = max(nearH, hp + .2 - (band - hw) / hw * .3);
+            continue;
+          }
           float u = band / hw;
           float wire = odd < .5 ? 1. - pow(u, 6.) : sqrt(max(0., 1. - u * u));
           float ang = atan(e.y, e.x);
           float rivet = odd < .5 ? 0. : exp(-pow((ang - .8) / .2, 2.));
-          float h = clamp((d.x * sign(tilt) * 1.3 + d.y * .45 + .9) / 1.8, 0., 1.) + wire * (.2 + .12 * rivet);
-          if (h > best.y) best = vec4(wire, h, fxH2(c), rivet);
+          // 쐐기 리벳 머리: 겹친 철사 끝 한가운데 동그랗게 솟는다
+          vec2 rv = e - vec2(cos(.8), sin(.8)) * .44;
+          float head = odd < .5 ? 0. : 1. - smoothstep(.03, .05, length(rv));
+          wire = max(wire, head * 1.15);
+          float h = hp + wire * (.2 + .12 * rivet);
+          if (h > best.y) {
+            best = vec4(wire, h, fxH2(c), max(rivet, head));
+            fxRgDir = normalize(d + 1e-4);
+            fxRgU = (r - .44) / hw * (odd < .5 ? pow(u, 4.) : 1.) * (1. - head);
+            fxRgAng = ang;
+          }
         }
       }
+      fxRgSh = smoothstep(0., .12, nearH - best.y);
       return best;
     }
     float fxMailleH(vec2 p, float seed) {
@@ -3153,15 +3300,20 @@ S.mithril = {
     float fxHt = fxMailleH(vLocal.xy, vSeed);
     vec3 fxBase = diffuseColor.rgb;
     float fxOn = step(.001, fxM.x);
-    float fxAO = smoothstep(.0, .7, fxM.y);
-    vec3 fxMetal = mix(vec3(.84, .88, .94), fxBase, .78) * (.45 + .55 * fxM.x) * (.55 + .5 * fxAO) * (.88 + .2 * fxM.z);
+    float fxAO = smoothstep(.0, .7, fxM.y) * (1. - fxRgSh * .6);
+    float fxBrush = .88 + .24 * fxN2(vec2(fxRgAng * 34. + fxM.z * 50., fxRgU * 3.));
+    vec3 fxMetal = mix(vec3(.84, .88, .94), fxBase, .78) * (.45 + .55 * fxM.x) * (.55 + .5 * fxAO) * (.88 + .2 * fxM.z) * fxBrush;
+    fxMetal *= 1. - fxRgSh * .45;
     fxMetal = mix(fxMetal, vec3(.92, .95, 1.), pow(fxM.x, 10.) * fxAO * .35);
     vec2 fxQd = fxRot(.785) * fxF * 9.;
     float fxQuilt = 1. - smoothstep(0., .08, min(abs(fract(fxQd.x) - .5), abs(fract(fxQd.y) - .5)));
     vec3 fxPad = vec3(.07, .06, .055) * (.7 + .4 * fxN2(fxF * 140.)) * (1. - fxQuilt * .5);
     diffuseColor.rgb = mix(fxPad, fxMetal, fxOn);`,
-  normal: 'normal = fxBump(normal, clamp(fxHt - vLift, -.02, .02) + fxOn * fxM.w * .0006 + (1. - fxOn) * fxQuilt * .0006);',
-  surface: 'roughnessFactor = mix(.9, .14 + .16 * fxM.z + .2 * (1. - fxAO), fxOn); metalnessFactor = fxOn;',
+  normal: `
+    normal = fxBump(normal, clamp(fxHt - vLift, -.02, .02) + (1. - fxOn) * fxQuilt * .0006);
+    // 둥근 철사 단면: 철사를 가로지르는 쪽으로 법선을 눕힌다
+    normal = normalize(normal + (vTx * fxRgDir.x + vTy * fxRgDir.y) * fxRgU * .9 * fxOn);`,
+  surface: 'roughnessFactor = mix(.9, .1 + .14 * fxM.z + .2 * (1. - fxAO) + (fxBrush - .88) * .3, fxOn); metalnessFactor = fxOn;',
   emissive: 'totalEmissiveRadiance = vec3(.6, .75, 1.) * fxOn * pow(fxM.x, 6.) * fxFresnel(normal, 1.5) * .35 * fxAO;',
 };
 
@@ -3204,34 +3356,37 @@ S.damascus = {
         vec2 cl = fract(cc) - .5;
         ph = (mod(floor(cc.x) + floor(cc.y), 2.) < .5 ? cl.x : cl.y) * .9 + warp * .4 + fxH2(floor(cc)) * .5;
       }
-      return ph * 21.;
+      return ph * 30.;
     }
     float fxDamaH(vec2 p, float seed) {
       vec2 q = p / uSticker.x;
-      vec3 v = fxVoronoi(q * 3.6 + seed * 13.);
-      float dimple = min(v.x * v.x * 2.4, 1.);
+      vec3 v = fxVoronoi(q * 4.2 + seed * 13.);
+      float dimple = min(v.x * v.x * 2.6, 1.);
       float bevel = smoothstep(0., .2, fxEdgeAt(p) / uSticker.x);
-      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .02 * bevel + .012 * dimple * bevel);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .022 * bevel + .016 * dimple * bevel);
     }`,
   height: 'fxDamaH',
   color: `
     if (fxEdge() < 0.) discard;
     vec2 fxF = fxFace();
     float fxHt = fxDamaH(vLocal.xy, vSeed);
-    float fxPh = fxLayers(fxF);
-    float fxL = .5 + .5 * sin(fxPh * 6.2832);
-    float fxBright = smoothstep(.3, .7, fxL);
-    float fxFine = .5 + .5 * sin(fxPh * 6.2832 * 3. + fxN2(fxF * 30.) * 2.);
     float fxBev = smoothstep(0., .2, fxEdge() / uSticker.x);
+    // 숫돌로 간 가장자리에서는 더 깊은 겹이 드러나 무늬가 밀려난다
+    float fxPh = fxLayers(fxF) + (1. - fxBev) * 5.;
+    float fxAA = fwidth(fxPh);
+    float fxL = .5 + .5 * sin(fxPh * 6.2832);
+    float fxBright = mix(smoothstep(.32, .68, fxL), .5, smoothstep(.25, .6, fxAA));
+    float fxFine = mix(.5 + .5 * sin(fxPh * 6.2832 * 3. + fxN2(fxF * 30.) * 2.), .5, smoothstep(.08, .25, fxAA));
+    float fxPit = smoothstep(.55, .85, fxN2(fxF * 260. + uFace)) * (1. - fxBright);
     vec3 fxBase = diffuseColor.rgb;
     vec3 fxSteel = mix(vec3(.07, .07, .08), vec3(.8, .81, .82), fxBright) * (.92 + .1 * fxFine);
     vec3 fxC = fxSteel * mix(vec3(1.), fxBase * 1.35, .5 + .3 * fxBright);
     fxC = mix(fxC, mix(vec3(.85), fxBase, .35), (1. - fxBev) * .5);
     float fxScratch = (1. - smoothstep(0., .02, abs(fract(fxF.x * 40. + fxN2(fxF * vec2(3., 60.)) * .5) - .5))) * .08;
-    fxC *= 1. - fxScratch;
+    fxC *= (1. - fxScratch) * (1. - fxPit * .35);
     diffuseColor.rgb = fxC;`,
-  normal: 'normal = fxBump(normal, clamp(fxHt - vLift, -.01, .01) + fxBright * .0009 * fxBev + fxFine * .00015);',
-  surface: 'roughnessFactor = mix(.5, .1, fxBright * fxBev) + (1. - fxBev) * .12; metalnessFactor = .95;',
+  normal: 'normal = fxBump(normal, clamp(fxHt - vLift, -.012, .012) + fxBright * .0014 * fxBev + fxFine * .0002 - fxPit * .0004);',
+  surface: 'roughnessFactor = mix(.55, .08, fxBright * fxBev) + fxPit * .15 + (1. - fxBev) * .05; metalnessFactor = .95;',
   emissive: 'totalEmissiveRadiance = diffuseColor.rgb * .05;',
 };
 
@@ -3563,41 +3718,59 @@ B.galaxy = {
 };
 
 S.bismuth = {
-  // 비스무트 결정. 칸마다 네모난 계단이 안으로 파고드는 깔때기 결정이 실제로 층층이 솟아 있고,
-  // 얇은 산화막이 빛을 받아 금속 무지갯빛으로 번쩍인다. 층마다 막 두께가 달라 빛깔이 조금씩 바뀌며, 면마다 도는 빛깔이 다르다
+  // 비스무트 결정. 칸마다 깔때기(호퍼) 결정이 둘셋 겹쳐 실제로 높이 솟아 있다. 결정마다 바깥 테는 계단처럼 층층이 내려가는
+  // 지구라트이고, 안쪽은 계단을 타고 가운데로 깊게 꺼진 네모 우물이다. 크고 작은 결정이 서로 다른 각도와 높이로 엇갈려
+  // 자라 올랐다. 얇은 산화막 두께가 단마다 달라 금빛, 자홍, 파랑, 초록으로 단마다 빛깔이 넘어가고, 계단 턱은 은빛 금속이
+  // 드러나 날카롭게 번쩍인다. 면마다 도는 빛깔의 중심이 다르다
   head: `
-    // 깔때기 결정: x 층 높이(0 바깥 ~ 1 가운데 테), y 층 번호, z 층 가장자리
-    vec3 fxHopper(vec2 q, float seed) {
-      vec2 p = fxRot((fxH1(seed * 5.) - .5) * .5) * (q - (vec2(fxH1(seed * 3.), fxH1(seed * 9.)) - .5) * .25);
+    // 깔때기 결정 하나: x 높이(0~1, 결정 밖이면 -1), y 단 번호, z 계단 턱
+    vec3 fxHop(vec2 q, vec2 c, float rot, float L) {
+      vec2 p = fxRot(rot) * (q - c) / L;
       float d = max(abs(p.x), abs(p.y));
-      vec2 p2 = fxRot(.6) * (q - vec2(.62, -.6) * sign(fxH1(seed * 11.) - .5));
-      float d2 = max(abs(p2.x), abs(p2.y)) * 1.9;
-      float steps = d * 5.;
-      float idx = floor(steps);
-      float f = fract(steps);
-      float h = idx < .5 ? .15 : 1. - idx / 5.;
-      float rim = 1. - smoothstep(0., .1, f);
-      float idx2 = floor(d2 * 5.);
-      float h2 = idx2 < .5 ? .1 : (1. - idx2 / 5.) * .7;
-      if (h2 > h && d2 < 1.) { h = h2; idx = idx2 + 7.; rim = 1. - smoothstep(0., .1, fract(d2 * 5.)); }
-      return vec3(max(h, 0.), idx, rim * step(.5, mod(idx, 7.)));
+      if (d > 1.) return vec3(-1., 0., 0.);
+      float ring = .58;
+      float u = d > ring ? (d - ring) / .084 : (ring - d) / .082;
+      float idx = floor(u);
+      float h = d > ring ? 1. - idx * .2 : 1. - (idx + 1.) * .15;
+      float f = fract(u);
+      float riser = 1. - smoothstep(0., .14, min(f, 1. - f) * 2.);
+      return vec3(h, idx + (d > ring ? 0. : 6.), riser);
+    }
+    vec3 fxHopper(vec2 q, float seed) {
+      vec3 best = vec3(0., 20., 0.);
+      float hb = -1.;
+      for (int i = 0; i < 3; i++) {
+        float fi = float(i);
+        vec2 c = i == 0 ? (vec2(fxH1(seed * 3.), fxH1(seed * 9.)) - .5) * .25
+          : (vec2(fxH1(seed * 5. + fi), fxH1(seed * 7. + fi)) - .5) * 1.3;
+        float L = i == 0 ? .92 : (.38 + .22 * fxH1(seed * 13. + fi));
+        float rot = (fxH1(seed * 17. + fi) - .5) * (i == 0 ? .5 : 1.6);
+        float base = i == 0 ? 0. : .25 + .35 * fxH1(seed * 19. + fi);
+        vec3 h = fxHop(q, c, rot, L);
+        if (h.x < 0.) continue;
+        float hh = base + h.x * (i == 0 ? 1. : .75);
+        if (hh > hb) { hb = hh; best = vec3(hh, h.y + fi * 13., h.z); }
+      }
+      return best;
     }
     float fxBismuthH(vec2 p, float seed) {
       vec3 hp = fxHopper(p / uSticker.x, seed);
-      return smoothstep(0., .06, fxEdgeAt(p)) * (.006 + .03 * hp.x + .004 * hp.z);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .07 * hp.x);
     }`,
   height: 'fxBismuthH',
   color: `
     if (fxEdge() < 0.) discard;
     vec3 fxHp = fxHopper(fxQ(), vSeed);
-    diffuseColor.rgb = diffuseColor.rgb * (.18 + .28 * fxHp.x);`,
-  surface: 'roughnessFactor = .12; metalnessFactor = .9;',
+    float fxHt = fxBismuthH(vLocal.xy, vSeed);
+    diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.7), .25) * (.14 + .2 * fxHp.x);`,
+  normal: 'normal = fxBump(normal, clamp(fxHt - vLift, -.02, .02) + fxN2(fxQ() * 60. + vSeed) * .0003);',
+  surface: 'roughnessFactor = mix(.1, .05, fxHp.z); metalnessFactor = .92;',
   emissive: `
     float fxFr = fxFresnel(normal, 1.5);
-    float fxFilm = fxHp.y * .13 + fxFr * .6 + fxN2(fxQ() * 3. + vSeed) * .22;
+    float fxFilm = fxH1(fxHp.y * 3.7 + vSeed) * .55 + fxHp.x * .25 + fxFr * .35 + fxN2(fxQ() * 2.5 + vSeed) * .15 + uFace * .17;
     vec3 fxIr = .5 + .5 * cos(6.2832 * (fxFilm + vec3(0., .33, .67)));
-    fxIr *= fxIr * 1.5;
-    totalEmissiveRadiance = mix(diffuse * diffuse * 1.2, fxIr, .42) * (.2 + .6 * fxHp.z + .35 * fxFr) * (.55 + .45 * fxHp.x);`,
+    fxIr = mix(fxIr * fxIr * 1.6, diffuse * 1.3, .32);
+    totalEmissiveRadiance = mix(fxIr, vec3(.85), fxHp.z * .6) * (.25 + .35 * fxFr + .25 * fxHp.z) * (.6 + .4 * fxHp.x);`,
 };
 B.bismuth = {
   surface: 'roughnessFactor = .25; metalnessFactor = 1.;',
