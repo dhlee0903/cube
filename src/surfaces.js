@@ -1902,11 +1902,11 @@ S.planet = {
         h += .045 * max(0., 1. - r / .17) - .02 * (1. - smoothstep(.02, .04, r));
         h += .004 * fxF2(S * 9.);
       } else if (uFace < 4.5) {
-        vec3 v = fxVoronoi(S * 3. + 5.);
-        float pr = .03 + .08 * fract(v.z * 7.3);
-        h = -.01 * step(.45, v.z) * (1. - smoothstep(pr - .01, pr + .02, v.x));
+        vec3 v = fxVoronoi(S * 2.4 + 5.);
+        float pr = .05 + .12 * fract(v.z * 7.3);
+        h = -.016 * step(.35, v.z) * (1. - smoothstep(pr - .01, pr + .02, v.x)) + .006 * step(.35, v.z) * exp(-pow((v.x - pr - .03) / .03, 2.));
         vec3 m = fxVoronoi(S * 2.3 + 17.);
-        h += .025 * step(.82, m.z) * smoothstep(.0, .25, m.y) * (1. - smoothstep(.1, .35, m.x));
+        h += .035 * step(.75, m.z) * smoothstep(.0, .25, m.y) * (1. - smoothstep(.1, .4, m.x));
         h += .004 * fxF2(S * 6.);
       } else {
         h = .003 * sin(F.y * 8. + fxF2(S * vec2(.8, 3.)) * 2.);
@@ -1949,7 +1949,9 @@ S.planet = {
       fxC = mix(zone, fxBase * 1.05, smoothstep(-.3, .2, bv));
       fxC = mix(fxC, beltC, smoothstep(.25, .6, bv));
       fxC = mix(fxC, vec3(.86, .56, .3), smoothstep(.0, .2, bv) * (1. - smoothstep(.2, .4, bv)) * .45);
-      fxC *= .9 + .2 * streakJ;
+      fxC *= .86 + .28 * streakJ;
+      float chev = smoothstep(.55, .85, fxN2(vec2(fxS.x * 14. + abs(yb) * 20., yb * 30.)));
+      fxC = mix(fxC, fxC * .78, chev * .5);
       float edge = 1. - abs(bv) * 1.6;
       float eddy = smoothstep(.55, .8, fxN2(vec2(fxS.x * 7., lat * 11.))) * smoothstep(.6, 1., edge);
       fxC = mix(fxC, mix(zone, beltC, .5) * 1.05, eddy * .5);
@@ -1961,7 +1963,7 @@ S.planet = {
       float spr = length(sp);
       float swirl = .5 + .5 * sin(atan(sp.y, sp.x) * 2. + spr * 8. - uTime * .4);
       fxC = mix(fxC, vec3(.96, .9, .8), (1. - smoothstep(1., 1.3, spr)) * smoothstep(.85, 1., spr));
-      fxC = mix(fxC, mix(vec3(.72, .3, .17), vec3(.9, .55, .38), swirl), 1. - smoothstep(.8, 1., spr));
+      fxC = mix(fxC, mix(vec3(.66, .24, .12), vec3(.92, .55, .36), swirl), 1. - smoothstep(.8, 1., spr));
       fxAtm = vec3(.95, .82, .62);
     } else if (uFace < 1.5) {
       float h = fxF2(fxS * 1.1 + 7.);
@@ -2033,10 +2035,13 @@ S.planet = {
       fxC = mix(fxC, vec3(.82, .5, .2), smoothstep(.52, .68, fxF2(fxS * 1.8 + 3.)) * .6);
       fxC = mix(fxC, vec3(.5, .44, .26), smoothstep(.58, .74, fxF2(fxS * 2.8 + 11.)) * .55);
       // 화산: 모양과 크기가 제각각인 검은 용암 호수, 그 둘레 초록빛 테, 드물게 붉은 분출 고리
-      vec3 v = fxVoronoi(fxS * 3. + 5.);
+      vec3 v = fxVoronoi(fxS * 2.4 + 5.);
       float wob = (fxN2(fxS * 10.) - .5) * .05 + (fxN2(fxS * 3.) - .5) * .05;
-      float pr = .03 + .08 * fract(v.z * 7.3);
-      float vol = step(.45, v.z);
+      float pr = .05 + .12 * fract(v.z * 7.3);
+      float vol = step(.35, v.z);
+      // 화산 둘레로 흘러내린 용암 흐름과 분출물 부채꼴
+      float flow = smoothstep(.6, .8, fxN2(vec2(atan(v.y, v.x) * 3., v.x * 6.) + v.z * 9.)) * (1. - smoothstep(pr, pr + .35, v.x)) * vol;
+      fxC = mix(fxC, vec3(.35, .18, .1), flow * .6);
       float patera = vol * (1. - smoothstep(pr - .01, pr + .01, v.x + wob));
       float greenEdge = vol * (1. - smoothstep(0., .03, abs(v.x + wob - pr - .02))) * .7;
       float ringN = fxN2(vec2(atan(v.y, v.x) * 2., v.z * 9.));
@@ -2067,10 +2072,10 @@ S.planet = {
     float fxSunGlint = fxSea * fxDay * exp(-dot(fxGl, fxGl) * 5.) * (1. - fxCloud);
     diffuseColor.rgb = fxC;`,
   normal: 'normal = fxBump(normal, clamp(fxHt - vLift, -.012, .012) + fxF2(fxFace() * 40. + uFace * 3.) * .0012 * (1. - fxSea));',
-  surface: 'roughnessFactor = mix(.6, .12, fxSea);',
+  surface: 'roughnessFactor = mix(.75, .15, fxSea);',
   emissive: `
     float fxRim = 1. - smoothstep(0., .1, fxBorder);
-    totalEmissiveRadiance = fxAtm * fxAtmK * (fxRim * fxRim * 1.2 + fxFresnel(normal, 3.) * .25)
+    totalEmissiveRadiance = fxAtm * fxAtmK * (fxRim * fxRim * 1.2 + fxFresnel(normal, 3.) * .08)
       + vec3(1., .78, .4) * fxCity * 1.6
       + vec3(1., .45, .1) * fxHotSpot * mix(.6, 2.2, 1. - fxDay)
       + vec3(1., .95, .85) * fxSunGlint * .45
@@ -2659,7 +2664,7 @@ S.blackhole = {
     float fxShadow = 1. - smoothstep(fxRs * .985, fxRs * 1.01, fxR);
     vec3 fxWhite = vec3(1., .95, .86);
     vec3 fxCol = fxBg * (1. - fxShadow);
-    fxCol += mix(fxWhite, fxHot, smoothstep(.0, .85, fxRd)) * fxArc * 3. * (1. - fxShadow);
+    fxCol += mix(fxWhite, fxHot, smoothstep(.0, .85, fxRd)) * fxArc * mix(2.6, 4.2, fxUp) * (1. - fxShadow);
     fxCol += mix(fxWhite, fxHot, .35) * fxPhoton * 1.6 * (1. - fxShadow * .8);
     fxCol += mix(fxWhite, fxHot, smoothstep(.05, .8, fxTd)) * fxDisk * 4.;
     diffuseColor.rgb = vec3(.006);`,
