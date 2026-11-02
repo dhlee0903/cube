@@ -3436,24 +3436,22 @@ export const THEMES = [
     burst: { shape: 'star', colors: ['#FFFFFF', '#D0E0FF', '#6088FF', '#B0C8FF'], size: 0.14, speed: 2.4, gravity: -1, drag: 2, life: 0.9, additive: true },
   },
   {
-    // 에메랄드 컷 녹주석. 귀를 깎은 직사각형에 계단이 겹겹이 져 넓은 빛 조각이 거울 복도처럼 비치고, 에메랄드엔 이끼 같은
-    // 자르댕. 면마다 녹주석이 다르다(레드 베릴, 모거나이트, 고셰나이트, 헬리오도르, 에메랄드, 아쿠아마린). 백금 판, 금 베젤
+
+    // 에메랄드. 조각 하나가 통째로 녹주석이다. 스티커 자리마다 면 전체가 귀를 깎은 계단 컷(아셔)으로 깎여 계단이 솟고, 거울
+    // 복도처럼 비친다. 에메랄드엔 이끼 같은 자르댕. 면마다 녹주석(레드 베릴, 모거나이트, 고셰나이트, 헬리오도르, 에메랄드, 아쿠아마린)
     id: 'emerald',
     name: '에메랄드',
     bg: '#060C0A',
     ink: '#EEF6F0',
-    backdrop: [
-      'radial-gradient(30% 42% at 50% 0%, rgba(230,255,240,.13), transparent 70%)',
-      'radial-gradient(80% 60% at 50% 45%, #10241C, #030806)',
-    ].join(', '),
-    form: { bevel: 0.07, size: 0.92, radius: 0.1, grid: 64 },
-    body: { color: '#0E1A14', roughness: 0.5 },
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #10221A, #030605)',
+    form: { bevel: 0.06, size: 0.96, radius: 0.12, grid: 56 },
+    body: { color: '#0E1A14', roughness: 0.04 },
     faces: ['#C41E48', '#F2A68E', '#EEF2F2', '#F0CC1E', '#109A58', '#6CC4EC'],
     lights: {
       sky: '#f4fff8', ground: '#0a1a12', hemi: 0.9,
       key: ['#ffffff', 2.6, [-3, 7, 5]], fill: ['#e0fff0', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.6, [3, 4, -6]],
     },
-    env: 1,
+    env: 1.05,
     surface: 'emerald',
     sound: 'glass',
     motion: 'smooth',
@@ -3461,24 +3459,22 @@ export const THEMES = [
     burst: { shape: 'star', colors: 'faces', size: 0.13, speed: 2.3, gravity: -1, drag: 2, life: 0.9, additive: true },
   },
   {
-    // 석영 무리. 쿠션 체커보드 컷이 그을린 은 베젤에 물려 솟아 바둑판 패싯이 칸칸이 반짝인다.
-    // 면마다 석영이 다르다(장미 석영, 연수정, 수정, 황수정, 그린 애미시스트, 자수정). 점판암 몸통
+
+    // 석영. 조각 하나가 통째로 석영이다. 스티커 자리마다 면 전체가 체커보드 컷으로 깎여 둥근 지붕이 바둑판 패싯으로 칸칸이
+    // 솟는다. 면마다 석영(장미 석영, 연수정, 수정, 황수정, 그린 애미시스트, 자수정)
     id: 'quartz',
-    name: '자수정·수정',
+    name: '석영',
     bg: '#0C0A10',
     ink: '#F2EEF6',
-    backdrop: [
-      'radial-gradient(30% 42% at 50% 0%, rgba(240,230,255,.14), transparent 70%)',
-      'radial-gradient(80% 60% at 50% 45%, #1E1A26, #060508)',
-    ].join(', '),
-    form: { bevel: 0.07, size: 0.92, radius: 0.1, grid: 64 },
-    body: { color: '#2C2E34', roughness: 0.55 },
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #1C1826, #050407)',
+    form: { bevel: 0.06, size: 0.96, radius: 0.12, grid: 56 },
+    body: { color: '#1C1D22', roughness: 0.04 },
     faces: ['#F4A6C0', '#6A5444', '#F0F2F4', '#F4BE28', '#86D27C', '#8A3AD0'],
     lights: {
       sky: '#ffffff', ground: '#1a1620', hemi: 0.9,
       key: ['#ffffff', 2.6, [-3, 7, 5]], fill: ['#ece0ff', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.6, [3, 4, -6]],
     },
-    env: 1,
+    env: 1.05,
     surface: 'quartz',
     sound: 'crystal',
     motion: 'smooth',
@@ -3486,18 +3482,16 @@ export const THEMES = [
     burst: { shape: 'star', colors: 'faces', size: 0.13, speed: 2.3, gravity: -1, drag: 2, life: 0.9, additive: true },
   },
   {
-    // 스타 사파이어 카보숑. 둥근 돔 속 바늘이 빛을 되쏘아 여섯 갈래 별이 서고, 조명과 손가락을 따라 돔 위를 미끄러진다.
-    // 면마다 다르다(스타 루비, 핑크, 화이트, 옐로, 블랙 스타, 블루). 검은 칠보 판, 금 베젤, 금 몸통
+
+    // 스타 사파이어. 조각 하나가 통째로 높은 카보숑이다. 둥근 네모꼴 돔 속 바늘이 빛을 되쏘아 여섯 갈래 별이 서고, 조명과
+    // 손가락을 따라 돔 위를 미끄러진다. 면마다 다르다(스타 루비, 핑크, 화이트, 옐로, 블랙 스타, 블루)
     id: 'starstone',
     name: '스타 사파이어',
     bg: '#0A0806',
     ink: '#F6EEDC',
-    backdrop: [
-      'radial-gradient(30% 42% at 50% 0%, rgba(255,240,210,.14), transparent 70%)',
-      'radial-gradient(80% 60% at 50% 45%, #221A10, #070504)',
-    ].join(', '),
-    form: { bevel: 0.07, size: 0.92, radius: 0.1, grid: 64 },
-    body: { color: '#B08A3E', roughness: 0.2, metalness: 1 },
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #1A1C24, #050506)',
+    form: { bevel: 0.06, size: 0.96, radius: 0.14, grid: 64 },
+    body: { color: '#55607A', roughness: 0.14 },
     faces: ['#B8143A', '#F07AB4', '#DCDEE6', '#F2CC3A', '#2A2622', '#2C50B8'],
     lights: {
       sky: '#fff4e4', ground: '#1a1208', hemi: 0.8,
@@ -3511,18 +3505,16 @@ export const THEMES = [
     burst: { shape: 'star', colors: ['#FFFFFF', '#FFF2D0'], size: 0.14, speed: 2.2, gravity: -1, drag: 2, life: 0.9, additive: true },
   },
   {
-    // 월장석·장석 카보숑. 속 얇은 층이 빛을 되쏘아 보는 각도 따라 물빛과 무지갯빛이 떠다닌다. 면마다 다르다(선스톤,
-    // 피치 문스톤, 레인보우 문스톤, 래브라도라이트, 아마조나이트, 블루 문스톤). 망치로 두드린 은 판, 옛 청동 몸통
+
+    // 월장석·장석. 조각 하나가 통째로 낮은 카보숑이다. 속 얇은 층이 빛을 되쏘아 보는 각도 따라 물빛과 무지갯빛이 떠다닌다.
+    // 면마다 다르다(선스톤, 피치 문스톤, 레인보우 문스톤, 래브라도라이트, 아마조나이트, 블루 문스톤)
     id: 'moonstone',
     name: '월장석·장석',
     bg: '#0A0C10',
     ink: '#EEF2F8',
-    backdrop: [
-      'radial-gradient(34% 30% at 70% 16%, rgba(220,232,255,.2), transparent 70%)',
-      'radial-gradient(80% 60% at 50% 45%, #182030, #05060A)',
-    ].join(', '),
-    form: { bevel: 0.07, size: 0.92, radius: 0.1, grid: 64 },
-    body: { color: '#5A4230', roughness: 0.4, metalness: 0.85 },
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #161A24, #040506)',
+    form: { bevel: 0.06, size: 0.96, radius: 0.16, grid: 64 },
+    body: { color: '#101114', roughness: 0.1 },
     faces: ['#E0662A', '#F0A27A', '#ECEEF0', '#3E4A52', '#3CBFA6', '#8AAEF2'],
     lights: {
       sky: '#eef2ff', ground: '#141820', hemi: 0.8,
