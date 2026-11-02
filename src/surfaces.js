@@ -6854,6 +6854,72 @@ B.oscilloscope = {
   surface: 'roughnessFactor = .5; metalnessFactor = .4;',
 };
 
+S.theremin = {
+  // 테레민 진공관. 조각 겉이 면 색 망치 무늬(해머톤)로 칠한 앰프 섀시이고, 그 위에 유리 진공관 둘이 진짜 원통으로 솟아 누웠다.
+  // 관 속엔 검은 금속 판과 그물, 주황 필라멘트가 보이고 유리 겉엔 세로로 빛이 맺힌다. 손끝을 가져가면 테레민처럼 거리에
+  // 따라 관 속 면 색 빛이 밝아지고 떨림(맥놀이)이 빨라지며, 손을 떼면 은은한 대기 불빛으로 돌아간다
+  head: `
+    float fxThNear(vec2 p) {
+      vec2 d = fxPtr.xy - p;
+      return smoothstep(5.5, 2., fxPtr.z) * step(0., fxPtr.z) * exp(-dot(d, d) / .4);
+    }
+    float fxThH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float h = .004;
+      for (int i = 0; i < 2; i++) {
+        float cy = (q.y - (float(i) - .5) * .9) / .33;
+        float inX = 1. - smoothstep(.72, .78, abs(q.x));
+        h = max(h, .05 * sqrt(max(0., 1. - cy * cy)) * inX);
+        // 관 끝 받침
+        float cap = step(.72, abs(q.x)) * step(abs(q.x), .86) * step(abs(cy), 1.05);
+        h = max(h, .035 * cap);
+      }
+      return smoothstep(0., .04, fxEdgeAt(p)) * h;
+    }`,
+  height: 'fxThH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    float fxN = fxThNear(vec2(0.));
+    float fxTube = 0., fxCy = 0., fxCap = 0.;
+    for (int i = 0; i < 2; i++) {
+      float cy = (fxQ.y - (float(i) - .5) * .9) / .33;
+      float inX = 1. - smoothstep(.72, .74, abs(fxQ.x));
+      float t = step(abs(cy), 1.) * inX;
+      if (t > fxTube) { fxTube = t; fxCy = cy; }
+      fxCap = max(fxCap, step(.72, abs(fxQ.x)) * step(abs(fxQ.x), .86) * step(abs(cy), 1.05));
+    }
+    // 섀시: 면 색 해머톤
+    float fxHam = fxVoronoi(fxQ * 14. + vSeed * 5.).x;
+    vec3 fxChassis = fxFc * (.55 + .25 * fxHam);
+    // 관 속: 판(가운데 띠), 그물, 필라멘트
+    float fxPlate = step(abs(fxCy), .45) * step(abs(fxQ.x), .6);
+    float fxMesh = step(.5, fract(fxQ.x * 30.)) * step(abs(fxCy), .65) * step(.45, abs(fxCy)) * step(abs(fxQ.x), .6);
+    float fxFil = (1. - smoothstep(.02, .06, abs(fxCy))) * step(abs(fxQ.x), .62);
+    float fxBeat = .55 + .45 * sin(uTime * (3. + 40. * fxN) + vSeed * 9.) * sin(uTime * (2.3 + 31. * fxN));
+    float fxGlowA = (.75 + 1.8 * fxN) * (.75 + .25 * fxBeat);
+    vec3 fxInside = mix(vec3(.04), vec3(.12), fxMesh) * (1. - fxPlate) + vec3(.03) * fxPlate;
+    vec3 fxGlow = fxFc * fxGlowA * (exp(-fxCy * fxCy * 1.4) * .8 + .3 * fxMesh) * (1. - .6 * fxPlate) + vec3(1., .55, .2) * (fxFil * (.9 + .5 * fxN) + exp(-fxCy * fxCy * 6.) * .15);
+    float fxGlass = pow(1. - abs(fxCy), .5);
+    vec3 fxCol = mix(fxChassis, fxInside, fxTube);
+    fxCol = mix(fxCol, vec3(.7, .72, .75), fxCap * (1. - fxTube));
+    diffuseColor.rgb = fxCol;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxThH(fxP - vec2(fxE, 0.), vSeed) - fxThH(fxP + vec2(fxE, 0.), vSeed),
+                               fxThH(fxP - vec2(0., fxE), vSeed) - fxThH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = fxBump(normalize(mat3(vTx, vTy, vTz) * fxNt), (1. - fxTube) * (1. - fxCap) * fxHam * .0012);`,
+  surface: 'roughnessFactor = mix(mix(.45, .25, fxCap), .03, fxTube); metalnessFactor = mix(mix(.5, .9, fxCap), 0., fxTube);',
+  emissive: 'totalEmissiveRadiance = fxGlow * fxTube + fxFc * fxN * .08 * (1. - fxTube);',
+};
+B.theremin = {
+  // 몸통은 짙은 호두나무 함
+  color: 'diffuseColor.rgb *= .8 + .3 * fxN3(vec3(vLocal.x * 4., vLocal.y * 40., vLocal.z * 4.) + vSeed);',
+  surface: 'roughnessFactor = .4;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -6873,6 +6939,7 @@ export const MOVING = new Set([
   'radar',
   'clockface',
   'oscilloscope',
+  'theremin',
 ]);
 
 /**

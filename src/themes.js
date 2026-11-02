@@ -3498,6 +3498,27 @@ export const THEMES = [
     motion: 'snap',
     burst: { shape: 'streak', colors: 'faces', size: 0.07, speed: 3, gravity: 0, drag: 3, life: 0.4, additive: true },
   },
+  {
+    // 테레민 진공관. 조각 겉이 면 색 해머톤 앰프 섀시이고 유리 진공관 둘이 원통으로 솟아 누웠다. 손끝을 가져가면 거리에 따라
+    // 관 속 면 색 빛이 밝아지고 떨림이 빨라진다
+    id: 'theremin',
+    name: '테레민',
+    bg: '#0A0806',
+    ink: '#F4EEE6',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #241C14, #060403)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.05, grid: 64 },
+    body: { color: '#3A2618', roughness: 0.4 },
+    faces: ['#C82E34', '#D87A2A', '#D2B43A', '#2E8A56', '#2E5EBE', '#8240B0'],
+    lights: {
+      sky: '#fff2e4', ground: '#100c08', hemi: 0.9,
+      key: ['#fff2e4', 2.2, [-3, 7, 5]], fill: ['#ffe2c8', 0.5, [6, 1, 4]], rim: ['#ffffff', 1.4, [3, 4, -6]],
+    },
+    env: 0.9,
+    surface: 'theremin',
+    sound: 'electric',
+    motion: 'smooth',
+    burst: { shape: 'glow', colors: 'faces', size: 0.06, speed: 1.6, gravity: 0, drag: 2, life: 0.6, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3525,5 +3546,5 @@ export const GROUPS = [
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'chrome', 'fiberoptic', 'ledcube'] },
-  { name: '계기', themes: ['radar', 'clockface', 'oscilloscope'] },
+  { name: '계기', themes: ['radar', 'clockface', 'oscilloscope', 'theremin'] },
 ];
