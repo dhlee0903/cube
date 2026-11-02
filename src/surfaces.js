@@ -6790,6 +6790,70 @@ B.clockface = {
   surface: 'roughnessFactor = .25; metalnessFactor = .9;',
 };
 
+S.oscilloscope = {
+  // 오실로스코프. 조각 겉 전체가 살짝 부푼 네모 브라운관 화면이다. 거의 검은 유리 밑에 가로 열, 세로 여덟 칸 눈금이 희미하게
+  // 새겨졌고, 면 색 형광 파형이 흐르며 잔광을 남긴다. 손끝을 가져가면 파형의 높이와 주기가 손끝 자리에 맞춰 바뀌어 손끝을
+  // 지나가고, 층을 돌리면 날카로운 펄스가 치고 지나간다
+  head: `
+    float fxOsH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float n = pow(pow(abs(q.x), 6.) + pow(abs(q.y), 6.), 1. / 6.);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .018 * sqrt(max(0., 1. - n * n)));
+    }
+    float fxOsWave(float x, float t, vec2 tp, float near, float seed) {
+      float A = mix(.42, clamp(abs(tp.y), .08, .85), near);
+      float k = mix(5. + 2. * fract(seed * 7.), 3. + 6. * clamp(abs(tp.x), 0., 1.), near);
+      float ph = t * 2.2 + seed * 9.;
+      // 손끝을 지나도록 위상을 맞춘다
+      ph = mix(ph, asin(clamp(tp.y / max(A, .01), -1., 1.)) - k * tp.x, near);
+      float y = A * sin(k * x + ph) + .12 * (1. - near) * sin(k * 2.7 * x - t * 3.1);
+      // 돌리면 펄스
+      float px = mod(t * 1.8, 2.6) - 1.3;
+      y += uCharge * .6 * exp(-pow((x - px) / .05, 2.)) * sign(sin(seed * 40.) + .1);
+      return y;
+    }`,
+  height: 'fxOsH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    vec2 fxTp = fxPtr.xy / uSticker.x;
+    float fxNear = smoothstep(5., 2.2, fxPtr.z) * step(0., fxPtr.z) * step(length(fxTp), 1.2);
+    float fxT = uTime;
+    // 파형까지 거리(기울기로 나눠 굵기를 고르게)
+    float fxE = .004;
+    float fxY = fxOsWave(fxQ.x, fxT, fxTp, fxNear, vSeed);
+    float fxSl = (fxOsWave(fxQ.x + fxE, fxT, fxTp, fxNear, vSeed) - fxOsWave(fxQ.x - fxE, fxT, fxTp, fxNear, vSeed)) / (2. * fxE);
+    float fxD = abs(fxQ.y - fxY) / sqrt(1. + fxSl * fxSl);
+    float fxAA = fwidth(fxQ.y);
+    float fxTrace = exp(-fxD * fxD / (.00012 + fxAA * fxAA)) * 1.6 + exp(-fxD / .03) * .35;
+    // 잔광: 조금 전 파형
+    float fxYo = fxOsWave(fxQ.x, fxT - .12, fxTp, fxNear, vSeed);
+    fxTrace += exp(-pow(fxQ.y - fxYo, 2.) / .0008) * .25;
+    // 눈금
+    vec2 fxG = fxQ * vec2(5., 4.);
+    vec2 fxGf = abs(fract(fxG + .5) - .5);
+    float fxGrid = (1. - smoothstep(.0, .025 + fxAA * 4., min(fxGf.x, fxGf.y))) * .12;
+    vec2 fxTk = abs(fract(fxQ * 25. + .5) - .5);
+    fxGrid += (1. - smoothstep(.0, .06, fxTk.x)) * (1. - smoothstep(.0, .015, abs(fxQ.y))) * .2 + (1. - smoothstep(.0, .06, fxTk.y)) * (1. - smoothstep(.0, .015, abs(fxQ.x))) * .2;
+    float fxGrain = .85 + .3 * fxH2(floor(fxQ * 160.) + floor(uTime * 24.));
+    vec3 fxPh = (fxFc * (.01 + fxGrid) + mix(fxFc, vec3(1.), .35) * fxTrace) * fxGrain;
+    diffuseColor.rgb = vec3(.006) + fxFc * .006;`,
+  normal: `
+    float fxEe = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxOsH(fxP - vec2(fxEe, 0.), vSeed) - fxOsH(fxP + vec2(fxEe, 0.), vSeed),
+                               fxOsH(fxP - vec2(0., fxEe), vSeed) - fxOsH(fxP + vec2(0., fxEe), vSeed), 2. * fxEe));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = .06; metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxPh;',
+};
+B.oscilloscope = {
+  // 몸통은 회색 계기 함
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .5; metalnessFactor = .4;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -6808,6 +6872,7 @@ export const MOVING = new Set([
   'ledcube',
   'radar',
   'clockface',
+  'oscilloscope',
 ]);
 
 /**

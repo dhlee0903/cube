@@ -3477,6 +3477,27 @@ export const THEMES = [
     motion: 'mechanical',
     burst: { shape: 'dot', colors: ['#E8C878', '#FFFFFF'], size: 0.04, speed: 1.6, gravity: 2, drag: 2, life: 0.5 },
   },
+  {
+    // 오실로스코프. 조각 겉 전체가 네모 브라운관 화면이다. 희미한 눈금 위로 면 색 형광 파형이 흐르고, 손끝을 가져가면 파형의
+    // 높이와 주기가 손끝에 맞춰 바뀌어 손끝을 지나간다. 층을 돌리면 펄스가 친다
+    id: 'oscilloscope',
+    name: '오실로스코프',
+    bg: '#030404',
+    ink: '#EEF4F2',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #121816, #020303)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.08, grid: 32 },
+    body: { color: '#3A3E42', roughness: 0.5, metalness: 0.4 },
+    faces: ['#FF4048', '#FF9A30', '#FFE640', '#40FF8A', '#40A8FF', '#D066FF'],
+    lights: {
+      sky: '#c8ccd0', ground: '#050606', hemi: 0.5,
+      key: ['#ffffff', 1.2, [-3, 7, 5]], fill: ['#c0c8d0', 0.3, [6, 1, 4]], rim: ['#ffffff', 0.8, [3, 4, -6]],
+    },
+    env: 0.45,
+    surface: 'oscilloscope',
+    sound: 'electric',
+    motion: 'snap',
+    burst: { shape: 'streak', colors: 'faces', size: 0.07, speed: 3, gravity: 0, drag: 3, life: 0.4, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3504,5 +3525,5 @@ export const GROUPS = [
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'chrome', 'fiberoptic', 'ledcube'] },
-  { name: '계기', themes: ['radar', 'clockface'] },
+  { name: '계기', themes: ['radar', 'clockface', 'oscilloscope'] },
 ];
