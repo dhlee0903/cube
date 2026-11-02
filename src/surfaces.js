@@ -6718,6 +6718,66 @@ B.iris = {
   surface: 'roughnessFactor = .35; metalnessFactor = .8;',
 };
 
+S.sequin = {
+  // 스팽글. 조각 겉 전체에 양면 스팽글이 비늘처럼 줄줄이 달렸다. 위 줄이 아래 줄을 반쯤 덮고, 하나하나 살짝 오목하며
+  // 저마다 조금씩 기울어 보는 각도마다 다른 알이 번쩍인다. 평소엔 면 색 쪽이 보이다가, 손끝이 지나가면 그 둘레 스팽글이
+  // 하나씩 뒤집혀(가운데가 먼저, 둘레는 들쭉날쭉) 무지갯빛이 도는 은빛 쪽이 나온다
+  head: `
+    float fxSqNear(vec2 p) {
+      vec2 d = fxPtr.xy - p;
+      return exp(-dot(d, d) / .12) * smoothstep(5., 2., fxPtr.z) * step(0., fxPtr.z);
+    }
+    float fxSqPillow(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.01 + .012 * max(0., 1. - pow(max(abs(q.x), abs(q.y)), 4.)));
+    }`,
+  height: 'fxSqPillow',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxP = vLocal.xy;
+    float fxS = .072;
+    // 맨 위에 놓인 스팽글 찾기: 위 줄(더 큰 j)이 아래 줄을 덮는다
+    float fxJ0 = floor(fxP.y / fxS);
+    vec2 fxC = vec2(0.);
+    vec2 fxId = vec2(-99.);
+    float fxRad = fxS * .78;
+    for (int dj = 1; dj >= -1; dj--) {
+      float j = fxJ0 + float(dj);
+      float off = mod(j, 2.) * .5;
+      float i0 = floor(fxP.x / fxS - off);
+      for (int di = -1; di <= 1; di++) {
+        float i = i0 + float(di);
+        // 스팽글은 윗구멍에 꿰여 아래로 늘어진다: 가운데가 칸 위쪽보다 조금 아래
+        vec2 c = vec2((i + off + .5) * fxS, (j + .35) * fxS);
+        if (fxId.x < -98. && length(fxP - c) < fxRad) { fxId = vec2(i, j); fxC = c; }
+      }
+    }
+    float fxIn = step(-98., fxId.x);
+    vec2 fxD = (fxP - fxC) / fxRad;
+    float fxH = fxH2(fxId + vSeed * 13.);
+    // 뒤집힘: 손끝이 가까울수록, 알마다 문턱이 조금씩 다르다
+    float fxFlip = smoothstep(.3, .6, fxSqNear(fxC) + (fxH - .5) * .35);
+    float fxMid = sin(3.1416 * fxFlip);
+    vec2 fxTilt = (vec2(fxH2(fxId * 1.7), fxH2(fxId * 3.1)) - .5) * .5 + vec2(0., .35) + vec2(0., 1.6) * fxMid;
+    vec3 fxNs = normalize(vec3(-fxTilt - fxD * .5, 1.));
+    // 실 구멍과 가장자리 그늘
+    float fxHoleS = 1. - smoothstep(.07, .11, length(fxD - vec2(0., .62)));
+    float fxEdgeS = smoothstep(.78, 1., length(fxD));
+    vec3 fxHolo = vec3(.78, .8, .84) + .22 * cos(6.2832 * (fxH * 1.7 + dot(fxD, vec2(.4, .7)) + vec3(0., .33, .67)));
+    vec3 fxSide = mix(fxFc, fxHolo, fxFlip);
+    vec3 fxBase = fxFc * .12;
+    diffuseColor.rgb = mix(fxBase, fxSide * (1. - .5 * fxEdgeS) * (1. - .8 * fxHoleS), fxIn);`,
+  normal: 'normal = normalize(mat3(vTx, vTy, vTz) * mix(vec3(0., 0., 1.), fxNs, fxIn));',
+  surface: 'roughnessFactor = mix(.6, .12, fxIn); metalnessFactor = mix(.2, .95, fxIn);',
+  emissive: 'totalEmissiveRadiance = fxSide * fxIn * .06 * (1. + fxFlip);',
+};
+B.sequin = {
+  // 몸통은 검은 공단
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 30. + vSeed);',
+  surface: 'roughnessFactor = .4; metalnessFactor = .1;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -6735,6 +6795,7 @@ export const MOVING = new Set([
   'fogglass',
   'candles',
   'iris',
+  'sequin',
 ]);
 
 /**

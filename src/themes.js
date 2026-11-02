@@ -3453,6 +3453,27 @@ export const THEMES = [
     motion: 'mechanical',
     burst: { shape: 'glow', colors: 'faces', size: 0.06, speed: 1.6, gravity: 0, drag: 2, life: 0.6, additive: true },
   },
+  {
+    // 스팽글. 조각 겉 전체에 양면 스팽글이 비늘처럼 줄줄이 달렸다. 평소엔 면 색 쪽이 보이고, 손끝이 지나가면 그 둘레가
+    // 하나씩 뒤집혀 무지갯빛 은색 쪽이 나오며 번쩍인다
+    id: 'sequin',
+    name: '스팽글',
+    bg: '#0A080E',
+    ink: '#F4EEFA',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #241C30, #060408)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.04, grid: 40 },
+    body: { color: '#141218', roughness: 0.4 },
+    faces: ['#E8283C', '#F58A1E', '#F2D21E', '#20B85E', '#2470F0', '#A436E0'],
+    lights: {
+      sky: '#ffffff', ground: '#120e18', hemi: 0.9,
+      key: ['#ffffff', 2.6, [-3, 7, 5]], fill: ['#ffe6f4', 0.8, [6, 1, 4]], rim: ['#ffffff', 2, [3, 4, -6]],
+    },
+    env: 1.1,
+    surface: 'sequin',
+    sound: 'disco',
+    motion: 'bouncy',
+    burst: { shape: 'star', colors: 'faces', size: 0.08, speed: 2.2, gravity: 1, drag: 2, life: 0.7, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3479,5 +3500,5 @@ export const GROUPS = [
   { name: '명화', themes: ['oil', 'watercolor', 'ukiyoe', 'monet', 'seurat', 'gogh', 'munch', 'klimt', 'cubism', 'warhol', 'collage'] },
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
-  { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris'] },
+  { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
 ];
