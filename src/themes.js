@@ -2264,7 +2264,7 @@ export const THEMES = [
       sky: '#ff9ac8', ground: '#1a0820', hemi: 0.7,
       key: ['#ffd0e0', 1.6, [-4, 5, 5]], fill: ['#ff8a3a', 0.8, [6, -2, 3]], rim: ['#b88aff', 1.6, [0, 4, -6]],
     },
-    env: 1.3,
+    env: 0.45,
     surface: 'lavalamp',
     sound: 'molten',
     motion: 'heavy',

@@ -2396,8 +2396,8 @@ S.lavalamp = {
     vec3 fxWaxC = fxWax * (.42 + .35 * fxCore + .55 * fxBottom * (.5 + fxHeat))
       + mix(fxWax, vec3(1., .95, .85), .45) * fxRim * fxBottom * .6
       + mix(fxWax, vec3(1.), .3) * pow(fxRim, 3.) * .25;
-    vec3 fxTint = mix(vec3(1.) - fxWax, vec3(.5), .45);
-    vec3 fxLiquid = fxTint * (.05 + .2 * fxHeat) * (.85 + .3 * fxN2(vec2(fxR.x * 3., fxR.y * .8 - uTime * .05)));
+    vec3 fxTint = mix(vec3(1.) - fxWax, vec3(.35, .1, .4), .35);
+    vec3 fxLiquid = fxTint * (.06 + .32 * fxHeat) * (.85 + .3 * fxN2(vec2(fxR.x * 3., fxR.y * .8 - uTime * .05)));
     fxLiquid += fxWax * .1 * exp(-fxW.x * .6) * fxW.x;
     vec2 fxBq = vec2(fxR.x * 11., fxR.y * 7. - uTime * .3);
     float fxBubble = (1. - smoothstep(.04, .08, length(fract(fxBq) - .5))) * step(.9, fxH2(floor(fxBq)));
@@ -2407,7 +2407,7 @@ S.lavalamp = {
     vec3 fxCol = mix(fxLiquid, fxWaxC, fxBlob) + vec3(fxGlass) * vec3(1., .97, .92);
     diffuseColor.rgb = fxCol * .12;`,
   normal: 'normal = fxBump(normal, clamp(fxHt - vLift, -.01, .01));',
-  surface: 'roughnessFactor = .05;',
+  surface: 'roughnessFactor = .14;',
   emissive: 'totalEmissiveRadiance = fxCol * (1. + fxHeat * .25);',
 };
 B.lavalamp = {
@@ -2740,16 +2740,16 @@ S.agate = {
     float fxCav = .2 + .04 * fxN2(fxF * 4.);
     float fxIn = 1. - smoothstep(fxCav - .012, fxCav + .012, fxD);
     // 띠 위상: 두께가 천천히 달라지도록 거리를 비틀어 늘인다
-    float fxPh = (fxD - fxCav) * 26. + 2.2 * sin((fxD - fxCav) * 9.) + 1.1 * sin((fxD - fxCav) * 23. + 1.);
-    float fxPh2 = (fxD2 - fxCav) * 26. + 2.2 * sin((fxD2 - fxCav) * 9.) + 1.1 * sin((fxD2 - fxCav) * 23. + 1.);
+    float fxPh = (fxD - fxCav) * 44. + 3. * sin((fxD - fxCav) * 9.) + 1.4 * sin((fxD - fxCav) * 23. + 1.);
+    float fxPh2 = (fxD2 - fxCav) * 44. + 3. * sin((fxD2 - fxCav) * 9.) + 1.4 * sin((fxD2 - fxCav) * 23. + 1.);
     float fxAA = max(fwidth(fxPh), .02);
     float fxLines = 1. - smoothstep(.08, .08 + fxAA * 1.5, abs(fract(fxPh * 2.) - .5) * 2. - .82);
-    float fxWhiteB = smoothstep(.55 - fxAA, .55 + fxAA, .5 + .5 * sin(fxPh * .9 + 1.2) * sin(fxPh * .37 + 2.));
+    float fxWhiteB = smoothstep(.72 - fxAA, .72 + fxAA, .5 + .5 * sin(fxPh * .9 + 1.2) * sin(fxPh * .37 + 2.));
     float fxDark = .5 + .5 * sin(fxPh * .6 + .4);
     vec3 fxBase = diffuseColor.rgb;
-    vec3 fxCol = fxBase * (.38 + .55 * fxDark);
+    vec3 fxCol = fxBase * (.3 + .7 * fxDark) * (.85 + .3 * (.5 + .5 * sin(fxPh * 2.3)));
     fxCol = mix(fxCol, vec3(.93, .92, .88), fxWhiteB * .8);
-    fxCol = mix(fxCol, fxCol * .7, fxLines * .35 * (1. - fxWhiteB));
+    fxCol = mix(fxCol, fxCol * .55, fxLines * .5 * (1. - fxWhiteB));
     vec3 fxDeep = fxBase * (.3 + .5 * (.5 + .5 * sin(fxPh2 * .6 + .4)));
     fxCol = mix(fxCol, fxDeep, .25 * (1. - fxWhiteB));
     float fxBorder = 1. - max(abs(fxF.x), abs(fxF.y));
