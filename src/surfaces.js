@@ -3821,8 +3821,10 @@ S.jigsaw = {
         if (intrude > .5 && dc < R) id = b + nrm;
         float de = abs(dot(mid - u, nrm));
         float t = abs(dot(u - mid, along));
+        // 곧은 변은 꼭지 목 자리를 빼고, 꼭지 둘레는 이웃 꼭지가 이 조각을 파고든 안쪽 호만 이음매다
         float dEdge = t > .135 ? de : 9.;
-        d = min(d, min(dEdge, abs(dc - R)));
+        float dArc = intrude > .5 && dot(u - mid, nrm) < 0. ? abs(dc - R) : 9.;
+        d = min(d, min(dEdge, dArc));
       }
       return vec3(id, d);
     }
@@ -3844,8 +3846,8 @@ S.jigsaw = {
     fxC *= .95 + .08 * fxH2(fxPc.xy);
     float fxCore = 1. - smoothstep(.012, .03, fxPc.z);
     float fxWall = (1. - smoothstep(.0, .06, fxPc.z)) * (1. - fxCore);
-    fxC *= 1. - fxWall * .3;
-    fxC = mix(fxC, vec3(.56, .5, .42) * (.75 + .35 * fxN2(fxF * 260.)), fxCore * .9);
+    fxC *= 1. - fxWall * .4;
+    fxC = mix(fxC, vec3(.3, .26, .22) * (.75 + .35 * fxN2(fxF * 260.)), fxCore * .9);
     diffuseColor.rgb = fxC;`,
   normal: 'normal = fxBump(normal, clamp(fxHt - vLift, -.01, .01) + fxCore * fxN2(fxF * 300.) * .0003);',
   surface: 'roughnessFactor = mix(.26, .9, fxCore);',
