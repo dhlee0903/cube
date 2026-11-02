@@ -3517,6 +3517,27 @@ export const THEMES = [
     ambient: { mode: 'float', shape: 'flake', colors: ['#FFFFFF', '#E8F0FF'], count: 20, size: 0.04, speed: 0.2, opacity: 0.6 },
     burst: { shape: 'flake', colors: ['#FFFFFF', '#E8F0FF'], size: 0.06, speed: 1.8, gravity: 1, drag: 2, life: 0.9 },
   },
+  {
+    // 물병. 조각 하나가 통째로 면 색 액체가 반 넘게 찬 유리 상자다. 액체 표면은 늘 수평이라 옆면마다 아래쪽이 차 있고,
+    // 층을 돌리면 출렁이다 가라앉는다
+    id: 'bottleink',
+    name: '물병',
+    bg: '#080B10',
+    ink: '#EEF2F8',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #1A2230, #04060A)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.06, grid: 40 },
+    body: { color: '#5A6470', roughness: 0.08 },
+    faces: ['#F0303A', '#FF8A1A', '#F2D61E', '#22C460', '#1E72F0', '#B03AF0'],
+    lights: {
+      sky: '#ffffff', ground: '#10141a', hemi: 1,
+      key: ['#ffffff', 2.4, [-3, 7, 5]], fill: ['#dfe6ff', 0.7, [6, 1, 4]], rim: ['#ffffff', 1.6, [3, 4, -6]],
+    },
+    env: 0.9,
+    surface: 'bottleink',
+    sound: 'water',
+    motion: 'fluid',
+    burst: { shape: 'drip', colors: 'faces', size: 0.07, speed: 2, gravity: 4, drag: 1.5, life: 0.8 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3544,5 +3565,5 @@ export const GROUPS = [
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
-  { name: '기울기', themes: ['spiritlevel', 'snowglobe'] },
+  { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink'] },
 ];

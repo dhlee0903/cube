@@ -6910,6 +6910,63 @@ B.snowglobe = {
   surface: 'roughnessFactor = .4;',
 };
 
+S.bottleink = {
+  // 물병. 조각 하나가 통째로 유리 상자이고 속에 면 색 액체가 반 넘게 찼다. 액체 표면은 늘 수평(화면 아래쪽에 수직)이라
+  // 큐브를 어떻게 돌려 보든 옆면마다 아래쪽이 차 있고, 위를 향한 면에선 바닥에 깔린 액체가 깊이 비친다. 표면엔 반짝이는
+  // 메니스커스 띠가 지고 속엔 일렁이는 빛 그물과 잔 기포가 떠오른다. 층을 돌리면 표면이 출렁이다 가라앉는다
+  head: `
+    float fxBtH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float n = pow(pow(abs(q.x), 6.) + pow(abs(q.y), 6.), 1. / 6.);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .014 * sqrt(max(0., 1. - n * n)));
+    }`,
+  height: 'fxBtH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    vec2 fxG = -vec2(vTx.y, vTy.y);
+    float fxGl = length(fxG);
+    vec2 fxGd = fxG / max(fxGl, 1e-3);
+    vec2 fxSd = vec2(-fxGd.y, fxGd.x);
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVl = vec3(dot(fxV, vTx), dot(fxV, vTy), max(dot(fxV, vTz), .25));
+    // 상자 가운데 깊이에서 본 자리
+    vec2 fxQm = fxQ - fxVl.xy / fxVl.z * .25 / uSticker.x;
+    float fxU = dot(fxQm, fxGd);
+    float fxVv = dot(fxQm, fxSd);
+    // 표면: 수평, 돌리면 출렁인다
+    float fxSl = uCharge * (sin(fxVv * 5. - uTime * 9. + vSeed * 6.) * .12 + sin(fxVv * 11. + uTime * 13.) * .04) + sin(fxVv * 3. + uTime * 1.3) * .012;
+    float fxLevel = -.15 + fxSl;
+    float fxWet = mix(1., smoothstep(fxLevel - .015, fxLevel + .015, fxU), smoothstep(.2, .55, fxGl));
+    float fxMen = (1. - smoothstep(.0, .035, abs(fxU - fxLevel))) * smoothstep(.2, .55, fxGl);
+    // 속 빛 그물(코스틱)과 떠오르는 기포
+    vec2 fxCq = fxQm * 4. + vec2(uTime * .25, -uTime * .2);
+    float fxCa = pow(1. - abs(sin(fxCq.x + 2. * fxN2(fxCq * .7)) * sin(fxCq.y + 2. * fxN2(fxCq.yx * .7 + 3.))), 6.);
+    vec2 fxBb = vec2(fxVv * 7., fxU * 7. + uTime * .8);
+    vec2 fxBc = floor(fxBb);
+    float fxBub = step(.8, fxH2(fxBc + vSeed * 7.)) * (1. - smoothstep(.06, .12, length(fract(fxBb) - .5 - (fxH2(fxBc * 1.3) - .5) * .4)));
+    float fxDeep = 1. - .4 * smoothstep(.2, 1., length(fxQ));
+    vec3 fxLiq = fxFc * fxDeep * (.85 + .5 * fxCa) + vec3(1.) * fxBub * .35;
+    vec3 fxAir = fxFc * .08 + vec3(.03);
+    vec3 fxCol = mix(fxAir, fxLiq, fxWet);
+    fxCol += vec3(1.) * fxMen * .55;
+    diffuseColor.rgb = fxCol;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxBtH(fxP - vec2(fxE, 0.), vSeed) - fxBtH(fxP + vec2(fxE, 0.), vSeed),
+                               fxBtH(fxP - vec2(0., fxE), vSeed) - fxBtH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = .04; metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxLiq * fxWet * .22 + vec3(1.) * fxMen * .15;',
+};
+B.bottleink = {
+  // 몸통은 맑은 유리 모서리
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .08;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -6930,6 +6987,7 @@ export const MOVING = new Set([
   'sequin',
   'spiritlevel',
   'snowglobe',
+  'bottleink',
 ]);
 
 /**
