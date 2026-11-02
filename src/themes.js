@@ -3957,6 +3957,27 @@ export const THEMES = [
     ambient: { mode: 'float', shape: 'star', colors: ['#FFFFFF', '#FFE8A0'], count: 16, size: 0.03, speed: 0.2, opacity: 0.6, additive: true },
     burst: { shape: 'star', colors: 'faces', size: 0.1, speed: 3.5, gravity: 2, drag: 1.5, life: 1, additive: true },
   },
+  {
+    // 클라드니 판. 조각 겉이 면 색으로 칠한 진동판이고 흰 모래가 마디 선에만 모여 대칭 무늬로 솟는다. 몇 초마다 무늬가
+    // 바뀌고, 층을 돌리면 모래가 튀어 흩어졌다가 새 무늬로 모인다
+    id: 'chladni',
+    name: '클라드니 판',
+    bg: '#0A0A0C',
+    ink: '#F2F2F6',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #202028, #050506)',
+    form: { bevel: 0.04, size: 0.96, radius: 0.03, grid: 72 },
+    body: { color: '#18181C', roughness: 0.4, metalness: 0.5 },
+    faces: ['#D8302E', '#E8841E', '#D8B81E', '#2A9A52', '#2A5EC8', '#8A3AC0'],
+    lights: {
+      sky: '#ffffff', ground: '#121216', hemi: 1,
+      key: ['#ffffff', 2.4, [-3, 7, 5]], fill: ['#e6ecff', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.2, [3, 4, -6]],
+    },
+    env: 0.8,
+    surface: 'chladni',
+    sound: 'metal',
+    motion: 'stutter',
+    burst: { shape: 'dot', colors: ['#F0E8D8', '#FFFFFF'], size: 0.03, speed: 2, gravity: 3, drag: 1.5, life: 0.6 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3986,5 +4007,5 @@ export const GROUPS = [
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
   { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops', 'liquidtimer', 'oilwater', 'mobile'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'laser', 'magnifier', 'chrome', 'fiberoptic', 'ledcube'] },
-  { name: '돌리면', themes: ['pinwheel', 'musicbox', 'fireworks'] },
+  { name: '돌리면', themes: ['pinwheel', 'musicbox', 'fireworks', 'chladni'] },
 ];

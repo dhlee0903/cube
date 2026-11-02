@@ -8265,6 +8265,58 @@ B.fireworks = {
   surface: 'roughnessFactor = .2;',
 };
 
+S.chladni = {
+  // 클라드니 판. 조각 겉이 면 색으로 칠한 얇은 금속 진동판이고 그 위에 흰 모래가 뿌려졌다. 판이 떨면 모래가 진동이 멎는
+  // 마디 선에만 모여 대칭 무늬(정사각 판의 cos·cos 모드)로 실제로 솟아 쌓인다. 몇 초마다 진동 모드가 바뀌어 무늬가
+  // 흐트러졌다 새로 모이고, 층을 돌리면 모래가 튀어 흩어졌다가 새 무늬로 다시 모인다
+  head: `
+    float fxClF(vec2 q, float t, float seed) {
+      float k = floor(t / 6.) + floor(seed * 7.);
+      float n = 1. + mod(k * 3., 5.), m = 2. + mod(k * 2. + 1., 6.);
+      if (n == m) m += 1.;
+      vec2 x = q * .5 + .5;
+      return cos(n * 3.1416 * x.x) * cos(m * 3.1416 * x.y) - cos(m * 3.1416 * x.x) * cos(n * 3.1416 * x.y);
+    }
+    float fxClSand(vec2 q, float seed) {
+      float t = uTime;
+      float ph = fract(t / 6.);
+      float f = fxClF(q, t, seed);
+      float form = smoothstep(.0, .35, ph) * (1. - .85 * uCharge);
+      float w = mix(.6, .12, form);
+      return exp(-f * f / (w * w)) * mix(.35, 1., form);
+    }
+    float fxClH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float s = fxClSand(q, seed);
+      return smoothstep(0., .04, fxEdgeAt(p)) * (.004 + .014 * s * (.8 + .4 * fxN2(q * 30.)));
+    }`,
+  height: 'fxClH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    float fxS = fxClSand(fxQ, vSeed);
+    // 모래 알갱이: 흩어진 알이 판 위에 점점이
+    float fxGrain = step(.7, fxH2(floor(fxQ * 90. + floor(uTime * 20.) * uCharge * 3.) + vSeed));
+    float fxSand = clamp(smoothstep(.2, .6, fxS) + fxGrain * (.25 + .4 * uCharge) * (1. - fxS), 0., 1.);
+    vec3 fxPlate = fxFc * (.8 + .15 * fxN2(vec2(fxQ.x * 40., fxQ.y * 2.)));
+    vec3 fxSandC = vec3(.93, .9, .82) * (.85 + .2 * fxN2(fxQ * 120.));
+    diffuseColor.rgb = mix(fxPlate, fxSandC, fxSand);`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxClH(fxP - vec2(fxE, 0.), vSeed) - fxClH(fxP + vec2(fxE, 0.), vSeed),
+                               fxClH(fxP - vec2(0., fxE), vSeed) - fxClH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = fxBump(normalize(mat3(vTx, vTy, vTz) * fxNt), fxSand * fxN2(fxP * 900.) * .0004);`,
+  surface: 'roughnessFactor = mix(.35, .95, fxSand); metalnessFactor = mix(.6, 0., fxSand);',
+  emissive: 'totalEmissiveRadiance = vec3(0.);',
+};
+B.chladni = {
+  // 몸통은 검은 진동기 받침
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .4; metalnessFactor = .5;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -8306,6 +8358,7 @@ export const MOVING = new Set([
   'pinwheel',
   'musicbox',
   'fireworks',
+  'chladni',
 ]);
 
 /**
