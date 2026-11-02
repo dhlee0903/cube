@@ -3491,7 +3491,7 @@ export const THEMES = [
     ink: '#F6EEDC',
     backdrop: 'radial-gradient(80% 60% at 50% 40%, #1A1C24, #050506)',
     form: { bevel: 0.06, size: 0.96, radius: 0.14, grid: 64 },
-    body: { color: '#55607A', roughness: 0.14 },
+    body: { color: '#101838', roughness: 0.14 },
     faces: ['#B8143A', '#F07AB4', '#DCDEE6', '#F2CC3A', '#2A2622', '#2C50B8'],
     lights: {
       sky: '#fff4e4', ground: '#1a1208', hemi: 0.8,

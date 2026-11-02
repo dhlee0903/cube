@@ -5511,18 +5511,18 @@ B.emerald = {
 const CHECKER_CUT = /* glsl */ `
   #define FX_GR .23
   ${SQ_CUT}
-  // 지붕: 가운데 0.4, 거들 0.012. 둥근 네모꼴(지수 6) 등고선
+  // 지붕: 가운데 0.5, 거들 0.012. 둥근 네모꼴(지수 6) 등고선
   float fxQzN(vec2 p) { vec2 s = p * p * p; s *= s; return pow(s.x + s.y + 1e-9, 1. / 6.); }
-  float fxQzF(vec2 p) { float n = fxQzN(p); return .4 - .388 * n * n; }
-  vec2 fxQzG(vec2 p) { float n = fxQzN(p); vec2 p5 = p * p * p * p * p; return -.776 * p5 / (n * n * n * n + 1e-9); }
+  float fxQzF(vec2 p) { float n = fxQzN(p); return .5 - .488 * n * n; }
+  vec2 fxQzG(vec2 p) { float n = fxQzN(p); vec2 p5 = p * p * p * p * p; return -.976 * p5 / (n * n * n * n + 1e-9); }
   vec4 fxQzCrown(vec2 p) {
     mat2 r = mat2(.70711, .70711, -.70711, .70711);
-    vec2 c0 = floor((p * r) / .22 + .5);
+    vec2 c0 = floor((p * r) / .3 + .5);
     float hb = 1e3;
     vec3 nb = vec3(0., 0., 1.);
     for (int y = -1; y <= 1; y++) {
       for (int x = -1; x <= 1; x++) {
-        vec2 P = r * ((c0 + vec2(x, y)) * .22);
+        vec2 P = r * ((c0 + vec2(x, y)) * .3);
         vec2 G = fxQzG(P);
         float h = fxQzF(P) + dot(G, p - P);
         if (h < hb) { hb = h; nb = vec3(-G, 1.); }
@@ -5622,7 +5622,7 @@ S.starstone = {
     }
     float fxTh = fxCabZ(fxQd) / .42;
     vec3 fxSilky = mix(fxBody, vec3(dot(fxBody, vec3(.33))), .08);
-    diffuseColor.rgb = fxSilky * (.1 + .06 * fxSilk) * (.6 + .4 * fxTh);`,
+    diffuseColor.rgb = fxSilky * (.1 + .015 * fxSilk) * (.6 + .4 * fxTh);`,
   normal: `
     vec3 fxNt = FX_HNORM(fxStH, vLocal.xy, .0012);
     normal = normalize(fxTbn * fxNt);`,
@@ -5650,12 +5650,12 @@ S.starstone = {
       }
       // 가장 센 조명의 별이 또렷하고, 약한 조명은 희미한 별을 겹친다
       float fxLum = dot(fxC, vec3(.3, .5, .2));
-      fxC *= j < 3 ? min(1.2, pow(fxLum / 2.4, 1.5)) * 2.4 / max(fxLum, 1e-3) : .7;
-      fxStar += fxC * smoothstep(0., .3, fxH.z) * (fxS * exp(-fxFar * 1.2) * .8 + .8 * exp(-fxFar * fxFar * 30.));
+      fxC *= j < 3 ? min(1.2, pow(fxLum / 2.4, 3.)) * 2.4 / max(fxLum, 1e-3) : .7;
+      fxStar += fxC * smoothstep(0., .3, fxH.z) * (fxS * exp(-fxFar * 1.8) * .8 + .8 * exp(-fxFar * fxFar * 30.));
     }
     vec3 fxStarC = mix(mix(vec3(1.), fxBody, .2), vec3(1., .74, .38), fxBlack);
     // 속에서 흩어진 빛: 두꺼운 가운데가 밝게 비치고 가장자리는 짙다
-    totalEmissiveRadiance = fxStarC * fxStar * .55 + fxSilky * (.06 + .3 * pow(fxTh, 1.5)) * (1. + .5 * fxSilk) + vec3(.03) * fxTh * (1. - fxBlack) + vec3(.4, 0., .03) * step(uFace, .5) * .2 * fxTh;`,
+    totalEmissiveRadiance = fxStarC * fxStar * .55 + fxSilky * (.06 + .3 * pow(fxTh, 1.5)) * (1. + .12 * fxSilk) + vec3(.03) * fxTh * (1. - fxBlack) + vec3(.4, 0., .03) * step(uFace, .5) * .2 * fxTh;`,
 };
 B.starstone = {
   // 몸통도 같은 강옥: 실크로 뿌옇게 빛나는 매끈한 돌
