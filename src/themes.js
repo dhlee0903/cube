@@ -3370,6 +3370,158 @@ export const THEMES = [
     sound: 'cloth',
     motion: 'squish',
   },
+  {
+    // 보석상 진열장의 다이아몬드. 칸마다 라운드 브릴리언트 한 알이 백금 베젤에 물려 솟았고, 패싯마다 흑백 대비와
+    // 무지갯빛 불꽃이 튄다. 면마다 컬러 다이아몬드가 다르다(무색, 카나리, 핑크, 블루, 그린, 코냑). 검은 오닉스 몸통
+    id: 'diamond',
+    name: '다이아몬드',
+    bg: '#07070A',
+    ink: '#F4F2EE',
+    backdrop: [
+      'radial-gradient(30% 42% at 50% 0%, rgba(255,255,255,.14), transparent 70%)',
+      'radial-gradient(60% 30% at 50% 100%, rgba(40,40,60,.45), transparent 70%)',
+      'radial-gradient(80% 60% at 50% 45%, #15151C, #050507)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.92, radius: 0.1, grid: 64 },
+    body: { color: '#141418', roughness: 0.14 },
+    faces: ['#FF6EB0', '#B8641E', '#F2F4F8', '#FFD21A', '#2FC46A', '#2E7BFF'],
+    lights: {
+      sky: '#ffffff', ground: '#1a1a22', hemi: 0.9,
+      key: ['#ffffff', 2.6, [-3, 7, 5]], fill: ['#dfe8ff', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.6, [3, 4, -6]],
+    },
+    env: 1,
+    surface: 'diamond',
+    sound: 'crystal',
+    motion: 'smooth',
+    ambient: { mode: 'float', shape: 'star', colors: ['#FFFFFF', '#E8F0FF', '#FFF4E0'], count: 28, size: 0.1, speed: 0.4, opacity: 0.85, additive: true },
+    burst: { shape: 'star', colors: ['#FFFFFF', '#FFFFFF', '#BFE0FF', '#FFD8F0'], size: 0.14, speed: 2.4, gravity: -1, drag: 2, life: 0.9, additive: true },
+  },
+  {
+    // 보석상 진열장의 루비·사파이어. 칸마다 쿠션 믹스드 컷 한 알이 금 베젤에 물려 솟았고, 속엔 비단 같은 금홍석 실크.
+    // 면마다 강옥이 다르다(피전 블러드 루비, 파파라차, 핑크, 옐로, 퍼플, 로열 블루). 기요셰를 새긴 금판, 자줏빛 옻칠 몸통
+    id: 'corundum',
+    name: '루비·사파이어',
+    bg: '#0E080C',
+    ink: '#F6ECE4',
+    backdrop: [
+      'radial-gradient(30% 42% at 50% 0%, rgba(255,236,214,.14), transparent 70%)',
+      'repeating-linear-gradient(100deg, rgba(255,255,255,.025) 0 4%, rgba(0,0,0,.14) 7% 12%)',
+      'radial-gradient(80% 60% at 50% 45%, #2A1220, #08040A)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.92, radius: 0.1, grid: 64 },
+    body: { color: '#2A1424', roughness: 0.18 },
+    faces: ['#C8102E', '#F7967A', '#F25AAA', '#F6C514', '#9A34D0', '#2446C8'],
+    lights: {
+      sky: '#fff6ee', ground: '#2a1018', hemi: 0.9,
+      key: ['#fff8ee', 2.6, [-3, 7, 5]], fill: ['#ffe2c8', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.6, [3, 4, -6]],
+    },
+    env: 1,
+    surface: 'corundum',
+    sound: 'crystal',
+    motion: 'smooth',
+    ambient: { mode: 'float', shape: 'star', colors: ['#FFFFFF', '#FFE8D8', '#FFD0D8'], count: 24, size: 0.09, speed: 0.4, opacity: 0.8, additive: true },
+    burst: { shape: 'star', colors: 'faces', size: 0.13, speed: 2.3, gravity: -1, drag: 2, life: 0.9, additive: true },
+  },
+  {
+    // 에메랄드 컷 녹주석. 귀를 깎은 직사각형에 계단이 겹겹이 져 넓은 빛 조각이 거울 복도처럼 비치고, 에메랄드엔 이끼 같은
+    // 자르댕. 면마다 녹주석이 다르다(레드 베릴, 모거나이트, 고셰나이트, 헬리오도르, 에메랄드, 아쿠아마린). 백금 판, 금 베젤
+    id: 'emerald',
+    name: '에메랄드',
+    bg: '#060C0A',
+    ink: '#EEF6F0',
+    backdrop: [
+      'radial-gradient(30% 42% at 50% 0%, rgba(230,255,240,.13), transparent 70%)',
+      'radial-gradient(80% 60% at 50% 45%, #10241C, #030806)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.92, radius: 0.1, grid: 64 },
+    body: { color: '#0E1A14', roughness: 0.5 },
+    faces: ['#C41E48', '#F2A68E', '#EEF2F2', '#F0CC1E', '#109A58', '#6CC4EC'],
+    lights: {
+      sky: '#f4fff8', ground: '#0a1a12', hemi: 0.9,
+      key: ['#ffffff', 2.6, [-3, 7, 5]], fill: ['#e0fff0', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.6, [3, 4, -6]],
+    },
+    env: 1,
+    surface: 'emerald',
+    sound: 'glass',
+    motion: 'smooth',
+    ambient: { mode: 'float', shape: 'star', colors: ['#FFFFFF', '#E0FFF0'], count: 22, size: 0.09, speed: 0.4, opacity: 0.8, additive: true },
+    burst: { shape: 'star', colors: 'faces', size: 0.13, speed: 2.3, gravity: -1, drag: 2, life: 0.9, additive: true },
+  },
+  {
+    // 석영 무리. 쿠션 체커보드 컷이 그을린 은 베젤에 물려 솟아 바둑판 패싯이 칸칸이 반짝인다.
+    // 면마다 석영이 다르다(장미 석영, 연수정, 수정, 황수정, 그린 애미시스트, 자수정). 점판암 몸통
+    id: 'quartz',
+    name: '자수정·수정',
+    bg: '#0C0A10',
+    ink: '#F2EEF6',
+    backdrop: [
+      'radial-gradient(30% 42% at 50% 0%, rgba(240,230,255,.14), transparent 70%)',
+      'radial-gradient(80% 60% at 50% 45%, #1E1A26, #060508)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.92, radius: 0.1, grid: 64 },
+    body: { color: '#2C2E34', roughness: 0.55 },
+    faces: ['#F4A6C0', '#6A5444', '#F0F2F4', '#F4BE28', '#86D27C', '#8A3AD0'],
+    lights: {
+      sky: '#ffffff', ground: '#1a1620', hemi: 0.9,
+      key: ['#ffffff', 2.6, [-3, 7, 5]], fill: ['#ece0ff', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.6, [3, 4, -6]],
+    },
+    env: 1,
+    surface: 'quartz',
+    sound: 'crystal',
+    motion: 'smooth',
+    ambient: { mode: 'float', shape: 'star', colors: ['#FFFFFF', '#EEE0FF'], count: 22, size: 0.09, speed: 0.4, opacity: 0.8, additive: true },
+    burst: { shape: 'star', colors: 'faces', size: 0.13, speed: 2.3, gravity: -1, drag: 2, life: 0.9, additive: true },
+  },
+  {
+    // 스타 사파이어 카보숑. 둥근 돔 속 바늘이 빛을 되쏘아 여섯 갈래 별이 서고, 조명과 손가락을 따라 돔 위를 미끄러진다.
+    // 면마다 다르다(스타 루비, 핑크, 화이트, 옐로, 블랙 스타, 블루). 검은 칠보 판, 금 베젤, 금 몸통
+    id: 'starstone',
+    name: '스타 사파이어',
+    bg: '#0A0806',
+    ink: '#F6EEDC',
+    backdrop: [
+      'radial-gradient(30% 42% at 50% 0%, rgba(255,240,210,.14), transparent 70%)',
+      'radial-gradient(80% 60% at 50% 45%, #221A10, #070504)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.92, radius: 0.1, grid: 64 },
+    body: { color: '#B08A3E', roughness: 0.2, metalness: 1 },
+    faces: ['#B8143A', '#F07AB4', '#DCDEE6', '#F2CC3A', '#2A2622', '#2C50B8'],
+    lights: {
+      sky: '#fff4e4', ground: '#1a1208', hemi: 0.8,
+      key: ['#ffffff', 2.6, [-3, 7, 5]], fill: ['#ffe8cc', 0.5, [6, 1, 4]], rim: ['#ffffff', 1.4, [3, 4, -6]],
+    },
+    env: 0.9,
+    surface: 'starstone',
+    sound: 'stone',
+    motion: 'smooth',
+    ambient: { mode: 'float', shape: 'star', colors: ['#FFFFFF', '#FFF0D8'], count: 20, size: 0.1, speed: 0.35, opacity: 0.75, additive: true },
+    burst: { shape: 'star', colors: ['#FFFFFF', '#FFF2D0'], size: 0.14, speed: 2.2, gravity: -1, drag: 2, life: 0.9, additive: true },
+  },
+  {
+    // 월장석·장석 카보숑. 속 얇은 층이 빛을 되쏘아 보는 각도 따라 물빛과 무지갯빛이 떠다닌다. 면마다 다르다(선스톤,
+    // 피치 문스톤, 레인보우 문스톤, 래브라도라이트, 아마조나이트, 블루 문스톤). 망치로 두드린 은 판, 옛 청동 몸통
+    id: 'moonstone',
+    name: '월장석·장석',
+    bg: '#0A0C10',
+    ink: '#EEF2F8',
+    backdrop: [
+      'radial-gradient(34% 30% at 70% 16%, rgba(220,232,255,.2), transparent 70%)',
+      'radial-gradient(80% 60% at 50% 45%, #182030, #05060A)',
+    ].join(', '),
+    form: { bevel: 0.07, size: 0.92, radius: 0.1, grid: 64 },
+    body: { color: '#5A4230', roughness: 0.4, metalness: 0.85 },
+    faces: ['#E0662A', '#F0A27A', '#ECEEF0', '#3E4A52', '#3CBFA6', '#8AAEF2'],
+    lights: {
+      sky: '#eef2ff', ground: '#141820', hemi: 0.8,
+      key: ['#ffffff', 2.5, [-3, 7, 5]], fill: ['#d8e4ff', 0.5, [6, 1, 4]], rim: ['#e8f0ff', 1.6, [3, 4, -6]],
+    },
+    env: 0.9,
+    surface: 'moonstone',
+    sound: 'stone',
+    motion: 'smooth',
+    ambient: { mode: 'float', shape: 'glow', colors: ['#BFD4FF', '#FFFFFF'], count: 26, size: 0.08, speed: 0.3, opacity: 0.6, additive: true },
+    burst: { shape: 'glow', colors: 'faces', size: 0.12, speed: 2, gravity: -1, drag: 2, life: 0.9, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3380,7 +3532,7 @@ export const GROUPS = [
   { name: '자연', themes: ['forest', 'grass', 'soil', 'timber', 'pebble', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert'] },
   { name: '빛·불', themes: ['neon', 'lava', 'electric', 'disco', 'lavalamp', 'kaleido'] },
   { name: '우주', themes: ['space', 'planet', 'blackhole', 'nebula', 'galaxy'] },
-  { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'bismuth', 'druze', 'pave'] },
+  { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'bismuth', 'druze', 'pave', 'diamond', 'corundum', 'emerald', 'quartz', 'starstone', 'moonstone'] },
   { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'camo'] },
   { name: '문양', themes: ['lantern'] },
   { name: '패턴', themes: ['houndstooth', 'glencheck', 'herringbone', 'gingham', 'argyle', 'chevron', 'tartan', 'pinstripe', 'windowpane', 'buffalo', 'madras', 'seersucker', 'birdseye'] },
