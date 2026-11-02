@@ -3371,31 +3371,31 @@ export const THEMES = [
     motion: 'squish',
   },
   {
-    // 보석상 진열장의 다이아몬드. 칸마다 라운드 브릴리언트 한 알이 백금 베젤에 물려 솟았고, 패싯마다 흑백 대비와
-    // 무지갯빛 불꽃이 튄다. 면마다 컬러 다이아몬드가 다르다(무색, 카나리, 핑크, 블루, 그린, 코냑). 검은 오닉스 몸통
+    // 다이아몬드 원석. 큐브 자체가 킴벌라이트 덩어리이고 칸마다 날것의 팔면체 결정이 바위를 뚫고 솟았다. 녹아 둥근 모서리,
+    // 삼각 부식 자국, 금강 광택과 속에서 튀는 불꽃. 면마다 결정 빛깔이 다르다(무색, 카나리, 핑크, 블루, 그린, 코냑)
     id: 'diamond',
     name: '다이아몬드',
-    bg: '#07070A',
+    bg: '#100E0C',
     ink: '#F4F2EE',
     backdrop: [
-      'radial-gradient(30% 42% at 50% 0%, rgba(255,255,255,.14), transparent 70%)',
-      'radial-gradient(60% 30% at 50% 100%, rgba(40,40,60,.45), transparent 70%)',
-      'radial-gradient(80% 60% at 50% 45%, #15151C, #050507)',
+      'radial-gradient(45% 35% at 30% 20%, rgba(255,220,170,.16), transparent 70%)',
+      'radial-gradient(70% 55% at 50% 60%, #1E1C19, #080706)',
     ].join(', '),
-    form: { bevel: 0.07, size: 0.92, radius: 0.1, grid: 64 },
-    body: { color: '#141418', roughness: 0.14 },
+    form: { bevel: 0.07, size: 0.96, radius: 0.08, grid: 64 },
+    body: { color: '#3A423C', roughness: 0.9 },
     faces: ['#FF6EB0', '#B8641E', '#F2F4F8', '#FFD21A', '#2FC46A', '#2E7BFF'],
     lights: {
-      sky: '#ffffff', ground: '#1a1a22', hemi: 0.9,
-      key: ['#ffffff', 2.6, [-3, 7, 5]], fill: ['#dfe8ff', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.6, [3, 4, -6]],
+      sky: '#fff4e6', ground: '#1a1814', hemi: 1.1,
+      key: ['#fff0dc', 2.8, [-4, 7, 5]], fill: ['#c8d8ff', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.4, [3, 4, -6]],
     },
-    env: 1,
+    env: 0.7,
     surface: 'diamond',
-    sound: 'crystal',
-    motion: 'smooth',
-    ambient: { mode: 'float', shape: 'star', colors: ['#FFFFFF', '#E8F0FF', '#FFF4E0'], count: 28, size: 0.1, speed: 0.4, opacity: 0.85, additive: true },
-    burst: { shape: 'star', colors: ['#FFFFFF', '#FFFFFF', '#BFE0FF', '#FFD8F0'], size: 0.14, speed: 2.4, gravity: -1, drag: 2, life: 0.9, additive: true },
+    sound: 'stone',
+    motion: 'heavy',
+    ambient: { mode: 'float', shape: 'dot', colors: ['#E8DCC8', '#FFFFFF'], count: 24, size: 0.05, speed: 0.2, opacity: 0.5 },
+    burst: { shape: 'flake', colors: ['#5A625A', '#FFFFFF', '#3A423C'], size: 0.09, speed: 2.4, gravity: -7, drag: 0.8, life: 1 },
   },
+
   {
     // 보석상 진열장의 루비·사파이어. 칸마다 쿠션 믹스드 컷 한 알이 금 베젤에 물려 솟았고, 속엔 비단 같은 금홍석 실크.
     // 면마다 강옥이 다르다(피전 블러드 루비, 파파라차, 핑크, 옐로, 퍼플, 로열 블루). 기요셰를 새긴 금판, 자줏빛 옻칠 몸통

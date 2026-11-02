@@ -5212,66 +5212,110 @@ const ROUND_BRILLIANT = /* glsl */ `
 `;
 
 S.diamond = {
-  // 다이아몬드. 칸마다 라운드 브릴리언트 컷 한 알이 백금 베젤에 물려 실제로 솟았다(테이블, 카이트, 스타, 어퍼 거들 패싯).
-  // 빛을 돌 속에서 실제로 튕겨 따라가서 패싯마다 밝기가 다르고, 보는 사람 머리가 가린 쪽은 검게 비쳐 흑백 대비(화살 무늬)가
-  // 또렷하다. 진열장 스폿이 굴절률 차이로 갈라져 무지갯빛 불꽃이 튀고, 큐브를 돌리면 반짝임이 패싯을 건너뛴다.
-  // 면마다 다이아몬드가 다르다(무색, 카나리 옐로, 핑크, 블루, 그린, 코냑)
-  head: `${GEM_BASE}${ROUND_BRILLIANT}
-    #define fxCutHit fxRbHit
-    ${GEM_TRACE}
-    // 칸 하나의 높이: 검은 판, 둥근 베젤 테, 그 안에서 솟은 크라운
-    float fxDiaH(vec2 p, float seed) {
-      float R = uSticker.x * .76;
-      vec2 q = p / R;
-      float r = length(q);
-      float bez = .034 * sqrt(max(0., 1. - pow((r - 1.07) / .11, 2.)));
-      float st = r < 1. ? .02 + R * fxRbCrown(q).w : 0.;
-      return smoothstep(0., .05, fxEdgeAt(p)) * max(max(.008, bez), st);
+  // 다이아몬드 원석. 큐브 자체가 다이아몬드를 품은 킴벌라이트 덩어리이고, 칸마다 날것 그대로의 팔면체 결정이 바위를 뚫고
+  // 솟았다. 큰 결정 하나가 꼭짓점을 위로 네모뿔처럼 솟고, 곁으로 작은 결정 한두 개가 비스듬히 박혔다. 결정 모서리는 녹아
+  // 둥글고, 면마다 거꾸로 선 삼각 부식 자국(트라이곤)과 모서리에 나란한 성장 계단이 잔잔하며, 군데군데 서리처럼 뿌옇다.
+  // 기름진 금강 광택에 속으로 빛이 되튕겨 면마다 밝기가 다르고, 이따금 무지갯빛 불꽃이 튄다.
+  // 결정 색이 곧 면 색(무색, 카나리, 핑크, 블루, 그린, 코냑)
+  head: `
+    // 결정 하나: x 높이(0~1, 밖이면 음수), y 면 번호(0~3), zw 결정 좌표
+    vec4 fxOcta(vec2 q, vec2 c, float rot, float sz) {
+      vec2 p = fxRot(rot) * (q - c) / sz;
+      float m = max(abs(p.x), abs(p.y));
+      float r8 = pow(pow(abs(p.x), 8.) + pow(abs(p.y), 8.), .125);
+      float h = 1. - mix(m, r8, .18);
+      h = h - .04 * smoothstep(.9, 1., h);
+      float face = abs(p.x) > abs(p.y) ? (p.x > 0. ? 0. : 1.) : (p.y > 0. ? 2. : 3.);
+      return vec4(h, face, p);
     }
-    // 조각 셰이더용: 베젤 바깥 어깨의 밀그레인 구슬까지 더한 높이
-    float fxMgAA;
-    float fxDiaHf(vec2 p, float seed) {
-      vec2 q = p / (uSticker.x * .76);
-      float r = length(q);
-      vec2 c = vec2(fract(atan(q.y, q.x) / 6.2832 * 90.) - .5, (r - 1.15) * 90. / 6.2832 / 1.15);
-      float bead = sqrt(max(0., 1. - dot(c, c) * 4.2)) * (1. - smoothstep(.02, .035, abs(r - 1.15)));
-      return fxDiaH(p, seed) + bead * .0022 * fxMgAA;
+    // 칸 하나: x 높이, y 결정 번호(-1 바위), z 면 번호, w 결정 안 높이(0~1)
+    vec4 fxRough(vec2 q, float seed, out vec2 fxP) {
+      vec4 best = vec4(-1., -1., 0., 0.);
+      float hb = -9.;
+      fxP = vec2(0.);
+      for (int i = 0; i < 3; i++) {
+        float fi = float(i);
+        if (i == 2 && fxH1(seed * 23.) < .5) break;
+        vec2 c = i == 0 ? (vec2(fxH1(seed * 3.), fxH1(seed * 9.)) - .5) * .3
+          : vec2(fxH1(seed * 5. + fi) > .5 ? 1. : -1., fxH1(seed * 7. + fi) > .5 ? 1. : -1.) * (.52 + .1 * fxH1(seed * 11. + fi));
+        float sz = i == 0 ? .78 + .08 * fxH1(seed * 13.) : .3 + .14 * fxH1(seed * 17. + fi);
+        float rot = (fxH1(seed * 19. + fi) - .5) * 1.4;
+        vec4 o = fxOcta(q, c, rot, sz);
+        if (o.x <= 0.) continue;
+        float hh = (i == 0 ? 1. : .55 + .15 * fxH1(seed * 29. + fi)) * o.x;
+        if (hh > hb) { hb = hh; best = vec4(hh, fi, o.y, o.x); fxP = o.zw; }
+      }
+      return best;
+    }
+    float fxKimb(vec2 q, float seed) {
+      return .012 + .012 * fxF2(q * 3. + seed * 7.) + .004 * fxN2(q * 17. + seed);
+    }
+    float fxDiaH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      vec2 cp;
+      vec4 r = fxRough(q, seed, cp);
+      float rock = fxKimb(q, seed);
+      float cry = r.y >= 0. ? .012 + .13 * r.x : -1.;
+      return smoothstep(0., .05, fxEdgeAt(p)) * max(rock, cry);
     }`,
   height: 'fxDiaH',
   color: `
     if (fxEdge() < 0.) discard;
-    ${GEM_LIGHTS}
-    float fxR = uSticker.x * .76;
-    vec2 fxQd = vLocal.xy / fxR;
-    float fxRq = length(fxQd);
-    vec4 fxCr = fxRbCrown(fxQd);
+    vec2 fxQ0 = fxQ();
+    vec2 fxCp;
+    vec4 fxR = fxRough(fxQ0, vSeed, fxCp);
+    float fxRock = fxKimb(fxQ0, vSeed);
     float fxHt = fxDiaH(vLocal.xy, vSeed);
-    float fxStone = step(fxRq, 1.) * step(fxHt - .0004, .02 + fxR * fxCr.w);
-    float fxBezel = (1. - fxStone) * smoothstep(.94, .97, fxRq) * (1. - smoothstep(1.16, 1.19, fxRq));
-    vec3 fxBody = diffuseColor.rgb;
-    // 판은 검게 도금한 금속(블랙 로듐)을 곱게 무광으로, 베젤 테는 백금을 거울처럼 닦았고 바깥 어깨엔 밀그레인(작은 구슬)이 줄지어 박혔다
-    float fxAng = atan(fxQd.y, fxQd.x);
-    fxMgAA = 1. - smoothstep(.25, .6, fwidth(fxRq) * 90. / 6.2832);
-    float fxSat = fxN2(vec2(fxAng * 40., fxRq * 3.) + vSeed * 9.);
-    diffuseColor.rgb = mix(mix(vec3(.13, .13, .14) * (.9 + .2 * fxSat), vec3(.74, .72, .69), fxBezel), vec3(0.), fxStone);`,
-  normal: `
-    normal = normalize(fxTbn * (fxStone > .5 ? fxCr.xyz : FX_HNORM(fxDiaHf, vLocal.xy, .0015)));`,
-  surface: `
-    roughnessFactor = mix(mix(.34 + .08 * fxSat, .1, fxBezel), .02, fxStone);
-    metalnessFactor = 1. - fxStone;`,
+    float fxOn = step(.0, fxR.y) * step(fxRock, .012 + .13 * fxR.x);
+    vec3 fxBase = diffuseColor.rgb;
+    // 킴벌라이트: 짙은 청회록 바탕에 석류석, 감람석, 운모 알갱이
+    float fxGr = step(.975, fxH2(floor(fxQ0 * 22. + vSeed * 9.)));
+    float fxOl = smoothstep(.62, .7, fxN2(fxQ0 * 7. + vSeed * 5.));
+    vec3 fxStone = vec3(.13, .16, .15) * (.7 + .5 * fxF2(fxQ0 * 4. + vSeed * 3.)) * (.85 + .3 * fxN2(fxQ0 * 30.));
+    fxStone = mix(fxStone, vec3(.4, .07, .06), fxGr * .7);
+    fxStone = mix(fxStone, vec3(.3, .34, .27), fxOl * .55);
+    // 결정 면 안 좌표: 면마다 밑변 방향(u)과 꼭짓점 쪽(v)
+    vec2 fxFc = fxR.z < 1.5 ? vec2(fxCp.y, abs(fxCp.x)) : vec2(fxCp.x, abs(fxCp.y));
+    // 트라이곤: 면 위 거꾸로 선 삼각 자국
+    vec2 fxTg = fxFc * vec2(7., 7.) + fxR.z * 3.7 + fxR.y * 11.;
+    vec2 fxTc = floor(fxTg);
+    vec2 fxTw = (fract(fxTg) - .5 - (vec2(fxH2(fxTc + vSeed), fxH2(fxTc + vSeed + 5.)) - .5) * .4) / (.18 + .2 * fxH2(fxTc + 2.));
+    float fxTd = max(abs(fxTw.x) * .866 - fxTw.y * .5, fxTw.y) - .5;
+    float fxTri = step(.72, fxH2(fxTc + vSeed * 3.)) * (1. - smoothstep(0., .12, fxTd));
+    float fxTriEdge = step(.72, fxH2(fxTc + vSeed * 3.)) * (1. - smoothstep(.0, .08, abs(fxTd + .04)));
+    float fxStep = 1. - smoothstep(.0, .12, abs(fract(fxR.w * 18.) - .5) * 2. - .8);
+    float fxFrost = smoothstep(.68, .85, fxN2(fxQ0 * 3.5 + vSeed * 13.)) * (1. - fxR.w * .6);
+    // 속빛: 면마다 다른 밝기에 보는 각도 따라 옮겨 가는 반사
+    vec3 fxV = normalize(vViewPosition);
+    vec2 fxVt = vec2(dot(fxV, vTx), dot(fxV, vTy));
+    float fxIn = .5 + .5 * sin(fxR.z * 2.1 + dot(fxVt, vec2(7., 5.)) + fxR.y * 3. + vSeed * 9.);
+    float fxEdgeL = 1. - smoothstep(0., .05, abs(abs(fxCp.x) - abs(fxCp.y)));
+    float fxFb = fxH1(fxR.z * 3.1 + fxR.y * 7. + vSeed * 5.);
+    float fxGl = fxGlint(fxCp * 6. + fxVt * 3. + fxR.z * 9., .3, 1.4);
+    vec3 fxIce = mix(fxBase, vec3(1.), .04);
+    vec3 fxCry = fxIce * (.14 + .32 * fxFb + .34 * fxIn) * (.6 + .55 * fxR.w);
+    fxCry = mix(fxCry, fxIce * .9 + .12, fxEdgeL * .55);
+    fxCry = mix(fxCry, fxCry * .55, fxTri * .5);
+    fxCry = mix(fxCry, fxIce * 1.15 + .08, fxTriEdge * .5);
+    fxCry *= 1. - fxStep * .12;
+    fxCry = mix(fxCry, mix(fxIce, vec3(.9), .4), fxFrost * .2);
+    diffuseColor.rgb = mix(fxStone, fxCry, fxOn);`,
+  normal: 'normal = fxBump(normal, clamp(fxHt - vLift, -.02, .02) - fxOn * (fxTri * .0012 + fxStep * .0002) + (1. - fxOn) * fxN2(fxQ0 * 40.) * .0015);',
+  surface: 'roughnessFactor = mix(.9, mix(.08, .45, fxFrost) + fxTri * .1, fxOn); metalnessFactor = 0.;',
   emissive: `
-    vec3 fxGlow = vec3(0.);
-    if (fxStone > .5) {
-      vec3 fxVt = normalize(-vViewPosition) * fxTbn;
-      vec3 fxAl = -log(clamp(fxBody, .02, 1.)) * .32;
-      fxGlow = fxGemShade(vec3(fxQd, fxCr.w), fxCr.xyz, fxVt, vec3(2.385, 2.417, 2.475), fxAl, vec3(.015)) + fxBody * .045;
-    }
-    totalEmissiveRadiance = fxGlow;`,
+    vec3 fxFire = .5 + .5 * cos(6.2832 * (fxIn * .7 + fxFb + vec3(0., .33, .67)));
+    totalEmissiveRadiance = fxOn * (fxIce * .12 * (.3 + fxIn) + fxFire * fxGl * 1.6 + vec3(1.) * fxFresnel(normal, 3.) * .18 * (1. - fxFrost));`,
 };
 B.diamond = {
-  // 몸통은 거울처럼 닦은 검은 오닉스
-  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
-  surface: 'roughnessFactor = .14;',
+  // 몸통은 킴벌라이트: 짙은 청회록 바위에 석류석, 감람석 알갱이, 거친 결
+  color: `
+    float fxG = step(.93, fxH3(floor(vLocal * 60.) + vSeed));
+    float fxO = step(.9, fxH3(floor(vLocal * 45.) + vSeed + 7.));
+    diffuseColor.rgb *= .7 + .5 * fxN3(vLocal * 9. + vSeed);
+    diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.45, .08, .07), fxG * .7);
+    diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.42, .45, .2), fxO * .5);`,
+  normal: 'normal = fxBump(normal, fxN3(vLocal * 40.) * .002);',
+  surface: 'roughnessFactor = .9;',
 };
 
 // 쿠션 믹스드 컷(거들은 초타원 지수 3, 가로세로 반지름 1, 거들 두께 0.024). 크라운은 브릴리언트식(테이블, 카이트 36°,
