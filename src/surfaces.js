@@ -8672,6 +8672,74 @@ B.spintop = {
   surface: 'roughnessFactor = .6;',
 };
 
+S.fountain = {
+  // 분수. 조각마다 면 색 유약 타일을 붙인 벽 앞의 작은 분수다(유리 상자 속 깊이에 있다). 아래쪽(화면 아래)엔 대야에 물이
+  // 고여 물결이 번지고, 가운데 꼭지에서 물줄기가 위로 솟아 꼭대기에서 갈라져 양옆으로 물방울 포물선을 그리며 떨어진다.
+  // 가만히 두면 낮게 퐁퐁 솟고, 층을 돌리면 높이 치솟았다가 잦아든다. 위를 향한 면에선 대야 물을 내려다본다
+  head: `
+    float fxFtH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float n = pow(pow(abs(q.x), 8.) + pow(abs(q.y), 8.), 1. / 8.);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .01 * sqrt(max(0., 1. - n * n)));
+    }`,
+  height: 'fxFtH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    vec2 fxGd = fxGrav;
+    float fxSt = smoothstep(.15, .5, fxGravL);
+    vec2 fxSd = vec2(-fxGd.y, fxGd.x);
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVl = vec3(dot(fxV, vTx), dot(fxV, vTy), max(dot(fxV, vTz), .25));
+    vec2 fxQb = fxQ - fxVl.xy / fxVl.z * .4 / uSticker.x;
+    vec2 fxQm = fxQ - fxVl.xy / fxVl.z * .2 / uSticker.x;
+    // 타일 벽
+    vec2 fxTg = fxQb * 3.2;
+    vec2 fxTf = fract(fxTg);
+    float fxGrout = 1. - smoothstep(.0, .06, min(min(fxTf.x, 1. - fxTf.x), min(fxTf.y, 1. - fxTf.y)));
+    vec3 fxTile = fxFc * (.65 + .25 * fxH2(floor(fxTg) + vSeed * 7.)) * (.9 + .1 * fxN2(fxQb * 30.));
+    vec3 fxCol = mix(fxTile, vec3(.85, .82, .76), fxGrout * .8);
+    // 분수
+    vec2 fxUV = vec2(dot(fxQm, fxSd), dot(fxQm, fxGd));
+    float fxH = .3 + 1.05 * uCharge + .05 * sin(uTime * 7.);
+    float fxBase = .68;
+    float fxTop = fxBase - fxH;
+    float fxJet = step(fxTop, fxUV.y) * step(fxUV.y, fxBase) * (1. - smoothstep(.035, .05, abs(fxUV.x + .006 * sin(fxUV.y * 30. - uTime * 20.))));
+    float fxDrops = 0.;
+    for (int s = -1; s <= 1; s += 2) {
+      for (int k = 0; k < 7; k++) {
+        float ph = fract(uTime * .9 + float(k) / 7. + fxH1(float(k) + vSeed));
+        float vv = float(s) * ph * (.28 + .3 * uCharge);
+        float uu = fxTop + fxH * pow(ph, 2.) * 1.05;
+        fxDrops += 1. - smoothstep(.02, .035, length(fxUV - vec2(vv, uu)));
+      }
+    }
+    // 대야 물: 물결
+    float fxBasin = smoothstep(fxBase - .02, fxBase + .02, fxUV.y);
+    float fxRip = .5 + .5 * sin(length(fxUV - vec2(0., fxBase)) * 40. - uTime * 6.);
+    vec3 fxWater = mix(vec3(.3, .5, .65), fxFc, .6) * (.6 + .3 * fxRip);
+    fxCol = mix(fxCol, fxWater, fxBasin * fxSt);
+    fxCol = mix(fxCol, vec3(.9, .96, 1.), clamp(fxJet + fxDrops, 0., 1.) * fxSt * .9);
+    // 위를 향한 면: 대야 물을 내려다본다
+    float fxRip2 = .5 + .5 * sin(length(fxQ) * 30. - uTime * 4.);
+    fxCol = mix(fxCol, mix(fxTile, vec3(.5, .7, .85), .25) * (.85 + .2 * fxRip2), 1. - fxSt);
+    diffuseColor.rgb = fxCol;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxFtH(fxP - vec2(fxE, 0.), vSeed) - fxFtH(fxP + vec2(fxE, 0.), vSeed),
+                               fxFtH(fxP - vec2(0., fxE), vSeed) - fxFtH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = .05; metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxCol * .12;',
+};
+B.fountain = {
+  // 몸통은 흰 회반죽
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 20. + vSeed);',
+  surface: 'roughnessFactor = .8;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -8719,6 +8787,7 @@ export const MOVING = new Set([
   'orrery',
   'vinyl',
   'spintop',
+  'fountain',
 ]);
 
 /**

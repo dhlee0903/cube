@@ -4082,6 +4082,27 @@ export const THEMES = [
     motion: 'bouncy',
     burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 2.4, gravity: 0, drag: 2, life: 0.6 },
   },
+  {
+    // 분수. 조각마다 면 색 타일 벽 앞의 작은 분수다. 아래 대야에서 물줄기가 화면 위쪽으로 솟아 양옆으로 물방울 포물선을 그리며
+    // 떨어지고, 가만히 두면 낮게 퐁퐁, 층을 돌리면 높이 치솟았다 잦아든다
+    id: 'fountain',
+    name: '분수',
+    bg: '#0A0C10',
+    ink: '#F2F4F8',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #1E2630, #050608)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.04, grid: 40 },
+    body: { color: '#E2DCD0', roughness: 0.8 },
+    faces: ['#D8343A', '#E8862A', '#E2C42E', '#2E9E5E', '#2E6ED8', '#9A48D0'],
+    lights: {
+      sky: '#ffffff', ground: '#121418', hemi: 1,
+      key: ['#ffffff', 2.2, [-3, 7, 5]], fill: ['#e6ecff', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.4, [3, 4, -6]],
+    },
+    env: 0.8,
+    surface: 'fountain',
+    sound: 'water',
+    motion: 'fluid',
+    burst: { shape: 'drip', colors: ['#D0E8FF', '#FFFFFF'], size: 0.06, speed: 2.4, gravity: 4, drag: 1.2, life: 0.8 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -4111,5 +4132,5 @@ export const GROUPS = [
   { name: '손끝', themes: ['ferrofluid', 'pinart', 'memoryfoam', 'shadowgarden', 'flashlight', 'blacklight', 'fogglass', 'candles', 'iris', 'sequin'] },
   { name: '기울기', themes: ['spiritlevel', 'snowglobe', 'bottleink', 'hourglass', 'marbles', 'pendulum', 'raindrops', 'liquidtimer', 'oilwater', 'mobile'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'laser', 'magnifier', 'chrome', 'fiberoptic', 'ledcube'] },
-  { name: '돌리면', themes: ['pinwheel', 'musicbox', 'fireworks', 'chladni', 'safedial', 'windchime', 'orrery', 'vinyl', 'spintop'] },
+  { name: '돌리면', themes: ['pinwheel', 'musicbox', 'fireworks', 'chladni', 'safedial', 'windchime', 'orrery', 'vinyl', 'spintop', 'fountain'] },
 ];
