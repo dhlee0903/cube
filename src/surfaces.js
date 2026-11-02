@@ -7330,6 +7330,72 @@ B.liquidtimer = {
   surface: 'roughnessFactor = .1;',
 };
 
+S.oilwater = {
+  // 기름과 물. 조각 하나가 통째로 물이 찬 유리 상자이고, 면 색 기름이 동그란 방울로 떠다닌다. 방울은 늘 위쪽(화면 위)으로
+  // 떠오르는데 큰 방울일수록 빠르고, 위에 닿은 기름은 한 겹 층으로 모여 물결친다. 방울은 깊이마다 떠 있어 보는 각도 따라
+  // 어긋나고, 둘레에 빛이 꺾인 테가 진다. 층을 돌리면 기름이 잘게 부서져 뿌옇게 흩어졌다가 다시 떠오르며 뭉친다
+  head: `
+    float fxOwH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float n = pow(pow(abs(q.x), 6.) + pow(abs(q.y), 6.), 1. / 6.);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .014 * sqrt(max(0., 1. - n * n)));
+    }`,
+  height: 'fxOwH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    vec2 fxGd = fxGrav;
+    float fxSt = smoothstep(.15, .5, fxGravL);
+    vec2 fxSd = vec2(-fxGd.y, fxGd.x);
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVl = vec3(dot(fxV, vTx), dot(fxV, vTy), max(dot(fxV, vTz), .25));
+    float fxMix = uCharge;
+    float fxBlob = 0., fxRimB = 0.;
+    vec2 fxBn = vec2(0.);
+    for (int k = 0; k < 3; k++) {
+      float fk = float(k);
+      vec2 qq = fxQ - fxVl.xy / fxVl.z * (.08 + .12 * fk) / uSticker.x;
+      vec2 fr = vec2(dot(qq, fxSd), -dot(qq, fxGd));
+      float sc = mix(1.7 + .6 * fk, 7. + 2.5 * fk, fxMix);
+      vec2 g = fr * sc;
+      float col = floor(g.x);
+      float hs = fxH1(col * 3.7 + fk * 11. + vSeed * 7.);
+      float rad = mix(.22 + .18 * hs, .18 + .1 * hs, fxMix);
+      g.y -= uTime * (.25 + .5 * rad) * (.3 + fxSt);
+      vec2 c = floor(g);
+      vec2 f = fract(g) - .5 - (vec2(0., fxH2(c * 1.7)) - .5) * .3;
+      f.x -= (fxH2(c + fk) - .5) * .3;
+      float on = step(fxH2(c * 2.3 + fk * 9. + vSeed), .42 + .4 * fxMix);
+      float d = length(f) / rad;
+      float b = on * (1. - smoothstep(.9, 1., d));
+      if (b > fxBlob) { fxBlob = b; fxRimB = smoothstep(.65, .95, d); fxBn = f / rad; }
+    }
+    // 위에 모인 기름층
+    float fxU = -dot(fxQ, fxGd);
+    float fxLayer = smoothstep(.62 + .04 * sin(dot(fxQ, fxSd) * 7. + uTime * 1.5), .66, fxU) * fxSt * (1. - .6 * fxMix);
+    float fxFlat = 1. - fxSt;
+    vec3 fxWater = fxFc * .12 + vec3(.02, .04, .06) + vec3(.02) * fxMix;
+    vec3 fxOil = fxFc * (.8 + .3 * (1. - fxRimB)) * (1. - .45 * fxRimB);
+    fxOil += vec3(1.) * smoothstep(.35, .0, length(fxBn - vec2(-.35, .4))) * .45 * fxBlob;
+    vec3 fxCol = mix(fxWater, fxOil, max(fxBlob, fxLayer));
+    fxCol = mix(fxCol, fxFc * .7, fxFlat * .35);
+    diffuseColor.rgb = fxCol;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxOwH(fxP - vec2(fxE, 0.), vSeed) - fxOwH(fxP + vec2(fxE, 0.), vSeed),
+                               fxOwH(fxP - vec2(0., fxE), vSeed) - fxOwH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = .04; metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxCol * .18;',
+};
+B.oilwater = {
+  // 몸통은 맑은 유리 모서리
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .08;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -7356,6 +7422,7 @@ export const MOVING = new Set([
   'pendulum',
   'raindrops',
   'liquidtimer',
+  'oilwater',
 ]);
 
 /**
