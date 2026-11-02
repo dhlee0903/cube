@@ -3561,6 +3561,27 @@ export const THEMES = [
     motion: 'fluid',
     burst: { shape: 'drip', colors: ['#D0E8FF', '#FFFFFF'], size: 0.05, speed: 1.6, gravity: 3, drag: 1.5, life: 0.7 },
   },
+  {
+    // 나침반. 조각 겉 전체가 네모난 나침반 문자판이다. 면 색 판에 금빛 나침반 장미와 눈금이 돋고 마름모꼴 자석 바늘이 솟았다.
+    // 늘 화면 위쪽을 가리키다가 손끝을 가져가면 손끝 쪽으로 휙 돌아 가리킨다
+    id: 'compass',
+    name: '나침반',
+    bg: '#0A0806',
+    ink: '#F6F0E6',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #241C14, #060403)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.06, grid: 72 },
+    body: { color: '#8A6A34', roughness: 0.3, metalness: 0.9 },
+    faces: ['#B82838', '#D87028', '#C8A82E', '#2A7E54', '#2A52A8', '#7A3A9E'],
+    lights: {
+      sky: '#fff6ea', ground: '#120e08', hemi: 1,
+      key: ['#fff6ea', 2.4, [-3, 7, 5]], fill: ['#ffe6c8', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.4, [3, 4, -6]],
+    },
+    env: 1,
+    surface: 'compass',
+    sound: 'metal',
+    motion: 'smooth',
+    burst: { shape: 'dot', colors: ['#E8C878', '#D02818'], size: 0.04, speed: 1.6, gravity: 2, drag: 2, life: 0.5 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3588,5 +3609,5 @@ export const GROUPS = [
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'chrome', 'fiberoptic', 'ledcube'] },
-  { name: '계기', themes: ['radar', 'clockface', 'oscilloscope', 'theremin', 'seismograph', 'sonar'] },
+  { name: '계기', themes: ['radar', 'clockface', 'oscilloscope', 'theremin', 'seismograph', 'sonar', 'compass'] },
 ];

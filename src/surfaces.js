@@ -7058,6 +7058,87 @@ B.sonar = {
   surface: 'roughnessFactor = .8;',
 };
 
+S.compass = {
+  // 나침반. 조각 겉 전체가 네모난 나침반 문자판이다. 면 색 칠 판에 금빛 나침반 장미(긴 네 갈래와 짧은 네 갈래 별)와 방위 눈금이
+  // 돋을새김으로 솟았고, 가운데 황동 축 위에 마름모꼴 자석 바늘(북쪽 끝은 빨강, 남쪽 끝은 검정 강철)이 솟아 꽂혔다. 평소엔 늘
+  // 화면 위쪽을 가리키며 살짝 떨고, 손끝을 가져가면 바늘이 손끝 쪽으로 휙 돌아 가리킨다
+  head: `
+    float fxCpAng(float seed) {
+      vec2 g = -fxGrav;
+      float north = atan(g.x, g.y);
+      vec2 d = fxPtr.xy;
+      float near = smoothstep(5., 2.2, fxPtr.z) * step(0., fxPtr.z) * smoothstep(.0, .05, length(d));
+      float fa = atan(d.x, d.y);
+      float df = mod(fa - north + 3.1416, 6.2832) - 3.1416;
+      return north + df * near + .04 * sin(uTime * 5.3 + seed * 9.) * (1. - near);
+    }
+    float fxCpNeedle(vec2 q, float a) {
+      vec2 dir = vec2(sin(a), cos(a));
+      float along = dot(q, dir);
+      float across = abs(dot(q, vec2(dir.y, -dir.x)));
+      return step(abs(along), .74) * step(across, .13 * (1. - abs(along) / .74));
+    }
+    float fxCpRose(vec2 q) {
+      float r = length(q), a = atan(q.x, q.y);
+      float s4 = .62 * pow(abs(cos(a * 2.)), 18.) + .32 * pow(abs(cos(a * 2. + .785)), 18.);
+      return step(r, max(s4, .08));
+    }
+    float fxCpH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float a = fxCpAng(seed);
+      float h = .006 * fxCpRose(q);
+      float m = max(abs(q.x), abs(q.y));
+      h = max(h, .004 * (1. - smoothstep(.0, .015, abs(m - .82))));
+      h = max(h, .022 * fxCpNeedle(q, a));
+      h = max(h, .03 * (1. - smoothstep(.05, .065, length(q))));
+      return smoothstep(0., .04, fxEdgeAt(p)) * (.004 + h);
+    }`,
+  height: 'fxCpH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    float fxA = fxCpAng(vSeed);
+    float fxR = length(fxQ);
+    float fxAq = atan(fxQ.x, fxQ.y);
+    float fxRose = fxCpRose(fxQ);
+    // 장미 갈래는 반쪽씩 밝고 어둡게(입체 판)
+    float fxHalf = step(0., sin(fxAq * 8.));
+    float fxM = max(abs(fxQ.x), abs(fxQ.y));
+    float fxTick = step(.84, fxM) * step(fxM, .9) * (1. - smoothstep(.0, .15, abs(fract(fxAq / .19635) - .5) * 2. - .8));
+    float fxRing = 1. - smoothstep(.0, .015, abs(fxM - .82));
+    vec3 fxGold = vec3(.9, .74, .42);
+    vec3 fxCol = fxFc * (.72 + .1 * fxN2(fxQ * 25.));
+    fxCol = mix(fxCol, fxGold * mix(.75, 1., fxHalf), fxRose);
+    fxCol = mix(fxCol, fxGold, max(fxTick, fxRing) * .85);
+    float fxNd = fxCpNeedle(fxQ, fxA);
+    vec2 fxDir = vec2(sin(fxA), cos(fxA));
+    float fxNorth = step(0., dot(fxQ, fxDir));
+    vec3 fxNeedleC = mix(vec3(.12, .13, .15), vec3(.85, .1, .08), fxNorth);
+    fxCol = mix(fxCol, fxNeedleC, fxNd);
+    float fxCap = 1. - smoothstep(.05, .065, fxR);
+    fxCol = mix(fxCol, fxGold * .9, fxCap);
+    float fxMet = max(max(fxRose, max(fxTick, fxRing)), max(fxNd, fxCap));
+    diffuseColor.rgb = fxCol;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxCpH(fxP - vec2(fxE, 0.), vSeed) - fxCpH(fxP + vec2(fxE, 0.), vSeed),
+                               fxCpH(fxP - vec2(0., fxE), vSeed) - fxCpH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    // 바늘 등줄기: 가운데가 솟은 마름모
+    vec2 fxNdir = vec2(sin(fxA), cos(fxA));
+    float fxAcr = dot(fxQ, vec2(fxNdir.y, -fxNdir.x));
+    vec2 fxRidge = vec2(fxNdir.y, -fxNdir.x) * sign(fxAcr) * .5 * fxNd;
+    normal = normalize(mat3(vTx, vTy, vTz) * normalize(fxNt + vec3(fxRidge, 0.)));`,
+  surface: 'roughnessFactor = mix(.4, .2, fxMet); metalnessFactor = mix(.2, .9, fxMet);',
+  emissive: 'totalEmissiveRadiance = fxCol * .03;',
+};
+B.compass = {
+  // 몸통은 결 따라 깎은 황동 함
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .3; metalnessFactor = .9;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -7080,6 +7161,7 @@ export const MOVING = new Set([
   'theremin',
   'seismograph',
   'sonar',
+  'compass',
 ]);
 
 /**
