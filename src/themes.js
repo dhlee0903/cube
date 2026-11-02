@@ -465,33 +465,6 @@ export const THEMES = [
     ambient: { mode: 'float', shape: 'glow', colors: ['#BFE3FF', '#7FB8FF', '#FFFFFF'], count: 50, size: 0.06, speed: 1.4, opacity: 0.8, additive: true },
     burst: { shape: 'streak', colors: ['#FFFFFF', '#9FD4FF', '#5C9DFF'], size: 0.1, speed: 5, gravity: 0, drag: 4.5, life: 0.4, additive: true },
   },
-  {
-    // 고전압 실험실. 다 맞추면 면 하나가 테슬라 코일 2차 권선의 한 토막이다. 에나멜 입힌 구리선이 촘촘히 감겨 한 가닥씩 솟았고,
-    // 이따금 보랏빛 번개가 면 위로 탁 튀어 갈라지며 지나간 자리의 선이 달아오른다. 가장자리엔 코로나. 에나멜 빛깔이 곧 면 색
-    id: 'tesla',
-    name: '테슬라 코일',
-    bg: '#07060C',
-    ink: '#E8E4FF',
-    backdrop: [
-      'radial-gradient(40% 30% at 50% 50%, rgba(140,110,255,.18), transparent 70%)',
-      'repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 6px)',
-      'radial-gradient(80% 65% at 50% 45%, #15122A, #030206)',
-    ].join(', '),
-    form: { bevel: 0.06, size: 0.95, radius: 0.06, grid: 56 },
-    body: { color: '#1A1820', roughness: 0.35, metalness: 0.5 },
-    faces: ['#C87533', '#B83226', '#2E8A4A', '#2E58B0', '#D8B13A', '#B8BCC4'],
-    lights: {
-      sky: '#e8e4ff', ground: '#100818', hemi: 0.8,
-      key: ['#ffffff', 2.0, [-4, 6, 5]], fill: ['#9a80ff', 0.5, [6, 0, 3]], rim: ['#c0a8ff', 1.2, [2, 4, -6]],
-    },
-    env: 0.9,
-    flicker: 'lightning',
-    ambient: { mode: 'float', shape: 'glow', colors: ['#B8A0FF', '#FFFFFF'], count: 20, size: 0.03, speed: 0.3, opacity: 0.6, additive: true },
-    burst: { shape: 'streak', colors: ['#E0D0FF', '#FFFFFF', '#9A7CFF'], size: 0.14, speed: 3, gravity: 0, drag: 2.6, life: 0.5, additive: true },
-    surface: 'tesla',
-    sound: 'electric',
-    motion: 'snap',
-  },
 
   {
     // 정육점 갈고리에 걸린 덩어리처럼, 그런데 아직 살아 있다. 울퉁불퉁 솟은 생살, 고름 주머니,
@@ -851,7 +824,8 @@ export const THEMES = [
     sound: 'candy',
     motion: 'bouncy',
     burst: { shape: 'square', colors: 'faces', size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
-  },  {
+  },
+  {
     // 버스 행선판 같은 플립닷 판. 칸마다 한쪽은 형광 노랑, 한쪽은 검정인 원판이 축에 매달려 뒤집힌다.
     // 두 색뿐이라 면은 블록 속 그림으로 갈린다(민무늬, 안쪽 테, 가운데 네모, 빗금, 네 칸, 가로줄). 원판 아래로 그림자
     id: 'flipdot',
@@ -1065,7 +1039,8 @@ export const THEMES = [
     sound: 'pixel',
     motion: 'stepped',
     burst: { shape: 'square', colors: ['#FF1818', '#9A0000'], size: 0.1, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
-  },  {
+  },
+  {
     // 큐브로 그린 큐브. 진짜 큐브 수백 개를 벽에 붙여 만든 모자이크처럼, 3×3 칸이 큐브 하나이고 칸마다 큐브 여섯 색 가운데
     // 하나를 고른다. 큐브 둘레는 검은 테가 두껍고 큐브마다 살짝 기울어 빛이 다르다
     id: 'cubemosaic',
@@ -1258,7 +1233,8 @@ export const THEMES = [
     sound: 'electric',
     motion: 'smooth',
     burst: { shape: 'glow', colors: ['#5CFF6A', '#E8FFE8'], size: 0.08, speed: 2.4, gravity: -6, drag: 0.8, life: 1 },
-  },  {
+  },
+  {
     // 복셀. 화소 하나가 작은 정육면체 하나라, 앞면 위로 밝은 윗면, 옆으로 어두운 옆면이 보여 그림 전체가
     // 깍둑깍둑 쌓은 블록처럼 도톰하다. 채널마다 여섯 단 색, 블록 사이엔 가는 그늘
     id: 'voxel',
@@ -1279,9 +1255,6 @@ export const THEMES = [
     motion: 'snap',
     burst: { shape: 'square', colors: 'faces', size: 0.12, speed: 2.6, gravity: -8, drag: 0.6, life: 1 },
   },
-
-
-
 
   {
     // 화실의 유화. 장면 전체를 넓적한 붓질로 다시 칠한다. 붓질은 색이 바뀌는 경계를 따라 길게 눕고 끝이 뭉툭하며,
@@ -1782,34 +1755,7 @@ export const THEMES = [
     ],
     burst: { shape: 'glow', colors: ['#FFFFFF', '#F2EEE6'], size: 0.42, speed: 1.4, gravity: 0.6, drag: 1.8, life: 1.3, opacity: 0.28 },
   },
-  {
-    // 벌통에서 막 꺼낸 벌집. 칸이 실제로 패여 꽃꿀(라벤더, 벚꽃, 아카시아, 오렌지꽃, 보리수, 블루베리)이
-    // 고여 빛나고, 몇 칸은 밀랍 뚜껑, 넘친 꿀이 흘러내린다. 벌이 기어다니고 맴돈다. 꿀처럼 끈적하게 돈다
-    id: 'honey',
-    name: '벌집',
-    bg: '#2A1704',
-    ink: '#FFEFCF',
-    backdrop: [
-      `${svg(52, 90, "<g fill='none' stroke='rgba(255,200,90,.14)' stroke-width='2'><path d='M13 0 L26 7.5 L26 22.5 L13 30 L0 22.5 L0 7.5Z M39 22.5 L52 30 L52 45 L39 52.5 L26 45 L26 30Z M13 45 L26 52.5 L26 67.5 L13 75 L0 67.5 L0 52.5Z M39 67.5 L52 75 L52 90 M26 90 L26 75'/></g>", 'xMidYMid meet')} 0 0 / 52px 90px`,
-      'radial-gradient(55% 45% at 50% 42%, #7A4A0C 0%, #3E2306 60%, #1E1003 100%)',
-    ].join(', '),
-    drift: 'radial-gradient(40% 32% at 50% 42%, rgba(255,190,60,.18), transparent 70%)',
-    form: { bevel: 0.05, size: 0.92, radius: 0.05, grid: 48 },
-    body: { color: '#6A4420', roughness: 0.7 },
-    faces: ['#9B6BD6', '#D8405A', '#F3E6B0', '#F08A24', '#9CC23A', '#3E5FB8'],
-    lights: {
-      sky: '#ffe0a0', ground: '#3a2208', hemi: 1.8,
-      key: ['#fff0c8', 2.4, [-3, 6, 5]], fill: ['#ffb040', 0.6, [6, -1, 3]], rim: ['#ffd070', 1.4, [0, 3, -6]],
-    },
-    surface: 'honey',
-    sound: 'squish',
-    motion: 'heavy',
-    ambient: [
-      { mode: 'buzz', shape: 'bee', colors: ['#F5C21B'], count: 7, size: 0.18, speed: 1.1, opacity: 1 },
-      { mode: 'float', shape: 'glow', colors: ['#FFD36A'], count: 20, size: 0.06, speed: 0.3, opacity: 0.5, additive: true },
-    ],
-    burst: { shape: 'drip', colors: ['#F5B21B', '#E89A10', '#FFD36A'], size: 0.09, speed: 1.8, gravity: -6, drag: 1.4, life: 1.3 },
-  },
+
   {
     // 들판 한가운데. 다 맞추면 면 하나가 위에서 내려다본 풀밭 한 뙈기다. 끝이 뾰족한 풀잎이 겹겹이 눕고, 잎맥이 서고, 이슬이 맺혔다.
     // 면마다 풀이 다르다(잔디, 가을 억새빛, 푸른 김의털, 붉은 띠, 보랏빛 수크령, 서리 내린 풀)
@@ -2009,32 +1955,30 @@ export const THEMES = [
     burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: -1, drag: 2.6, life: 1.4 },
   },
   {
-    // 자연사 박물관 진열장. 화석이 실제로 도드라진 돌판. 면마다 돌과 화석이 다르다: 봉합선이 고사리잎처럼 주름진
-    // 암모나이트와 조각조각 비치는 암몰라이트(셰일), 미간 돌기와 겹눈, 볼가시, 마디가 또렷한 삼엽충(석회암),
-    // 깃이 엇갈린 탄화된 고사리(청회색 셰일), 뼈마디가 보이는 작은 청어(크림빛 석회암과 검은 수지상 무늬),
-    // 다섯 꽃잎과 숨구멍 줄의 성게(사문석), 진흙이 밀려 올라온 공룡 발자국(갈라진 붉은 사암)
-    id: 'fossil',
-    name: '화석',
-    bg: '#18221F',
-    ink: '#E8E2D2',
+    // 군용 천막 안. 위장 무늬 천을 씌운 큐브. 다 맞추면 면마다 한 장으로 이어진다(숲, 사막, 디지털 바다, 사냥용 주황,
+    // 분홍, 설원). 능직 천의 비스듬한 결, 기계처럼 딱딱 돈다
+    id: 'camo',
+    name: '카모',
+    bg: '#3A3A2C',
+    ink: '#ECE8D8',
     backdrop: [
-      'linear-gradient(transparent 82%, #2A2620 82%, #1C1915 100%)',
-      'radial-gradient(34% 62% at 50% -4%, rgba(255,236,200,.4), rgba(255,236,200,.08) 55%, transparent 75%)',
-      'linear-gradient(#22302B, #18221F 80%)',
+      'repeating-linear-gradient(45deg, rgba(0,0,0,.06) 0 2px, transparent 2px 5px)',
+      'repeating-linear-gradient(-45deg, rgba(255,255,255,.03) 0 2px, transparent 2px 5px)',
+      'radial-gradient(70% 55% at 50% 40%, #4E4E3A, #24241A)',
     ].join(', '),
-    form: { bevel: 0.05, size: 0.9, radius: 0.05, grid: 44 },
-    body: { color: '#1E1E20', roughness: 0.85 },
-    faces: ['#5A524E', '#C8A878', '#8EA4BE', '#ECE2C8', '#7A9A7A', '#A8503A'],
+    form: { bevel: 0.07, size: 0.94, radius: 0.06 },
+    body: { color: '#2E3328', roughness: 0.9 },
+    faces: ['#4A7A3A', '#C8A870', '#2A5AA8', '#F07A1E', '#E070A8', '#E8ECEE'],
     lights: {
-      sky: '#fff2dc', ground: '#2a2a24', hemi: 1.6,
-      key: ['#fff0d8', 3, [0, 9, 3]], fill: ['#c8d8ff', 0.3, [6, -1, 4]], rim: ['#ffffff', 0.9, [3, 3, -6]],
+      sky: '#f4f0dc', ground: '#2a2a1a', hemi: 1.6,
+      key: ['#fff4dc', 1.8, [-4, 6, 5]], fill: ['#d8e0c0', 0.4, [6, 0, 3]], rim: ['#ffffff', 0.6, [0, 4, -6]],
     },
-    surface: 'fossil',
-    sound: 'stone',
-    motion: 'heavy',
-    ambient: { mode: 'float', shape: 'dot', colors: ['#FFF2D8'], count: 30, size: 0.03, speed: 0.12, opacity: 0.5 },
-    burst: { shape: 'dot', colors: ['#D8CCB4', '#A89878', '#7A6E5A'], size: 0.05, speed: 1.5, gravity: -3, drag: 2.2, life: 1.1 },
+    surface: 'camo',
+    sound: 'cloth',
+    motion: 'mechanical',
+    burst: { shape: 'leaf', colors: ['#4A7A3A', '#6A5A32', '#2A3A1E'], size: 0.15, speed: 1.6, gravity: -1.2, drag: 2.2, life: 1.4 },
   },
+
   {
     // 말랑한 구미 젤리. 실제로 볼록하고 돌리면 출렁출렁, 안에서 비치는 빛과 설탕 알갱이
     id: 'jelly',
@@ -2188,33 +2132,7 @@ export const THEMES = [
     motion: 'snap',
     burst: { shape: 'square', colors: 'faces', size: 0.13, speed: 2.4, gravity: -6, drag: 1, life: 1.1 },
   },
-  {
-    // 공책 귀퉁이 낙서. 줄 공책 위에 마커로 그린 별, 하트, 웃는 얼굴, 나선, 번개, 꽃이
-    // 손그림 애니메이션처럼 1초에 여섯 번 꿈틀거린다. 돌아갈 때도 컷컷이 끊긴다
-    id: 'doodle',
-    name: '낙서',
-    bg: '#F6F2E6',
-    ink: '#1E2A4A',
-    backdrop: [
-      PAPER_GRAIN,
-      'linear-gradient(90deg, transparent 9vw, rgba(220,60,60,.45) 9vw, rgba(220,60,60,.45) calc(9vw + 2px), transparent calc(9vw + 2px))',
-      'repeating-linear-gradient(180deg, transparent 0 31px, rgba(90,140,210,.35) 31px 32px)',
-      '#F6F2E6',
-    ].join(', '),
-    form: { bevel: 0.06, size: 0.9, radius: 0.06 },
-    body: { color: '#C8B48A', roughness: 0.9 },
-    faces: ['#E8343A', '#E0408A', '#2A6AE0', '#20A060', '#F0A020', '#7A40C8'],
-    lights: {
-      sky: '#ffffff', ground: '#c8c0b0', hemi: 2.4,
-      key: ['#ffffff', 1.2, [-3, 6, 5]], fill: ['#ffffff', 0.4, [6, 0, 3]], rim: ['#ffffff', 0.3, [0, 4, -6]],
-    },
-    haloMode: 'shadow',
-    halo: 0.18,
-    surface: 'doodle',
-    sound: 'paper',
-    motion: 'stop',
-    burst: { shape: 'star', colors: 'faces', size: 0.17, speed: 2.2, gravity: -1, drag: 2.4, life: 0.8 },
-  },
+
   {
     // 카지노 초록 펠트 위 주사위. 칸마다 진짜 주사위 눈이 움푹 파여 있고, 마주 보는 면을 더하면 7.
     // 놋쇠 몸통, 데굴 구르듯 튀며 돈다
@@ -2530,53 +2448,6 @@ export const THEMES = [
     motion: 'heavy',
     ambient: { mode: 'float', shape: 'star', colors: ['#FFFFFF'], count: 18, size: 0.05, speed: 0.25, opacity: 0.6, additive: true },
     burst: { shape: 'square', colors: 'faces', size: 0.08, speed: 2.2, gravity: -4, drag: 1.2, life: 1.1 },
-  },
-  {
-    // 군용 천막 안. 위장 무늬 천을 씌운 큐브. 다 맞추면 면마다 한 장으로 이어진다(숲, 사막, 디지털 바다, 사냥용 주황,
-    // 분홍, 설원). 능직 천의 비스듬한 결, 기계처럼 딱딱 돈다
-    id: 'camo',
-    name: '카모',
-    bg: '#3A3A2C',
-    ink: '#ECE8D8',
-    backdrop: [
-      'repeating-linear-gradient(45deg, rgba(0,0,0,.06) 0 2px, transparent 2px 5px)',
-      'repeating-linear-gradient(-45deg, rgba(255,255,255,.03) 0 2px, transparent 2px 5px)',
-      'radial-gradient(70% 55% at 50% 40%, #4E4E3A, #24241A)',
-    ].join(', '),
-    form: { bevel: 0.07, size: 0.94, radius: 0.06 },
-    body: { color: '#2E3328', roughness: 0.9 },
-    faces: ['#4A7A3A', '#C8A870', '#2A5AA8', '#F07A1E', '#E070A8', '#E8ECEE'],
-    lights: {
-      sky: '#f4f0dc', ground: '#2a2a1a', hemi: 1.6,
-      key: ['#fff4dc', 1.8, [-4, 6, 5]], fill: ['#d8e0c0', 0.4, [6, 0, 3]], rim: ['#ffffff', 0.6, [0, 4, -6]],
-    },
-    surface: 'camo',
-    sound: 'cloth',
-    motion: 'mechanical',
-    burst: { shape: 'leaf', colors: ['#4A7A3A', '#6A5A32', '#2A3A1E'], size: 0.15, speed: 1.6, gravity: -1.2, drag: 2.2, life: 1.4 },
-  },  {
-    // 직소 퍼즐. 면 하나가 퍼즐 한 판이고 칸마다 꼭지 달린 조각 네 개가 끼워져 있다. 다 맞추면 면 전체 조각이 맞물리고,
-    // 섞으면 칸 가장자리에서 꼭지가 어긋난다. 조각 사이 골이 패여 판지 속살이 보이고 조각마다 살짝 들떴다
-    id: 'jigsaw',
-    name: '직소 퍼즐',
-    bg: '#14302A',
-    ink: '#F0F4F0',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 25%, rgba(120,200,170,.18), transparent 70%)',
-      'linear-gradient(180deg, #1E4A3E, #0C1C18)',
-    ].join(', '),
-    form: { bevel: 0.05, size: 0.95, radius: 0.03, grid: 56 },
-    body: { color: '#3A342C', roughness: 0.85 },
-    faces: ['#E8402E', '#2E64D8', '#F2C828', '#2EA050', '#F2F0EA', '#F08A1E'],
-    lights: {
-      sky: '#fff6ec', ground: '#203028', hemi: 1.3,
-      key: ['#fff4e6', 2.6, [-4, 6, 5]], fill: ['#c8e0ff', 0.45, [6, -1, 3]], rim: ['#ffffff', 1, [2, 3, -6]],
-    },
-    env: 0.35,
-    surface: 'jigsaw',
-    sound: 'paper',
-    motion: 'snap',
-    burst: { shape: 'square', colors: 'faces', size: 0.12, speed: 2.4, gravity: -8, drag: 0.6, life: 1 },
   },
 
   {
@@ -3072,29 +2943,7 @@ export const THEMES = [
     sound: 'crystal',
     motion: 'mechanical',
   },
-  {
-    // 광물 진열장의 갈아 낸 광석. 다 맞추면 면마다 한 판이다. 공작석(초록 눈알 무늬), 능망간석(분홍과 흰 물결 띠),
-    // 남동석(짙은 파랑 덩이 띠), 호안석(빛줄이 미끄러지는 금빛 섬유), 적철석(은빛 띠와 붉은 벽옥), 라리마(하늘빛에 흰 그물)
-    id: 'banded',
-    name: '줄무늬 광석',
-    bg: '#16141A',
-    ink: '#F0E8F4',
-    backdrop: [
-      'radial-gradient(45% 35% at 50% 35%, rgba(255,240,220,.12), transparent 70%)',
-      'linear-gradient(180deg, #22202A, #0C0B10)',
-    ].join(', '),
-    form: { bevel: 0.06, size: 0.94, radius: 0.05, depth: 0.02 },
-    body: { color: '#6A5040', roughness: 0.5 },
-    faces: ['#2A9A5A', '#E0708A', '#2A4AB0', '#C8902A', '#4A4A52', '#7AC8E0'],
-    lights: {
-      sky: '#fff4e4', ground: '#3a2a1a', hemi: 1.2,
-      key: ['#fff0dc', 2.2, [-4, 6, 5]], fill: ['#ffc890', 0.4, [6, 0, 3]], rim: ['#ffffff', 1.2, [2, 4, -6]],
-    },
-    burst: { shape: 'square', colors: 'faces', size: 0.08, speed: 2.2, gravity: -4, drag: 1.2, life: 1.1 },
-    surface: 'banded',
-    sound: 'stone',
-    motion: 'heavy',
-  },
+
   {
     // 사바나의 털가죽. 다 맞추면 면마다 동물 한 마리의 옆구리다. 짧고 촘촘한 털 위로 호랑이 줄무늬, 얼룩말 줄무늬,
     // 표범 매화 무늬, 기린 그물 무늬, 흑소 얼룩, 그리고 비단뱀 비늘
@@ -3543,276 +3392,6 @@ export const THEMES = [
   },
 
   {
-    // 바닷속 산호초. 관 모양 폴립이 다닥다닥 솟고 컵 속 촉수가 형광으로 빛나며 천천히 숨 쉰다
-    id: 'coral',
-    name: '산호',
-    bg: '#0A2A3A',
-    ink: '#E0F4FF',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 20%, rgba(160,230,255,.25), transparent 70%)',
-      'linear-gradient(180deg, #0E4A5E, #04141E)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.12, grid: 48 },
-    body: { color: '#2A2622', roughness: 0.8 },
-    faces: ['#F07A30', '#9A4AC8', '#F06A9A', '#8AD040', '#F2D23A', '#4AB8E8'],
-    lights: {
-      sky: '#a8e0ff', ground: '#0a2030', hemi: 1.6,
-      key: ['#e8f8ff', 2.3, [-3, 7, 4]], fill: ['#40a0c0', 0.6, [5, -1, 3]], rim: ['#80e0ff', 1, [0, 4, -6]],
-    },
-    ambient: { mode: 'rise', shape: 'bubble', colors: ['#CFF4FF'], count: 26, size: 0.1, speed: 0.3, opacity: 0.7 },
-    surface: 'coral',
-    sound: 'water',
-    motion: 'fluid',
-    burst: { shape: 'bubble', colors: ['#DFFAFF'], size: 0.12, speed: 1.6, gravity: 2.4, drag: 1.8, life: 1.4, opacity: 0.9 },
-  },
-  {
-    // 물 빠진 갯바위. 크고 작은 따개비가 화산처럼 솟아 다닥다닥 붙었다
-    id: 'barnacle',
-    name: '따개비',
-    bg: '#3A4A52',
-    ink: '#F2EEE6',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 20%, rgba(255,255,255,.18), transparent 70%)',
-      'linear-gradient(180deg, #6A7A80, #2A363C)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.12, grid: 48 },
-    body: { color: '#2A2624', roughness: 0.5 },
-    faces: ['#E8E4DC', '#E8A0A8', '#E8D060', '#7A8AA0', '#5A8A4A', '#7A2A30'],
-    lights: {
-      sky: '#ffffff', ground: '#6a6058', hemi: 1.7,
-      key: ['#fff4e2', 2.4, [-3, 7, 5]], fill: ['#d8e4ff', 0.45, [5, 0, 4]], rim: ['#ffffff', 0.8, [0, 3, -6]],
-    },
-    surface: 'barnacle',
-    sound: 'stone',
-    motion: 'heavy',
-    burst: { shape: 'dot', colors: 'faces', size: 0.06, speed: 1.8, gravity: -4, drag: 1.6, life: 0.9 },
-  },
-  {
-    // 모래 위 성게 껍데기. 칸마다 둥근 껍데기가 솟고 다섯 갈래 띠와 돌기가 줄지었다
-    id: 'urchin',
-    name: '성게',
-    bg: '#1E3A4A',
-    ink: '#F2EEE6',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 20%, rgba(200,240,255,.2), transparent 70%)',
-      'linear-gradient(180deg, #2E5A6E, #0E1E28)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.12, grid: 48 },
-    body: { color: '#5A5048', roughness: 0.85 },
-    faces: ['#8A4AA8', '#5AA05A', '#F0A0B8', '#F2EEE6', '#C83A3A', '#E8902A'],
-    lights: {
-      sky: '#a8e0ff', ground: '#0a2030', hemi: 1.6,
-      key: ['#e8f8ff', 2.3, [-3, 7, 4]], fill: ['#40a0c0', 0.6, [5, -1, 3]], rim: ['#80e0ff', 1, [0, 4, -6]],
-    },
-    surface: 'urchin',
-    sound: 'ceramic',
-    motion: 'smooth',
-    burst: { shape: 'dot', colors: 'faces', size: 0.06, speed: 1.8, gravity: -4, drag: 1.6, life: 0.9 },
-  },
-  {
-    // 문어 다리 안쪽. 빨판이 다닥다닥 솟아 한쪽으로 작아지고, 살갗은 점액으로 번들거린다
-    id: 'suckers',
-    name: '빨판',
-    bg: '#140A10',
-    ink: '#F2DCDC',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 20%, rgba(255,160,160,.15), transparent 70%)',
-      'linear-gradient(180deg, #3A1A24, #0A0408)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.12, grid: 48 },
-    body: { color: '#3A1A1A', roughness: 0.25 },
-    faces: ['#C83A2A', '#7A3A8A', '#E8803A', '#F0A0A8', '#8A7A6A', '#3A6A9A'],
-    lights: {
-      sky: '#ffe8e0', ground: '#200808', hemi: 1.3,
-      key: ['#fff0e8', 2.4, [-3, 7, 5]], fill: ['#ff8070', 0.5, [5, 0, 4]], rim: ['#ffd0c0', 1, [0, 3, -6]],
-    },
-    surface: 'suckers',
-    sound: 'squish',
-    motion: 'squish',
-    burst: { shape: 'drip', colors: ['#F0C8C8', '#FFFFFF'], size: 0.06, speed: 1.6, gravity: -6, drag: 1.2, life: 1 },
-  },
-  {
-    // 바닷속 말미잘. 칸마다 한 송이가 피어 굵은 촉수가 두 겹으로 뻗고 물살에 흔들린다
-    id: 'anemone',
-    name: '말미잘',
-    bg: '#06141E',
-    ink: '#D8F4FF',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 20%, rgba(120,220,255,.22), transparent 70%)',
-      'linear-gradient(180deg, #0A3040, #02080C)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.12, grid: 48 },
-    body: { color: '#1A2028', roughness: 0.8 },
-    faces: ['#4AC860', '#F06AA8', '#9A5AE0', '#F09030', '#30C8C0', '#F0F0F0'],
-    lights: {
-      sky: '#a8e0ff', ground: '#0a2030', hemi: 1.6,
-      key: ['#e8f8ff', 2.3, [-3, 7, 4]], fill: ['#40a0c0', 0.6, [5, -1, 3]], rim: ['#80e0ff', 1, [0, 4, -6]],
-    },
-    ambient: { mode: 'rise', shape: 'bubble', colors: ['#CFF4FF'], count: 26, size: 0.1, speed: 0.3, opacity: 0.7 },
-    surface: 'anemone',
-    sound: 'water',
-    motion: 'fluid',
-    burst: { shape: 'bubble', colors: ['#DFFAFF'], size: 0.1, speed: 1.6, gravity: 2.4, drag: 1.8, life: 1.4, opacity: 0.9 },
-  },
-  {
-    // 벨벳 위 진주 더미. 둥근 알이 빽빽이 솟고 진주층이 무지갯빛으로 아른거린다
-    id: 'pearl',
-    name: '진주',
-    bg: '#120E1A',
-    ink: '#F2ECE4',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 20%, rgba(255,240,230,.18), transparent 70%)',
-      'linear-gradient(180deg, #2A2238, #08060C)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.12, grid: 48 },
-    body: { color: '#1A1424', roughness: 0.9 },
-    faces: ['#F2F0EA', '#F0B0B8', '#D8B048', '#3A4A48', '#8AA0C8', '#F0A878'],
-    lights: {
-      sky: '#ffffff', ground: '#6a6058', hemi: 1.7,
-      key: ['#fff4e2', 2.4, [-3, 7, 5]], fill: ['#d8e4ff', 0.45, [5, 0, 4]], rim: ['#ffffff', 0.8, [0, 3, -6]],
-    },
-    env: 1.0,
-    surface: 'pearl',
-    sound: 'ceramic',
-    motion: 'smooth',
-    burst: { shape: 'star', colors: ['#FFFFFF', '#FFE8F0'], size: 0.08, speed: 1.6, gravity: -2, drag: 2, life: 0.8, additive: true },
-  },
-  {
-    // 사막 온실. 세로 이랑이 볼록볼록 솟고 이랑을 따라 솜털 자리와 별 모양 가시
-    id: 'cactus',
-    name: '선인장',
-    bg: '#E8D8B8',
-    ink: '#3A2A1A',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 20%, rgba(255,250,220,.6), transparent 70%)',
-      'linear-gradient(180deg, #F2E4C4, #D8B888)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.12, grid: 48 },
-    body: { color: '#5A4A3A', roughness: 0.9 },
-    faces: ['#4A8A3A', '#5AA8A0', '#C8A838', '#8A6AB0', '#D8503A', '#E8E4D4'],
-    lights: {
-      sky: '#ffffff', ground: '#6a6058', hemi: 1.7,
-      key: ['#fff4e2', 2.4, [-3, 7, 5]], fill: ['#d8e4ff', 0.45, [5, 0, 4]], rim: ['#ffffff', 0.8, [0, 3, -6]],
-    },
-    surface: 'cactus',
-    sound: 'nature',
-    motion: 'heavy',
-    burst: { shape: 'dot', colors: 'faces', size: 0.06, speed: 1.8, gravity: -4, drag: 1.6, life: 0.9 },
-  },
-  {
-    // 창가 화분. 칸마다 에케베리아 한 포기가 장미처럼 솟아 도톰한 잎이 겹겹이 돈다
-    id: 'succulent',
-    name: '다육',
-    bg: '#EDE8E0',
-    ink: '#2A2A2A',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 20%, rgba(255,255,255,.7), transparent 70%)',
-      'linear-gradient(180deg, #F6F2EC, #DCD4C8)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.12, grid: 48 },
-    body: { color: '#6A5A4A', roughness: 0.9 },
-    faces: ['#7A9AA8', '#E8A0B0', '#9AC85A', '#7A5A9A', '#E8D060', '#4A8A50'],
-    lights: {
-      sky: '#ffffff', ground: '#6a6058', hemi: 1.7,
-      key: ['#fff4e2', 2.4, [-3, 7, 5]], fill: ['#d8e4ff', 0.45, [5, 0, 4]], rim: ['#ffffff', 0.8, [0, 3, -6]],
-    },
-    surface: 'succulent',
-    sound: 'nature',
-    motion: 'smooth',
-    burst: { shape: 'dot', colors: 'faces', size: 0.06, speed: 1.8, gravity: -4, drag: 1.6, life: 0.9 },
-  },
-  {
-    // 숲 바닥. 칸마다 버섯 갓 몇 개가 둥글게 솟고 사마귀 점이 도톰하다
-    id: 'mushroom',
-    name: '버섯',
-    bg: '#1E2418',
-    ink: '#E8E4D0',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 20%, rgba(220,255,180,.15), transparent 70%)',
-      'linear-gradient(180deg, #2E3A24, #0E120A)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.12, grid: 48 },
-    body: { color: '#3A2A1A', roughness: 0.9 },
-    faces: ['#D8302A', '#8A5A32', '#EEE8DC', '#E8B830', '#7A4A9A', '#E8702A'],
-    lights: {
-      sky: '#ffffff', ground: '#6a6058', hemi: 1.7,
-      key: ['#fff4e2', 2.4, [-3, 7, 5]], fill: ['#d8e4ff', 0.45, [5, 0, 4]], rim: ['#ffffff', 0.8, [0, 3, -6]],
-    },
-    ambient: { mode: 'float', shape: 'glow', colors: ['#E8FFC0', '#FFFFFF'], count: 24, size: 0.06, speed: 0.25, opacity: 0.7, additive: true },
-    surface: 'mushroom',
-    sound: 'squish',
-    motion: 'squish',
-    burst: { shape: 'dot', colors: 'faces', size: 0.06, speed: 1.8, gravity: -4, drag: 1.6, life: 0.9 },
-  },
-  {
-    // 솔숲. 나무질 비늘이 나선으로 겹겹이 포개져 끝이 들렸다
-    id: 'pinecone',
-    name: '솔방울',
-    bg: '#E8E0D0',
-    ink: '#2A1E14',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 20%, rgba(255,255,240,.6), transparent 70%)',
-      'linear-gradient(180deg, #F2ECE0, #D4C8B4)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.12, grid: 48 },
-    body: { color: '#E8DCC8', roughness: 0.8 },
-    faces: ['#8A5A2E', '#4A2E1A', '#B84A3A', '#8A8478', '#5A7A3A', '#C89A40'],
-    lights: {
-      sky: '#ffffff', ground: '#6a6058', hemi: 1.7,
-      key: ['#fff4e2', 2.4, [-3, 7, 5]], fill: ['#d8e4ff', 0.45, [5, 0, 4]], rim: ['#ffffff', 0.8, [0, 3, -6]],
-    },
-    surface: 'pinecone',
-    sound: 'wood',
-    motion: 'heavy',
-    burst: { shape: 'dot', colors: 'faces', size: 0.06, speed: 1.8, gravity: -4, drag: 1.6, life: 0.9 },
-  },
-  {
-    // 축축한 숲 바위. 이끼 방석이 몽글몽글 솟고 홀씨주머니가 맺혔다
-    id: 'moss',
-    name: '이끼',
-    bg: '#1A2418',
-    ink: '#DCEAD0',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 20%, rgba(200,255,180,.18), transparent 70%)',
-      'linear-gradient(180deg, #2A3A24, #0A100A)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.12, grid: 48 },
-    body: { color: '#4A4A40', roughness: 0.9 },
-    faces: ['#2E6A2A', '#8AC040', '#C8A030', '#B8402A', '#9AB0A0', '#2A8A80'],
-    lights: {
-      sky: '#ffffff', ground: '#6a6058', hemi: 1.7,
-      key: ['#fff4e2', 2.4, [-3, 7, 5]], fill: ['#d8e4ff', 0.45, [5, 0, 4]], rim: ['#ffffff', 0.8, [0, 3, -6]],
-    },
-    ambient: { mode: 'float', shape: 'dot', colors: ['#F2FFE0'], count: 30, size: 0.03, speed: 0.2, opacity: 0.6 },
-    surface: 'moss',
-    sound: 'nature',
-    motion: 'smooth',
-    burst: { shape: 'dot', colors: 'faces', size: 0.06, speed: 1.8, gravity: -4, drag: 1.6, life: 0.9 },
-  },
-  {
-    // 아름드리 고목. 세로로 긴 껍질 판이 두껍게 솟고 판 사이로 깊은 골이 갈라졌다
-    id: 'bark',
-    name: '나무껍질',
-    bg: '#2A2218',
-    ink: '#EDE4D4',
-    backdrop: [
-      'radial-gradient(60% 45% at 50% 20%, rgba(255,240,200,.2), transparent 70%)',
-      'linear-gradient(180deg, #3A3024, #140E0A)',
-    ].join(', '),
-    form: { bevel: 0.08, size: 0.94, radius: 0.12, grid: 48 },
-    body: { color: '#14100C', roughness: 0.9 },
-    faces: ['#8A8680', '#9A4A2A', '#5A3A48', '#E8E4DA', '#5A7A40', '#D89A48'],
-    lights: {
-      sky: '#ffffff', ground: '#6a6058', hemi: 1.7,
-      key: ['#fff4e2', 2.4, [-3, 7, 5]], fill: ['#d8e4ff', 0.45, [5, 0, 4]], rim: ['#ffffff', 0.8, [0, 3, -6]],
-    },
-    surface: 'bark',
-    sound: 'wood',
-    motion: 'heavy',
-    burst: { shape: 'dot', colors: 'faces', size: 0.06, speed: 1.8, gravity: -4, drag: 1.6, life: 0.9 },
-  },
-
-  {
     // 조각 하나가 어금니 하나. 교두 다섯이 솟은 치관이 번들거리는 잇몸에 박혔다
     id: 'teeth',
     name: '이빨',
@@ -3835,7 +3414,6 @@ export const THEMES = [
     motion: 'squish',
     burst: { shape: 'flake', colors: ['#F4EEE0', '#E8D8B8', '#C02028'], size: 0.06, speed: 2, gravity: -7, drag: 1, life: 1 },
   },
-
 
   {
     // 쪼갠 정동 속. 뾰족한 육각 결정이 빽빽이 솟아 각지게 번쩍인다
@@ -3890,14 +3468,12 @@ export const themeById = (id) => THEMES.find((t) => t.id === id);
 
 // 테마 고르는 목록에서 묶어 보여 주는 무리. 테마는 모두 한 무리에만 들어간다(테스트가 본다)
 export const GROUPS = [
-  { name: '기본', themes: ['classic', 'candy', 'brick', 'dice', 'jelly', 'clay', 'bubblewrap', 'paper', 'box', 'doodle', 'slime'] },
-  { name: '자연', themes: ['forest', 'grass', 'soil', 'timber', 'pebble', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert', 'honey'] },
-  { name: '바다', themes: ['coral', 'barnacle', 'urchin', 'suckers', 'anemone', 'pearl'] },
-  { name: '식물', themes: ['cactus', 'succulent', 'mushroom', 'pinecone', 'moss', 'bark'] },
-  { name: '빛·불', themes: ['neon', 'lava', 'electric', 'tesla', 'disco', 'lavalamp', 'kaleido'] },
+  { name: '기본', themes: ['classic', 'candy', 'brick', 'dice', 'jelly', 'clay', 'bubblewrap', 'paper', 'box', 'slime'] },
+  { name: '자연', themes: ['forest', 'grass', 'soil', 'timber', 'pebble', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert'] },
+  { name: '빛·불', themes: ['neon', 'lava', 'electric', 'disco', 'lavalamp', 'kaleido'] },
   { name: '우주', themes: ['space', 'planet', 'blackhole', 'nebula', 'galaxy'] },
-  { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'fossil', 'bismuth', 'banded', 'druze', 'pave'] },
-  { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'camo', 'jigsaw'] },
+  { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'bismuth', 'druze', 'pave'] },
+  { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'camo'] },
   { name: '문양', themes: ['arabesque', 'artdeco', 'celtic', 'aztec', 'paisley', 'kkotsal', 'guilloche', 'quilt', 'lantern', 'carpet'] },
   { name: '패턴', themes: ['houndstooth', 'glencheck', 'herringbone', 'gingham', 'argyle', 'swissdot', 'chevron', 'tartan'] },
   { name: '판타지', themes: ['dragon', 'phoenix', 'mithril', 'damascus', 'fairywing', 'dragonegg'] },
