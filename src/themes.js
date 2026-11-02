@@ -3603,6 +3603,27 @@ export const THEMES = [
     motion: 'snap',
     burst: { shape: 'glow', colors: 'faces', size: 0.06, speed: 1.8, gravity: 0, drag: 2, life: 0.5, additive: true },
   },
+  {
+    // 닉시관. 조각 하나가 닉시관 하나다. 유리 돔 속에 철사 숫자 열 개가 깊이를 달리해 겹쳐 서 있고, 켜진 숫자 하나만 면 색 네온으로
+    // 이글거린다. 숫자는 늘 바로 서며 가만두면 몇 초마다 바뀌고, 층을 돌리면 빠르게 뒤섞이며 깜박인다
+    id: 'nixie',
+    name: '닉시관',
+    bg: '#050404',
+    ink: '#F6EEE6',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #1A1210, #030202)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.08, grid: 32 },
+    body: { color: '#141210', roughness: 0.3 },
+    faces: ['#FF3A2A', '#FF8A1A', '#FFD040', '#40F080', '#40A0FF', '#D060FF'],
+    lights: {
+      sky: '#d8d0c8', ground: '#060404', hemi: 0.5,
+      key: ['#fff0e0', 1.2, [-3, 7, 5]], fill: ['#d0c8c0', 0.3, [6, 1, 4]], rim: ['#ffffff', 1, [3, 4, -6]],
+    },
+    env: 0.7,
+    surface: 'nixie',
+    sound: 'electric',
+    motion: 'snap',
+    burst: { shape: 'glow', colors: 'faces', size: 0.06, speed: 1.8, gravity: 0, drag: 2, life: 0.5, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3630,5 +3651,5 @@ export const GROUPS = [
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'chrome', 'fiberoptic', 'ledcube'] },
-  { name: '계기', themes: ['radar', 'clockface', 'oscilloscope', 'theremin', 'seismograph', 'sonar', 'compass', 'vumeter'] },
+  { name: '계기', themes: ['radar', 'clockface', 'oscilloscope', 'theremin', 'seismograph', 'sonar', 'compass', 'vumeter', 'nixie'] },
 ];

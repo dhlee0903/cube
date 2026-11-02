@@ -7213,6 +7213,98 @@ B.vumeter = {
   surface: 'roughnessFactor = .3; metalnessFactor = .9;',
 };
 
+S.nixie = {
+  // 닉시관. 조각 하나가 닉시관 하나를 앞에서 본 모습이다. 유리 돔이 둥글게 솟았고, 속엔 0부터 9까지 굽힌 철사 숫자 열 개가
+  // 깊이를 달리해 겹겹이 서 있어(보는 각도 따라 어긋난다) 꺼진 숫자도 흐린 철사로 비친다. 켜진 숫자 하나만 네온이 둘러싸
+  // 면 색으로 이글거리고, 앞엔 육각 그물 양극, 뒤엔 검은 금속판. 숫자는 늘 바로 서며(화면 아래쪽이 아래), 가만두면 몇 초마다
+  // 바뀌고 층을 돌리면 숫자가 빠르게 뒤섞이며 깜박인다
+  head: `
+    vec2 fxNxUp(vec2 q) { vec2 g = fxGrav; return vec2(dot(q, vec2(-g.y, g.x)), -dot(q, g)); }
+    float fxNxS(vec2 p, vec2 a, vec2 b) { vec2 pa = p - a, ba = b - a; return length(pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0., 1.)); }
+    float fxNxE(vec2 p, vec2 c, vec2 r) { vec2 d = (p - c) / r; return abs(length(d) - 1.) * min(r.x, r.y); }
+    // 굽힌 철사 숫자 d까지 거리(가로 -.35~.35, 세로 -.6~.6)
+    float fxNxD(vec2 p, int d) {
+      if (d == 0) return fxNxE(p, vec2(0.), vec2(.32, .58));
+      if (d == 1) return min(fxNxS(p, vec2(0., -.6), vec2(0., .6)), fxNxS(p, vec2(0., .6), vec2(-.16, .44)));
+      if (d == 2) return min(min(min(fxNxS(p, vec2(-.3, .38), vec2(-.14, .56)), fxNxS(p, vec2(-.14, .56), vec2(.14, .57))),
+                              min(fxNxS(p, vec2(.14, .57), vec2(.3, .38)), fxNxS(p, vec2(.3, .38), vec2(.26, .14)))),
+                          min(fxNxS(p, vec2(.26, .14), vec2(-.32, -.6)), fxNxS(p, vec2(-.32, -.6), vec2(.32, -.6))));
+      if (d == 3) return min(min(min(fxNxS(p, vec2(-.3, .6), vec2(.3, .6)), fxNxS(p, vec2(.3, .6), vec2(0., .12))),
+                              min(fxNxS(p, vec2(0., .12), vec2(.24, .02)), fxNxS(p, vec2(.24, .02), vec2(.32, -.28)))),
+                          min(fxNxS(p, vec2(.32, -.28), vec2(.14, -.58)), fxNxS(p, vec2(.14, -.58), vec2(-.3, -.5))));
+      if (d == 4) return min(min(fxNxS(p, vec2(.15, -.6), vec2(.15, .6)), fxNxS(p, vec2(.15, .6), vec2(-.35, -.2))), fxNxS(p, vec2(-.35, -.2), vec2(.35, -.2)));
+      if (d == 5) return min(min(min(fxNxS(p, vec2(.3, .6), vec2(-.25, .6)), fxNxS(p, vec2(-.25, .6), vec2(-.3, .1))),
+                              min(fxNxS(p, vec2(-.3, .1), vec2(.14, .14)), fxNxS(p, vec2(.14, .14), vec2(.32, -.2)))),
+                          min(fxNxS(p, vec2(.32, -.2), vec2(.14, -.58)), fxNxS(p, vec2(.14, -.58), vec2(-.3, -.5))));
+      if (d == 6) return min(fxNxE(p, vec2(0., -.28), vec2(.3)), fxNxS(p, vec2(.22, .58), vec2(-.28, -.2)));
+      if (d == 7) return min(fxNxS(p, vec2(-.32, .6), vec2(.32, .6)), fxNxS(p, vec2(.32, .6), vec2(-.1, -.6)));
+      if (d == 8) return min(fxNxE(p, vec2(0., .32), vec2(.25, .26)), fxNxE(p, vec2(0., -.27), vec2(.31, .32)));
+      return min(fxNxE(p, vec2(0., .28), vec2(.3)), fxNxS(p, vec2(.28, .2), vec2(-.2, -.6)));
+    }
+    int fxNxCur(float seed) {
+      float t = uTime;
+      float idle = floor(t / 2.3 + seed * 10.);
+      float fast = floor(t * 24.);
+      float k = uCharge > .12 ? fast + seed * 7. : idle;
+      return int(mod(floor(fxH1(k * 1.37 + seed) * 10.), 10.));
+    }
+    float fxNxH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float n = pow(pow(abs(q.x), 6.) + pow(abs(q.y), 6.), 1. / 6.);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.006 + .03 * sqrt(max(0., 1. - n * n)));
+    }`,
+  height: 'fxNxH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ0 = vLocal.xy / uSticker.x;
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVl = vec3(dot(fxV, vTx), dot(fxV, vTy), max(dot(fxV, vTz), .25));
+    vec2 fxSk = fxVl.xy / fxVl.z / uSticker.x;
+    int fxCur = fxNxCur(vSeed);
+    float fxFlick = uCharge > .12 ? .6 + .4 * step(.3, fxH1(floor(uTime * 30.) + vSeed)) : .92 + .08 * sin(uTime * 50. + vSeed * 9.);
+    vec3 fxCol = vec3(0.);
+    vec3 fxGlow = vec3(0.);
+    float fxAA = fwidth(fxQ0.x);
+    for (int k = 0; k < 10; k++) {
+      float dep = .12 + .025 * float(k);
+      vec2 q = fxNxUp(fxQ0 - fxSk * dep) * 1.12;
+      float d = fxNxD(q, k);
+      if (k == fxCur) {
+        fxGlow += fxFc * (exp(-d * d / (.0009 + fxAA * fxAA)) * 1.6 + exp(-d / .045) * .55 + exp(-d / .14) * .18) * fxFlick;
+        fxGlow += vec3(1., .85, .6) * exp(-d * d / (.00025 + fxAA * fxAA)) * .5 * fxFlick;
+      } else {
+        float w = 1. - smoothstep(.006, .012 + fxAA, d);
+        fxCol = mix(fxCol, vec3(.09, .085, .08) * (1. - float(k) * .05), w * .6);
+      }
+    }
+    // 앞 육각 그물 양극
+    vec2 fxHq = fxNxUp(fxQ0 - fxSk * .07) * 14.;
+    vec2 fxHr = vec2(1., 1.7320508);
+    vec2 fxHa = mod(fxHq, fxHr) - fxHr * .5;
+    vec2 fxHb = mod(fxHq - fxHr * .5, fxHr) - fxHr * .5;
+    vec2 fxHg = dot(fxHa, fxHa) < dot(fxHb, fxHb) ? fxHa : fxHb;
+    float fxHex = smoothstep(.36, .46, max(abs(fxHg.x) * .866 + abs(fxHg.y) * .5, abs(fxHg.y)));
+    fxCol = mix(fxCol, vec3(.1), fxHex * .5);
+    fxGlow *= 1. - fxHex * .35;
+    // 뒤 금속판: 켜진 숫자 빛을 받는다
+    fxCol += fxFc * .05;
+    diffuseColor.rgb = fxCol;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxNxH(fxP - vec2(fxE, 0.), vSeed) - fxNxH(fxP + vec2(fxE, 0.), vSeed),
+                               fxNxH(fxP - vec2(0., fxE), vSeed) - fxNxH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = .04; metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxGlow;',
+};
+B.nixie = {
+  // 몸통은 검은 베이클라이트 받침
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .3;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -7237,6 +7329,7 @@ export const MOVING = new Set([
   'sonar',
   'compass',
   'vumeter',
+  'nixie',
 ]);
 
 /**
