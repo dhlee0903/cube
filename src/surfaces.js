@@ -6920,6 +6920,85 @@ B.theremin = {
   surface: 'roughnessFactor = .4;',
 };
 
+S.seismograph = {
+  // 지진계. 조각 하나가 지진계 기록 드럼이다. 면 색 칠 바탕 위에 모눈종이를 감은 드럼이 진짜 원통으로 솟아 누웠고, 종이엔
+  // 지난 기록이 여러 줄 잉크로 그어졌다(가끔 큰 흔들림 자국). 드럼은 천천히 돌아 종이가 흐르고, 황동 펜 팔 끝의 펜이 맨 아래
+  // 줄을 긋는다. 층을 돌릴 때마다 펜이 크게 떨며 큰 진동을 휘갈긴다
+  head: `
+    float fxSgH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      float cy = q.y / .66;
+      float inX = 1. - smoothstep(.76, .8, abs(q.x));
+      float drum = .05 * sqrt(max(0., 1. - cy * cy)) * inX;
+      float axle = .03 * step(.8, abs(q.x)) * step(abs(q.x), .9) * (1. - smoothstep(.1, .14, abs(q.y)));
+      // 펜 팔: 오른쪽 아래에서 드럼 위로
+      vec2 a = vec2(.85, -.85), b = vec2(.05, -.44);
+      vec2 pa = q - a, ba = b - a;
+      float hh = clamp(dot(pa, ba) / dot(ba, ba), 0., 1.);
+      float arm = .028 * (1. - smoothstep(.025, .05, length(pa - ba * hh)));
+      return smoothstep(0., .04, fxEdgeAt(p)) * (.004 + max(max(drum, axle), arm));
+    }
+    // 줄 r의 기록(줄 안 x에서 잉크 높이)
+    float fxSgTrace(float x, float row, float seed, float live) {
+      float w = (fxN2(vec2(x * 30., row * 7. + seed)) - .5) * .12 + sin(x * 60. + row) * .02;
+      float qx = fract(fxH1(row * 3.7 + seed) * 3.) * 1.6 - .8;
+      float big = step(.6, fxH1(row * 1.9 + seed * 5.));
+      w += big * exp(-pow((x - qx) / .12, 2.)) * sin(x * 90.) * .55;
+      return w + live;
+    }`,
+  height: 'fxSgH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    float fxCy = fxQ.y / .66;
+    float fxDrum = step(abs(fxCy), 1.) * (1. - smoothstep(.76, .78, abs(fxQ.x)));
+    // 드럼 위 종이 좌표: 둘레를 따라 펴서 본다
+    float fxS = asin(clamp(fxCy, -1., 1.));
+    float fxScroll = uTime * .03;
+    float fxV = fxS / 1.5708 * 3.5 + fxScroll * 3.;
+    float fxRow = floor(fxV);
+    float fxRf = fract(fxV) - .5;
+    float fxX = fxQ.x - fxScroll;
+    // 맨 아래(펜 자리) 줄은 지금 흔들림
+    float fxPenRow = floor(asin(-.67) / 1.5708 * 3.5 + fxScroll * 3.);
+    float fxLive = fxRow == fxPenRow ? uCharge * .9 * sin(fxQ.x * 70. + uTime * 30.) * exp(-pow((fxQ.x - .05) / .25, 2.)) : 0.;
+    float fxY = fxSgTrace(fxX, fxRow, vSeed, fxLive) * .32;
+    float fxAA = fwidth(fxV) * 1.2;
+    float fxInk = 1. - smoothstep(.02, .02 + fxAA + .02, abs(fxRf - fxY));
+    // 모눈
+    vec2 fxGg = vec2(fxX * 20., fxV * 4.);
+    vec2 fxGf = abs(fract(fxGg) - .5);
+    float fxGrid = (1. - smoothstep(.0, .06, min(fxGf.x, fxGf.y))) * .25;
+    vec3 fxPaper = mix(vec3(.96, .94, .88), fxFc, .5) * (.85 + .15 * sqrt(max(0., 1. - fxCy * fxCy)));
+    vec3 fxPaperC = mix(fxPaper, fxFc * .7, fxGrid);
+    fxPaperC = mix(fxPaperC, vec3(.08, .08, .12), fxInk * .9);
+    vec3 fxBase = fxFc * (.55 + .2 * fxN2(fxQ * 30.));
+    vec3 fxCol = mix(fxBase, fxPaperC, fxDrum);
+    // 펜 팔과 축
+    vec2 fxA = vec2(.85, -.85), fxB = vec2(.05, -.44);
+    vec2 fxPa = fxQ - fxA, fxBa = fxB - fxA;
+    float fxHh = clamp(dot(fxPa, fxBa) / dot(fxBa, fxBa), 0., 1.);
+    float fxArm = 1. - smoothstep(.022, .034, length(fxPa - fxBa * fxHh));
+    float fxAx = step(.78, abs(fxQ.x)) * step(abs(fxQ.x), .9) * (1. - smoothstep(.1, .14, abs(fxQ.y)));
+    fxCol = mix(fxCol, vec3(.85, .66, .32), max(fxArm, fxAx));
+    float fxMet = max(fxArm, fxAx);
+    diffuseColor.rgb = fxCol;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxSgH(fxP - vec2(fxE, 0.), vSeed) - fxSgH(fxP + vec2(fxE, 0.), vSeed),
+                               fxSgH(fxP - vec2(0., fxE), vSeed) - fxSgH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = normalize(mat3(vTx, vTy, vTz) * fxNt);`,
+  surface: 'roughnessFactor = mix(mix(.5, .85, fxDrum), .25, fxMet); metalnessFactor = mix(.2, .9, fxMet);',
+  emissive: 'totalEmissiveRadiance = fxCol * .03;',
+};
+B.seismograph = {
+  // 몸통은 짙은 녹색 칠 철판
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .45; metalnessFactor = .5;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -6940,6 +7019,7 @@ export const MOVING = new Set([
   'clockface',
   'oscilloscope',
   'theremin',
+  'seismograph',
 ]);
 
 /**

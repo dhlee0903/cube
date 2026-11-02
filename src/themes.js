@@ -3519,6 +3519,27 @@ export const THEMES = [
     motion: 'smooth',
     burst: { shape: 'glow', colors: 'faces', size: 0.06, speed: 1.6, gravity: 0, drag: 2, life: 0.6, additive: true },
   },
+  {
+    // 지진계. 조각 하나가 지진계 기록 드럼이다. 모눈종이를 감은 드럼이 원통으로 솟아 누워 천천히 돌고, 황동 펜이 기록을 긋는다.
+    // 층을 돌릴 때마다 펜이 크게 떨며 큰 진동을 휘갈긴다
+    id: 'seismograph',
+    name: '지진계',
+    bg: '#0A0C0A',
+    ink: '#F2F2EE',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #1E2420, #050605)',
+    form: { bevel: 0.05, size: 0.96, radius: 0.04, grid: 64 },
+    body: { color: '#26302A', roughness: 0.45, metalness: 0.5 },
+    faces: ['#C83034', '#D8802A', '#D2B83A', '#3A8A58', '#3460B8', '#8444A8'],
+    lights: {
+      sky: '#fff8f0', ground: '#101210', hemi: 1,
+      key: ['#fff8f0', 2.3, [-3, 7, 5]], fill: ['#e6ecff', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.2, [3, 4, -6]],
+    },
+    env: 0.8,
+    surface: 'seismograph',
+    sound: 'paper',
+    motion: 'stutter',
+    burst: { shape: 'dot', colors: ['#202030', '#E8C070'], size: 0.04, speed: 2, gravity: 2, drag: 2, life: 0.5 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3546,5 +3567,5 @@ export const GROUPS = [
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'chrome', 'fiberoptic', 'ledcube'] },
-  { name: '계기', themes: ['radar', 'clockface', 'oscilloscope', 'theremin'] },
+  { name: '계기', themes: ['radar', 'clockface', 'oscilloscope', 'theremin', 'seismograph'] },
 ];
