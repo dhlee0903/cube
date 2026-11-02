@@ -3624,6 +3624,27 @@ export const THEMES = [
     motion: 'snap',
     burst: { shape: 'glow', colors: 'faces', size: 0.06, speed: 1.8, gravity: 0, drag: 2, life: 0.5, additive: true },
   },
+  {
+    // 철가루. 조각 겉이 면 색 두꺼운 카드이고 고운 철가루가 뿌려졌다. 카드 밑 막대자석의 자기력선을 따라 가루가 줄지어 눕고
+    // 극 가까이 수북이 쌓인다. 손끝을 가져가면 셋째 극이 되어 힘줄이 손끝 쪽으로 휘어 모인다
+    id: 'ironfilings',
+    name: '철가루',
+    bg: '#0A0A0C',
+    ink: '#F2F2F6',
+    backdrop: 'radial-gradient(80% 60% at 50% 40%, #202024, #050506)',
+    form: { bevel: 0.04, size: 0.96, radius: 0.03, grid: 56 },
+    body: { color: '#1C1C20', roughness: 0.4, metalness: 0.6 },
+    faces: ['#E2463E', '#F29A3A', '#EED24A', '#46B672', '#4682E2', '#A85ADC'],
+    lights: {
+      sky: '#ffffff', ground: '#121214', hemi: 1,
+      key: ['#ffffff', 2.4, [-3, 7, 5]], fill: ['#e6ecff', 0.6, [6, 1, 4]], rim: ['#ffffff', 1.4, [3, 4, -6]],
+    },
+    env: 0.7,
+    surface: 'ironfilings',
+    sound: 'metal',
+    motion: 'snap',
+    burst: { shape: 'dot', colors: ['#202024', '#606068'], size: 0.03, speed: 2, gravity: 3, drag: 2, life: 0.5 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3651,5 +3672,5 @@ export const GROUPS = [
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'chrome', 'fiberoptic', 'ledcube'] },
-  { name: '계기', themes: ['radar', 'clockface', 'oscilloscope', 'theremin', 'seismograph', 'sonar', 'compass', 'vumeter', 'nixie'] },
+  { name: '계기', themes: ['radar', 'clockface', 'oscilloscope', 'theremin', 'seismograph', 'sonar', 'compass', 'vumeter', 'nixie', 'ironfilings'] },
 ];

@@ -7305,6 +7305,81 @@ B.nixie = {
   surface: 'roughnessFactor = .3;',
 };
 
+S.ironfilings = {
+  // 철가루. 조각 겉이 면 색 두꺼운 카드이고 그 위에 고운 철가루가 뿌려졌다. 카드 밑에 막대자석이 숨어 있어 가루 한 알 한 알이
+  // 두 극을 잇는 자기력선을 따라 줄지어 눕고, 극 가까이엔 가루가 수북이 쌓여 곤두선다. 손끝을 가져가면 손끝이 셋째 극이 되어
+  // 힘줄이 손끝 쪽으로 휘어 모이고 그 둘레 가루가 곤두선다. 가루는 검은 쇳빛에 잔 빛이 반짝인다
+  head: `
+    vec2 fxIfB(vec2 q, float seed) {
+      float an = seed * 6.2832;
+      vec2 ax = vec2(cos(an), sin(an)) * .36;
+      vec2 B = vec2(0.);
+      vec2 d1 = q - ax, d2 = q + ax;
+      B += d1 / pow(dot(d1, d1) + .004, 1.5);
+      B -= d2 / pow(dot(d2, d2) + .004, 1.5);
+      vec2 tp = fxPtr.xy / uSticker.x;
+      float near = smoothstep(5., 2.2, fxPtr.z) * step(0., fxPtr.z) * step(length(tp), 1.6);
+      vec2 d3 = q - tp;
+      B -= 1.6 * near * d3 / pow(dot(d3, d3) + .006, 1.5);
+      return B;
+    }
+    float fxIfPile(vec2 q, float seed) {
+      float m = length(fxIfB(q, seed));
+      return smoothstep(8., 40., m);
+    }
+    float fxIfH(vec2 p, float seed) {
+      vec2 q = p / uSticker.x;
+      return smoothstep(0., .04, fxEdgeAt(p)) * (.006 + .016 * fxIfPile(q, seed));
+    }`,
+  height: 'fxIfH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxFc = diffuseColor.rgb;
+    vec2 fxQ = vLocal.xy / uSticker.x;
+    float fxPile = fxIfPile(fxQ, vSeed);
+    float fxS = .045;
+    vec2 fxC0 = floor(fxQ / fxS);
+    float fxGrain = 0.;
+    float fxGlint = 0.;
+    for (int y = -1; y <= 1; y++) for (int x = -1; x <= 1; x++) {
+      vec2 c = fxC0 + vec2(float(x), float(y));
+      for (int k = 0; k < 2; k++) {
+        vec2 h = vec2(fxH2(c + float(k) * 17.3 + vSeed * 7.), fxH2(c * 1.7 + float(k) * 5.1 + vSeed * 3.));
+        vec2 g = (c + h) * fxS;
+        vec2 B = fxIfB(g, vSeed);
+        float m = length(B);
+        // 힘이 셀수록 가루가 많다
+        if (fxH2(c * 3.1 + float(k)) > .12 + .6 * smoothstep(2., 30., m)) continue;
+        vec2 dir = B / max(m, 1e-4);
+        float L = fxS * (.55 + .5 * fxH2(c * 2.3 + float(k))) * (1. - .4 * smoothstep(20., 60., m));
+        vec2 rel = fxQ - g;
+        float t = clamp(dot(rel, dir), -L, L);
+        float d = length(rel - dir * t);
+        float w = fxS * .07;
+        float on = 1. - smoothstep(w, w + fwidth(fxQ.x) * 1.2, d);
+        fxGrain = max(fxGrain, on);
+        fxGlint = max(fxGlint, on * step(.85, fxH2(c * 5.7 + float(k) * 2.)));
+      }
+    }
+    vec3 fxCard = fxFc * (.88 + .1 * fxN2(fxQ * 50.));
+    vec3 fxIron = vec3(.04, .04, .045) + vec3(.4) * fxGlint * (.5 + .5 * sin(uTime * 2. + vSeed * 30.));
+    vec3 fxCol = mix(fxCard, fxIron, max(fxGrain, fxPile * .7));
+    diffuseColor.rgb = fxCol;`,
+  normal: `
+    float fxE = .0012;
+    vec2 fxP = vLocal.xy;
+    vec3 fxNt = normalize(vec3(fxIfH(fxP - vec2(fxE, 0.), vSeed) - fxIfH(fxP + vec2(fxE, 0.), vSeed),
+                               fxIfH(fxP - vec2(0., fxE), vSeed) - fxIfH(fxP + vec2(0., fxE), vSeed), 2. * fxE));
+    normal = fxBump(normalize(mat3(vTx, vTy, vTz) * fxNt), fxGrain * .0012);`,
+  surface: 'roughnessFactor = mix(.85, .55, fxGrain); metalnessFactor = fxGrain * .35;',
+  emissive: 'totalEmissiveRadiance = vec3(0.);',
+};
+B.ironfilings = {
+  // 몸통은 검게 칠한 강철 판
+  color: 'diffuseColor.rgb *= .85 + .2 * fxN3(vLocal * 9. + vSeed);',
+  surface: 'roughnessFactor = .4; metalnessFactor = .6;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -7330,6 +7405,7 @@ export const MOVING = new Set([
   'compass',
   'vumeter',
   'nixie',
+  'ironfilings',
 ]);
 
 /**
