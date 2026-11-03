@@ -989,6 +989,73 @@ export const THEMES = [
     burst: { shape: 'streak', colors: ['#40FF70', '#B0FFC0'], size: 0.06, speed: 2.6, gravity: -8, drag: 0.6, life: 0.9 },
   },
   {
+    // 십자수. 화면 전체가 아이다 천이고 칸마다 X자 땀 하나를 놓았다. 꼬인 실의 결과 둥근 단면 빛, 위 땀이 드리운 그림자,
+    // 칸 귀의 바늘구멍. 큐브는 면마다 다른 수실 색, 빈 곳은 천이 보인다
+    id: 'crossstitch',
+    name: '십자수',
+    bg: '#EDE6D6',
+    ink: '#2A2420',
+    backdrop: '#EDE6D6',
+    form: { bevel: 0.05, size: 0.88, radius: 0.04 },
+    body: { color: '#2A2420', roughness: 0.6 },
+    faces: ['#C8202E', '#2A5AC0', '#F4F0E6', '#F2C230', '#2E9A4A', '#F0782A'],
+    lights: {
+      sky: '#ffffff', ground: '#8890b0', hemi: 1.8,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.6, [0, 3, -6]],
+    },
+    filter: {
+      type: 'pixel', cell: 'stitch', res: 64, dither: 0.15, gain: 1.05, bg: '#EDE6D6', line: null,
+      palette: ['#2A2420', '#F4F0E6', '#C8202E', '#8A1420', '#F0782A', '#B0501A', '#F2C230', '#B08A18',
+        '#2E9A4A', '#1A6A32', '#2A5AC0', '#1A3A80', '#8A3AA8', '#5A2270', '#8A8A86', '#D8B490'],
+    },
+    surface: 'plain',
+    sound: 'cloth',
+    motion: 'snap',
+    burst: { shape: 'square', colors: 'faces', size: 0.06, speed: 2.2, gravity: -5, drag: 0.8, life: 0.8 },
+  },
+  {
+    // 펜 플로터 낙서. 종이 위에 펜이 가로줄 하나씩을 물결로 긋는데, 어두운 곳일수록 크게 출렁여 선의 떨림만으로 큐브가 떠오른다.
+    // 큐브 위에선 그 색 펜, 바탕에선 옅은 회색 펜. 펜이 조금씩 떨어 줄이 살아 움직인다
+    id: 'squiggle',
+    name: '펜 플로터',
+    bg: '#F4F1E8',
+    ink: '#1A1A1A',
+    backdrop: '#F4F1E8',
+    form: { bevel: 0.05, size: 0.88, radius: 0.04 },
+    body: { color: '#1A1A1A', roughness: 0.6 },
+    faces: ['#E02A2A', '#2A5AE0', '#D89A10', '#2AA050', '#8A3AC8', '#F07020'],
+    lights: {
+      sky: '#ffffff', ground: '#8890b0', hemi: 1.6,
+      key: ['#ffffff', 2.2, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.6, [0, 3, -6]],
+    },
+    filter: { type: 'pixel', cell: 'squiggle', res: 62, gain: 1, bg: '#F4F1E8', line: null, animated: true },
+    surface: 'plain',
+    sound: 'paper',
+    motion: 'smooth',
+    burst: { shape: 'streak', colors: 'faces', size: 0.06, speed: 2.4, gravity: -4, drag: 1, life: 0.7 },
+  },
+  {
+    // 등고선 지도. 스티커 하나하나가 섬이 되어 가운데가 가장 높은 봉우리로 솟고, 그 둘레로 등고선이 겹겹이 돈다.
+    // 높을수록 제 색이 진해지고, 큐브 몸통은 낮은 평지, 바탕은 경위선이 그어진 바다
+    id: 'contour',
+    name: '등고선 지도',
+    bg: '#EFE8D4',
+    ink: '#3A2A1A',
+    backdrop: '#EFE8D4',
+    form: { bevel: 0.05, size: 0.88, radius: 0.04 },
+    body: { color: '#2A2A2A', roughness: 0.6 },
+    faces: ['#E02A2A', '#2A5AE0', '#D89A10', '#2AA050', '#8A3AC8', '#F07020'],
+    lights: {
+      sky: '#ffffff', ground: '#8890b0', hemi: 1.6,
+      key: ['#ffffff', 2.4, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.8, [0, 3, -6]],
+    },
+    filter: { type: 'pixel', cell: 'contour', res: 390, gain: 1, linear: true, bg: '#EFE8D4', line: null },
+    surface: 'plain',
+    sound: 'paper',
+    motion: 'smooth',
+    burst: { shape: 'dot', colors: ['#7A4A2A'], size: 0.04, speed: 2, gravity: -4, drag: 1, life: 0.7 },
+  },
+  {
     // 야간 투시경. 초록 형광 한 빛깔로 증폭한 상에 알갱이 잡음이 쉬지 않고 끓고, 밝은 데는 번지며 가끔 흰 점이 튄다.
     // 광섬유판의 벌집 무늬가 비치고 둘레는 둥글게 어둡다. 면은 블록 속 그림으로 갈린다
     id: 'nightvision',
@@ -3502,7 +3569,7 @@ export const GROUPS = [
     name: '픽셀',
     themes: ['pixel', 'pixel2', 'pixel3', 'handheld', 'cga', 'arcade', 'amber', 'ascii', 'bricks', 'beads', 'vga',
       'teletext', 'halftone', 'riso',
-      'screentone', 'glassblock', 'dotprinter', 'coderain', 'nightvision', 'voxel'],
+      'screentone', 'glassblock', 'dotprinter', 'coderain', 'crossstitch', 'squiggle', 'contour', 'nightvision', 'voxel'],
   },
   { name: '명화', themes: ['oil', 'watercolor', 'ukiyoe', 'monet', 'seurat', 'gogh', 'munch', 'cubism', 'warhol', 'collage'] },
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
