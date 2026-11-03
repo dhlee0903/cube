@@ -13,6 +13,7 @@
 //          fxFace()가 면 전체 좌표를 준다. 면 하나에 그림 한 장을 그리면 다 맞췄을 때 그림이 이어진다
 //
 // 각 질감은 네 군데에 들어간다. 앞에서 선언한 변수는 뒤에서 그대로 쓴다(같은 main 안).
+// (정점 셰이더에 vnormal(objectNormal을 고칠 때), vertex(transformed를 옮길 때)를 더 넣을 수 있다)
 //   color     diffuseColor(바탕색)
 //   surface   roughnessFactor, metalnessFactor
 //   normal    normal(시점 공간)
@@ -5799,6 +5800,52 @@ B.fire = {
     totalEmissiveRadiance = vec3(1., .32, .06) * fxCrack * fxBr * 1.4 + vec3(.9, .25, .05) * (1. - smoothstep(.0, .2, fxCk)) * .12;`,
 };
 
+S.sod = {
+  // 풀. 조각 하나가 통째로 뗏장(풀이 빽빽이 난 흙덩이)이라 여섯 면 모두에서 풀잎이 솟았다. 풀잎은 스티커 위에 세운 진짜 면
+  // (view.js bladeGeometry)이라 조각 테두리 밖으로 넘어 나오고 실루엣이 풀숲이 된다. 스티커마다 풀잎 배치를 돌려
+  // 같은 모양이 되풀이되지 않게 하고, 끝으로 갈수록 바람에 흔들리며 옆면의 풀은 아래로 처진다. 뿌리 쪽은 그늘져 어둡고
+  // 끝은 볕에 바래 밝다. 면마다 풀 빛깔이 다르다(잔디 초록, 마른 억새 금빛, 붉은 풀, 푸른 김의털, 보라 수크령, 서리 앉은 흰 풀)
+  head: `
+    // 스티커마다 풀잎 배치를 90도씩 돌린다(뒤집으면 면의 앞뒤가 바뀌어 빛이 거꾸로 든다)
+    vec2 fxSodRot(vec2 p, float seed) {
+      float k = floor(fract(seed * 7.13) * 4.);
+      for (int i = 0; i < 3; i++) if (float(i) < k) p = vec2(-p.y, p.x);
+      return p;
+    }`,
+  vnormal: 'objectNormal = vec3(fxSodRot(objectNormal.xy, aSeed), objectNormal.z);',
+  vertex: `
+    transformed.xy = fxSodRot(transformed.xy, aSeed);
+    float fxBk = clamp(position.z / .22, 0., 1.);
+    fxBk *= fxBk;
+    vec2 fxWind = vec2(sin(uTime * 1.3 + transformed.x * 7. + transformed.y * 5. + aSeed * 20.),
+      cos(uTime * 1.05 + transformed.y * 6. + aSeed * 13.)) * .022;
+    // 옆면의 풀은 아래로 처지며 조금 낮아진다
+    float fxDroop = 1. - abs(vTz.y);
+    transformed.xy += (fxWind + fxGrav * fxDroop * .055) * fxBk;
+    transformed.z -= fxDroop * .025 * fxBk;`,
+  color: `
+    vec3 fxBase = diffuseColor.rgb;
+    float fxBh = vLocal.z;
+    float fxLeaf = step(.0015, fxBh);
+    float fxT = clamp(fxBh / .2, 0., 1.);
+    vec3 fxBlade = fxBase * (.82 + .3 * fxH2(floor(vLocal.xy * 60.) + vSeed));
+    fxBlade = mix(fxBlade, mix(fxBase, vec3(1., .97, .82), .35), smoothstep(.6, 1., fxT) * .55);
+    fxBlade *= .2 + .8 * pow(fxT, .6);
+    // 잎 사이 바닥은 시든 잎과 흙이 엉긴 그늘이라 그 풀빛이 어둡게 깔린다
+    vec3 fxSoil = mix(vec3(.1, .07, .04), fxBase * .3, .7) * (.5 + .8 * fxN2(vLocal.xy * 70. + vSeed));
+    diffuseColor.rgb = mix(fxSoil, fxBlade, fxLeaf);`,
+  surface: 'roughnessFactor = mix(.95, .6, fxLeaf); metalnessFactor = 0.;',
+  // 볕이 잎을 비쳐 끝이 은은하게 빛난다
+  emissive: 'totalEmissiveRadiance = fxBase * fxLeaf * smoothstep(.4, 1., fxT) * .08;',
+};
+B.sod = {
+  // 몸통은 뗏장 모서리로 드러난 흙. 잔뿌리와 작은 돌이 섞였다
+  color: `
+    float fxSn = fxN3(vLocal * 40. + vSeed * 3.);
+    diffuseColor.rgb = vec3(.2, .13, .08) * (.55 + .7 * fxSn) + vec3(.15) * step(.82, fxN3(vLocal * 90.));`,
+  surface: 'roughnessFactor = .95; metalnessFactor = 0.;',
+};
+
 S.amber = {
   // 호박. 칸마다 반들반들하게 간 호박 덩이가 둥근 네모 캐보숑으로 봉긋 솟았다. 속은 진짜 깊이가 있어서, 겉이 렌즈처럼
   // 빛을 꺾어 보는 각도에 따라 속 것들이 깊은 데서 미끄러지고 가운데가 살짝 커 보인다. 깊숙이 모기가 갇혀 있고
@@ -6708,6 +6755,7 @@ export const MOVING = new Set([
   'fiberoptic',
   'ledcube',
   'fire',
+  'sod',
 ]);
 
 /**
@@ -6752,7 +6800,8 @@ export function wear(material, part, uniforms, face = -1) {
         vGrav = fxGrav;
         vSeed = aSeed;
         vHome = ${part === 'sticker' ? 'aHome' : 'vec3(0., 0., 1.)'};
-        ${lift}`)
+        ${lift}
+        ${fx.vnormal ?? ''}`)
       .replace('#include <begin_vertex>', `#include <begin_vertex>
         vLocal = position;
         vLift = ${fx.height ? 'fxHd' : '0.'};
@@ -6764,7 +6813,8 @@ export function wear(material, part, uniforms, face = -1) {
         vTx = normalize(normalMatrix * (fxIm * vec3(1., 0., 0.)));
         vTy = normalize(normalMatrix * (fxIm * vec3(0., 1., 0.)));
         vTz = normalize(normalMatrix * (fxIm * vec3(0., 0., 1.)));
-        ${fx.height ? 'transformed.z += fxHd;' : ''}`);
+        ${fx.height ? 'transformed.z += fxHd;' : ''}
+        ${fx.vertex ?? ''}`);
     shader.fragmentShader = shader.fragmentShader
       .replace('#include <common>', `#include <common>
         ${UNIFORMS}

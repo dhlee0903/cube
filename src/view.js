@@ -1,11 +1,13 @@
 import {
-  AdditiveBlending, Box3, CanvasTexture, Color, DirectionalLight, DynamicDrawUsage, Euler, ExtrudeGeometry,
+  AdditiveBlending, Box3, BufferGeometry, CanvasTexture, Color, DirectionalLight, DoubleSide, DynamicDrawUsage, Euler,
+  ExtrudeGeometry, Float32BufferAttribute, FrontSide,
   HemisphereLight, Group, InstancedBufferAttribute, InstancedMesh, Matrix4, MeshBasicMaterial, MeshStandardMaterial,
   NormalBlending, PMREMGenerator, PerspectiveCamera, PlaneGeometry, Quaternion, Raycaster, Scene, Shape,
   ShapeGeometry, Vector2, Vector3, WebGLRenderer,
 } from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { FACES, createCube, layerOf } from './cube.js';
 import { MOVING, wear } from './surfaces.js';
 import { Ambient, Burst } from './particles.js';
@@ -24,6 +26,7 @@ const ONE = new Vector3(1, 1, 1);
 //   size    스티커 한 변
 //   radius  스티커 모서리 둥글기(size/2면 동그라미)
 //   depth   스티커 두께. 0이면 납작한 스티커, 크면 솟아오른 타일
+//   blades  스티커 위에 세우는 풀잎의 가장 큰 높이(풀). 0이면 없음
 const FORM = { bevel: 0.08, size: 0.8, radius: 0.09, depth: 0 };
 
 // 조명. 테마가 lights로 덮어쓴다. [색, 세기, 위치]
@@ -55,6 +58,71 @@ function roundedSquare(size, r) {
 }
 
 /** 스티커 둘레로 번지는 빛(또는 그림자). 흰색 알파만 그려 두고 색은 재질이 입힌다. */
+// 풀잎이 솟은 스티커: 납작한 바닥(흙) 위에 끝으로 가늘어지는 풀잎 띠를 빽빽이 세운다. 잎마다 높이, 넓은 면이 향하는 쪽,
+// 휘는 쪽과 정도가 다르다. 잎은 진짜 면이라 조각 테두리 밖으로도 넘어 나와 실루엣이 풀숲이 된다
+// 칸이 많을수록 스티커가 작게 보이니 풀잎을 줄인다(7×7에서도 삼각형이 너무 많지 않게)
+function bladeCount(n) {
+  return Math.round(420 * Math.min(1, (3 / n) ** 1.2));
+}
+
+function bladeGeometry(f, count) {
+  const base = new ShapeGeometry(roundedSquare(f.size, f.radius), 8);
+  const pos = [];
+  const nor = [];
+  const uv = [];
+  const idx = [];
+  let seed = 9;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const half = f.size / 2 - 0.015;
+  const SEG = 3;
+  for (let b = 0; b < count; b++) {
+    const x = (rnd() * 2 - 1) * half;
+    const y = (rnd() * 2 - 1) * half;
+    const h = f.blades * (0.5 + 0.5 * rnd());
+    const w = 0.022 + 0.016 * rnd();
+    const face = rnd() * Math.PI * 2;
+    const bend = rnd() * Math.PI * 2;
+    const curl = (0.08 + 0.32 * rnd()) * h;
+    const cx = Math.cos(face);
+    const cy = Math.sin(face);
+    const bx = Math.cos(bend);
+    const by = Math.sin(bend);
+    const start = pos.length / 3;
+    for (let k = 0; k <= SEG; k++) {
+      const t = k / SEG;
+      const ww = (w * (1 - t)) / 2;
+      const ox = x + bx * curl * t * t;
+      const oy = y + by * curl * t * t;
+      const oz = h * t * (1 - 0.25 * t * (curl / h));
+      // 잎 겉 방향: 폭 방향과 잎이 뻗는 방향에 모두 수직
+      const tx = bx * curl * 2 * t;
+      const ty = by * curl * 2 * t;
+      const tz = h;
+      let nx = cy * tz;
+      let ny = -cx * tz;
+      let nz = cx * ty - cy * tx;
+      const nl = Math.hypot(nx, ny, nz) || 1;
+      nx /= nl; ny /= nl; nz /= nl;
+      pos.push(ox - cx * ww, oy - cy * ww, oz, ox + cx * ww, oy + cy * ww, oz);
+      nor.push(nx, ny, nz, nx, ny, nz);
+      uv.push(b / count, t, b / count, t);
+    }
+    for (let k = 0; k < SEG; k++) {
+      const a = start + k * 2;
+      idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+    }
+  }
+  const blades = new BufferGeometry();
+  blades.setAttribute('position', new Float32BufferAttribute(pos, 3));
+  blades.setAttribute('normal', new Float32BufferAttribute(nor, 3));
+  blades.setAttribute('uv', new Float32BufferAttribute(uv, 2));
+  blades.setIndex(idx);
+  const geo = mergeGeometries([base, blades]);
+  base.dispose();
+  blades.dispose();
+  return geo;
+}
+
 function haloTexture(size, radius, shadow) {
   const px = 128;
   const canvas = document.createElement('canvas');
@@ -188,7 +256,11 @@ export class CubeView {
     this.form = f;
     this.bodyGeo = new RoundedBoxGeometry(BODY, BODY, BODY, 3, f.bevel);
     let lift = 0.002;
-    if (f.grid) {
+    if (f.blades) {
+      this.stickerGeo = bladeGeometry(f, bladeCount(this.cube?.n ?? 3));
+      this.bladesFor = this.cube?.n ?? 3;
+      lift += f.blades;
+    } else if (f.grid) {
       // 겉이 실제로 솟는 질감용. 둥근 모서리는 셰이더가 잘라 낸다
       this.stickerGeo = this.grid(f, this.cube?.n ?? 3);
       lift += 0.12;
@@ -245,6 +317,11 @@ export class CubeView {
     if (this.form?.grid && this.gridFor !== cube.n) {
       this.stickerGeo.dispose();
       this.stickerGeo = this.grid(this.form, cube.n);
+    }
+    if (this.form?.blades && this.bladesFor !== cube.n) {
+      this.stickerGeo.dispose();
+      this.stickerGeo = bladeGeometry(this.form, bladeCount(cube.n));
+      this.bladesFor = cube.n;
     }
 
     // 조각마다 난수를 하나씩 줘서 무늬가 똑같이 반복되지 않게
@@ -418,6 +495,9 @@ export class CubeView {
       m.emissiveIntensity = glows[i];
       m.roughness = sticker.roughness ?? 0.32;
       m.metalness = sticker.metalness ?? 0;
+      // 풀잎처럼 얇은 면은 양쪽에서 보인다
+      const side = sticker.double ? DoubleSide : FrontSide;
+      if (m.side !== side) { m.side = side; m.needsUpdate = true; }
       this.haloMats[i].color.set(shadow ? '#000000' : c);
       this.haloMats[i].opacity = Array.isArray(glow) ? (halo * glows[i]) / brightest : halo;
     });

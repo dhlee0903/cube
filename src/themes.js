@@ -3574,6 +3574,30 @@ export const THEMES = [
     ambient: { mode: 'rise', shape: 'glow', colors: ['#FFC23A', '#FF7A1A', '#FF3B0A'], count: 50, size: 0.05, speed: 0.5, opacity: 0.8, additive: true },
     burst: { shape: 'streak', colors: 'faces', size: 0.08, speed: 3, gravity: 3, drag: 2, life: 0.6, additive: true },
   },
+  {
+    // 풀. 조각 하나가 통째로 뗏장이라 여섯 면 모두 진짜 풀잎이 빽빽이 솟아 조각 테두리 밖으로 넘어 나온다.
+    // 바람에 흔들리며 옆면의 풀은 아래로 처진다. 잔디 초록, 마른 억새 금빛, 붉은 풀, 푸른 김의털, 보라 수크령, 서리 앉은 흰 풀
+    id: 'sod',
+    name: '풀',
+    bg: '#E6EFDC',
+    ink: '#1C2A16',
+    backdrop: [
+      'radial-gradient(60% 45% at 50% 38%, rgba(255,255,235,.7), transparent 70%)',
+      'radial-gradient(90% 75% at 50% 42%, #EEF4E4, #B9CFA6)',
+    ].join(', '),
+    form: { bevel: 0.05, size: 0.97, radius: 0.06, blades: 0.2 },
+    body: { color: '#3A2616', roughness: 0.95 },
+    sticker: { roughness: 0.62, double: true },
+    faces: ['#46A82E', '#D9B23A', '#C2302A', '#4C86D2', '#8C44B4', '#EEF2EA'],
+    lights: {
+      sky: '#f4fbff', ground: '#6a7a4a', hemi: 1.3,
+      key: ['#fff6e0', 2.6, [-4, 7, 4]], fill: ['#d8ecff', 0.5, [6, 1, 3]], rim: ['#fffbe8', 1, [1, 4, -6]],
+    },
+    surface: 'sod',
+    sound: 'nature',
+    motion: 'smooth',
+    burst: { shape: 'leaf', colors: 'faces', size: 0.07, speed: 2.4, gravity: -5, drag: 1.4, life: 0.9 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3599,7 +3623,7 @@ export const GROUPS = [
   },
   { name: '명화', themes: ['oil', 'watercolor', 'ukiyoe', 'monet', 'seurat', 'gogh', 'munch', 'cubism', 'warhol', 'collage'] },
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
-  { name: '원소', themes: ['fire'] },
+  { name: '원소', themes: ['fire', 'sod'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'chrome', 'fiberoptic', 'ledcube'] },
 ];
