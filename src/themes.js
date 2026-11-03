@@ -1035,25 +1035,25 @@ export const THEMES = [
     burst: { shape: 'streak', colors: 'faces', size: 0.06, speed: 2.4, gravity: -4, drag: 1, life: 0.7 },
   },
   {
-    // 등고선 지도. 스티커 하나하나가 섬이 되어 가운데가 가장 높은 봉우리로 솟고, 그 둘레로 등고선이 겹겹이 돈다.
-    // 높을수록 제 색이 진해지고, 큐브 몸통은 낮은 평지, 바탕은 경위선이 그어진 바다
-    id: 'contour',
-    name: '등고선 지도',
-    bg: '#EFE8D4',
-    ink: '#3A2A1A',
-    backdrop: '#EFE8D4',
+    // 스크래치 아트. 검은 왁스를 바른 종이를 짧은 빗금으로 긁어 밑의 색을 드러낸다. 밝은 곳일수록 촘촘하게 십자로 겹치고,
+    // 큐브 위는 그 조각의 색, 바탕은 드문드문 긁힌 자국 사이로 무지개 밑종이가 비친다. 홈 가장자리엔 밀려난 왁스 턱
+    id: 'scratchart',
+    name: '스크래치 아트',
+    bg: '#0E0E0E',
+    ink: '#F2F0EC',
+    backdrop: '#0E0E0E',
     form: { bevel: 0.05, size: 0.88, radius: 0.04 },
-    body: { color: '#2A2A2A', roughness: 0.6 },
-    faces: ['#E02A2A', '#2A5AE0', '#D89A10', '#2AA050', '#8A3AC8', '#F07020'],
+    body: { color: '#141414', roughness: 0.6 },
+    faces: ['#E8302A', '#2A6AF0', '#F2D020', '#2AB050', '#A040E0', '#F08020'],
     lights: {
-      sky: '#ffffff', ground: '#8890b0', hemi: 1.6,
-      key: ['#ffffff', 2.4, [-3, 6, 5]], fill: ['#c8d8ff', 0.4, [5, 0, 4]], rim: ['#ffffff', 0.8, [0, 3, -6]],
+      sky: '#ffffff', ground: '#8890b0', hemi: 1.8,
+      key: ['#ffffff', 2.4, [-3, 6, 5]], fill: ['#c8d8ff', 0.5, [5, 0, 4]], rim: ['#ffffff', 0.8, [0, 3, -6]],
     },
-    filter: { type: 'pixel', cell: 'contour', res: 390, gain: 1, linear: true, bg: '#EFE8D4', line: null },
+    filter: { type: 'pixel', cell: 'scratch', res: 120, gain: 1, bg: '#0E0E0E', line: null },
     surface: 'plain',
     sound: 'paper',
-    motion: 'smooth',
-    burst: { shape: 'dot', colors: ['#7A4A2A'], size: 0.04, speed: 2, gravity: -4, drag: 1, life: 0.7 },
+    motion: 'snap',
+    burst: { shape: 'streak', colors: 'faces', size: 0.05, speed: 2.4, gravity: -4, drag: 1, life: 0.7 },
   },
   {
     // 야간 투시경. 초록 형광 한 빛깔로 증폭한 상에 알갱이 잡음이 쉬지 않고 끓고, 밝은 데는 번지며 가끔 흰 점이 튄다.
@@ -3569,7 +3569,7 @@ export const GROUPS = [
     name: '픽셀',
     themes: ['pixel', 'pixel2', 'pixel3', 'handheld', 'cga', 'arcade', 'amber', 'ascii', 'bricks', 'beads', 'vga',
       'teletext', 'halftone', 'riso',
-      'screentone', 'glassblock', 'dotprinter', 'coderain', 'crossstitch', 'squiggle', 'contour', 'nightvision', 'voxel'],
+      'screentone', 'glassblock', 'dotprinter', 'coderain', 'crossstitch', 'squiggle', 'scratchart', 'nightvision', 'voxel'],
   },
   { name: '명화', themes: ['oil', 'watercolor', 'ukiyoe', 'monet', 'seurat', 'gogh', 'munch', 'cubism', 'warhol', 'collage'] },
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },

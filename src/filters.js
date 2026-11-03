@@ -1,5 +1,5 @@
 import {
-  DepthTexture, HalfFloatType, LinearFilter, Mesh, NearestFilter, NoBlending, OrthographicCamera, PlaneGeometry, Scene,
+  DepthTexture, HalfFloatType, Mesh, NearestFilter, NoBlending, OrthographicCamera, PlaneGeometry, Scene,
   ShaderMaterial, Vector2, Vector3, Vector4, WebGLRenderTarget,
 } from 'three';
 import { PAINT_TYPES, paintShader } from './paint.js';
@@ -383,56 +383,50 @@ vec4 fxSquiggle(vec2 g) {
   return vec4(mix(paper, pen, ln * mix(.45, 1., smoothstep(.2, .6, r.a))), 1.);
 }
 
-// 등고선 지도: 스티커 하나하나를 섬으로 읽는다. 스티커 가장자리에서 안쪽으로 얼마나 들어왔는지를 높이로 삼으니
-// 조각마다 둥근 봉우리가 솟고, 그 둘레로 일정한 간격의 등고선이 겹겹이 돈다(다섯 줄마다 굵은 계곡선). 높을수록 그 색이
-// 진해진다. 큐브 몸통은 낮은 평지, 바탕은 경위선이 그어진 바다.
-// 그 자리가 스티커인지(채도 있는 색이 칠해졌는지). 작은 화면을 촘촘히 그리고 칸 사이를 이어 읽은 뒤, 네 점을 모아
-// 경계를 조금 흐려야 등고선이 끊기지 않고 매끈하게 이어진다
-float fxStkL(vec2 g) {
-  vec4 c = texture2D(tColor, g / uLow);
-  if (c.a < .01) return 0.;
-  vec3 s = fxSrgb(c.rgb / c.a);
-  return smoothstep(.3, .7, c.a) * smoothstep(.1, .24, max(max(s.r, s.g), s.b) - min(min(s.r, s.g), s.b));
+// 스크래치 아트: 검은 왁스를 바른 종이를 긁어 밑의 색을 드러낸다. 긁은 자국은 길쭉한 빗금이고 스티커 위는 촘촘히,
+// 밝은 스티커는 십자로 한 번 더 긁는다. 밑종이는 큐브가 있는 곳은 그 조각의 색(몸통은 검정), 나머지는 무지개라 바탕에
+// 드문드문 난 자국으로만 비친다
+float fxScratchLayer(vec2 g, float ang, float thr, out float side) {
+  float c = cos(ang), sn = sin(ang);
+  vec2 q = mat2(c, sn, -sn, c) * g * 1.5;
+  float row = floor(q.y);
+  float L = 4.2;
+  float off = fxHash(vec2(row, ang * 7.)) * L;
+  float seg = floor((q.x + off) / L);
+  float h1 = fxHash(vec2(seg, row + ang * 13.));
+  float h2 = fxHash(vec2(row * 1.7 + ang, seg * 3.1));
+  // 이 자국 한가운데가 스티커인지, 얼마나 밝은지로 긁을지 정한다
+  vec2 mid = vec2((seg + .5) * L - off, row + .5) / 1.5;
+  vec4 m = fxAtL(mat2(c, -sn, sn, c) * mid);
+  float chroma = max(max(m.r, m.g), m.b) - min(min(m.r, m.g), m.b);
+  float stk = smoothstep(.12, .25, chroma) * step(.7, m.a);
+  float dens = stk > .5 ? .86 + .3 * fxLum(m.rgb) : .014;
+  if (h1 > dens - thr) { side = 0.; return 0.; }
+  float u = (q.x + off) / L - seg;
+  float y = q.y - row - .5 - (h2 - .5) * .25 - (u - .5) * (h2 - .5) * .2;
+  float taper = smoothstep(0., .12, u) * smoothstep(1., .88 - h2 * .08, u);
+  float w = (.2 + .08 * h2) * taper;
+  float px = fwidth(q.y);
+  side = y;
+  return 1. - smoothstep(w - px * .7, w + px * .7, abs(y));
 }
-float fxStk(vec2 g) {
-  return .25 * (fxStkL(g + vec2(1.4, .5)) + fxStkL(g + vec2(-.5, 1.4)) + fxStkL(g + vec2(-1.4, -.5)) + fxStkL(g + vec2(.5, -1.4)));
-}
-vec4 fxContour(vec2 g0) {
-  vec4 r = fxAtL(g0);
-  // 작은 화면을 세 배로 촘촘히 그리니, 거리와 무늬는 세 칸을 한 칸으로 셈한다
-  vec2 g = g0 / 3.;
-  // 가장 가까운 바깥(스티커가 아닌 곳)까지의 거리를 부드러운 최솟값으로 잰다
-  const float R = 9.5, K = 1.25;
-  float acc = exp(-K * R) + (1. - fxStk(g0));
-  for (int i = 1; i <= 80; i++) {
-    float fi = float(i);
-    float rad = R * sqrt(fi / 80.);
-    float an = fi * 2.39996;
-    acc += (1. - fxStk(g0 + 3. * rad * vec2(cos(an), sin(an)))) * exp(-K * rad);
-  }
-  float d = max(-log(acc) / K, 0.);
-  float k = (d - .5) / 1.45;
-  // 거리의 기울기는 어디서나 1이니 선 굵기를 화면 한 점의 크기로 고정한다(미분으로 재면 잡음에 선이 끊긴다)
-  float cpx = max(fwidth(g.x), 1e-5);
-  float fw = cpx / 1.45;
-  float dl = abs(fract(k + .5) - .5) / fw;
-  float idx = step(abs(mod(floor(k + .5), 5.)), .5);
-  float line = (1. - smoothstep(.45 + idx * .7, 1.25 + idx * .9, dl)) * step(.6, k);
-  float coast = 1. - smoothstep(.6, 1.6, abs(k) / fw);
+vec4 fxScratch(vec2 g) {
+  vec4 r = fxAtL(g);
   vec2 sp = gl_FragCoord.xy / uDpr;
-  vec3 paper = uBg.rgb * (.97 + .03 * fxHash(floor(sp * .5)));
-  vec2 gq = abs(fract(g / 12.) - .5) * 12. / cpx;
-  float grat = 1. - smoothstep(.4, 1.2, min(gq.x, gq.y));
-  vec3 sea = mix(paper, vec3(.55, .7, .85), grat * .35 + .12);
-  vec3 plain = mix(paper, vec3(.74, .64, .48), .45);
-  vec3 low = mix(sea, plain, smoothstep(.3, .7, r.a));
-  vec3 hue = r.rgb / max(max(max(r.r, r.g), r.b), .2);
-  float band = clamp(floor(k) / 4., 0., 1.);
-  vec3 land = mix(paper, hue, .35 + .65 * band);
-  vec3 col = mix(low, land, step(0., k));
-  vec3 ink = mix(vec3(.42, .28, .16), hue * .35, .5);
-  col = mix(col, ink, line * mix(.6, 1., idx));
-  return vec4(mix(col, vec3(.3, .2, .12), coast * .9), 1.);
+  // 왁스 바탕: 아주 옅은 광택과 결
+  float grain = fxHash(floor(sp * .7));
+  vec3 coat = vec3(.045, .043, .042) * (.85 + .3 * grain) + .03 * smoothstep(.6, 0., length(vUv - vec2(.3, .8)));
+  float s1, s2;
+  float a1 = fxScratchLayer(g, .55, 0., s1);
+  float a2 = fxScratchLayer(g, -.62, .62, s2);
+  float cut = max(a1, a2);
+  vec3 bow = .55 + .45 * cos(6.2832 * (g.x / uLow.x * .9 + g.y / uLow.y * .35 + vec3(0., .33, .67)));
+  vec3 under = r.a > .7 ? r.rgb / max(max(max(r.r, r.g), r.b), .45) : bow;
+  // 홈 바닥은 살짝 거칠고, 한쪽 가장자리가 그늘진다
+  float rough = .88 + .12 * fxHash(floor(sp * 1.5));
+  float edge = a1 >= a2 ? s1 : s2;
+  vec3 groove = under * rough * (.8 + .2 * smoothstep(.15, -.1, edge));
+  return vec4(mix(coat, groove, cut), 1.);
 }
 
 // 디지털 비: 칸마다 낯선 글자가 바뀌고, 줄마다 빛나는 머리가 위에서 아래로 떨어지며 꼬리를 끈다.
@@ -504,7 +498,7 @@ void main() {
   if (uCell == 26) { gl_FragColor = fxNight(g); return; }
   if (uCell == 28) { gl_FragColor = fxStitch(g); return; }
   if (uCell == 29) { gl_FragColor = fxSquiggle(g); return; }
-  if (uCell == 30) { gl_FragColor = fxContour(g); return; }
+  if (uCell == 30) { gl_FragColor = fxScratch(g); return; }
   vec2 cell = floor(g);
   vec2 f = fract(g);
   vec2 q = f - .5;
@@ -649,10 +643,9 @@ void main() {
 //            vga 두 번 그린 줄 | teletext 2×3 모자이크 글자 | halftone 네 판 망점 | riso 형광 잉크 세 판
 //            tone 만화 스크린톤 | glassblock 유리 블록
 //            printer 도트 프린터 | rain 디지털 비 | night 야간 투시경 | voxel 작은 정육면체
-//            stitch 십자수 | squiggle 펜 플로터 낙서 | contour 등고선 지도
+//            stitch 십자수 | squiggle 펜 플로터 낙서 | scratch 스크래치 아트
 //   animated 가만히 있어도 움직이는지(디지털 비, 야간 투시경)
 //   res      화면 짧은 쪽을 몇 칸으로 볼지(클수록 촘촘)
-//   linear   작은 화면을 칸 사이로 이어 읽을지(등고선처럼 칸 경계를 곡선으로 펴는 필터만)
 //   aspect   칸 세로/가로 비(아스키 글자 칸)
 //   gamma    밝기 사다리와 아스키 글자 고르기의 밝기 곡선(1보다 작으면 밝게)
 //   gain     색을 고르기 전에 곱하는 밝기
@@ -662,12 +655,12 @@ const PICO = ['#000000', '#1D2B53', '#7E2553', '#008751', '#AB5236', '#5F574F', 
   '#FF004D', '#FFA300', '#FFEC27', '#00E436', '#29ADFF', '#83769C', '#FF77A8', '#FFCCAA'];
 const PIXEL_BASE = {
   palette: PICO, mode: 'palette', cell: 'square', res: 125, aspect: 1, dither: 0.2, gamma: 1, levels: 6, gain: 1,
-  bg: null, line: '#000000', animated: false, linear: false,
+  bg: null, line: '#000000', animated: false,
 };
 const MODES = { palette: 0, ramp: 1, levels: 4 };
 const CELLS = {
   square: 0, lcd: 1, brick: 3, bead: 4, ascii: 5, crt: 6, arcade: 7, vga: 9, teletext: 10,
-  halftone: 12, riso: 13, tone: 22, glassblock: 23, printer: 24, rain: 25, night: 26, voxel: 27, stitch: 28, squiggle: 29, contour: 30,
+  halftone: 12, riso: 13, tone: 22, glassblock: 23, printer: 24, rain: 25, night: 26, voxel: 27, stitch: 28, squiggle: 29, scratch: 30,
 };
 const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
 
@@ -836,8 +829,7 @@ export class Filter {
       this.block = Math.max(2, Math.round(Math.min(w, h) / p.res));
       const lw = Math.ceil(w / this.block);
       const lh = Math.ceil(h / (this.block * p.aspect));
-      const filt = p.linear ? LinearFilter : NearestFilter;
-      this.target = new WebGLRenderTarget(lw, lh, { type: HalfFloatType, minFilter: filt, magFilter: filt });
+      this.target = new WebGLRenderTarget(lw, lh, { type: HalfFloatType, minFilter: NearestFilter, magFilter: NearestFilter });
       this.materials.pixel.uniforms.uLow.value.set(lw, lh);
     } else if (this.mode === 'toon') {
       this.target = new WebGLRenderTarget(w, h, { type: HalfFloatType, depthTexture: new DepthTexture(w, h) });
