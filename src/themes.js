@@ -584,15 +584,15 @@ export const THEMES = [
     burst: { shape: 'square', colors: 'faces', size: 0.08, speed: 3, gravity: 0, drag: 3.2, life: 0.5 },
   },
   {
-    // 8비트 게임 화면. 뒤로 단순한 픽셀 풍경(해, 구름, 눈 덮인 산, 언덕, 풀밭)이 펼쳐진다. 큐브를 낮은 해상도로 그려 칸칸이 키우고, 16색 팔레트로 줄이면서 그늘과 빛을 바둑판 점(디더링)으로
+    // 8비트 게임 화면. 뒤로 단순한 픽셀 풍경(구름, 눈 덮인 산, 언덕, 풀밭)이 펼쳐진다. 큐브를 낮은 해상도로 그려 칸칸이 키우고, 16색 팔레트로 줄이면서 그늘과 빛을 바둑판 점(디더링)으로
     // 섞고, 스프라이트처럼 검은 테두리를 두른다. 스티커는 도톰한 블록이라 모서리 빛과 그늘이 점으로 찍힌다. 칸칸이 끊기는 움직임
     id: 'pixel',
     name: '픽셀',
     bg: '#5C94FC',
     ink: '#0E0F1A',
     backdrop: [
-      // 손으로 찍은 192×108 픽셀 풍경. 단순하게: 하늘 띠, 해, 구름 둘, 눈 덮인 먼 산, 언덕, 풀밭
-      `${svg(192, 108, "<image href='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAABsBAMAAADOLKChAAAAJFBMVEX////I3P//8ej/9qj/7CeMuP9clPxO0GoisEovqFiKgLA+e/AIp/VmAAACwElEQVR42u1YO7LTMBQ9NtIkY4rYBUugBnbwipdejbdAnQ5KFxTQZQmuncYNNIEZFgBbYAty8cyQDyMKf57tZ0WSY/EZJBW2biSde869+jjeHnaLj/8ToFwzqwAlQ8n+Fom8CVm0rh6Pc0sMysHThEHJ1H6tO+97UwZM7Vc56G8EUGoOMinkAflyrRe9sXLYYrGRApTQiZ4XAQCC7wAQDH7cAge5RExL2gAAsixNEQDpgAA4x1aSRYOlOWmTfccBRK/GGcwQ20Ork8ZCm4QnAKD4zXtRm0XRSCznPw+CNMiqt3R2gIwfOU+DFBk/Zvw4bWsGgFC20Padl2k3gUX12NgL8iYCooV8L7q6LBANCcycpptWp6uOTMMsyu1W6wxIbhnA+2CbwfsTtVrtM8itpymzW72X7gvHATgAB+AAHIADcACzABSwW+e+tnwEuenf7IpZ5/8CnD8/7wGEwpuvnpEsX59XPdvTFzMifF0mwI83zzo28nM1n0CflgkAnMPeZ+zNhPs1ZbsxKxIAWCaPOlP6b2kI0/qEIR6zJtWcS9qxehlOeesXdnr+A2i7UgbglNfWqpzuKXhZ27XpqSxx9dh1G4Oy620VrOMXVf/VRbs4seoPM7+ZtJmZxiqAdnDMpJ1pTyLglMcXWI5FQFVaqX2p27GKgJaOl7ZrdtWiY2oAamCVK+nDkII2r1p2H2YUqIFKMVMdmezKwFCmAKDaqSVHMDv0qWku0XqhKZfLJP/r80DT41sARTj7vaiJKbkFAGF6Q+CcEx3R25uIMOLA7ze7C1G467e90Gx+hUSC3w0t2ioJWQw4vzib4HoQzVgywovXQnAZrZ5UohgTrvWNjMgGCO6tCoV49aS8akUyJYlEC7XWgiO678URNaO8sDuYTEnvIeF+Q/TMhLtPqD8NQL7ZBohcDByAA3AADuAfAPgF62mew02X9TwAAAAASUVORK5CYII=' width='192' height='108' image-rendering='optimizeSpeed' style='image-rendering:crisp-edges;image-rendering:pixelated'/>")} center bottom / cover no-repeat`,
+      // 손으로 찍은 192×108 픽셀 풍경. 단순하게: 하늘 띠, 구름 둘, 눈 덮인 먼 산, 언덕, 풀밭
+      `${svg(192, 108, "<image href='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAABsBAMAAADOLKChAAAAHlBMVEX/////8ejI3P+MuP9clPxO0GoisEovqFiKgLA+e/BvdEgWAAACfklEQVR42u1YO47bMBB91IogXFlGkDrJnmCLHGALN0EaNjyDWna+wqYzkGrP4EYXyd4gewW6WIAwBEcp9NdaJukl84FJFrIG5Lx5b4YUTfKIsC3BdQLoXAYF0BJa/isSkQuqKK8fi20gBnrydGGgpTmufPD70ZWBNMelJ+OdALTlJJeWviKvc7vsuQNo2GQvuQUAsAMAMCeAXht5hgIDgA1w2LKDjZxdFU2WprdNNnEoCK+bnQwN4L+Kbk/k0j8DJtnGs0T9XpQvdF07+WLrca2R+NG/BoAibA9eReRL6K3ia3AGJQ3awzNYBy9THrb/AQYRIAJEgAgQASJABLgOgD3Cdt/Hlh+4uRuf7D579f8TwM3H0ek6q4i/foRk347Lke3dJ48Iz0wCh+8fBrb019KfQE9MAsAxG91V3BfunijfnbLWFxBMJgOXyYZmcO3vOcQpa3PBwejASh5QFl1c2NnFD6AbSjmAsmisdSuL4XUOHYwUpYVgtSdRI4h6rpiINdoq+CCuYRxzBJqn6P3PxNACUD7wTIUdAQCCzw7uKZCHWrPXI3dnM2BqndTJbNjCRMBKx3PbNX/TouNmAOpgnVcygSMFa16N7AncKFAHlQQ3fTL5GxNDuQGAWpfWPILbR5+61hJtFppxuVwUf7vZ2UW8BrDPvJ+L2pymawCo9o7elVKpjejpffNaOXFQZokA/jJ6dUFQFhJV6mVqsVapmsuBUme9VcoOop2bnuClQLKe4wkIoBnReiLZnP8JgOp8kOXeIF7jVNVvqzkl0xktzFpXCqt+lMKqnUWy4eT0kvKeEh6/VCNzquJfqL8NkD6HBljFHESACBABIsB/APAbzmiC3Y+3aKEAAAAASUVORK5CYII=' width='192' height='108' image-rendering='optimizeSpeed' style='image-rendering:crisp-edges;image-rendering:pixelated'/>")} center bottom / cover no-repeat`,
       '#7FB0FF',
     ].join(', '),
     form: { bevel: 0.05, size: 0.84, radius: 0.04, depth: 0.06 },
