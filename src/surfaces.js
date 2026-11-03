@@ -5736,6 +5736,69 @@ B.plasmaball = {
   emissive: 'totalEmissiveRadiance = vec3(.75, .7, 1.) * fxFresnel(normal, 3.) * .2;',
 };
 
+S.fire = {
+  // 불. 조각 하나가 통째로 타오르는 불덩이다. 스티커 자리는 막이 아니라 불이 담긴 상자의 앞쪽이고, 시선은 그 속으로
+  // 들어가 불꽃을 겹겹이 지난다. 불은 조각 아래(화면 위쪽의 반대)에서 가장 짙게 이글거리고, 위로 갈수록 갈라진 혀가 되어
+  // 날름거리며 솟는다. 가장 뜨거운 속은 하얗게, 둘레는 면 색으로 탄다(불꽃 반응: 스트론튬 빨강, 구리 초록, 메탄 파랑,
+  // 나트륨 노랑, 칼륨 보라, 칼슘 주황). 불꽃은 진짜 깊이에 있어서 돌려 보면 속에서 어긋나고, 상자 벽 가까이서 잦아든다
+  head: `
+    float fxFireN(vec3 p) {
+      return fxN3(p) * .55 + fxN3(p * 2.03 + 11.7) * .3 + fxN3(p * 4.1 + 3.1) * .15;
+    }`,
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxBase = diffuseColor.rgb;
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVl = normalize(vec3(dot(fxV, vTx), dot(fxV, vTy), max(dot(fxV, vTz), .2)));
+    // 화면 위쪽(불이 솟는 쪽)을 조각 좌표로
+    vec3 fxU = normalize(vec3(vTx.y, vTy.y, vTz.y) + vec3(0., 0., 1e-4));
+    float fxR = uSticker.x;
+    vec3 fxC = vec3(0., 0., -.48);
+    vec3 fxQ = vec3(vLocal.xy, 0.);
+    float fxT = uTime;
+    vec3 fxFire = vec3(0.);
+    float fxTr = 1.;
+    float fxSt = .052;
+    // 겉에서 첫 걸음을 조금씩 어긋나게 해 층 무늬를 지운다
+    float fxJit = fxH2(gl_FragCoord.xy) * fxSt;
+    for (int i = 0; i < 16; i++) {
+      vec3 q = fxQ - fxVl * (fxJit + float(i) * fxSt);
+      vec3 qc = q - fxC;
+      float hb = dot(qc, fxU);
+      vec3 qp = qc - fxU * hb;
+      // 불꽃 결은 위아래로 길게 늘어지고 위로 흘러간다. 위로 갈수록 옆으로 더 흔들린다
+      float rise = clamp(hb + .5, 0., 1.);
+      vec3 w = qp * 5.5 + fxU * (hb * 2. - fxT * 2.3) + vec3(vSeed * 17.);
+      w += vec3(fxN3(w * .6 + fxT * .4), fxN3(w * .6 + 9.1), fxN3(w * .6 + 4.7 - fxT * .3)) * (.6 + 1.4 * rise);
+      float n = fxFireN(w);
+      // 아래는 짙고 위로 갈수록 갈라진 혀만 남는다
+      float shape = .78 - rise * 1.2;
+      float d = smoothstep(0., .3, (n - .5) * 3.2 + shape);
+      // 상자 벽 가까이서 잦아든다
+      float dw = min(min(fxR - abs(q.x), fxR - abs(q.y)), q.z + .96);
+      d *= smoothstep(0., .07, dw) * step(0., dw);
+      float heat = d * (.45 + .55 * (1. - rise));
+      vec3 em = fxBase * pow(heat, 1.4) * 2. + mix(fxBase, vec3(1., .93, .8), .4) * pow(heat, 4.) * 1.1;
+      fxFire += em * fxTr * fxSt * 6.;
+      fxTr *= exp(-d * fxSt * 5.);
+      if (fxTr < .04) break;
+    }
+    diffuseColor.rgb = vec3(0.);`,
+  surface: 'roughnessFactor = 1.; metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = fxFire;',
+};
+B.fire = {
+  // 몸통은 숯. 검게 탄 결 사이 갈라진 틈이 잉걸불처럼 달아올라 숨 쉬듯 깜박인다
+  color: `
+    float fxCk = abs(fxN3(vLocal * 14. + vSeed * 7.) - .5);
+    float fxCrack = 1. - smoothstep(.0, .05, fxCk);
+    diffuseColor.rgb = vec3(.03, .026, .024) * (.7 + .6 * fxN3(vLocal * 60.));`,
+  surface: 'roughnessFactor = .9; metalnessFactor = 0.;',
+  emissive: `
+    float fxBr = .55 + .45 * sin(uTime * 1.7 + fxN3(vLocal * 5.) * 9.);
+    totalEmissiveRadiance = vec3(1., .32, .06) * fxCrack * fxBr * 1.4 + vec3(.9, .25, .05) * (1. - smoothstep(.0, .2, fxCk)) * .12;`,
+};
+
 S.amber = {
   // 호박. 칸마다 반들반들하게 간 호박 덩이가 둥근 네모 캐보숑으로 봉긋 솟았다. 속은 진짜 깊이가 있어서, 겉이 렌즈처럼
   // 빛을 꺾어 보는 각도에 따라 속 것들이 깊은 데서 미끄러지고 가운데가 살짝 커 보인다. 깊숙이 모기가 갇혀 있고
@@ -6644,6 +6707,7 @@ export const MOVING = new Set([
   'chrome',
   'fiberoptic',
   'ledcube',
+  'fire',
 ]);
 
 /**

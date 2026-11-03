@@ -3549,6 +3549,31 @@ export const THEMES = [
     motion: 'snap',
     burst: { shape: 'star', colors: ['#FFFFFF', '#E8EEFF'], size: 0.08, speed: 2.6, gravity: 0, drag: 2.4, life: 0.6, additive: true },
   },
+  {
+    // 불. 조각 하나가 통째로 타오르는 불덩이. 시선이 상자 속 불꽃을 겹겹이 지나고, 아래에서 이글거리다 위로 혀를 날름거린다.
+    // 가장 뜨거운 속은 하얗게, 둘레는 불꽃 반응색으로 탄다. 몸통은 갈라진 틈이 달아오른 숯
+    id: 'fire',
+    name: '불',
+    bg: '#070302',
+    ink: '#FFE8D0',
+    backdrop: [
+      'radial-gradient(50% 40% at 50% 62%, rgba(255,120,40,.18), transparent 70%)',
+      'radial-gradient(90% 70% at 50% 45%, #1A0A05, #050202)',
+    ].join(', '),
+    form: { bevel: 0.04, size: 0.97, radius: 0.05 },
+    body: { color: '#0A0807', roughness: 0.9 },
+    faces: ['#FF2A1A', '#20E070', '#2A70FF', '#FFD020', '#B040FF', '#FF7A10'],
+    lights: {
+      sky: '#ffd8b0', ground: '#100604', hemi: 0.3,
+      key: ['#ffe0c0', 1.2, [-4, 6, 5]], fill: ['#ff8040', 0.3, [6, 0, 3]], rim: ['#ffb070', 0.8, [2, 4, -6]],
+    },
+    env: 0.05,
+    surface: 'fire',
+    sound: 'molten',
+    motion: 'smooth',
+    ambient: { mode: 'rise', shape: 'glow', colors: ['#FFC23A', '#FF7A1A', '#FF3B0A'], count: 50, size: 0.05, speed: 0.5, opacity: 0.8, additive: true },
+    burst: { shape: 'streak', colors: 'faces', size: 0.08, speed: 3, gravity: 3, drag: 2, life: 0.6, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3574,6 +3599,7 @@ export const GROUPS = [
   },
   { name: '명화', themes: ['oil', 'watercolor', 'ukiyoe', 'monet', 'seurat', 'gogh', 'munch', 'cubism', 'warhol', 'collage'] },
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
+  { name: '원소', themes: ['fire'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'chrome', 'fiberoptic', 'ledcube'] },
 ];
