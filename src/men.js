@@ -2,15 +2,17 @@
 //
 // 사람은 마디 열한 개(머리, 목, 골반, 팔꿈치·손 둘, 무릎·발 둘)를 뼈로 이은 헝겊 인형(래그돌)이다. 마디마다 중력을 받아
 // 베를레 적분으로 움직이고, 뼈 길이는 늘 지키며, 유리 벽에 부딪히면 멈추고 마찰로 미끄러진다.
-// 살아 있을 때는 마디마다 용수철이 걷기·뛰기·손 흔들기·춤·뛰어오르기 자세 쪽으로 끌어 그 동작을 한다. 이때 몸은 중력을
+// 살아 있을 때는 마디마다 용수철이 동작 자세 쪽으로 끌어 그 동작을 한다: 걷기, 뛰기, 손 흔들기, 춤, 뛰어오르기,
+// 팔굽혀펴기, 물구나무, 뒤로 공중제비, 보는 사람 쪽 유리로 걸어가 두드리기. 이때 몸은 중력을
 // 거슬러 곧게 서려고 바닥이 기운 만큼 기울어진다. 바닥이 너무 기울거나(층을 돌리거나 큐브를 굴려서) 바닥이 아예 바뀌면
 // 용수철을 놓아 그냥 헝겊 인형이 되어 떨어지고 뒹굴고 벽을 타고 미끄러진다.
-// 몸이 바닥에 멈추면 무릎을 굽혀 일어나 다시 돌아다닌다. 자리는 조각 좌표(가운데가 0, 벽이 ±0.46)로 센다.
+// 몸이 바닥에 멈추면 무릎을 굽혀 일어나 다시 돌아다닌다. 큐브를 돌리면 사람은 관성으로 제자리에 남으려 해서
+// 상자 벽에 밀리고 바닥 위에서 미끄러진다. 자리는 조각 좌표(가운데가 0, 벽이 ±0.46)로 센다.
 import { Vector3 } from 'three';
 
 export const JOINTS = 11; // 머리, 목, 골반, 왼팔꿈치, 왼손, 오른팔꿈치, 오른손, 왼무릎, 왼발, 오른무릎, 오른발
 const WALL = 0.46;
-const RADIUS = [0.045, 0.014, 0.016, 0.012, 0.012, 0.012, 0.012, 0.012, 0.013, 0.012, 0.013];
+const RADIUS = [0.055, 0.024, 0.026, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02];
 // 뼈: 두 마디와 길이
 const BONES = [
   [0, 1, 0.062], [1, 2, 0.15],
@@ -22,7 +24,7 @@ const STRUTS = [
   [0, 2, 0.2], [2, 8, 0.07], [2, 10, 0.07], [1, 4, 0.05], [1, 6, 0.05],
   [7, 9, 0.025], [8, 10, 0.02], [0, 4, 0.04], [0, 6, 0.04], [0, 7, 0.17], [0, 9, 0.17],
 ];
-const GRAVITY = 2.4;
+const GRAVITY = 5.2;
 const STEP = 1 / 120;
 const HIP = 0.2;
 const STAND = 0.84; // 바닥이 이만큼(약 33도) 넘게 기울면 서 있지 못한다
@@ -34,10 +36,17 @@ const CHORES = [
   ['run', 2, 1.2, 2.5],
   ['idle', 1, 0.8, 2],
   ['wave', 1, 1.2, 2],
-  ['jump', 1.5, 0.8, 0.8],
-  ['dance', 1.5, 1.6, 3],
+  ['jump', 1.2, 0.8, 0.8],
+  ['dance', 1.2, 1.6, 3],
+  ['pushup', 1, 2.5, 4],
+  ['handstand', 1, 2, 3.5],
+  ['flip', 1, 1.1, 1.1],
+  ['knock', 1.3, 4, 6],
 ];
-const RATE = { walk: 7, run: 12, idle: 2, wave: 9, jump: 4, dance: 7, limp: 13, getup: 3 };
+const RATE = {
+  walk: 7, run: 12, idle: 2, wave: 9, jump: 4, dance: 7, limp: 13, getup: 3,
+  pushup: 5, handstand: 3, flip: 3, knock: 9,
+};
 const SPEED = { walk: 0.2, run: 0.42 };
 
 const v1 = new Vector3();
@@ -75,6 +84,20 @@ function tangent(floor, out = new Vector3()) {
   return out.copy(v1).multiplyScalar(Math.cos(th)).addScaledVector(v2, Math.sin(th)).normalize();
 }
 
+/** 두 토막 팔다리의 가운데 마디(팔꿈치·무릎) 자리. a 뿌리, c 끝, bend 굽는 쪽 */
+function ik(a, c, l1, l2, bend) {
+  const d = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+  const L = Math.hypot(d[0], d[1], d[2]) || 1e-6;
+  const u = d.map((v) => v / L);
+  const r = Math.min(L, l1 + l2 - 1e-4);
+  const along = (l1 * l1 - l2 * l2 + r * r) / (2 * r);
+  const h = Math.sqrt(Math.max(0, l1 * l1 - along * along));
+  const bd = bend[0] * u[0] + bend[1] * u[1] + bend[2] * u[2];
+  const b = [bend[0] - u[0] * bd, bend[1] - u[1] * bd, bend[2] - u[2] * bd];
+  const bl = Math.hypot(b[0], b[1], b[2]) || 1;
+  return [0, 1, 2].map((i) => a[i] + u[i] * along + (b[i] / bl) * h);
+}
+
 function limb(side, ab, sw) {
   return [side * Math.sin(ab), -Math.cos(ab) * Math.cos(sw), Math.cos(ab) * Math.sin(sw)];
 }
@@ -84,6 +107,40 @@ function limb(side, ab, sw) {
  * mode 동작, ph 걸음 위상, k 동작이 얼마나 지났는지(0~1)
  */
 function pose(out, mode, ph, k) {
+  const set = (j, p) => { out[j * 3] = p[0]; out[j * 3 + 1] = p[1]; out[j * 3 + 2] = p[2]; };
+  if (mode === 'pushup') {
+    // 팔굽혀펴기: 몸을 판자처럼 곧게 펴고 손으로 바닥을 밀어 오르내린다
+    const hp = 0.07 + 0.055 * (0.5 + 0.5 * Math.sin(ph));
+    const pel = [0, hp, 0];
+    const neck = [0, hp + 0.03, 0.147];
+    set(0, [0, hp + 0.045, 0.207]); set(1, neck); set(2, pel);
+    for (const [e, h, side] of [[3, 4, -1], [5, 6, 1]]) {
+      const hand = [side * 0.075, 0.014, 0.15];
+      set(h, hand); set(e, ik(neck, hand, 0.086, 0.08, [side, 0.5, -0.4]));
+    }
+    for (const [kn, f, side] of [[7, 8, -1], [9, 10, 1]]) {
+      const foot = [side * 0.03, 0.014, -0.196];
+      set(f, foot); set(kn, ik([side * 0.019, hp, 0], foot, 0.1, 0.1, [0, 1, 0]));
+    }
+    return;
+  }
+  if (mode === 'handstand') {
+    // 물구나무: 손으로 서서 다리를 곧게 뻗고 조금씩 휘청인다
+    const sw = Math.sin(ph) * 0.03;
+    const neck = [sw * 0.3, 0.166, 0];
+    set(0, [sw * 0.3, 0.106, 0.012]); set(1, neck);
+    const pel = [sw, 0.315, -0.01];
+    set(2, pel);
+    for (const [e, h, side] of [[3, 4, -1], [5, 6, 1]]) {
+      const hand = [side * 0.05, 0.014, 0];
+      set(h, hand); set(e, ik(neck, hand, 0.086, 0.08, [side, 0, 0]));
+    }
+    for (const [kn, f, side] of [[7, 8, -1], [9, 10, 1]]) {
+      const foot = [side * 0.035 + sw * 1.6, 0.5, side * 0.03 * Math.sin(ph * 0.7)];
+      set(f, foot); set(kn, ik([pel[0] + side * 0.019, pel[1], pel[2]], foot, 0.1, 0.1, [0, 0, 1]));
+    }
+    return;
+  }
   let legL = 0, legR = 0, knL = 0.05, knR = 0.05;
   let armL = 0.05, armR = -0.05, abL = 0.18, abR = 0.18, elL = 0.25, elR = 0.25;
   let lean = 0, bob = 0;
@@ -116,6 +173,18 @@ function pose(out, mode, ph, k) {
     // 떨어지며 허우적댄다
     legL = Math.sin(ph * 1.3) * 0.8; legR = Math.sin(ph * 1.1 + 2) * 0.8; knL = 0.6; knR = 0.4;
     abL = 1.6 + Math.sin(ph) * 0.7; abR = 1.6 + Math.cos(ph * 1.2) * 0.7; elL = elR = 0.9;
+  } else if (mode === 'flip') {
+    // 뒤로 공중제비: 웅크렸다가 팔을 휘두르며 솟아 몸을 말아 한 바퀴 돌고 웅크려 내려선다
+    const crouch = 1 - smooth((k - 0.05) / 0.12) + smooth((k - 0.8) / 0.15);
+    const tuck = Math.sin(Math.PI * Math.min(1, Math.max(0, (k - 0.25) / 0.5)));
+    const c = Math.max(crouch, tuck);
+    knL = knR = c * 1.8; legL = legR = crouch * 0.8 + tuck * 1.5; lean = crouch * 0.35 + tuck * 0.5;
+    armL = armR = k < 0.2 ? -0.9 : 2.6 - tuck * 1.6; abL = abR = 0.3; elL = elR = 0.3 + tuck * 1.2;
+    bob = -crouch * 0.06;
+  } else if (mode === 'knock') {
+    // 유리를 두드린다: 오른팔을 앞으로 뻗어 주먹으로 콩콩
+    armR = 1.45; abR = 0.25; elR = 0.25 + 0.6 * (0.5 + 0.5 * Math.sin(ph * 2.2));
+    armL = 0.1; lean = 0.05;
   } else if (mode === 'getup') {
     const c = 1 - smooth(k);
     knL = knR = c * 1.9; legL = legR = c * 1.2; lean = c * 0.8; armL = armR = c * 0.7; elL = elR = 0.5;
@@ -124,7 +193,6 @@ function pose(out, mode, ph, k) {
   const sp = [0, Math.cos(lean), Math.sin(lean)];
   const pel = [0, HIP + bob, 0];
   const neck = [pel[0], pel[1] + sp[1] * 0.15, pel[2] + sp[2] * 0.15];
-  const set = (j, p) => { out[j * 3] = p[0]; out[j * 3 + 1] = p[1]; out[j * 3 + 2] = p[2]; };
   const add = (p, d, s) => [p[0] + d[0] * s, p[1] + d[1] * s, p[2] + d[2] * s];
   set(0, add(neck, sp, 0.062));
   set(1, neck);
@@ -137,6 +205,19 @@ function pose(out, mode, ph, k) {
   const kR = add([pel[0] + 0.019, pel[1], pel[2]], limb(1, 0.06, legR), 0.1);
   set(7, kL); set(8, add(kL, limb(-1, 0.06, legL - knL), 0.1));
   set(9, kR); set(10, add(kR, limb(1, 0.06, legR - knR), 0.1));
+  if (mode === 'flip') {
+    const th = -Math.PI * 2 * smooth((k - 0.22) / 0.55);
+    const lift = Math.sin(Math.PI * Math.min(1, Math.max(0, (k - 0.15) / 0.68))) * 0.2;
+    const cy = HIP * 0.8;
+    const c = Math.cos(th);
+    const sn = Math.sin(th);
+    for (let j = 0; j < JOINTS; j++) {
+      const y = out[j * 3 + 1] - cy;
+      const z = out[j * 3 + 2];
+      out[j * 3 + 1] = cy + y * c - z * sn + lift;
+      out[j * 3 + 2] = y * sn + z * c;
+    }
+  }
 }
 
 export class Men {
@@ -171,9 +252,9 @@ export class Men {
     });
   }
 
-  /** g: 조각마다 조각 좌표로 본 중력 방향(단위 벡터) */
-  update(dt, gs) {
-    this.list.forEach((m, i) => this.think(m, gs[i], dt));
+  /** gs: 조각마다 조각 좌표로 본 중력 방향(단위 벡터), eyes: 보는 사람 쪽 */
+  update(dt, gs, eyes) {
+    this.list.forEach((m, i) => this.think(m, gs[i], dt, eyes?.[i]));
     // 물리는 1/120초씩 고르게 나눠 돈다
     this.acc = Math.min((this.acc ?? 0) + dt, STEP * 6);
     while (this.acc >= STEP) {
@@ -182,12 +263,34 @@ export class Men {
     }
   }
 
+  /**
+   * 조각이 움직이고 돈 만큼 사람을 거꾸로 옮긴다(관성). move는 지난 조각 좌표를 지금 조각 좌표로 옮기는 행렬이다.
+   * 사람은 제자리에 있으려 하고 상자 벽이 와서 밀거나 그 밑에서 미끄러진다. k만큼만 받아 너무 세게 내동댕이쳐지지 않게
+   */
+  carry(m, move, k) {
+    const e = move.elements;
+    for (const arr of [m.x, m.o]) {
+      for (let j = 0; j < JOINTS; j++) {
+        const i = j * 3;
+        const px = arr[i], py = arr[i + 1], pz = arr[i + 2];
+        let dx = e[0] * px + e[4] * py + e[8] * pz + e[12] - px;
+        let dy = e[1] * px + e[5] * py + e[9] * pz + e[13] - py;
+        let dz = e[2] * px + e[6] * py + e[10] * pz + e[14] - pz;
+        const d = Math.hypot(dx, dy, dz);
+        const cap = d > 0.04 ? 0.04 / d : 1;
+        arr[i] = px + dx * k * cap;
+        arr[i + 1] = py + dy * k * cap;
+        arr[i + 2] = pz + dz * k * cap;
+      }
+    }
+  }
+
   joint(m, j, out) {
     return out.set(m.x[j * 3], m.x[j * 3 + 1], m.x[j * 3 + 2]);
   }
 
   /** 동작을 고르고 그 자세의 목표 자리를 정한다 */
-  think(m, g, dt) {
+  think(m, g, dt, eye) {
     m.phase += dt * RATE[m.mode];
     m.t += dt;
     const floor = floorOf(g, m.floor);
@@ -236,15 +339,30 @@ export class Men {
 
     // 서서 하는 일
     m.drive = Math.min(1, m.drive + dt * 3);
-    const speed = SPEED[m.mode] ?? 0;
+    let speed = SPEED[m.mode] ?? 0;
+    let act = m.mode;
+    if (m.mode === 'knock') {
+      // 보는 사람 쪽 유리로 걸어가 얼굴을 그쪽으로 두고 두드린다(위에서 내려다보면 그냥 손을 흔든다)
+      v1.copy(eye ?? floor).addScaledVector(floor, -(eye ?? floor).dot(floor));
+      if (v1.lengthSq() < 0.1) act = 'wave';
+      else {
+        m.heading.copy(v1).normalize();
+        let gap = 1;
+        for (let a = 0; a < 3; a++) {
+          if (Math.abs(floor.getComponent(a)) > 0.5 || Math.abs(m.heading.getComponent(a)) < 0.5) continue;
+          gap = WALL - 0.13 - m.ground.getComponent(a) * Math.sign(m.heading.getComponent(a));
+        }
+        if (gap > 0.02) { act = 'walk'; speed = SPEED.walk; }
+      }
+    }
     m.heading.addScaledVector(floor, -m.heading.dot(floor));
     if (m.heading.lengthSq() < 1e-4) tangent(floor, m.heading);
     m.heading.normalize();
-    if (speed) {
+    if (speed && m.mode !== 'knock') {
       // 이리저리 헤매며 걷고, 벽에 다다르면 돌아선다
       m.heading.applyAxisAngle(floor, (Math.sin(m.phase * 0.21 + m.t) * 0.9 + (Math.random() - 0.5) * 2) * dt);
-      m.ground.addScaledVector(m.heading, speed * dt);
     }
+    if (speed) m.ground.addScaledVector(m.heading, speed * dt);
     if (m.mode === 'dance') m.heading.applyAxisAngle(floor, dt * 2.5 * Math.sin(m.phase * 0.25));
     // 발 디딘 자리는 바닥 위, 벽에서 조금 떨어진 곳. 몸이 밀려나면 따라간다
     m.ground.lerp(v1.copy(pelvis), Math.min(1, dt * 1.5));
@@ -258,7 +376,7 @@ export class Men {
         if (m.heading.getComponent(a) * c > 0) m.heading.setComponent(a, -m.heading.getComponent(a));
       }
     }
-    this.aim(m, floor, g, m.mode, m.drive, false, Math.min(1, m.t / m.dur));
+    this.aim(m, floor, g, act, m.drive, false, Math.min(1, m.t / m.dur));
     if (m.t > m.dur) this.next(m);
   }
 
@@ -311,7 +429,7 @@ export class Men {
     for (let j = 0; j < JOINTS; j++) {
       const i = j * 3;
       for (let a = 0; a < 3; a++) {
-        const v = (x[i + a] - o[i + a]) * 0.995;
+        const v = (x[i + a] - o[i + a]) * 0.9997;
         o[i + a] = x[i + a];
         x[i + a] += v + (a === 0 ? gx : a === 1 ? gy : gz);
         if (pull) x[i + a] += (target[i + a] - x[i + a]) * pull;

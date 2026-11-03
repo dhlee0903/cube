@@ -379,6 +379,7 @@ export class CubeView {
 
     // 막대 사람 테마: 조각마다 사는 사람의 마디 자리를 스티커마다 한 줄씩 텍스처에 담아 넘긴다(스티커 좌표로 옮겨서)
     this.men = new Men(count);
+    this.menWas = null;
     let row = 0;
     this.manAt = this.stickerMeshes.map((mesh, s) => {
       const n = mesh.count;
@@ -717,7 +718,17 @@ export class CubeView {
     const q = new Quaternion();
     const down = new Vector3(0, -1, 0);
     const gs = this.now.map((p) => down.clone().applyQuaternion(q.copy(this.root.quaternion).multiply(p.quat).invert()));
-    this.men.update(dt, gs);
+    // 관성: 조각이 지난 프레임에서 움직이고 돈 만큼 사람을 거꾸로 옮긴다
+    const was = this.menWas;
+    this.menWas = this.now.map((p, i) => {
+      const m = new Matrix4().compose(p.pos.clone().applyQuaternion(this.root.quaternion), q.copy(this.root.quaternion).multiply(p.quat), ONE);
+      if (was?.[i]) this.men.carry(this.men.list[i], m.clone().invert().multiply(was[i]), 0.75);
+      return m;
+    });
+    // 보는 사람 쪽(카메라는 +z에 있다)
+    const eye = new Vector3(0, 0, 1);
+    const eyes = this.now.map((p) => eye.clone().applyQuaternion(q.copy(this.root.quaternion).multiply(p.quat).invert()));
+    this.men.update(dt, gs, eyes);
     const data = this.menTex.image.data;
     const w = JOINTS + 1;
     const v = new Vector3();

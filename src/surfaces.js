@@ -5285,14 +5285,15 @@ S.men = {
     vec3 fxHead = fxMJ(0.), fxPel = fxMJ(2.);
     vec2 jN = fxMnJ(fxMJ(1.)), jP = fxMnJ(fxPel);
     vec2 jEL = fxMnJ(fxMJ(3.)), jER = fxMnJ(fxMJ(5.)), jKL = fxMnJ(fxMJ(7.)), jKR = fxMnJ(fxMJ(9.));
-    float fxD = fxMnSeg(fxS, jN, jP);
+    // 몸통은 굵고 팔다리는 조금 가늘다
+    float fxD = fxMnSeg(fxS, jN, jP) - .007;
     fxD = min(fxD, min(fxMnSeg(fxS, jN, jEL), fxMnSeg(fxS, jEL, fxMnJ(fxMJ(4.)))));
     fxD = min(fxD, min(fxMnSeg(fxS, jN, jER), fxMnSeg(fxS, jER, fxMnJ(fxMJ(6.)))));
     fxD = min(fxD, min(fxMnSeg(fxS, jP, jKL), fxMnSeg(fxS, jKL, fxMnJ(fxMJ(8.)))));
     fxD = min(fxD, min(fxMnSeg(fxS, jP, jKR), fxMnSeg(fxS, jKR, fxMnJ(fxMJ(10.)))));
     float fxAa = max(fwidth(fxS.x), .0015);
-    float fxMan = 1. - smoothstep(.014 - fxAa, .014 + fxAa, fxD);
-    fxMan = max(fxMan, 1. - smoothstep(.045 - fxAa, .045 + fxAa, length(fxS - fxMnJ(fxHead))));
+    float fxMan = 1. - smoothstep(.021 - fxAa, .021 + fxAa, fxD);
+    fxMan = max(fxMan, 1. - smoothstep(.056 - fxAa, .056 + fxAa, length(fxS - fxMnJ(fxHead))));
     vec3 fxG = normalize(fxMJ(11.) + vec3(0., 1e-5, 0.));
     // 상자 속 벽: 시선이 닿는 안쪽 벽과 그 벽이 향한 쪽
     float fxR = uSticker.x;
