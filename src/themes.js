@@ -1781,34 +1781,6 @@ export const THEMES = [
     ambient: { mode: 'fall', shape: 'dot', colors: ['#FFFFFF'], count: 40, size: 0.03, speed: 0.2, opacity: 0.8 },
     burst: { shape: 'drip', colors: 'faces', size: 0.09, speed: 2.2, gravity: -6, drag: 1.2, life: 1.1 },
   },
-  {
-    // 네모난 행성들. 조각 하나하나가 작은 정육면체 행성이라 칸마다 행성 겉이 꽉 찬다. 면마다 실제 천체를 본떴다
-    // (목성, 지구, 유로파, 화성, 이오, 해왕성). 지표가 자전하고, 낮밤 경계가 지나가면 밤쪽에 도시 불빛과 용암이 켜지며,
-    // 테두리를 따라 대기가 빛난다
-    id: 'planet',
-    name: '행성',
-    bg: '#04040C',
-    ink: '#E6E8FF',
-    backdrop: [
-      stars(110, 31),
-      'radial-gradient(40% 30% at 75% 25%, rgba(120,80,255,.18), transparent 70%)',
-      'radial-gradient(35% 25% at 20% 75%, rgba(0,160,255,.14), transparent 70%)',
-      '#04040C',
-    ].join(', '),
-    drift: 'radial-gradient(30% 22% at 65% 70%, rgba(255,120,200,.1), transparent 70%)',
-    form: { bevel: 0.05, size: 0.94, radius: 0.06, grid: 56 },
-    body: { color: '#2A2C36', roughness: 0.45, metalness: 0.6 },
-    faces: ['#D89A5A', '#2A78B8', '#E8EEF4', '#C8502A', '#E0C84A', '#3A48C0'],
-    lights: {
-      sky: '#3a3a6a', ground: '#000000', hemi: 0.35,
-      key: ['#ffffff', 3.4, [-7, 3, 4]], fill: ['#6b5cff', 0.25, [6, -2, 3]], rim: ['#9fd8ff', 1, [4, 2, -6]],
-    },
-    surface: 'planet',
-    sound: 'space',
-    motion: 'fluid',
-    ambient: { mode: 'orbit', shape: 'glow', colors: ['#FFFFFF', '#CFC8FF'], count: 160, size: 0.045, speed: 1, additive: true },
-    burst: { shape: 'star', colors: ['#FFFFFF', '#FFD9A0', '#A8E8FF'], size: 0.13, speed: 1.4, gravity: 0, drag: 0.8, life: 1.5, additive: true },
-  },
 
   {
     // 미러볼. 거울 조각마다 돌아가는 색 조명이 걸려 번쩍이고, 박자에 맞춰 조명 색이 돈다
@@ -2018,36 +1990,6 @@ export const THEMES = [
     motion: 'mechanical',
     ambient: { mode: 'float', shape: 'dot', colors: ['#E8C890', '#C89A60'], count: 40, size: 0.025, speed: 0.25, opacity: 0.6 },
     burst: { shape: 'streak', colors: ['#E8C890', '#C89A60', '#8A5A30'], size: 0.13, speed: 2, gravity: -4, drag: 1.4, life: 1.2 },
-  },
-  {
-    // 70년대 거실의 라바램프. 칸마다 아래서 데워진 밀랍 덩어리가 천천히 떠올랐다 가라앉으며
-    // 합쳐졌다 갈라진다. 크롬 받침, 방 안을 물들이는 빛, 끈적하게 돈다
-    id: 'lavalamp',
-    name: '라바램프',
-    bg: '#1A0E24',
-    ink: '#FFE6C8',
-    backdrop: [
-      'radial-gradient(50% 40% at 50% 45%, rgba(255,90,140,.22), transparent 70%)',
-      'radial-gradient(30% 25% at 18% 80%, rgba(255,170,40,.16), transparent 70%)',
-      'radial-gradient(30% 25% at 85% 20%, rgba(150,90,255,.18), transparent 70%)',
-      'repeating-radial-gradient(circle at 50% 120%, rgba(255,140,60,.05) 0 30px, transparent 30px 60px)',
-      '#1A0E24',
-    ].join(', '),
-    drift: 'radial-gradient(35% 28% at 40% 60%, rgba(255,80,160,.12), transparent 70%)',
-    form: { bevel: 0.07, size: 0.94, radius: 0.12, grid: 40 },
-    body: { color: '#B8BCC4', roughness: 0.18, metalness: 1 },
-    sticker: { roughness: 0.08 },
-    faces: ['#FF7A1E', '#FF3A8A', '#FFD83A', '#6AE03A', '#2AC8F0', '#9A5AFF'],
-    lights: {
-      sky: '#ff9ac8', ground: '#1a0820', hemi: 0.7,
-      key: ['#ffd0e0', 1.6, [-4, 5, 5]], fill: ['#ff8a3a', 0.8, [6, -2, 3]], rim: ['#b88aff', 1.6, [0, 4, -6]],
-    },
-    env: 0.45,
-    surface: 'lavalamp',
-    sound: 'molten',
-    motion: 'heavy',
-    ambient: { mode: 'rise', shape: 'bubble', colors: ['#FFB0D0', '#FFD8A0'], count: 30, size: 0.07, speed: 0.25, opacity: 0.5 },
-    burst: { shape: 'glow', colors: 'faces', size: 0.16, speed: 1.4, gravity: 1.2, drag: 1.6, life: 1.6, additive: true },
   },
   {
     // 택배 상자 속. 큐브를 뽁뽁이로 쌌다. 칸마다 공기 방울이 볼록 솟아 반질거리고, 하나씩 톡 터지며 반짝하고
@@ -2598,58 +2540,7 @@ export const THEMES = [
     ambient: { mode: 'float', shape: 'star', colors: ['#FFFFFF', '#FFF2A8'], count: 24, size: 0.08, speed: 0.4, opacity: 0.9 },
     burst: { shape: 'star', colors: 'faces', size: 0.2, speed: 2.6, gravity: -1, drag: 2.4, life: 0.8 },
   },
-  {
-    // 우주 저편의 성운. 다 맞추면 면 하나가 성운 한 덩이다. 휘감기며 번지는 빛나는 가스와 그 앞을 가로막는 먼지 띠,
-    // 갓 태어난 밝은 별과 빛무리, 촘촘한 잔별. 아주 천천히 흐른다
-    id: 'nebula',
-    name: '성운',
-    bg: '#03030A',
-    ink: '#EAE6FF',
-    backdrop: [
-      stars(140, 71),
-      'radial-gradient(50% 40% at 25% 70%, rgba(200,60,160,.12), transparent 70%)',
-      'radial-gradient(45% 35% at 75% 30%, rgba(60,120,255,.12), transparent 70%)',
-      '#03030A',
-    ].join(', '),
-    form: { bevel: 0.05, size: 0.94, radius: 0.05 },
-    body: { color: '#0A0A14', roughness: 0.3, metalness: 0.6 },
-    faces: ['#E0408A', '#2AB8B0', '#F08A3A', '#3A6AE0', '#9A5AE0', '#6AD05A'],
-    lights: {
-      sky: '#30304a', ground: '#000000', hemi: 0.4,
-      key: ['#ffffff', 1, [-5, 4, 5]], fill: ['#8a7aff', 0.3, [6, -1, 3]], rim: ['#8aa8ff', 1, [0, 4, -6]],
-    },
-    ambient: { mode: 'orbit', shape: 'glow', colors: ['#FFFFFF', '#E0D0FF'], count: 80, size: 0.035, speed: 1, opacity: 0.8, additive: true },
-    burst: { shape: 'star', colors: 'faces', size: 0.14, speed: 2.4, gravity: 0, drag: 2.4, life: 0.9, additive: true },
-    surface: 'nebula',
-    sound: 'space',
-    motion: 'fluid',
-  },
 
-  {
-    // 깊은 우주. 다 맞추면 면마다 나선 은하 하나가 천천히 돈다. 노란 중심, 두 갈래로 감기는 팔과 먼지 띠,
-    // 팔을 따라 붉은 별 탄생 구역, 둘레의 잔별과 먼 은하
-    id: 'galaxy',
-    name: '은하',
-    bg: '#020208',
-    ink: '#E8ECFF',
-    backdrop: [
-      stars(160, 91),
-      'radial-gradient(40% 30% at 70% 70%, rgba(120,90,255,.1), transparent 70%)',
-      '#020208',
-    ].join(', '),
-    form: { bevel: 0.05, size: 0.94, radius: 0.05 },
-    body: { color: '#08081A', roughness: 0.3, metalness: 0.6 },
-    faces: ['#4A7AF0', '#F0C050', '#F06AA0', '#F2F0FF', '#3AC8C0', '#E04A3A'],
-    lights: {
-      sky: '#30304a', ground: '#000000', hemi: 0.4,
-      key: ['#ffffff', 1, [-5, 4, 5]], fill: ['#8a7aff', 0.3, [6, -1, 3]], rim: ['#8aa8ff', 1, [0, 4, -6]],
-    },
-    ambient: { mode: 'orbit', shape: 'glow', colors: ['#FFFFFF'], count: 90, size: 0.03, speed: 0.8, opacity: 0.7, additive: true },
-    burst: { shape: 'star', colors: 'faces', size: 0.12, speed: 2.4, gravity: 0, drag: 2.4, life: 0.9, additive: true },
-    surface: 'galaxy',
-    sound: 'space',
-    motion: 'fluid',
-  },
   {
     // 광물 진열장의 비스무트 결정. 칸마다 네모난 계단이 안으로 파고드는 깔때기 결정이 층층이 솟았고,
     // 얇은 산화막이 금속 무지갯빛으로 번쩍인다. 면마다 도는 빛깔이 다르다
@@ -3231,33 +3122,6 @@ export const THEMES = [
     burst: { shape: 'glow', colors: 'faces', size: 0.12, speed: 2, gravity: -1, drag: 2, life: 0.9, additive: true },
   },
   {
-
-    // 플라스마 큐브. 조각 하나가 통째로 속이 빈 유리 상자이고, 조각 한가운데 전극에서 빛 가닥이 갈라져 유리 벽까지 뻗는다.
-    // 손끝을 가져가면 가까운 조각의 가닥들이 그쪽으로 휘어 모여 더 밝아진다. 가닥 빛이 곧 면 색
-    id: 'plasmaball',
-    name: '플라즈마 볼',
-    bg: '#06040C',
-    ink: '#EEE8FF',
-    backdrop: [
-      'radial-gradient(45% 35% at 50% 48%, rgba(150,90,255,.22), transparent 70%)',
-      'radial-gradient(70% 25% at 50% 100%, rgba(120,80,200,.12), transparent 70%)',
-      'radial-gradient(90% 70% at 50% 45%, #140C24, #040308)',
-    ].join(', '),
-    form: { bevel: 0.05, size: 0.96, radius: 0.06, grid: 40 },
-    body: { color: '#0E0E12', roughness: 0.08 },
-    faces: ['#A040FF', '#2A8CFF', '#FF2E63', '#2EE87A', '#FF8C1A', '#E4E8FF'],
-    lights: {
-      sky: '#b8b0ff', ground: '#050308', hemi: 0.35,
-      key: ['#f0eaff', 1.6, [-4, 6, 5]], fill: ['#8a6cff', 0.35, [6, 0, 3]], rim: ['#d8d0ff', 1.1, [2, 4, -6]],
-    },
-    env: 0.35,
-    surface: 'plasmaball',
-    sound: 'electric',
-    motion: 'smooth',
-    ambient: { mode: 'float', shape: 'glow', colors: ['#C8A8FF', '#8FB8FF'], count: 18, size: 0.05, speed: 0.3, opacity: 0.45, additive: true },
-    burst: { shape: 'streak', colors: 'faces', size: 0.09, speed: 4, gravity: 0, drag: 4, life: 0.45, additive: true },
-  },
-  {
     // 호박. 조각 하나가 통째로 반들반들 간 호박 덩이라 봉긋 솟았고, 속 깊이 쥐라기 모기가 갇혀 있다.
     // 기포와 흐름 자국, 햇살 같은 둥근 금(선 스팽글)이 각도에 따라 번쩍인다. 꿀빛, 체리, 초록, 도미니카 블루, 버터스카치, 코냑
     id: 'amberstone',
@@ -3580,16 +3444,39 @@ export const THEMES = [
     ambient: { mode: 'rise', shape: 'bubble', colors: ['#FFFFFF', '#CFEFFF'], count: 26, size: 0.05, speed: 0.25, opacity: 0.55 },
     burst: { shape: 'bubble', colors: ['#FFFFFF', '#D8F2FF'], size: 0.07, speed: 2.2, gravity: 2, drag: 2, life: 0.8 },
   },
+  {
+    // 막대 사람. 조각 하나가 통째로 맑은 유리 상자이고 속에 막대 사람이 하나씩 산다. 화면 아래쪽이 중력이라 사람은 아래 벽을
+    // 바닥 삼아 걷고 뛰고 손 흔들고 춤추다가, 층을 돌리거나 큐브를 굴려 바닥이 바뀌면 새 바닥으로 떨어져 뒹굴고 일어난다
+    id: 'stickmen',
+    name: '막대 사람',
+    bg: '#EEF0F4',
+    ink: '#1A1C22',
+    backdrop: [
+      'radial-gradient(60% 45% at 50% 35%, rgba(255,255,255,.85), transparent 70%)',
+      'radial-gradient(90% 75% at 50% 42%, #F6F7FA, #CDD3DE)',
+    ].join(', '),
+    form: { bevel: 0.04, size: 0.97, radius: 0.05 },
+    body: { color: '#1E222A', roughness: 0.06, metalness: 0.1 },
+    faces: ['#FF5C5C', '#4A98FF', '#FFD84A', '#4FD17E', '#B57EFF', '#FF9C3F'],
+    lights: {
+      sky: '#ffffff', ground: '#9aa4b8', hemi: 1.1,
+      key: ['#ffffff', 2, [-4, 7, 5]], fill: ['#dfe8ff', 0.5, [6, 1, 3]], rim: ['#ffffff', 1, [1, 4, -6]],
+    },
+    env: 0.7,
+    surface: 'men',
+    sound: 'glass',
+    motion: 'smooth',
+    burst: { shape: 'star', colors: 'faces', size: 0.07, speed: 2.4, gravity: -4, drag: 1.6, life: 0.7 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
 
 // 테마 고르는 목록에서 묶어 보여 주는 무리. 테마는 모두 한 무리에만 들어간다(테스트가 본다)
 export const GROUPS = [
-  { name: '기본', themes: ['classic', 'candy', 'brick', 'dice', 'jelly', 'clay', 'bubblewrap', 'paper', 'box', 'slime'] },
-  { name: '자연', themes: ['forest', 'grass', 'soil', 'timber', 'pebble', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert'] },
-  { name: '빛·불', themes: ['neon', 'lava', 'electric', 'plasmaball', 'disco', 'lavalamp', 'kaleido'] },
-  { name: '우주', themes: ['space', 'planet', 'nebula', 'galaxy'] },
+  { name: '기본', themes: ['classic', 'candy', 'brick', 'dice', 'jelly', 'clay', 'bubblewrap', 'paper', 'box', 'slime', 'stickmen'] },
+  { name: '자연', themes: ['forest', 'grass', 'soil', 'timber', 'pebble', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert', 'space'] },
+  { name: '빛·불', themes: ['neon', 'disco', 'kaleido'] },
   { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'bismuth', 'druze', 'pave', 'diamond', 'ruby', 'sapphire', 'emerald', 'quartz', 'starstone', 'moonstone', 'amberstone'] },
   { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'camo', 'enamel'] },
   { name: '문양', themes: ['lantern'] },
@@ -3605,7 +3492,7 @@ export const GROUPS = [
   },
   { name: '명화', themes: ['oil', 'watercolor', 'monet', 'gogh', 'munch', 'cubism', 'warhol', 'collage'] },
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
-  { name: '원소', themes: ['fire', 'sod', 'aqua'] },
+  { name: '원소', themes: ['fire', 'sod', 'aqua', 'lava', 'electric'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'chrome', 'fiberoptic', 'ledcube'] },
 ];

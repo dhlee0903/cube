@@ -13,6 +13,7 @@ import { MOVING, wear } from './surfaces.js';
 import { Ambient, Burst } from './particles.js';
 import { MOTIONS } from './motions.js';
 import { Filter } from './filters.js';
+import { MODE, Men } from './men.js';
 
 const BODY = 0.96;
 const SIZE = 3; // 몇 칸이든 화면에서는 같은 크기로 보이게
@@ -373,6 +374,24 @@ export class CubeView {
       return mesh;
     });
 
+    // 막대 사람 테마: 조각마다 사는 사람의 자리와 자세를 스티커마다 넘길 칸
+    this.men = new Men(count);
+    this.manAt = this.stickerMeshes.map((mesh, s) => {
+      const n = mesh.count;
+      const attrs = { P: 3, U: 3, F: 3, G: 3, A: 4 };
+      const out = {};
+      for (const [k, size] of Object.entries(attrs)) {
+        const a = new InstancedBufferAttribute(new Float32Array(n * size), size);
+        a.setUsage(DynamicDrawUsage);
+        mesh.geometry.setAttribute(`aMan${k}`, a);
+        out[k] = a;
+      }
+      const q = new Quaternion().setFromUnitVectors(AXES[2], new Vector3(...FACES[s]));
+      out.inv = q.invert();
+      out.at = new Vector3(...FACES[s]).multiplyScalar(BODY / 2 + 0.002);
+      return out;
+    });
+
     this.base = cube.cubies.map(() => ({ pos: new Vector3(), quat: new Quaternion() }));
     this.now = cube.cubies.map(() => ({ pos: new Vector3(), quat: new Quaternion() }));
     this.pieceMats = cube.cubies.map(() => new Matrix4());
@@ -533,6 +552,7 @@ export class CubeView {
     const ambient = [].concat(theme.ambient ?? []);
     this.ambients.forEach((a, i) => a.set(this.still ? null : ambient[i], theme.faces));
     this.burst.set(this.still ? null : theme.burst, theme.faces);
+    this.menOn = surface === 'men';
     this.moving = !this.still && (MOVING.has(surface) || ambient.length > 0 || Boolean(this.flicker) || this.filter.animated);
     this.themeAt = performance.now();
     if (this.cube) this.place();
@@ -686,6 +706,33 @@ export class CubeView {
     });
   }
 
+  /** 막대 사람을 한 걸음 움직이고 스티커마다 그 사람을 스티커 좌표로 넘긴다. 중력은 화면 아래쪽 */
+  walkMen(dt) {
+    if (!this.men || !this.now) return;
+    const q = new Quaternion();
+    const down = new Vector3(0, -1, 0);
+    const gs = this.now.map((p) => down.clone().applyQuaternion(q.copy(this.root.quaternion).multiply(p.quat).invert()));
+    this.men.update(dt, gs);
+    const v = new Vector3();
+    this.slots.forEach((list, s) => {
+      const at = this.manAt[s];
+      list.forEach((piece, k) => {
+        const m = this.men.list[piece];
+        v.copy(m.p).addScaledVector(m.floor ?? down, m.hop).sub(at.at).applyQuaternion(at.inv);
+        at.P.setXYZ(k, v.x, v.y, v.z);
+        v.copy(m.up).applyQuaternion(at.inv);
+        at.U.setXYZ(k, v.x, v.y, v.z);
+        v.copy(m.fwd).applyQuaternion(at.inv);
+        at.F.setXYZ(k, v.x, v.y, v.z);
+        v.copy(m.floor ?? down).applyQuaternion(at.inv);
+        at.G.setXYZ(k, v.x, v.y, v.z);
+        const busy = m.mode === 'jump' || m.mode === 'getup' ? Math.min(1, m.t / m.dur) : 0;
+        at.A.setXYZW(k, MODE[m.mode], m.phase, busy, 0);
+      });
+      for (const key of ['P', 'U', 'F', 'G', 'A']) at[key].needsUpdate = true;
+    });
+  }
+
   invalidate() {
     if (!this.frame) this.frame = requestAnimationFrame(this.tick);
   }
@@ -716,6 +763,7 @@ export class CubeView {
     // 손을 떼고 잠시 지나면 시선이 다시 보는 사람에게 돌아온다
     if (now - (this.lookedAt ?? 0) > 2500) u.uPointer.value.multiplyScalar(Math.exp(-dt * 2));
 
+    if (this.menOn) this.walkMen(dt);
     if (this.filter.mode) this.filter.render(this.scene, this.camera);
     else this.renderer.render(this.scene, this.camera);
     this.pace(dt);
