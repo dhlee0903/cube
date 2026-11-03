@@ -5254,111 +5254,46 @@ B.aqua = {
 };
 
 S.men = {
-  // 막대 사람. 조각 하나가 통째로 맑은 유리 상자이고, 그 속에 막대 사람이 하나씩 산다. 사람의 자리와 자세는 men.js가 매 프레임
-  // 셈해 스티커마다 넘긴다(조각 좌표를 그 스티커 좌표로 옮겨서). 사람은 화면 아래쪽(중력)이 가장 세게 당기는 벽을 바닥 삼아
-  // 걷고 뛰고 손 흔들고 춤추고 뛰어오르며, 층을 돌려 바닥이 바뀌면 새 바닥으로 떨어져 뒹굴다 일어난다. 사람은 진짜 상자 속
-  // 깊이에 있어서 한 조각의 세 면이 같은 사람을 다른 쪽에서 비춘다. 바닥 벽엔 바둑판 무늬와 사람 그림자, 벽 모서리는 가늘게
-  // 빛난다. 유리 빛깔이 곧 면 색
+  // 막대 사람. 조각 하나가 통째로 맑은 유리 상자이고, 그 속에 막대 사람이 하나씩 산다. 사람은 men.js의 헝겊 인형이라
+  // 마디 열한 개가 중력을 받아 떨어지고 뒹굴고 벽을 타고 미끄러지며, 살아 있을 땐 용수철이 걷기·춤 같은 자세로 끈다.
+  // 마디 자리는 view.js가 매 프레임 스티커 좌표로 옮겨 텍스처(uMen, 스티커마다 한 줄)에 담는다. 사람은 진짜 상자 속
+  // 깊이에 있어서 한 조각의 세 면이 같은 사람을 다른 쪽에서 비춘다. 바닥 벽엔 바둑판 무늬와 사람 그림자, 벽 모서리는
+  // 가늘게 빛난다. 유리 빛깔이 곧 면 색
   head: `
-    varying vec3 vManP;
-    varying vec3 vManU;
-    varying vec3 vManF;
-    varying vec3 vManG;
-    varying vec4 vManA;
-    vec3 fxMP;
-    vec3 fxMU;
-    vec3 fxMF;
-    vec3 fxMS;
+    uniform sampler2D uMen;
+    uniform vec2 uMenSize;
+    varying float vManRow;
     vec2 fxMSk;
-    // 몸 좌표(오른쪽, 위, 앞)의 점을 스티커 평면에 비친 자리로
-    vec2 fxMnJ(vec3 b) {
-      vec3 P = fxMP + (fxMS * b.x + fxMU * b.y + fxMF * b.z) * 1.35;
-      return P.xy - P.z * fxMSk;
-    }
+    // 마디 j(0 머리, 1 목, 2 골반, 3·4 왼팔꿈치·손, 5·6 오른팔꿈치·손, 7·8 왼무릎·발, 9·10 오른무릎·발, 11 바닥 쪽)
+    vec3 fxMJ(float j) { return texture2D(uMen, (vec2(j, vManRow) + .5) / uMenSize).xyz; }
+    // 상자 속 점을 스티커 평면에 비친 자리로
+    vec2 fxMnJ(vec3 P) { return P.xy - P.z * fxMSk; }
     float fxMnSeg(vec2 p, vec2 a, vec2 b) {
       vec2 pa = p - a, ba = b - a;
       float h = clamp(dot(pa, ba) / max(dot(ba, ba), 1e-8), 0., 1.);
       return length(pa - ba * h);
-    }
-    // 팔다리 방향. side 왼쪽 -1, 오른쪽 1. ab 옆으로 벌린 각, sw 앞뒤로 흔든 각
-    vec3 fxMnLimb(float side, float ab, float sw) { return vec3(side * sin(ab), -cos(ab) * cos(sw), cos(ab) * sin(sw)); }`,
-  vhead: `
-    attribute vec3 aManP;
-    attribute vec3 aManU;
-    attribute vec3 aManF;
-    attribute vec3 aManG;
-    attribute vec4 aManA;`,
-  vertex: 'vManP = aManP; vManU = aManU; vManF = aManF; vManG = aManG; vManA = aManA;',
+    }`,
+  vhead: 'attribute float aManRow;',
+  vertex: 'vManRow = aManRow;',
   color: `
     if (fxEdge() < 0.) discard;
     vec3 fxBase = diffuseColor.rgb;
     vec3 fxV = normalize(vViewPosition);
     vec3 fxVl = normalize(vec3(dot(fxV, vTx), dot(fxV, vTy), max(dot(fxV, vTz), .2)));
     fxMSk = fxVl.xy / fxVl.z;
-    fxMP = vManP;
-    fxMU = normalize(vManU + vec3(0., 0., 1e-5));
-    fxMF = normalize(vManF + vec3(1e-5, 0., 0.));
-    fxMS = normalize(cross(fxMU, fxMF));
-    vec3 fxG = normalize(vManG + vec3(0., 1e-5, 0.));
     vec2 fxS = vLocal.xy;
-    float fxMode = vManA.x, fxPh = vManA.y, fxMk = vManA.z;
-    // 자세: 다리(앞뒤 각, 무릎), 팔(앞뒤 각, 옆으로 벌린 각, 팔꿈치), 허리 숙임, 몸 들썩임
-    float legL = 0., legR = 0., knL = .05, knR = .05;
-    float armL = .05, armR = -.05, abL = .18, abR = .18, elL = .25, elR = .25;
-    float lean = 0., bob = 0.;
-    if (fxMode < .5) {
-      legL = sin(fxPh) * .55; legR = -legL;
-      knL = max(0., sin(fxPh + 1.7)) * .8; knR = max(0., sin(fxPh + 4.84)) * .8;
-      armL = -legL * .8; armR = -legR * .8; elL = .4; elR = .4;
-      bob = abs(cos(fxPh)) * .008; lean = .06;
-    } else if (fxMode < 1.5) {
-      legL = sin(fxPh) * .95; legR = -legL;
-      knL = max(0., sin(fxPh + 1.7)) * 1.5 + .2; knR = max(0., sin(fxPh + 4.84)) * 1.5 + .2;
-      armL = -legL * .9; armR = -legR * .9; elL = 1.5; elR = 1.5;
-      bob = abs(cos(fxPh)) * .02; lean = .3;
-    } else if (fxMode < 2.5) {
-      armL = sin(fxPh) * .05; armR = -armL; bob = sin(fxPh) * .003;
-    } else if (fxMode < 3.5) {
-      abR = 2.5; armR = 0.; elR = .5 + .5 * sin(fxPh);
-    } else if (fxMode < 4.5) {
-      // 웅크렸다가 팔을 번쩍 들고 솟는다, 내려서 다시 웅크린다
-      float c = 1. - smoothstep(.1, .3, fxMk) + smoothstep(.85, 1., fxMk);
-      knL = c * 1.6; knR = knL; legL = c * .8; legR = legL; lean = c * .35;
-      armL = mix(2.8, -.6, c); armR = armL; abL = mix(.4, .2, c); abR = abL; bob = -c * .05;
-    } else if (fxMode < 5.5) {
-      legL = sin(fxPh) * .35; legR = -legL * .6;
-      knL = max(0., sin(fxPh)) * .6; knR = max(0., -sin(fxPh)) * .6;
-      abL = 2.3 + sin(fxPh * 2.) * .5; abR = 2.3 - sin(fxPh * 2.) * .5; elL = .6 + .4 * sin(fxPh); elR = elL;
-      bob = abs(sin(fxPh)) * .015;
-    } else if (fxMode < 6.5) {
-      // 떨어지며 허우적댄다
-      legL = sin(fxPh * 1.3) * .8; legR = sin(fxPh * 1.1 + 2.) * .8; knL = .6; knR = .4;
-      abL = 1.6 + sin(fxPh) * .7; abR = 1.6 + cos(fxPh * 1.2) * .7; elL = .9; elR = .9;
-    } else if (fxMode < 7.5) {
-      abL = .5; abR = .5; armL = .1; armR = .1; legL = .05; legR = -.05;
-    } else {
-      float c = 1. - fxMk;
-      knL = c * 1.8; knR = knL; legL = c * 1.1; legR = legL; lean = c * .7; armL = c * .6; armR = armL; elL = .5; elR = .5;
-    }
-    vec3 fxSpine = vec3(0., cos(lean), sin(lean));
-    vec3 fxPel = vec3(0., bob, 0.);
-    vec3 fxNeck = fxPel + fxSpine * .11;
-    vec3 fxHead = fxNeck + fxSpine * .046;
-    vec3 fxSh = fxNeck - fxSpine * .012;
-    vec2 jP = fxMnJ(fxPel), jN = fxMnJ(fxNeck), jS = fxMnJ(fxSh);
-    vec3 kL = fxPel + vec3(-.014, 0., 0.) + fxMnLimb(-1., .06, legL) * .075;
-    vec3 kR = fxPel + vec3(.014, 0., 0.) + fxMnLimb(1., .06, legR) * .075;
-    vec3 eL = fxSh + fxMnLimb(-1., abL, armL) * .064;
-    vec3 eR = fxSh + fxMnLimb(1., abR, armR) * .064;
-    vec2 jKL = fxMnJ(kL), jKR = fxMnJ(kR), jEL = fxMnJ(eL), jER = fxMnJ(eR);
-    float fxD = fxMnSeg(fxS, jP, jN);
-    fxD = min(fxD, min(fxMnSeg(fxS, jP, jKL), fxMnSeg(fxS, jKL, fxMnJ(kL + fxMnLimb(-1., .06, legL - knL) * .075))));
-    fxD = min(fxD, min(fxMnSeg(fxS, jP, jKR), fxMnSeg(fxS, jKR, fxMnJ(kR + fxMnLimb(1., .06, legR - knR) * .075))));
-    fxD = min(fxD, min(fxMnSeg(fxS, jS, jEL), fxMnSeg(fxS, jEL, fxMnJ(eL + fxMnLimb(-1., abL, armL + elL) * .06))));
-    fxD = min(fxD, min(fxMnSeg(fxS, jS, jER), fxMnSeg(fxS, jER, fxMnJ(eR + fxMnLimb(1., abR, armR + elR) * .06))));
+    vec3 fxHead = fxMJ(0.), fxPel = fxMJ(2.);
+    vec2 jN = fxMnJ(fxMJ(1.)), jP = fxMnJ(fxPel);
+    vec2 jEL = fxMnJ(fxMJ(3.)), jER = fxMnJ(fxMJ(5.)), jKL = fxMnJ(fxMJ(7.)), jKR = fxMnJ(fxMJ(9.));
+    float fxD = fxMnSeg(fxS, jN, jP);
+    fxD = min(fxD, min(fxMnSeg(fxS, jN, jEL), fxMnSeg(fxS, jEL, fxMnJ(fxMJ(4.)))));
+    fxD = min(fxD, min(fxMnSeg(fxS, jN, jER), fxMnSeg(fxS, jER, fxMnJ(fxMJ(6.)))));
+    fxD = min(fxD, min(fxMnSeg(fxS, jP, jKL), fxMnSeg(fxS, jKL, fxMnJ(fxMJ(8.)))));
+    fxD = min(fxD, min(fxMnSeg(fxS, jP, jKR), fxMnSeg(fxS, jKR, fxMnJ(fxMJ(10.)))));
     float fxAa = max(fwidth(fxS.x), .0015);
     float fxMan = 1. - smoothstep(.014 - fxAa, .014 + fxAa, fxD);
     fxMan = max(fxMan, 1. - smoothstep(.045 - fxAa, .045 + fxAa, length(fxS - fxMnJ(fxHead))));
+    vec3 fxG = normalize(fxMJ(11.) + vec3(0., 1e-5, 0.));
     // 상자 속 벽: 시선이 닿는 안쪽 벽과 그 벽이 향한 쪽
     float fxR = uSticker.x;
     vec3 fxDin = -fxVl;
@@ -5369,14 +5304,14 @@ S.men = {
     vec3 fxX = vec3(fxS, 0.) + fxDin * fxTw;
     vec3 fxWn = fxTw == fxTb ? vec3(0., 0., 1.) : (fxTw == fxTx ? vec3(-sign(fxDin.x), 0., 0.) : vec3(0., -sign(fxDin.y), 0.));
     float fxOnFloor = smoothstep(.8, .95, dot(fxWn, fxG));
-    // 벽이 바닥에 가까울수록 밝다. 바닥엔 바둑판, 사람 그림자
+    // 벽이 바닥에 가까울수록 밝다. 바닥엔 바둑판, 사람 그림자(골반을 바닥에 내린 자리)
     vec3 fxWall = fxBase * (.62 + .2 * dot(fxWn, fxG));
     vec3 fxFq = fxX * 9.;
     float fxChk = mod(floor(fxFq.x + 50.) + floor(fxFq.y + 50.) + floor(fxFq.z + 50.), 2.);
     fxWall *= 1. - fxOnFloor * fxChk * .07;
-    vec3 fxGc = vManP - fxWn * dot(vManP - fxX, fxWn);
-    float fxHt = max(dot(vManP - fxX, fxWn), 0.);
-    float fxShadow = fxOnFloor * exp(-dot(fxX - fxGc, fxX - fxGc) / (.004 + fxHt * .02)) * exp(-fxHt * 4.);
+    vec3 fxGc = fxPel - fxWn * dot(fxPel - fxX, fxWn);
+    float fxHt = max(dot(fxPel - fxX, fxWn), 0.);
+    float fxShadow = fxOnFloor * exp(-dot(fxX - fxGc, fxX - fxGc) / (.006 + fxHt * .02)) * exp(-fxHt * 3.);
     fxWall *= 1. - fxShadow * .55;
     // 벽이 만나는 모서리
     float fxSeam = fxTw < fxTb ? min(abs(fxR - abs(fxX.x)) + abs(fxR - abs(fxX.y)), abs(fxX.z + .96)) : min(fxR - abs(fxX.x), fxR - abs(fxX.y));

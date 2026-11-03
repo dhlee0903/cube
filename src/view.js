@@ -1,6 +1,6 @@
 import {
-  AdditiveBlending, Box3, BufferGeometry, CanvasTexture, Color, DirectionalLight, DoubleSide, DynamicDrawUsage, Euler,
-  ExtrudeGeometry, Float32BufferAttribute, FrontSide,
+  AdditiveBlending, Box3, BufferGeometry, CanvasTexture, Color, DataTexture, DirectionalLight, DoubleSide, DynamicDrawUsage,
+  Euler, ExtrudeGeometry, Float32BufferAttribute, FloatType, FrontSide, NearestFilter, RGBAFormat,
   HemisphereLight, Group, InstancedBufferAttribute, InstancedMesh, Matrix4, MeshBasicMaterial, MeshStandardMaterial,
   NormalBlending, PMREMGenerator, PerspectiveCamera, PlaneGeometry, Quaternion, Raycaster, Scene, Shape,
   ShapeGeometry, Vector2, Vector3, WebGLRenderer,
@@ -13,7 +13,7 @@ import { MOVING, wear } from './surfaces.js';
 import { Ambient, Burst } from './particles.js';
 import { MOTIONS } from './motions.js';
 import { Filter } from './filters.js';
-import { MODE, Men } from './men.js';
+import { JOINTS, Men } from './men.js';
 
 const BODY = 0.96;
 const SIZE = 3; // 몇 칸이든 화면에서는 같은 크기로 보이게
@@ -193,6 +193,9 @@ export class CubeView {
       uPointer: { value: new Vector3(0, 0, 0) }, // 시점 공간. 0이면 카메라, 곧 보는 사람
       uBodyGlow: { value: new Color(0, 0, 0) },
       uSticker: { value: new Vector2(0.4, 0.09) },
+      // 막대 사람 마디 자리(스티커마다 한 줄, 스티커 좌표)
+      uMen: { value: null },
+      uMenSize: { value: new Vector2(1, 1) },
     };
     this.themeAt = 0;
     // 렌더링 전체에 거는 화면 필터(카툰, 8비트, 고장 난 화면)
@@ -374,23 +377,25 @@ export class CubeView {
       return mesh;
     });
 
-    // 막대 사람 테마: 조각마다 사는 사람의 자리와 자세를 스티커마다 넘길 칸
+    // 막대 사람 테마: 조각마다 사는 사람의 마디 자리를 스티커마다 한 줄씩 텍스처에 담아 넘긴다(스티커 좌표로 옮겨서)
     this.men = new Men(count);
+    let row = 0;
     this.manAt = this.stickerMeshes.map((mesh, s) => {
       const n = mesh.count;
-      const attrs = { P: 3, U: 3, F: 3, G: 3, A: 4 };
-      const out = {};
-      for (const [k, size] of Object.entries(attrs)) {
-        const a = new InstancedBufferAttribute(new Float32Array(n * size), size);
-        a.setUsage(DynamicDrawUsage);
-        mesh.geometry.setAttribute(`aMan${k}`, a);
-        out[k] = a;
-      }
+      const rows = new Float32Array(n);
+      for (let k = 0; k < n; k++) rows[k] = row + k;
+      mesh.geometry.setAttribute('aManRow', new InstancedBufferAttribute(rows, 1));
       const q = new Quaternion().setFromUnitVectors(AXES[2], new Vector3(...FACES[s]));
-      out.inv = q.invert();
-      out.at = new Vector3(...FACES[s]).multiplyScalar(BODY / 2 + 0.002);
+      const out = { inv: q.invert(), at: new Vector3(...FACES[s]).multiplyScalar(BODY / 2 + 0.002), row };
+      row += n;
       return out;
     });
+    this.menTex?.dispose();
+    this.menTex = new DataTexture(new Float32Array((JOINTS + 1) * row * 4), JOINTS + 1, row, RGBAFormat, FloatType);
+    this.menTex.magFilter = this.menTex.minFilter = NearestFilter;
+    this.menTex.needsUpdate = true;
+    this.uniforms.uMen.value = this.menTex;
+    this.uniforms.uMenSize.value.set(JOINTS + 1, row);
 
     this.base = cube.cubies.map(() => ({ pos: new Vector3(), quat: new Quaternion() }));
     this.now = cube.cubies.map(() => ({ pos: new Vector3(), quat: new Quaternion() }));
@@ -706,31 +711,35 @@ export class CubeView {
     });
   }
 
-  /** 막대 사람을 한 걸음 움직이고 스티커마다 그 사람을 스티커 좌표로 넘긴다. 중력은 화면 아래쪽 */
+  /** 막대 사람을 한 걸음 움직이고 마디 자리를 스티커 좌표로 옮겨 텍스처에 쓴다. 중력은 화면 아래쪽 */
   walkMen(dt) {
     if (!this.men || !this.now) return;
     const q = new Quaternion();
     const down = new Vector3(0, -1, 0);
     const gs = this.now.map((p) => down.clone().applyQuaternion(q.copy(this.root.quaternion).multiply(p.quat).invert()));
     this.men.update(dt, gs);
+    const data = this.menTex.image.data;
+    const w = JOINTS + 1;
     const v = new Vector3();
     this.slots.forEach((list, s) => {
       const at = this.manAt[s];
       list.forEach((piece, k) => {
         const m = this.men.list[piece];
-        v.copy(m.p).addScaledVector(m.floor ?? down, m.hop).sub(at.at).applyQuaternion(at.inv);
-        at.P.setXYZ(k, v.x, v.y, v.z);
-        v.copy(m.up).applyQuaternion(at.inv);
-        at.U.setXYZ(k, v.x, v.y, v.z);
-        v.copy(m.fwd).applyQuaternion(at.inv);
-        at.F.setXYZ(k, v.x, v.y, v.z);
+        const base = (at.row + k) * w * 4;
+        for (let j = 0; j < JOINTS; j++) {
+          v.set(m.x[j * 3], m.x[j * 3 + 1], m.x[j * 3 + 2]).sub(at.at).applyQuaternion(at.inv);
+          data[base + j * 4] = v.x;
+          data[base + j * 4 + 1] = v.y;
+          data[base + j * 4 + 2] = v.z;
+        }
+        // 마지막 칸: 바닥 쪽(바닥에서 위로)
         v.copy(m.floor ?? down).applyQuaternion(at.inv);
-        at.G.setXYZ(k, v.x, v.y, v.z);
-        const busy = m.mode === 'jump' || m.mode === 'getup' ? Math.min(1, m.t / m.dur) : 0;
-        at.A.setXYZW(k, MODE[m.mode], m.phase, busy, 0);
+        data[base + JOINTS * 4] = v.x;
+        data[base + JOINTS * 4 + 1] = v.y;
+        data[base + JOINTS * 4 + 2] = v.z;
       });
-      for (const key of ['P', 'U', 'F', 'G', 'A']) at[key].needsUpdate = true;
     });
+    this.menTex.needsUpdate = true;
   }
 
   invalidate() {
