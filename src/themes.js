@@ -584,16 +584,16 @@ export const THEMES = [
     burst: { shape: 'square', colors: 'faces', size: 0.08, speed: 3, gravity: 0, drag: 3.2, life: 0.5 },
   },
   {
-    // 8비트 게임 화면. 큐브를 낮은 해상도로 그려 칸칸이 키우고, 16색 팔레트로 줄이면서 그늘과 빛을 바둑판 점(디더링)으로
+    // 8비트 게임 화면. 뒤로 픽셀 풍경(해, 구름, 눈 덮인 산, 전나무 숲, 호수, 꽃밭)이 펼쳐진다. 큐브를 낮은 해상도로 그려 칸칸이 키우고, 16색 팔레트로 줄이면서 그늘과 빛을 바둑판 점(디더링)으로
     // 섞고, 스프라이트처럼 검은 테두리를 두른다. 스티커는 도톰한 블록이라 모서리 빛과 그늘이 점으로 찍힌다. 칸칸이 끊기는 움직임
     id: 'pixel',
     name: '픽셀',
     bg: '#5C94FC',
     ink: '#0E0F1A',
     backdrop: [
-      `${svg(64, 16, "<g fill='#ffffff'><rect x='6' y='4' width='10' height='4'/><rect x='4' y='6' width='16' height='4'/><rect x='10' y='2' width='6' height='3'/><rect x='38' y='8' width='8' height='3'/><rect x='36' y='10' width='13' height='3'/></g>", 'xMidYMid meet')} 0 6% / 320px 80px repeat-x`,
-      `${svg(100, 30, "<g shape-rendering='crispEdges'><path d='M0 30 V18 H6 V14 H12 V10 H22 V14 H28 V18 H34 V30Z' fill='#00A800'/><path d='M50 30 V22 H56 V16 H66 V12 H74 V16 H82 V22 H90 V30Z' fill='#00A800'/><rect x='14' y='16' width='2' height='2' fill='#005800'/><rect x='66' y='18' width='2' height='2' fill='#005800'/><rect x='0' y='26' width='100' height='4' fill='#C84C0C'/><rect x='0' y='26' width='100' height='1' fill='#FCA044'/></g>")} bottom / 100% 30% no-repeat`,
-      'linear-gradient(#6EA2FF, #5C94FC 70%)',
+      // 손으로 찍은 192×108 픽셀 풍경(디더로 이은 하늘 띠, 해, 구름, 눈 덮인 먼 산, 전나무 숲, 반짝이는 호수, 꽃 핀 풀밭)
+      `${svg(192, 108, "<image href='data:image/png;base64,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' width='192' height='108' image-rendering='optimizeSpeed' style='image-rendering:crisp-edges;image-rendering:pixelated'/>")} center bottom / cover no-repeat`,
+      '#7FB0FF',
     ].join(', '),
     form: { bevel: 0.05, size: 0.84, radius: 0.04, depth: 0.06 },
     body: { color: '#1D2B53', roughness: 0.6 },
@@ -608,6 +608,66 @@ export const THEMES = [
     sound: 'pixel',
     motion: 'stepped',
     ambient: { mode: 'rise', shape: 'square', colors: ['#F8D030', '#FFFFFF'], count: 18, size: 0.08, speed: 0.35, opacity: 0.85 },
+    burst: { shape: 'square', colors: 'faces', size: 0.11, speed: 2.8, gravity: -8, drag: 0.5, life: 1 },
+  },
+  {
+    // 픽셀 2. 밤 도시의 8비트 화면. 별과 보름달 아래 두 겹 빌딩 숲에 창이 켜지고 옥상엔 빨간 불, 강물에 불빛이 번진다.
+    // 큐브는 네온 밤빛 팔레트로 줄여 디더로 그늘을 찍고 남색 테두리를 두른다
+    id: 'pixel2',
+    name: '픽셀 2',
+    bg: '#14123A',
+    ink: '#F2F0FF',
+    backdrop: [
+      `${svg(192, 108, "<image href='data:image/png;base64,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' width='192' height='108' image-rendering='optimizeSpeed' style='image-rendering:crisp-edges;image-rendering:pixelated'/>")} center bottom / cover no-repeat`,
+      '#14123A',
+    ].join(', '),
+    form: { bevel: 0.05, size: 0.84, radius: 0.04, depth: 0.06 },
+    body: { color: '#1D1A40', roughness: 0.6 },
+    sticker: { roughness: 0.45 },
+    faces: ['#FF2A6D', '#05D9E8', '#F5F0FF', '#F9C80E', '#3DDC84', '#B967FF'],
+    lights: {
+      sky: '#d0c8ff', ground: '#3a2a6a', hemi: 1.6,
+      key: ['#eeeaff', 2, [-3, 6, 5]], fill: ['#ff2a6d', 0.5, [5, 0, 4]], rim: ['#05d9e8', 1.2, [0, 3, -6]],
+    },
+    filter: {
+      type: 'pixel', res: 120, dither: 0.25, line: '#0B0B2A',
+      palette: ['#0B0B2A', '#1D1A40', '#3A2A6A', '#6A5A9A', '#FF2A6D', '#A0164A', '#05D9E8', '#0A7A90',
+        '#F9C80E', '#B0840A', '#3DDC84', '#1A8A50', '#B967FF', '#6A30B0', '#F5F0FF', '#A8A4C8'],
+    },
+    surface: 'plain',
+    sound: 'pixel',
+    motion: 'stepped',
+    ambient: { mode: 'float', shape: 'square', colors: ['#F9C80E', '#F5F0FF', '#05D9E8'], count: 14, size: 0.06, speed: 0.2, opacity: 0.85 },
+    burst: { shape: 'square', colors: 'faces', size: 0.11, speed: 2.8, gravity: -8, drag: 0.5, life: 1 },
+  },
+  {
+    // 픽셀 3. 노을 바다의 8비트 화면. 띠진 노을 하늘에 줄무늬 해가 수평선에 걸리고, 햇빛이 물결에 부서지며 야자수 그림자와 새.
+    // 큐브는 노을빛 팔레트로 줄여 디더로 그늘을 찍고 짙은 보라 테두리를 두른다
+    id: 'pixel3',
+    name: '픽셀 3',
+    bg: '#3B1E54',
+    ink: '#FFF1E8',
+    backdrop: [
+      `${svg(192, 108, "<image href='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAABsBAMAAADOLKChAAAALVBMVEX/4Hr/7Cf/0nr/wjr/s0f/mj3/ej3gRGq4O15OMGh+JVM6I1BKIWArG0oaDyptfGzeAAAEvUlEQVR42u1az2vjRhh90mRNUA1Ve26KMfSYMqzaPZuyKT0GSkxPi1iK/4OCT4uOpueyB0NhDqUs2XYxpaf1HnLe4nTAt0KMoLTHrSmqMPKO0sNII0uWFDuyDwEpCMWTmXl67/sx34yjXWG/l44aoAaoAfYOcDDfN8C7d51B7UU1QA2wAwATZnkkuxUBNPp7+d9f7zsXuTuYhHLKb28DCnpTl6nFiyU6v2k0oZP9epGY3OU42ED/agBl1tsJQKR/FSIb2aAKkY0AqjjSTiK5FODDu5CL6hWtBqh3OPUOpwao4+DuxcHodEuArXovR8BznO0N4Hn0uHe6Hy9arv2yW4DlKEtlC4kGgAMH/bKu985u40Xa5wDwLP74VQmBVH366cYAXwMAvo0++k5hz5/TG6tN7Swru3OgazAARnGh106/mLuNDQygCwab2ey8W9TzvY3mMxh8GPDtlBc97foAurCf+l1WMPKfzDUvmh+GIZ8rADazYfwNH4bN7EqZx7dz44DZAEzAt5nNKgEYDH43piKN9TDUQz3Uw+Z3j0PdgKeHVX5+8vRH+rlv+Aa8x6Ee6qEWO8dv0rMvOkX7/WxL3raq6V10gOYPZrPjNb10qtBkj04lhbxmB4D3QQe/RvMrgOizV211iWfFJ02vmUnX811sNKP5O6NTL9ZaAZi7XCdNdJqx9GP5tDJvKAgAXrTB5zTqkUuWkGPObZ5mcJ31GnmEEF3/nY5xgndG8f0NxvgC4wKHg9ChjsC0MUK3DVicQoBAqKQcukl6m+mtrZq/nKhmJZEimHsscYI0hROMcToqtAE5VrNoY3AKkKM/aS7A7WxBjtx4aMSAUEBMKQCIyxwRFs7hkz8YBgsHg4WDXsAOnRLJyLGaRAEIcFiCgFPBq/tp4pSRF1EBDvBjQTDJdb8+Bujj0EnuQRlA4pQRA2v5S4tTcjx5IKbLPNKChG5b2SLrPpEtkmZrOUpLZEld7l/CmhBxM4UB+odOmUSCpxncD3kkHcUOTADSulpd0Wauphi/mCb6JJVD+ASLfn/llq8fzpDbe5akNskgPj4mRy4oK080G8VFch6tp5O1GY1em3/Rd7Do97Hs97F45mCRW2UmQ+drDEK3rUJ829ST02yJF7JZLZl6OwFut5BuBgKG4NVLBMMhguEQb18l1UdO75VmbczpitGtlTDmVWxxP4wC9mBmqvUswzsWVDYP0cMQB5+9RMMeokfYI7dNi1Si0EBks7SBevEoHnaQjERqRbtOFy+5l6TQsOXduwGAt5QXzfSWeCA4OEXonikbJKz5x25b2SIrRmSLNU+SgXD5fisjURLi2Stg2xBIIk0CKOkrfiOUk4wOpKljdh8Vh8+wYQcMD99eoBewhn1TsJlRc0oiQUjr6rbFUDoulBT6qhcRwCz8NiV4zRB8P4yCmZXWUSvJSHuTFOOh21bAVdMRoRGdGCCqV4q9CNjGiZI6SwJcaxENyaBSYQpgagNzExkGACCmUqJ8+gFDT94Nu0wsK7WhfpN+g3nlf4vLbLb0TBlj0sKRTK0G6060Ij5NV0ZZBgAmir4gCN1/i5JybIvV5r/WjjCyANda/v4RQPCjrazQ2HQvmsegEGFb+QEA/wOo+ksby38qbAAAAABJRU5ErkJggg==' width='192' height='108' image-rendering='optimizeSpeed' style='image-rendering:crisp-edges;image-rendering:pixelated'/>")} center bottom / cover no-repeat`,
+      '#3B1E54',
+    ].join(', '),
+    form: { bevel: 0.05, size: 0.84, radius: 0.04, depth: 0.06 },
+    body: { color: '#3B1E54', roughness: 0.6 },
+    sticker: { roughness: 0.45 },
+    faces: ['#FF3B5C', '#FF8C2A', '#FFF1D6', '#FFD23F', '#2EC4B6', '#6A4CFF'],
+    lights: {
+      sky: '#ffd8b0', ground: '#6a2c70', hemi: 1.6,
+      key: ['#ffe4c0', 2.2, [-5, 4, 4]], fill: ['#ff7aa0', 0.5, [5, 0, 4]], rim: ['#ffb070', 1.2, [0, 3, -6]],
+    },
+    filter: {
+      type: 'pixel', res: 130, dither: 0.25, line: '#1A0F2A',
+      palette: ['#1A0F2A', '#3B1E54', '#6A2C70', '#B83B5E', '#FF3B5C', '#A82038', '#FF8C2A', '#B85A14',
+        '#FFD23F', '#C09A20', '#FFF1D6', '#C8B49A', '#2EC4B6', '#13807A', '#6A4CFF', '#3E2AA8'],
+    },
+    surface: 'plain',
+    sound: 'pixel',
+    motion: 'stepped',
+    ambient: { mode: 'float', shape: 'bird', colors: ['#2B1B4A'], count: 6, size: 0.18, speed: 0.25, opacity: 0.9 },
     burst: { shape: 'square', colors: 'faces', size: 0.11, speed: 2.8, gravity: -8, drag: 0.5, life: 1 },
   },
   {
@@ -2893,30 +2953,6 @@ export const THEMES = [
   },
 
   {
-    // 새빌 로 양복점 재단실. 다 맞추면 면 하나가 한 폭의 소모사 수트 천이다. 면 색 2/2 능직 바탕에 열여섯 올마다 밝은 날실
-    // 한 올이 지나가 가까이서는 어긋난 점선, 멀리서는 가는 줄로 보인다. 촘촘한 사선 능선과 은은한 윤, 공단 안감 몸통
-    id: 'pinstripe',
-    name: '핀스트라이프',
-    bg: '#1C1E24',
-    ink: '#ECE6DA',
-    backdrop: [
-      'repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 26px)',
-      'radial-gradient(45% 35% at 50% 18%, rgba(255,236,200,.14), transparent 70%)',
-      'radial-gradient(80% 65% at 50% 45%, #3A3E48, #121318)',
-    ].join(', '),
-    form: { bevel: 0.12, size: 0.94, radius: 0.14, grid: 24 },
-    body: { color: '#B89A62', roughness: 0.38 },
-    faces: ['#1F3C82', '#3A3B40', '#6E4526', '#2C6242', '#8A1F36', '#A3A7AE'],
-    lights: {
-      sky: '#fff8ee', ground: '#3a3028', hemi: 1.4,
-      key: ['#fff2e0', 2.3, [-4, 6, 5]], fill: ['#dfe8ff', 0.45, [6, 0, 3]], rim: ['#ffffff', 1.1, [0, 4, -6]],
-    },
-    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: -1, drag: 2.6, life: 1.4 },
-    surface: 'pinstripe',
-    sound: 'cloth',
-    motion: 'squish',
-  },
-  {
     // 가을 사냥 재킷을 걸어 둔 옷방. 다 맞추면 면 하나가 한 폭의 모직이다. 무지 능직 바탕에 스물네 올마다 대비색 실 두 올이
     // 날실과 씨실로 지나가 조각보다 큰 창살 칸을 내고, 줄이 만나는 자리만 꽉 찬 색이 된다. 섞인 털빛과 잔털
     id: 'windowpane',
@@ -2986,30 +3022,6 @@ export const THEMES = [
     },
     burst: { shape: 'square', colors: 'faces', size: 0.05, speed: 1.6, gravity: -1.5, drag: 2.4, life: 1.3 },
     surface: 'madras',
-    sound: 'cloth',
-    motion: 'squish',
-  },
-  {
-    // 미국 남부 한여름 정원 파티. 다 맞추면 면 하나가 한 폭의 시어서커다. 느슨하게 건 색 날실 줄은 씨실을 칠 때마다 오글오글
-    // 접혀 가로 잔주름이 잡힌 물집처럼 실제로 부풀고, 팽팽하게 건 흰 줄은 납작하다. 줄과 주름이 면 전체로 이어진다
-    id: 'seersucker',
-    name: '시어서커',
-    bg: '#DCEBF2',
-    ink: '#1C2A38',
-    backdrop: [
-      'radial-gradient(55% 40% at 50% 15%, rgba(255,255,245,.75), transparent 70%)',
-      'repeating-linear-gradient(90deg, rgba(60,100,170,.07) 0 18px, transparent 18px 32px)',
-      'radial-gradient(85% 70% at 50% 45%, #EAF4F8, #A8C4D4)',
-    ].join(', '),
-    form: { bevel: 0.12, size: 0.94, radius: 0.14, grid: 64 },
-    body: { color: '#1E2433', roughness: 0.85 },
-    faces: ['#3E6EC0', '#D04848', '#3A9A5E', '#E8BE3A', '#E87EA8', '#5A606A'],
-    lights: {
-      sky: '#ffffff', ground: '#a8b0a0', hemi: 1.5,
-      key: ['#fff8ee', 2.3, [-4, 6, 5]], fill: ['#e8f4ff', 0.5, [6, 0, 3]], rim: ['#ffffff', 1.1, [0, 4, -6]],
-    },
-    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.4, gravity: -1, drag: 2.6, life: 1.4 },
-    surface: 'seersucker',
     sound: 'cloth',
     motion: 'squish',
   },
@@ -3482,13 +3494,13 @@ export const GROUPS = [
   { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'bismuth', 'druze', 'pave', 'diamond', 'ruby', 'sapphire', 'emerald', 'quartz', 'starstone', 'moonstone', 'amberstone'] },
   { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'camo', 'enamel'] },
   { name: '문양', themes: ['lantern'] },
-  { name: '패턴', themes: ['houndstooth', 'glencheck', 'herringbone', 'gingham', 'argyle', 'chevron', 'tartan', 'pinstripe', 'windowpane', 'buffalo', 'madras', 'seersucker', 'birdseye'] },
+  { name: '패턴', themes: ['houndstooth', 'glencheck', 'herringbone', 'gingham', 'argyle', 'chevron', 'tartan', 'windowpane', 'buffalo', 'madras', 'birdseye'] },
   { name: '판타지', themes: ['dragon', 'phoenix', 'mithril', 'damascus', 'fairywing', 'dragonegg'] },
   { name: '동물', themes: ['wool', 'hamster', 'wild', 'croc', 'python', 'calf'] },
   { name: '금속·기계', themes: ['metal', 'gauge', 'rust', 'mercury', 'circuit', 'carbon', 'candypaint'] },
   {
     name: '픽셀',
-    themes: ['pixel', 'handheld', 'cga', 'arcade', 'amber', 'ascii', 'bricks', 'beads', 'vga',
+    themes: ['pixel', 'pixel2', 'pixel3', 'handheld', 'cga', 'arcade', 'amber', 'ascii', 'bricks', 'beads', 'vga',
       'teletext', 'halftone', 'riso',
       'screentone', 'glassblock', 'dotprinter', 'coderain', 'nightvision', 'voxel'],
   },
