@@ -187,35 +187,6 @@ export const THEMES = [
     burst: { shape: 'bubble', colors: ['#DFFAFF', '#BFF4FF'], size: 0.15, speed: 1.6, gravity: 2.6, drag: 1.8, life: 1.5, opacity: 0.9 },
   },
   {
-    // 숲속 그루터기 위 나무 블록. 이끼 방석, 나뭇잎 사이로 흘러가는 햇빛 조각, 반딧불과 낙엽
-    id: 'forest',
-    name: '숲',
-    bg: '#16221A',
-    ink: '#E6EEDD',
-    backdrop: [
-      `${svg(100, 60, "<g fill='#0a120c'><rect x='4' y='0' width='6' height='60'/><rect x='19' y='0' width='3' height='60'/><rect x='73' y='0' width='8' height='60'/><rect x='91' y='0' width='4' height='60'/><path d='M0 60 C10 52 18 55 26 58 C36 50 46 56 54 59 C66 52 78 56 100 54 V60Z'/></g>")} center / 100% 100% no-repeat`,
-      'radial-gradient(70% 50% at 50% -10%, rgba(210,240,140,.25), transparent 70%)',
-      'linear-gradient(#22351F, #101A12)',
-    ].join(', '),
-    drift: 'repeating-linear-gradient(105deg, transparent 0 7%, rgba(230,255,170,.06) 8% 10%, transparent 11% 19%)',
-    form: { bevel: 0.05, size: 0.8, radius: 0.16, depth: 0.025 },
-    body: { color: '#3A2A1A', roughness: 0.8 },
-    sticker: { roughness: 0.85 },
-    faces: ['#C2452D', '#7A5230', '#EDE6D2', '#E3A23B', '#84B04F', '#2E6A47'],
-    lights: {
-      sky: '#f6ffd8', ground: '#1d2a14', hemi: 1.9,
-      key: ['#fff1c4', 2.3, [-5, 7, 3]], fill: ['#7fa86a', 0.35, [5, 0, 4]], rim: ['#e8ff9a', 0.9, [3, 5, -5]],
-    },
-    surface: 'forest',
-    sound: 'nature',
-    motion: 'smooth',
-    ambient: [
-      { mode: 'float', shape: 'glow', colors: ['#E4FF7A', '#B6FF5C'], count: 28, size: 0.11, speed: 0.4, opacity: 0.95, additive: true },
-      { mode: 'fall', shape: 'leaf', colors: ['#8DB255', '#E3A23B', '#C2452D', '#6B8F3A'], count: 16, size: 0.22, speed: 0.22, opacity: 0.95 },
-    ],
-    burst: { shape: 'leaf', colors: ['#8DB255', '#E3A23B', '#2E6A47', '#C2452D'], size: 0.18, speed: 1.6, gravity: -1.2, drag: 2.4, life: 1.8 },
-  },
-  {
     // 바닷가에 해가 진다. 낮게 깔린 주황 햇빛이 옆에서 들고, 법랑 면에 수평선이 비치고, 새가 지나간다
     id: 'sunset',
     name: '노을',
@@ -1534,53 +1505,6 @@ export const THEMES = [
     burst: { shape: 'glow', colors: ['#FFFFFF', '#F2EEE6'], size: 0.42, speed: 1.4, gravity: 0.6, drag: 1.8, life: 1.3, opacity: 0.28 },
   },
 
-  {
-    // 들판 한가운데. 다 맞추면 면 하나가 위에서 내려다본 풀밭 한 뙈기다. 끝이 뾰족한 풀잎이 겹겹이 눕고, 잎맥이 서고, 이슬이 맺혔다.
-    // 면마다 풀이 다르다(잔디, 가을 억새빛, 푸른 김의털, 붉은 띠, 보랏빛 수크령, 서리 내린 풀)
-    id: 'grass',
-    name: '풀밭',
-    bg: '#E8EED8',
-    ink: '#1E2A16',
-    backdrop: [
-      'radial-gradient(80% 50% at 50% -10%, rgba(255,250,210,.7), transparent 70%)',
-      'linear-gradient(180deg, #CFE3F2 0 45%, #A8C878 45% 60%, #6A9A3A 100%)',
-    ].join(', '),
-    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
-    body: { color: '#5A3E28', roughness: 0.85 },
-    faces: ['#4A9A3A', '#C8A040', '#7AA8B0', '#B83A2A', '#7A3A6A', '#D8E0E0'],
-    lights: {
-      sky: '#ffffff', ground: '#6a8a3a', hemi: 1.8,
-      key: ['#fff4e2', 2.3, [-4, 7, 5]], fill: ['#e8ffd0', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
-    },
-    ambient: { mode: 'float', shape: 'dot', colors: ['#FFF6C8', '#FFFFFF'], count: 30, size: 0.04, speed: 0.25, opacity: 0.8 },
-    burst: { shape: 'leaf', colors: 'faces', size: 0.12, speed: 1.6, gravity: -2, drag: 1.6, life: 1.4 },
-    surface: 'grass',
-    sound: 'nature',
-    motion: 'smooth',
-  },
-  {
-    // 밭고랑. 다 맞추면 면 하나가 갓 일군 흙 한 판이다. 부슬부슬한 흙덩이가 실제로 솟고, 잔돌과 실뿌리, 젖은 자국.
-    // 면마다 흙이 다르다(검은 부엽토, 갈색 밭흙, 붉은 황토, 누런 모래흙, 잿빛 점토, 흰 마사토)
-    id: 'soil',
-    name: '흙',
-    bg: '#E8DCC8',
-    ink: '#2A1E14',
-    backdrop: [
-      'radial-gradient(70% 40% at 50% 0%, rgba(255,240,210,.6), transparent 70%)',
-      'linear-gradient(180deg, #D8C8A8 0 40%, #8A6A48 40% 100%)',
-    ].join(', '),
-    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 40 },
-    body: { color: '#4A6A32', roughness: 0.5 },
-    faces: ['#2A2624', '#6A4428', '#A8482A', '#C8A050', '#7A8480', '#E0D0A8'],
-    lights: {
-      sky: '#ffffff', ground: '#5a4030', hemi: 1.8,
-      key: ['#fff4e2', 2.3, [-4, 7, 5]], fill: ['#ffe8c8', 0.5, [6, 0, 4]], rim: ['#ffffff', 1, [2, 4, -6]],
-    },
-    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 1.6, gravity: -6, drag: 1.4, life: 1 },
-    surface: 'soil',
-    sound: 'molten',
-    motion: 'heavy',
-  },
   {
     // 장작 쌓인 제재소. 다 맞추면 면 하나가 통나무 한 토막의 마구리다. 나이테가 고리를 그리며 실제로 결이 지고, 심재와
     // 변재 빛깔이 갈리고, 마른 갈라짐과 톱자국이 남았다. 몸통은 나무껍질. 면마다 나무가 다르다(자작, 참나무, 삼나무, 호두, 흑단, 잿빛 고목)
@@ -3475,7 +3399,7 @@ export const themeById = (id) => THEMES.find((t) => t.id === id);
 // 테마 고르는 목록에서 묶어 보여 주는 무리. 테마는 모두 한 무리에만 들어간다(테스트가 본다)
 export const GROUPS = [
   { name: '기본', themes: ['classic', 'candy', 'brick', 'dice', 'jelly', 'clay', 'bubblewrap', 'paper', 'box', 'slime', 'stickmen'] },
-  { name: '자연', themes: ['forest', 'grass', 'soil', 'timber', 'pebble', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert', 'space'] },
+  { name: '자연', themes: ['timber', 'pebble', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert', 'space'] },
   { name: '빛·불', themes: ['neon', 'disco', 'kaleido'] },
   { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'bismuth', 'druze', 'pave', 'diamond', 'ruby', 'sapphire', 'emerald', 'quartz', 'starstone', 'moonstone', 'amberstone'] },
   { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'camo', 'enamel'] },

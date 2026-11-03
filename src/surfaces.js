@@ -431,29 +431,6 @@ B.water = {
   emissive: 'totalEmissiveRadiance = vec3(.3, .75, 1.) * (fxFresnel(normal, 2.) * .12 + fxC * .12);',
 };
 
-S.forest = {
-  // 이끼 방석. 잎맥이 지나가고, 나뭇잎 사이로 햇빛 조각이 흘러간다
-  color: `
-    float fxN = fxF2(vLocal.xy * 14. + vSeed * 19.);
-    float fxFuzz = fxN2(vLocal.xy * 120. + vSeed * 3.);
-    float fxV = abs(sin((vLocal.x + vLocal.y * .35) * 26. + fxN * 5.));
-    float fxSun = smoothstep(.56, .72, fxF2(vLocal.xy * 2.2 + vec2(uTime * .06, uTime * .035) + vSeed * 4.));
-    diffuseColor.rgb *= .68 + .45 * fxN + .1 * fxFuzz;
-    diffuseColor.rgb *= .86 + .14 * smoothstep(0., .3, fxV);`,
-  surface: 'roughnessFactor = .85;',
-  emissive: 'totalEmissiveRadiance = diffuse * fxSun * .55 + vec3(1., .9, .55) * fxSun * .08;',
-};
-B.forest = {
-  // 나뭇결. 윗면은 나이테, 옆면은 줄결. 햇빛 조각이 같이 흐른다
-  color: `
-    float fxN = fxF3(vLocal * 6. + vSeed * 11.);
-    float fxR = fract(length(vLocal.xz + vec2(vSeed - .5, fxH1(vSeed * 7.) - .5)) * 20. + fxN * 2.5);
-    vec2 fxP = fxBodyUV();
-    float fxSun = smoothstep(.56, .72, fxF2(fxP * 2.2 + vec2(uTime * .06, uTime * .035) + vSeed * 4.));
-    diffuseColor.rgb *= .7 + .6 * smoothstep(0., .55, fxR) * (.65 + .35 * fxN);`,
-  surface: 'roughnessFactor = .8;',
-  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * fxSun * .5;',
-};
 
 S.sunset = {
   // 법랑 같은 매끈한 면에 지는 해와 수평선이 비친다
@@ -1404,122 +1381,9 @@ B.gauge = {
   surface: 'roughnessFactor = mix(.3, .8, fxPat); metalnessFactor = 1. - fxPat;',
 };
 
-S.grass = {
-  // 풀밭. 다 맞추면 면 하나가 바람에 한쪽으로 눕은 풀밭 한 뙈기다. 끝이 뾰족한 풀잎이 네 겹으로 겹쳐 누웠고, 아래 겹일수록
-  // 그늘져 짙고 맨 위 잎끝은 볕을 받아 밝다. 잎은 조금씩 휘었고 가운데 잎맥이 접혀 서며, 잎마다 빛깔이 조금씩 다르다.
-  // 몇 잎 끝은 말라 누렇고, 몇 잎엔 이슬이 맺혀 반짝인다. 잎 사이 깊은 곳엔 마른 풀과 흙이 비친다. 풀 덤불이 실제로 봉긋하다.
-  // 면마다 풀이 다르다(잔디, 가을 억새빛, 푸른 김의털, 붉은 띠, 보랏빛 수크령, 서리 내린 풀)
-  head: `
-    // 맨 위에 보이는 풀잎: x 잎 끝 쪽(0 뿌리 ~ 1 끝), y 잎마다 난수, z 잎맥에서 가장자리까지(-1~1), w 잎 층(-1 잎 없음, 0 아래 ~ 3 위)
-    vec4 fxBlades(vec2 F) {
-      vec4 best = vec4(0., 0., 0., -1.);
-      float top = -1.;
-      for (int L = 0; L < 4; L++) {
-        float fl = float(L);
-        vec2 g = F * (7. + fl * 1.5) + fl * 17.3 + uFace * 5.;
-        vec2 cell = floor(g);
-        for (int dy = -3; dy <= 0; dy++) {
-          for (int dx = -2; dx <= 2; dx++) {
-            vec2 c = cell + vec2(float(dx), float(dy));
-            float h = fxH2(c + fl * 3.1);
-            vec2 root = c + vec2(fxH2(c + 1.7), fxH2(c + 9.2));
-            float ang = 1.5708 + (h - .5) * .9 + .3 * sin(c.x * .45 + fl * 1.7);
-            vec2 dir = vec2(cos(ang), sin(ang));
-            vec2 rel = g - root;
-            float len = 1.5 + 1.2 * fxH2(c + 4.4);
-            float t = dot(rel, dir) / len;
-            if (t < 0. || t > 1.) continue;
-            float bend = (fxH2(c + 6.6) - .5) * .9;
-            float perp = dot(rel, vec2(-dir.y, dir.x)) - bend * t * t * len * .5;
-            float w = .3 * pow(1. - t, .6) + .01;
-            float z = fl + t * .9;
-            if (abs(perp) < w && z > top) { top = z; best = vec4(t, h, perp / w, fl); }
-          }
-        }
-      }
-      return best;
-    }
-    float fxGrassH(vec2 p, float seed) {
-      vec2 F = aHome.xy + p * aHome.z;
-      return smoothstep(0., .06, fxEdgeAt(p)) * (.008 + .014 * fxF2(F * 4. + uFace) + .006 * smoothstep(0., .4, fxEdgeAt(p) / uSticker.x));
-    }`,
-  height: 'fxGrassH',
-  color: `
-    if (fxEdge() < 0.) discard;
-    vec2 fxF = fxFace();
-    vec4 fxB = fxBlades(fxF);
-    vec3 fxBase = diffuseColor.rgb;
-    float fxOn = step(0., fxB.w);
-    vec3 fxThatch = mix(vec3(.14, .1, .05), vec3(.4, .32, .18), fxN2(fxF * 90.)) * (.5 + .5 * fxN2(fxF * 25.));
-    vec3 fxLeaf = mix(fxBase, fxBase * vec3(1.12, 1.08, .7), fxB.y * .6);
-    fxLeaf = mix(fxLeaf, vec3(.78, .68, .38), smoothstep(.75, 1., fxB.x) * step(.72, fract(fxB.y * 7.)) * .7);
-    float fxShade = (.3 + .7 * (fxB.w + fxB.x * .9) / 3.9) * (.6 + .4 * fxB.x);
-    fxShade *= 1. + .1 * sign(fxB.z) * (1. - abs(fxB.z));
-    vec3 fxC = mix(fxThatch, fxLeaf * fxShade * 1.35, fxOn);
-    float fxDew = fxOn * step(2.5, fxB.w) * step(.78, fract(fxB.y * 13.)) * (1. - smoothstep(.08, .14, length(vec2((fxB.x - .62) * .5, fxB.z * .1))));
-    fxC = mix(fxC, fxC * .6 + .25, fxDew * .5);
-    diffuseColor.rgb = fxC;`,
-  normal: 'normal = fxBump(normal, fxOn * (fxB.w * .0012 + (1. - abs(fxB.z)) * .0005) + fxDew * .0008);',
-  surface: 'roughnessFactor = mix(.95, .5, fxOn) - fxDew * .4;',
-  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * fxOn * fxB.x * .05 + vec3(1.) * fxDew * fxFresnel(normal, 1.5) * .5;',
-};
 
-B.grass = {
-  color: `diffuseColor.rgb *= .75 + .35 * fxN3(vLocal * 40. + vSeed);`,
-  surface: 'roughnessFactor = .95;',
-};
 
-S.soil = {
-  // 흙. 다 맞추면 면 하나가 갓 갈아엎은 밭 한 뙈기다. 크고 작은 흙덩이가 둥글둥글 실제로 솟았고, 덩이 사이 틈은 깊고 어둡다.
-  // 덩이마다 고운 흙 알갱이가 뭉쳐 오돌토돌하고, 반짝이는 모래알과 잔돌이 섞였다. 가는 실뿌리가 기어가고, 물기 먹은 자리는
-  // 짙게 젖어 번들거린다. 면마다 흙이 다르다(검은 부엽토, 갈색 밭흙, 붉은 황토, 누런 모래흙, 잿빛 점토, 흰 마사토)
-  head: `
-    // 흙덩이: x 높이, y 틈 바닥 정도, z 덩이마다 난수
-    vec3 fxClod(vec2 F) {
-      vec2 w = F + (vec2(fxN2(F * 3. + uFace), fxN2(F * 3. + 7. + uFace)) - .5) * .3;
-      vec3 a = fxVoronoi(w * 4.2 + uFace * 3.);
-      vec3 b = fxVoronoi(w * 10. + uFace * 7.);
-      float big = (1. - smoothstep(.15, .8, a.x)) * smoothstep(0., .18, a.y) * (.65 + .35 * a.z);
-      float small = (1. - smoothstep(.1, .7, b.x)) * smoothstep(0., .14, b.y) * (.35 + .25 * b.z);
-      float h = max(big, small) + .18 * fxF2(F * 14. + uFace);
-      return vec3(h, 1. - smoothstep(.05, .3, h), big > small ? a.z : b.z);
-    }
-    float fxSoilH(vec2 p, float seed) {
-      vec3 c = fxClod(aHome.xy + p * aHome.z);
-      return smoothstep(0., .05, fxEdgeAt(p)) * (.004 + .024 * c.x);
-    }`,
-  height: 'fxSoilH',
-  color: `
-    if (fxEdge() < 0.) discard;
-    vec2 fxF = fxFace();
-    vec3 fxCl = fxClod(fxF);
-    vec3 fxBase = diffuseColor.rgb;
-    vec3 fxGr = fxVoronoi(fxF * 110. + uFace);
-    float fxGrain = sqrt(max(0., smoothstep(0., .25, fxGr.y)));
-    float fxCrumb = fxGrain * .6 + fxN2(fxF * 300.) * .4;
-    vec3 fxC = fxBase * (.5 + .6 * fxCl.x) * (.75 + .35 * fxCrumb) * (.88 + .24 * fxGr.z) * (.92 + .16 * fxCl.z);
-    fxC *= 1. - fxCl.y * .6;
-    fxC = mix(fxC, vec3(.86, .83, .76), step(.97, fxGr.z) * fxGrain * .5);
-    vec3 fxPb = fxVoronoi(fxF * 9. + uFace * 11.);
-    float fxPr = .18 + .1 * fract(fxPb.z * 7.);
-    float fxPebble = step(.88, fxPb.z) * (1. - smoothstep(fxPr - .03, fxPr, fxPb.x));
-    float fxPd = fxPebble * sqrt(max(0., 1. - pow(fxPb.x / fxPr, 2.)));
-    vec3 fxPc = mix(vec3(.55, .52, .48), vec3(.72, .62, .5), fract(fxPb.z * 13.)) * (.55 + .55 * fxPd) * (.85 + .3 * fxN2(fxF * 140.));
-    fxC = mix(fxC, fxPc, fxPebble);
-    float fxRoot = (1. - smoothstep(0., .006, abs(fxF2(fxF * 3. + uFace * 5.) - .5))) * smoothstep(.55, .7, fxN2(fxF * 3. + 9.));
-    fxC = mix(fxC, vec3(.55, .45, .32) * (.7 + .3 * fxCl.x), fxRoot * .7);
-    float fxWet = smoothstep(.6, .8, fxF2(fxF * 1.4 + uFace * 2.));
-    fxC *= 1. - fxWet * .35;
-    diffuseColor.rgb = fxC;`,
-  normal: 'normal = fxBump(normal, fxCrumb * .0015 + fxPd * .002 + fxRoot * .0004);',
-  surface: 'roughnessFactor = mix(.98, .5, fxWet) - fxPebble * .2;',
-  emissive: 'totalEmissiveRadiance = diffuseColor.rgb * .03;',
-};
 
-B.soil = {
-  color: `diffuseColor.rgb *= .8 + .3 * fxN3(vLocal * 60. + vSeed);`,
-  surface: 'roughnessFactor = .8;',
-};
 
 S.timber = {
   // 통나무 단면. 칸마다 통나무를 톱으로 잘라 낸 마구리 한 토막이다. 칸 밖에 있는 나무 한가운데(수)를 두르는 나이테가
@@ -6426,7 +6290,7 @@ B.candypaint = {
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
-  'neon', 'lava', 'water', 'forest', 'space', 'candy', 'ice', 'electric', 'flesh', 'eldritch', 'gem',
+  'neon', 'lava', 'water', 'space', 'candy', 'ice', 'electric', 'flesh', 'eldritch', 'gem',
   'circuit', 'aurora', 'stained', 'najeon', 'rain', 'mercury', 'gauge', 'clay', 'holo', 'jelly',
   'disco', 'ink', 'glass', 'bubblewrap', 'thermal', 'kaleido', 'flip', 'opal',
   'dragon', 'slime', 'lantern', 'eyeball', 'hamster', 'phoenix', 'fairywing',
