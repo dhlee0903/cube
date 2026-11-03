@@ -159,7 +159,7 @@ export const THEMES = [
     // 물에 잠긴 타일 큐브. 칸마다 맑은 물 아래 수영장 타일이 깔려 일렁이고, 그 위로 빛그물이 춤춘다.
     // 위에서 빛줄기가 내리고, 느릿하게 미끄러지며, 돌리면 거품이 솟는다
     id: 'water',
-    name: '물',
+    name: '물결',
     bg: '#06293B',
     ink: '#DDF6FF',
     backdrop: [
@@ -3598,6 +3598,31 @@ export const THEMES = [
     motion: 'smooth',
     burst: { shape: 'leaf', colors: 'faces', size: 0.07, speed: 2.4, gravity: -5, drag: 1.4, life: 0.9 },
   },
+  {
+    // 물. 조각 하나가 통째로 물덩이(무중력에 뜬 물 큐브). 물낯이 쉬지 않고 출렁이며 하늘을 비추고, 꺾여 들어간 시선 끝
+    // 속 벽엔 빛 그물이 일렁이며 기포가 떠오른다. 지나온 길이만큼 물빛이 짙어진다. 깊은 바다, 석호, 적조, 흑수 강, 녹조, 빙하 물
+    id: 'aqua',
+    name: '물',
+    bg: '#DDEFF5',
+    ink: '#0E2A3A',
+    backdrop: [
+      'radial-gradient(60% 45% at 50% 30%, rgba(255,255,255,.75), transparent 70%)',
+      'radial-gradient(90% 75% at 50% 42%, #EAF6FA, #A9D2E2)',
+    ].join(', '),
+    form: { bevel: 0.05, size: 0.97, radius: 0.08, grid: 40 },
+    body: { color: '#0C2C46', roughness: 0.05 },
+    faces: ['#1450D0', '#18C8B8', '#E0383A', '#C88A28', '#4CB02E', '#E6F2FF'],
+    lights: {
+      sky: '#f2fbff', ground: '#4a7a90', hemi: 0.8,
+      key: ['#ffffff', 2.2, [-4, 7, 5]], fill: ['#cfeaff', 0.5, [6, 1, 3]], rim: ['#ffffff', 1.2, [1, 4, -6]],
+    },
+    env: 1,
+    surface: 'aqua',
+    sound: 'water',
+    motion: 'smooth',
+    ambient: { mode: 'rise', shape: 'bubble', colors: ['#FFFFFF', '#CFEFFF'], count: 26, size: 0.05, speed: 0.25, opacity: 0.55 },
+    burst: { shape: 'bubble', colors: ['#FFFFFF', '#D8F2FF'], size: 0.07, speed: 2.2, gravity: 2, drag: 2, life: 0.8 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3623,7 +3648,7 @@ export const GROUPS = [
   },
   { name: '명화', themes: ['oil', 'watercolor', 'ukiyoe', 'monet', 'seurat', 'gogh', 'munch', 'cubism', 'warhol', 'collage'] },
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
-  { name: '원소', themes: ['fire', 'sod'] },
+  { name: '원소', themes: ['fire', 'sod', 'aqua'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'chrome', 'fiberoptic', 'ledcube'] },
 ];

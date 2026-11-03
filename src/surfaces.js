@@ -5846,6 +5846,104 @@ B.sod = {
   surface: 'roughnessFactor = .95; metalnessFactor = 0.;',
 };
 
+S.aqua = {
+  // 물. 조각 하나가 통째로 물덩이다(무중력에 뜬 물 큐브처럼). 겉은 살아 있는 물낯이라 잔물결이 쉬지 않고 번지며 실제로
+  // 조금씩 출렁이고(실루엣도 흔들린다), 하늘과 방을 거울처럼 비춘다. 시선은 물낯에서 꺾여 속으로 들어가고, 지나온 길이만큼
+  // 그 물빛이 짙어진다. 속 벽에는 물결이 모은 빛 그물(커스틱)이 일렁이고, 작은 기포가 화면 위쪽으로 떠오른다.
+  // 면마다 물빛이 다르다(깊은 바다, 산호초 석호, 적조, 갈색 흑수 강, 녹조 연못, 빙하 녹은 물)
+  head: `
+    float fxAquaH(vec2 p, float seed) {
+      float t = uTime;
+      float w = sin(p.x * 9. + t * 1.7 + seed * 6.) * sin(p.y * 7. - t * 1.3 + seed * 3.) * .5
+        + sin((p.x + p.y) * 13. - t * 2.3 + seed * 9.) * .3 + sin((p.x - p.y) * 17. + t * 2.9) * .2;
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.014 + .008 * w);
+    }
+    // 빛 그물: 움직이는 보로노이 칸의 경계(가장 가까운 두 점 거리의 차가 작은 곳)가 밝은 실이 된다
+    float fxCaus(vec2 p, float t) {
+      vec2 i = floor(p), f = fract(p);
+      float f1 = 8., f2 = 8.;
+      for (int y = -1; y <= 1; y++) for (int x = -1; x <= 1; x++) {
+        vec2 g = vec2(float(x), float(y));
+        vec2 o = .5 + .42 * sin(t + 6.2831 * vec2(fxH2(i + g), fxH2(i + g + 5.3)));
+        float d = length(g + o - f);
+        if (d < f1) { f2 = f1; f1 = d; } else if (d < f2) f2 = d;
+      }
+      return exp(-(f2 - f1) * 8.);
+    }
+    float fxCaus2(vec2 p, float t) {
+      return pow(fxCaus(p * 3.2, t * .9) * .62 + fxCaus(p * 4.9 + 1.7, -t * 1.2 + 2.) * .38, 1.6);
+    }`,
+  height: 'fxAquaH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec3 fxBase = diffuseColor.rgb;
+    vec2 fxP = vLocal.xy;
+    float fxR = uSticker.x;
+    float fxT = uTime;
+    // 물낯 기울기: 출렁임 + 더 잘게 번지는 잔물결
+    float fxEs = .003;
+    float fxH0 = fxAquaH(fxP, vSeed);
+    vec2 fxG = vec2(fxAquaH(fxP + vec2(fxEs, 0.), vSeed) - fxH0, fxAquaH(fxP + vec2(0., fxEs), vSeed) - fxH0) / fxEs;
+    vec2 fxRp = fxP * 26. + vSeed * 9.;
+    fxG += (vec2(fxN2(fxRp + fxT * 1.6), fxN2(fxRp + 4.1 - fxT * 1.3)) - .5) * .07 * smoothstep(0., .04, fxEdge());
+    vec3 fxNw = normalize(vec3(-fxG, 1.));
+    vec3 fxV = normalize(vViewPosition);
+    vec3 fxVl = normalize(vec3(dot(fxV, vTx), dot(fxV, vTy), max(dot(fxV, vTz), .15)));
+    // 물속으로 꺾인 시선
+    vec3 fxRd = refract(-fxVl, fxNw, 1. / 1.33);
+    if (dot(fxRd, fxRd) < .5) fxRd = -fxVl;
+    vec3 fxO = vec3(fxP, 0.);
+    // 상자 속 벽(옆 넷, 뒤)까지
+    float fxTx = (sign(fxRd.x) * fxR - fxO.x) / (abs(fxRd.x) < 1e-4 ? 1e-4 : fxRd.x);
+    float fxTy = (sign(fxRd.y) * fxR - fxO.y) / (abs(fxRd.y) < 1e-4 ? 1e-4 : fxRd.y);
+    float fxTb = -.96 / min(fxRd.z, -1e-3);
+    float fxTw = min(min(fxTx, fxTy), fxTb);
+    vec3 fxX = fxO + fxRd * fxTw;
+    // 닿은 벽 위의 좌표로 빛 그물을 읽는다
+    vec2 fxWc = fxTw == fxTb ? fxX.xy : (fxTw == fxTx ? fxX.yz : fxX.xz);
+    float fxCs = fxCaus2(fxWc + vSeed * 3.7, fxT * 1.1);
+    // 물빛: 지나온 길이만큼 짙어진다. 하얀 물은 거의 맑다
+    vec3 fxAbs = (1. - fxBase) * 1.3 + .04;
+    vec3 fxTrn = exp(-fxAbs * fxTw);
+    vec3 fxDeep = fxBase * fxBase * .35;
+    vec3 fxIn = mix(fxDeep, fxBase * 1.05 + .08, fxTrn) * (.5 + 1.3 * fxCs * (.5 + .5 * fxTrn.g));
+    // 화면 위쪽에서 비치는 빛살
+    vec3 fxU = normalize(vec3(vTx.y, vTy.y, vTz.y) + vec3(0., 0., 1e-4));
+    vec3 fxMid = fxO + fxRd * fxTw * .5;
+    float fxShaft = pow(fxN2(vec2(dot(fxMid.xy, vec2(fxU.y, -fxU.x)) * 9. + fxT * .3, vSeed * 5.)), 3.) * .35;
+    fxIn += fxBase * fxShaft * (1. - fxTrn.g * .5);
+    // 기포: 조각 속 여기저기서 화면 위쪽으로 떠오른다(물속 깊이는 꺾여서 얕아 보인다)
+    vec2 fxSk = fxVl.xy / fxVl.z;
+    float fxBub = 0.;
+    for (int i = 0; i < 7; i++) {
+      float fi = float(i);
+      float h1 = fxH1(fi * 7.31 + vSeed * 13.7), h2 = fxH1(fi * 3.17 + vSeed * 5.3), h3 = fxH1(fi * 5.9 + vSeed * 2.1);
+      float rad = .012 + .022 * h3;
+      float ph = fract(fxT * (.06 + .05 * h2) + h1);
+      vec3 P = vec3((vec2(h1, h2) - .5) * fxR * 1.6, -.08 - .7 * h3);
+      P += fxU * (ph - .5) * 1.6;
+      P.xy += vec2(sin(fxT * 2. + fi * 3.), cos(fxT * 1.7 + fi)) * .01;
+      if (abs(P.x) > fxR - rad || abs(P.y) > fxR - rad) continue;
+      vec2 pj = P.xy - P.z / 1.33 * fxSk;
+      float d = length(fxP - pj) / rad;
+      float fade = smoothstep(0., .1, ph) * smoothstep(1., .85, ph);
+      fxBub += fade * (smoothstep(1., .82, d) * smoothstep(.55, .95, d) * .9 + smoothstep(.35, .0, length(fxP - pj - vec2(-.3, .35) * rad) / rad) * .8);
+    }
+    fxIn += vec3(.85, .95, 1.) * fxBub;
+    diffuseColor.rgb = fxBase * .02;`,
+  normal: 'normal = normalize(vTx * fxNw.x + vTy * fxNw.y + vTz * fxNw.z);',
+  surface: 'roughnessFactor = .03; metalnessFactor = 0.;',
+  emissive: `
+    float fxFr = .02 + .98 * pow(1. - max(dot(fxNw, fxVl), 0.), 5.);
+    totalEmissiveRadiance = fxIn * (1. - fxFr) * .9;`,
+};
+B.aqua = {
+  // 몸통은 조각 사이 깊은 물: 짙고 반들반들하다
+  color: 'diffuseColor.rgb *= .8 + .3 * fxN3(vLocal * 20. + vSeed + uTime * .2);',
+  surface: 'roughnessFactor = .05; metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = vec3(.2, .45, .7) * fxFresnel(normal, 3.) * .25;',
+};
+
 S.amber = {
   // 호박. 칸마다 반들반들하게 간 호박 덩이가 둥근 네모 캐보숑으로 봉긋 솟았다. 속은 진짜 깊이가 있어서, 겉이 렌즈처럼
   // 빛을 꺾어 보는 각도에 따라 속 것들이 깊은 데서 미끄러지고 가운데가 살짝 커 보인다. 깊숙이 모기가 갇혀 있고
@@ -6756,6 +6854,7 @@ export const MOVING = new Set([
   'ledcube',
   'fire',
   'sod',
+  'aqua',
 ]);
 
 /**
