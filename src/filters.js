@@ -670,14 +670,14 @@ const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 25
 
 // 명화 필터의 기본값. 테마의 filter에 { type: 'oil', ... }로 덮어쓴다
 //   bg       그림 속 배경 색 셋(필터마다 쓰는 법이 다르다)
-//   palette  물감(최대 12). 우키요에 안료, 쇠라풍 순색, 워홀풍 칸 바탕 넷과 흰 면 대신 칠할 색 넷
+//   palette  물감(최대 12). 워홀풍 칸 바탕 넷과 흰 면 대신 칠할 색 넷
 //   tiles    화면을 몇 칸으로 나눠 같은 장면을 되풀이하는지(워홀풍 2)
 //   animated 가만히 있어도 움직이는지
-//   dab, len, swirl, dot, relief, jitter, pastel, line  붓 자국 필터(dabs)의 크기, 길이, 소용돌이, 점 여부, 요철, 색 흔들림, 파스텔, 윤곽
+//   dab, len, swirl, relief, jitter, pastel, line  붓 자국 필터(dabs)의 크기, 길이, 소용돌이, 요철, 색 흔들림, 파스텔, 윤곽
 //   align, blunt, varnish, width  붓질을 형태 경계에 맞출지, 붓 끝이 뭉툭한 정도, 니스, 붓 폭
 const PAINT_BASE = {
   bg: ['#202020', '#606060', '#A0A0A0'], palette: [], tiles: 1, animated: false,
-  dab: 8, len: 1.8, swirl: 1, dot: 0, relief: 0.6, jitter: 0.06, pastel: 0, line: 0, align: 0, blunt: 0, varnish: 0, width: 0.36,
+  dab: 8, len: 1.8, swirl: 1, relief: 0.6, jitter: 0.06, pastel: 0, line: 0, align: 0, blunt: 0, varnish: 0, width: 0.36,
 };
 
 export class Filter {
@@ -722,7 +722,6 @@ export class Filter {
       uDab: { value: 8 },
       uLen: { value: 1.8 },
       uSwirl: { value: 1 },
-      uDot: { value: 0 },
       uRelief: { value: 0.6 },
       uJit: { value: 0.06 },
       uPastel: { value: 0 },
@@ -798,7 +797,6 @@ export class Filter {
       u.uDab.value = p.dab;
       u.uLen.value = p.len;
       u.uSwirl.value = p.swirl;
-      u.uDot.value = p.dot;
       u.uRelief.value = p.relief;
       u.uJit.value = p.jitter;
       u.uPastel.value = p.pastel;

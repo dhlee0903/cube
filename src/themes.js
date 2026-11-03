@@ -1144,28 +1144,6 @@ export const THEMES = [
     burst: { shape: 'dot', colors: 'faces', size: 0.06, speed: 1.8, gravity: -3, drag: 1.6, life: 0.9 },
   },
   {
-    // 목판화. 몇 가지 안료(주홍, 감빛, 황토, 녹청, 쪽빛, 감청, 먹)로 평평하게 찍고, 먹선은 조금 어긋난 판에 찍힌다.
-    // 나뭇결, 위쪽은 쪽빛에서 종이색으로 번지는 그러데이션(보카시), 화지 섬유
-    id: 'ukiyoe',
-    name: '우키요에',
-    bg: '#EFE3C8',
-    ink: '#24211F',
-    backdrop: '#EFE3C8',
-    form: { bevel: 0.07, size: 0.88, radius: 0.08, depth: 0.04 },
-    body: { color: '#1A1614', roughness: 0.55 },
-    sticker: { roughness: 0.35 },
-    faces: ['#C8302A', '#2A5AA8', '#E8C440', '#3A8A4A', '#F0EEE6', '#E07A2A'],
-    lights: {
-      sky: '#ffffff', ground: '#8a8070', hemi: 1.7,
-      key: ['#fff6e8', 2.4, [-3, 6, 5]], fill: ['#d8e0ff', 0.45, [5, 0, 4]], rim: ['#ffffff', 0.6, [0, 3, -6]],
-    },
-    filter: { type: 'ukiyoe', bg: ['#EFE3C8', '#3A66A0', '#C8BCA4'], palette: ['#EFE3C8', '#24211F', '#22325A', '#3A66A0', '#8FB3C8', '#C4402A', '#D9773A', '#D6A84A', '#5E8A5A', '#D99A9A', '#7A4E32', '#9A9A90'] },
-    surface: 'plain',
-    sound: 'paper',
-    motion: 'smooth',
-    burst: { shape: 'dot', colors: 'faces', size: 0.06, speed: 1.8, gravity: -3, drag: 1.6, life: 0.9 },
-  },
-  {
     // 인상주의. 섞지 않은 색을 짧게 끊어 찍은 붓 자국이 겹치고, 붓 자국마다 색이 조금씩 흔들린다.
     // 햇빛에 바랜 듯 옅은 색, 하늘빛·연둣빛·라일락빛 배경
     id: 'monet',
@@ -1184,27 +1162,6 @@ export const THEMES = [
     filter: { type: 'dabs', dab: 11, len: 1.5, swirl: 0.25, relief: 0.35, jitter: 0.07, pastel: 0.08, line: 0, bg: ['#A8C8D8', '#C8D8B0', '#D8B8D0'] },
     surface: 'plain',
     sound: 'nature',
-    motion: 'smooth',
-    burst: { shape: 'dot', colors: 'faces', size: 0.06, speed: 1.8, gravity: -3, drag: 1.6, life: 0.9 },
-  },
-  {
-    // 점묘. 순색 물감 열두 가지만으로 작은 점을 찍고, 점 사이로 캔버스가 비친다. 멀리서 보면 점이 섞여 색이 된다
-    id: 'seurat',
-    name: '쇠라풍',
-    bg: '#E8E0C8',
-    ink: '#2A2A30',
-    backdrop: '#E8E0C8',
-    form: { bevel: 0.07, size: 0.88, radius: 0.08, depth: 0.04 },
-    body: { color: '#1A1614', roughness: 0.55 },
-    sticker: { roughness: 0.35 },
-    faces: ['#C8302A', '#2A5AA8', '#E8C440', '#3A8A4A', '#F0EEE6', '#E07A2A'],
-    lights: {
-      sky: '#ffffff', ground: '#8a8070', hemi: 1.7,
-      key: ['#fff6e8', 2.4, [-3, 6, 5]], fill: ['#d8e0ff', 0.45, [5, 0, 4]], rim: ['#ffffff', 0.6, [0, 3, -6]],
-    },
-    filter: { type: 'dabs', dot: 1, dab: 8, relief: 0, jitter: 0.06, line: 0, bg: ['#C8D8A0', '#8AB0C8', '#E8D8A0'], palette: ['#E8302A', '#F08A20', '#F2D23A', '#A8C83A', '#3A9A4A', '#2A5AB8', '#6A3A9A', '#F2F0E6', '#8AC0E8', '#F0A0B0', '#1E2A4A', '#C8A060'] },
-    surface: 'plain',
-    sound: 'paper',
     motion: 'smooth',
     burst: { shape: 'dot', colors: 'faces', size: 0.06, speed: 1.8, gravity: -3, drag: 1.6, life: 0.9 },
   },
@@ -3646,7 +3603,7 @@ export const GROUPS = [
       'teletext', 'halftone', 'riso',
       'screentone', 'glassblock', 'dotprinter', 'coderain', 'crossstitch', 'squiggle', 'scratchart', 'nightvision', 'voxel'],
   },
-  { name: '명화', themes: ['oil', 'watercolor', 'ukiyoe', 'monet', 'seurat', 'gogh', 'munch', 'cubism', 'warhol', 'collage'] },
+  { name: '명화', themes: ['oil', 'watercolor', 'monet', 'gogh', 'munch', 'cubism', 'warhol', 'collage'] },
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '원소', themes: ['fire', 'sod', 'aqua'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },

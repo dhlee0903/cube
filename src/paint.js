@@ -4,9 +4,8 @@
 //   munch       뭉크풍 표현주의. 물결치는 흐름을 따라 길게 끌린 붓질, 출렁이는 윤곽, 타는 듯한 하늘 띠와 검푸른 물
 //   warhol      워홀풍 실크스크린. 같은 장면을 2×2로 찍고 칸마다 다른 색 판, 맨 위에 어긋나게 찍힌 검은 판
 //   dabs        붓 자국 하나하나를 찍는다. 설정에 따라 유화(형태 경계를 따라 눕는 긴 붓질, 두꺼운 요철, 니스),
-//               고흐풍(굵게 소용돌이치는 뭉툭한 붓질), 모네풍(가볍게 끊어 찍은 색), 쇠라풍(순색 점만 찍는 점묘)이 된다
+//               고흐풍(굵게 소용돌이치는 뭉툭한 붓질), 모네풍(가볍게 끊어 찍은 색)이 된다
 //   cubism      입체파. 장면을 각진 조각으로 쪼개 조각마다 조금씩 다른 시점, 흙빛 색조, 조각마다 다른 빛 방향과 빗금, 끊긴 윤곽
-//   ukiyoe      우키요에 목판화. 몇 가지 안료로 평평하게 찍고 먹선, 판 어긋남, 나뭇결, 위쪽 쪽빛 그러데이션(보카시), 화지 결
 //   watercolor  수채화. 번지는 가장자리, 가장자리에 고이는 물감, 안료 알갱이, 종이 요철, 남겨 둔 흰 종이, 연필 밑그림
 
 const HEAD = /* glsl */ `
@@ -213,7 +212,6 @@ const DABS = /* glsl */ `
 uniform float uDab;
 uniform float uLen;
 uniform float uSwirl;
-uniform float uDot;
 uniform float uRelief;
 uniform float uJit;
 uniform float uPastel;
@@ -257,7 +255,7 @@ void main() {
         vec2 d = (pos - cp) / D;
         vec2 lo = vec2(dot(d, vec2(cos(a), sin(a))), dot(d, vec2(-sin(a), cos(a))));
         vec2 qd = abs(lo) / vec2(uLen * .5, uWide);
-        float r = uDot > .5 ? length(lo) / .5 : mix(length(qd), pow(pow(qd.x, 4.) + pow(qd.y, 4.), .25), uBlunt);
+        float r = mix(length(qd), pow(pow(qd.x, 4.) + pow(qd.y, 4.), .25), uBlunt);
         float z = h + float(L);
         vec3 sc = fxOver(cp / uRes, bg);
         // 붓 자국은 칸 경계를 넘지 않는다: 붓 가운데 색이 이 자리 색과 다르면(다른 스티커나 몸통) 칠하지 않는다
@@ -332,39 +330,6 @@ void main() {
   gl_FragColor = vec4(clamp(col, 0., 1.), 1.);
 }`;
 
-const UKIYOE = /* glsl */ `
-vec3 fxBack(vec2 uv) {
-  vec2 P = fxP(uv);
-  vec3 c = mix(uBgA, uBgB, smoothstep(.12, .5, P.y));
-  return mix(c, uBgC, smoothstep(-.15, -.5, P.y) * .55);
-}
-void main() {
-  vec2 pos = vUv * uRes / uDpr;
-  vec3 bg = fxBack(vUv);
-  // 색 판은 먹 판과 조금 어긋나게 찍힌다
-  vec2 reg = vec2(1.4, -1.) * uDpr / uRes;
-  vec4 t = fxTex(vUv + reg);
-  vec3 col = mix(bg, fxPick(t.rgb), step(.5, t.a));
-  float grain = fxN(vec2(pos.x * .006, pos.y * .3) + fxN(pos * .01) * 3.);
-  col *= .95 + .08 * grain;
-  // 먹선: 색이나 바탕이 바뀌는 곳
-  vec4 c0 = fxTex(vUv);
-  float e = 0.;
-  for (int i = 0; i < 4; i++) {
-    float an = float(i) * .785398;
-    vec2 o = vec2(cos(an), sin(an)) * 1.7 * uDpr / uRes;
-    vec4 a = fxTex(vUv + o), b = fxTex(vUv - o);
-    e = max(e, length(a.rgb * a.a - b.rgb * b.a) + abs(a.a - b.a));
-  }
-  float line = smoothstep(.22, .4, e) * (.7 + .3 * fxN(pos * .08));
-  col = mix(col, uPal[1], line);
-  // 화지 섬유
-  col *= .96 + .06 * fxN(pos * .35);
-  float fiber = 1. - smoothstep(0., .04, abs(fxN(pos * vec2(.02, .09) + 9.) - .5));
-  col = mix(col, col * .9, fiber * .25);
-  gl_FragColor = vec4(clamp(col, 0., 1.), 1.);
-}`;
-
 const WATERCOLOR = /* glsl */ `
 vec3 fxBack(vec2 uv) {
   vec2 P = fxP(uv);
@@ -401,7 +366,7 @@ void main() {
   gl_FragColor = vec4(clamp(pig, 0., 1.), 1.);
 }`;
 
-const SHADERS = { collage: COLLAGE, munch: MUNCH, warhol: WARHOL, dabs: DABS, cubism: CUBISM, ukiyoe: UKIYOE, watercolor: WATERCOLOR };
+const SHADERS = { collage: COLLAGE, munch: MUNCH, warhol: WARHOL, dabs: DABS, cubism: CUBISM, watercolor: WATERCOLOR };
 
 export const PAINT_TYPES = Object.keys(SHADERS);
 
