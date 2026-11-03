@@ -398,8 +398,10 @@ float fxScratchLayer(vec2 g, float ang, float thr, out float side) {
   // 이 자국 한가운데가 스티커인지, 얼마나 밝은지로 긁을지 정한다
   vec2 mid = vec2((seg + .5) * L - off, row + .5) / 1.5;
   vec4 m = fxAtL(mat2(c, -sn, sn, c) * mid);
-  float chroma = max(max(m.r, m.g), m.b) - min(min(m.r, m.g), m.b);
-  float stk = smoothstep(.12, .25, chroma) * step(.7, m.a);
+  // 비스듬한 면은 빛을 받아 하얗게 바래니 채도(최댓값에 대한 비)로 가린다. 몸통은 회색이라 채도가 없다
+  float mx = max(max(m.r, m.g), m.b);
+  float sat = (mx - min(min(m.r, m.g), m.b)) / max(mx, .08);
+  float stk = smoothstep(.1, .22, sat) * step(.08, mx) * step(.7, m.a);
   float dens = stk > .5 ? .86 + .3 * fxLum(m.rgb) : .014;
   if (h1 > dens - thr) { side = 0.; return 0.; }
   float u = (q.x + off) / L - seg;
@@ -421,7 +423,9 @@ vec4 fxScratch(vec2 g) {
   float a2 = fxScratchLayer(g, -.62, .62, s2);
   float cut = max(a1, a2);
   vec3 bow = .55 + .45 * cos(6.2832 * (g.x / uLow.x * .9 + g.y / uLow.y * .35 + vec3(0., .33, .67)));
-  vec3 under = r.a > .7 ? r.rgb / max(max(max(r.r, r.g), r.b), .45) : bow;
+  // 큐브 밑종이는 바랜 색도 다시 짙게 살려 쓴다
+  vec3 cr = r.rgb / max(max(max(r.r, r.g), r.b), .45);
+  vec3 under = r.a > .7 ? clamp(mix(vec3(fxLum(cr)), cr, 1.8), 0., 1.) : bow;
   // 홈 바닥은 살짝 거칠고, 한쪽 가장자리가 그늘진다
   float rough = .88 + .12 * fxHash(floor(sp * 1.5));
   float edge = a1 >= a2 ? s1 : s2;

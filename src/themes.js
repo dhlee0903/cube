@@ -1044,6 +1044,7 @@ export const THEMES = [
     backdrop: '#0E0E0E',
     form: { bevel: 0.05, size: 0.88, radius: 0.04 },
     body: { color: '#141414', roughness: 0.6 },
+    sticker: { roughness: 0.85 },
     faces: ['#E8302A', '#2A6AF0', '#F2D020', '#2AB050', '#A040E0', '#F08020'],
     lights: {
       sky: '#ffffff', ground: '#8890b0', hemi: 1.8,
