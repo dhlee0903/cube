@@ -5,7 +5,6 @@
 //   warhol      워홀풍 실크스크린. 같은 장면을 2×2로 찍고 칸마다 다른 색 판, 맨 위에 어긋나게 찍힌 검은 판
 //   dabs        붓 자국 하나하나를 찍는다. 설정에 따라 유화(형태 경계를 따라 눕는 긴 붓질, 두꺼운 요철, 니스),
 //               고흐풍(굵게 소용돌이치는 뭉툭한 붓질), 모네풍(가볍게 끊어 찍은 색), 쇠라풍(순색 점만 찍는 점묘)이 된다
-//   klimt       클림트풍. 금박 바탕에 소용돌이 무늬, 색 면은 작은 네모·동그라미 모자이크, 검은 면은 흑백 네모
 //   cubism      입체파. 장면을 각진 조각으로 쪼개 조각마다 조금씩 다른 시점, 흙빛 색조, 조각마다 다른 빛 방향과 빗금, 끊긴 윤곽
 //   ukiyoe      우키요에 목판화. 몇 가지 안료로 평평하게 찍고 먹선, 판 어긋남, 나뭇결, 위쪽 쪽빛 그러데이션(보카시), 화지 결
 //   watercolor  수채화. 번지는 가장자리, 가장자리에 고이는 물감, 안료 알갱이, 종이 요철, 남겨 둔 흰 종이, 연필 밑그림
@@ -289,66 +288,6 @@ void main() {
   gl_FragColor = vec4(clamp(col, 0., 1.), 1.);
 }`;
 
-const KLIMT = /* glsl */ `
-vec3 fxBack(vec2 uv) { return vec3(0.); }
-vec3 fxGoldLeaf(vec2 P) {
-  vec2 g = P * 9.;
-  vec2 f = fract(g);
-  float sheet = fxHash(floor(g));
-  vec3 gold = mix(vec3(.66, .46, .14), vec3(.98, .8, .4), .35 + .5 * sheet);
-  gold *= .86 + .14 * smoothstep(0., .04, min(min(f.x, f.y), min(1. - f.x, 1. - f.y)));
-  gold *= .88 + .2 * fxN(P * 60.) + .1 * fxN(P * 7.);
-  return gold;
-}
-float fxSpiralOrn(vec2 P) {
-  vec2 g = P * 4.2;
-  vec2 f = fract(g) - .5;
-  if (fxHash(floor(g)) < .4) return 0.;
-  float r = length(f);
-  float a = atan(f.y, f.x);
-  float s = abs(fract(a / 6.2832 + r * 6.) - .5);
-  return (1. - smoothstep(.07, .13, s)) * step(r, .42) * step(.03, r);
-}
-void main() {
-  vec2 P = fxP(vUv);
-  vec2 pos = vUv * uRes;
-  vec4 c = fxTex(vUv);
-  vec3 gold = fxGoldLeaf(P);
-  vec3 col;
-  if (c.a < .5) {
-    col = gold;
-    col = mix(col, vec3(.36, .2, .05), fxSpiralOrn(P) * .75);
-    vec2 g2 = P * 15.;
-    float ring = abs(length(fract(g2) - .5) - .27);
-    col = mix(col, vec3(.42, .26, .08), (1. - smoothstep(.02, .05, ring)) * step(.72, fxHash(floor(g2))) * .6);
-  } else {
-    float T = 10. * uDpr;
-    vec2 cell = floor(pos / T);
-    vec2 f = fract(pos / T) - .5;
-    vec4 cc = fxTex((cell + .5) * T / uRes);
-    float h = fxHash(cell);
-    float tile;
-    if (h < .4) tile = 1. - smoothstep(.42, .47, max(abs(f.x), abs(f.y)));
-    else if (h < .75) tile = 1. - smoothstep(.44, .5, length(f));
-    else tile = (1. - smoothstep(.44, .5, length(f))) * smoothstep(.1, .15, length(f));
-    vec3 hsv = fxHsv(cc.rgb);
-    vec3 fill = fxSat(cc.rgb, 1.2) * (.82 + .32 * fxHash(cell + 2.));
-    if (hsv.y < .25 && hsv.z < .4) fill = fxHash(cell + 4.) > .55 ? vec3(.95, .93, .88) : vec3(.04);
-    col = mix(gold * .92, fill, tile * step(.5, cc.a));
-    // 스티커 테두리를 짙게 둘러 칸이 갈리게
-    float e = 0.;
-    for (int i = 0; i < 4; i++) {
-      float an = float(i) * .785398;
-      vec2 o = vec2(cos(an), sin(an)) * 1.8 * uDpr / uRes;
-      vec4 a = fxTex(vUv + o), b = fxTex(vUv - o);
-      e = max(e, length(a.rgb * a.a - b.rgb * b.a) + abs(a.a - b.a));
-    }
-    col = mix(col, vec3(.16, .09, .02), smoothstep(.2, .4, e) * .85);
-  }
-  col += pow(fxN(P * 30. + uTime * .2), 8.) * .55 * (c.a < .5 ? 1. : .3);
-  gl_FragColor = vec4(clamp(col, 0., 1.), 1.);
-}`;
-
 const CUBISM = /* glsl */ `
 vec3 fxBack(vec2 uv) {
   vec2 P = fxP(uv);
@@ -462,7 +401,7 @@ void main() {
   gl_FragColor = vec4(clamp(pig, 0., 1.), 1.);
 }`;
 
-const SHADERS = { collage: COLLAGE, munch: MUNCH, warhol: WARHOL, dabs: DABS, klimt: KLIMT, cubism: CUBISM, ukiyoe: UKIYOE, watercolor: WATERCOLOR };
+const SHADERS = { collage: COLLAGE, munch: MUNCH, warhol: WARHOL, dabs: DABS, cubism: CUBISM, ukiyoe: UKIYOE, watercolor: WATERCOLOR };
 
 export const PAINT_TYPES = Object.keys(SHADERS);
 
