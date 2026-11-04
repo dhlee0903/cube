@@ -224,8 +224,6 @@ export const THEMES = [
     bg: '#05050F',
     ink: '#E9E8FF',
     backdrop: [
-      'radial-gradient(circle at 36% 34%, #F1DCFF 0%, #A066E0 22%, #3B1670 52%, #12062A 64%, transparent 66%) 86% 16% / 22vmin 22vmin no-repeat',
-      'radial-gradient(closest-side, transparent 72%, rgba(230,200,255,.45) 76%, transparent 82%) 86% 17.5% / 38vmin 8vmin no-repeat',
       stars(90),
       'radial-gradient(45% 35% at 22% 70%, rgba(0,140,255,.16), transparent 70%)',
       '#05050F',
