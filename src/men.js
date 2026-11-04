@@ -6,7 +6,8 @@
 // 보는 사람 쪽 유리로 걸어가 두드리기, 앉아 쉬기, 누워 자기, 벽에 기대 팔짱 끼기, 기지개. 이때 몸은 중력을
 // 거슬러 곧게 서려고 바닥이 기운 만큼 기울어진다. 바닥이 너무 기울거나(층을 돌리거나 큐브를 굴려서) 바닥이 아예 바뀌면
 // 용수철을 놓아 그냥 헝겊 인형이 되어 떨어지고 뒹굴고 벽을 타고 미끄러진다.
-// 몸이 바닥에 멈추면 무릎을 굽혀 일어나 다시 돌아다닌다. 큐브를 돌리면 사람은 관성으로 제자리에 남으려 해서
+// 몸이 바닥에 멈추면 무릎을 굽혀 일어나 다시 돌아다닌다. 동작이 바뀔 땐 지금 몸 자세에서 새 자세로 0.65초에 걸쳐
+// 부드럽게 넘어가고, 몸이 향하는 쪽도 천천히 돌아선다. 큐브를 돌리면 사람은 관성으로 제자리에 남으려 해서
 // 상자 벽에 밀리고 바닥 위에서 미끄러진다. 자리는 조각 좌표(가운데가 0, 벽이 ±0.46)로 센다.
 import { Vector3 } from 'three';
 
@@ -28,6 +29,8 @@ const GRAVITY = 5.2;
 const STEP = 1 / 120;
 const HIP = 0.2;
 const STAND = 0.84; // 바닥이 이만큼(약 33도) 넘게 기울면 서 있지 못한다
+const FADE = 0.65; // 동작이 바뀔 때 지금 몸에서 새 자세로 넘어가는 시간(초)
+const TURN = 3.5; // 몸이 도는 가장 빠른 빠르기(라디안/초)
 const AXES = [new Vector3(1, 0, 0), new Vector3(0, 1, 0), new Vector3(0, 0, 1)];
 
 // 바닥에서 하는 일, 고르는 무게, 몇 초쯤
@@ -232,6 +235,10 @@ export class Men {
         floor: null,
         ground: new Vector3(),
         heading: new Vector3(0, 0, 1),
+        face: new Vector3(0, 0, 1),
+        from: new Float32Array(JOINTS * 3),
+        fade: 1,
+        act: null,
         spare: 0,
       };
       // 처음엔 아무 데나 서 있다가 떨어진다
@@ -288,6 +295,7 @@ export class Men {
   think(m, g, dt, eye) {
     m.phase += dt * RATE[m.mode];
     m.t += dt;
+    m.fade = Math.min(1, m.fade + dt / FADE);
     const floor = floorOf(g, m.floor);
     const changed = !m.floor || !floor.equals(m.floor);
     m.floor = floor;
@@ -310,6 +318,7 @@ export class Men {
       const nearFloor = pelvis.dot(floor) + WALL < 0.13;
       // 힘을 놓고 그냥 헝겊 인형이 된다
       m.drive = 0;
+      m.act = 'limp';
       if (m.still > 0.35 && nearFloor && level > STAND + 0.03) {
         m.mode = 'getup';
         m.t = 0;
@@ -320,6 +329,7 @@ export class Men {
         v1.addScaledVector(floor, -v1.dot(floor));
         if (v1.lengthSq() < 1e-4) tangent(floor, v1);
         m.heading.copy(v1).normalize();
+        m.face.copy(m.heading);
       }
       return;
     }
@@ -328,6 +338,7 @@ export class Men {
       const k = Math.min(1, m.t / m.dur);
       // 쓰러졌다 일어날 땐 힘을 서서히 주고, 앉았다 일어날 땐 힘을 그대로 둔다
       m.drive = Math.max(m.drive, 0.15 + 0.85 * smooth(k * 1.4));
+      this.blend(m, 'getup');
       this.aim(m, floor, g, 'getup', m.drive, false, k);
       if (m.t > m.dur) this.next(m);
       return;
@@ -386,8 +397,25 @@ export class Men {
         if (m.heading.getComponent(a) * c > 0) m.heading.setComponent(a, -m.heading.getComponent(a));
       }
     }
+    // 몸은 가려는 쪽으로 단번에 돌지 않고 천천히 돌아선다
+    m.face.addScaledVector(floor, -m.face.dot(floor));
+    if (m.face.lengthSq() < 1e-4) m.face.copy(m.heading);
+    m.face.normalize();
+    const ang = Math.atan2(v1.crossVectors(m.face, m.heading).dot(floor), m.face.dot(m.heading));
+    m.face.applyAxisAngle(floor, Math.max(-TURN * dt, Math.min(TURN * dt, ang)));
+    this.blend(m, act);
     this.aim(m, floor, g, act, m.drive, false, Math.min(1, m.t / m.dur));
     if (m.t > m.dur) this.next(m);
+  }
+
+  /** 하는 일이 바뀌면 지금 몸 자세에서 새 자세로 천천히 넘어가게 지금 마디 자리를 붙잡아 둔다 */
+  blend(m, act) {
+    if (act === m.act) return;
+    if (m.act !== null) {
+      m.from.set(m.x);
+      m.fade = 0;
+    }
+    m.act = act;
   }
 
   next(m) {
@@ -422,17 +450,21 @@ export class Men {
     } else {
       // 중력을 거슬러 곧게 서려고 바닥이 기운 만큼 몸을 기울인다
       up.copy(floor).multiplyScalar(0.35).addScaledVector(g, -0.65).normalize();
-      fwd.copy(m.heading).addScaledVector(up, -m.heading.dot(up)).normalize();
+      fwd.copy(m.face).addScaledVector(up, -m.face.dot(up)).normalize();
       origin.copy(m.ground);
     }
     const right = new Vector3().crossVectors(up, fwd);
+    // 동작이 막 바뀌었으면 붙잡아 둔 자세에서 새 자세로 부드럽게 옮겨 간다
+    const e = smooth(m.fade);
     for (let j = 0; j < JOINTS; j++) {
       const x = this.local[j * 3];
       const y = this.local[j * 3 + 1];
       const z = this.local[j * 3 + 2];
-      m.target[j * 3] = origin.x + right.x * x + up.x * y + fwd.x * z;
-      m.target[j * 3 + 1] = origin.y + right.y * x + up.y * y + fwd.y * z;
-      m.target[j * 3 + 2] = origin.z + right.z * x + up.z * y + fwd.z * z;
+      for (let a = 0; a < 3; a++) {
+        const c = a === 0 ? 'x' : a === 1 ? 'y' : 'z';
+        const t = origin[c] + right[c] * x + up[c] * y + fwd[c] * z;
+        m.target[j * 3 + a] = e < 1 ? m.from[j * 3 + a] + (t - m.from[j * 3 + a]) * e : t;
+      }
     }
   }
 
@@ -442,7 +474,8 @@ export class Men {
     const gy = g.y * GRAVITY * STEP * STEP;
     const gz = g.z * GRAVITY * STEP * STEP;
     // 베를레: 지난 걸음만큼 그대로 가고 중력을 더한다. 용수철은 자세 쪽으로 끈다
-    const pull = m.drive * 0.2;
+    // 용수철은 너무 세지 않게: 자세를 바로 따라붙지 않고 조금 늦게 무게 있게 따라간다
+    const pull = m.drive * 0.1;
     for (let j = 0; j < JOINTS; j++) {
       const i = j * 3;
       for (let a = 0; a < 3; a++) {
