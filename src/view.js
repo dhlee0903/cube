@@ -14,7 +14,7 @@ import { Ambient, Burst } from './particles.js';
 import { MOTIONS } from './motions.js';
 import { Filter } from './filters.js';
 import { JOINTS, Men } from './men.js';
-import { Sand } from './sand.js';
+import { Grains } from './sand.js';
 
 const BODY = 0.96;
 const SIZE = 3; // 몇 칸이든 화면에서는 같은 크기로 보이게
@@ -492,7 +492,7 @@ export class CubeView {
 
   // ---- 테마 ----
 
-  /** 모래 테마면 조각을 모래알로 바꿔 그린다(몸통·스티커는 감춘다). 아니면 모래를 치운다 */
+  /** 입자 테마면 조각을 입자로 바꿔 그린다(몸통·스티커는 감춘다). 아니면 입자를 치운다 */
   makeSand() {
     if (this.sand) {
       this.root.remove(this.sand.mesh);
@@ -501,7 +501,7 @@ export class CubeView {
     }
     const t = this.sandTheme;
     if (t && this.cube) {
-      this.sand = new Sand(this.cube, t.faces, t.sand.plain);
+      this.sand = new Grains(this.cube, t.faces, t.grains);
       this.root.add(this.sand.mesh);
     }
     for (const mesh of this.meshes ?? []) {
@@ -512,7 +512,7 @@ export class CubeView {
   }
 
   setTheme(theme) {
-    this.sandTheme = theme.sand ? theme : null;
+    this.sandTheme = theme.grains ? theme : null;
     const { body, sticker = {}, glow = 0, light = 1, halo = 0 } = theme;
     const surface = theme.surface ?? 'plain';
     if (this.shape(theme.form, theme.haloMode) && this.cube) this.setCube(this.cube);
@@ -807,7 +807,7 @@ export class CubeView {
     if (now - (this.lookedAt ?? 0) > 2500) u.uPointer.value.multiplyScalar(Math.exp(-dt * 2));
 
     // 막대 사람 셈이 어떤 환경에서 한 번 던져도 그리기 고리 전체가 멈추지 않게(멈추면 화면이 굳어 아무것도 안 듣는 것처럼 보인다)
-    // 모래알: 층이 돌면 흩날렸다가 제자리로 날아든다
+    // 입자: 층이 돌면 흩날렸다가 제자리로 날아든다
     let sandBusy = false;
     if (this.sand && this.now) {
       const down = new Vector3(0, -1, 0).applyQuaternion(this.root.quaternion.clone().invert());

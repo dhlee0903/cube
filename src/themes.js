@@ -3404,7 +3404,7 @@ export const THEMES = [
     form: { bevel: 0.05, size: 0.9, radius: 0.05 },
     body: { color: '#8A7558', roughness: 0.9 },
     faces: ['#D9412F', '#2D64C8', '#F3EFE6', '#E8B92A', '#3A9A4F', '#E9772A'],
-    sand: { plain: '#CDB68E' },
+    grains: { kind: 'sand', plain: '#CDB68E' },
     lights: {
       sky: '#fff8ec', ground: '#9a8460', hemi: 1.5,
       key: ['#fff4e0', 2.4, [-4, 7, 5]], fill: ['#e8ecff', 0.5, [6, 1, 3]], rim: ['#ffffff', 0.8, [1, 4, -6]],
@@ -3414,6 +3414,100 @@ export const THEMES = [
     motion: 'smooth',
     burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 2.4, gravity: -6, drag: 1.2, life: 1 },
   },
+  {
+    // 쇠구슬. 조각마다 반짝이는 금속 구슬이 빽빽이 뭉쳤다. 층을 돌리면 구슬이 튕겨 흩어졌다가 통통 튀며 제자리로 돌아온다. 면마다 양극 산화한 빛깔
+    id: 'bearings',
+    name: '쇠구슬',
+    bg: '#DADCE0',
+    ink: '#16181C',
+    backdrop: [
+      'radial-gradient(60% 45% at 50% 38%, rgba(255,255,255,.7), transparent 72%)',
+      'radial-gradient(95% 80% at 50% 45%, #E6E8EC, #AEB2BA)',
+    ].join(', '),
+    form: { bevel: 0.05, size: 0.9, radius: 0.05 },
+    body: { color: '#202024', roughness: 0.6 },
+    faces: ['#D23A3A', '#2F62D0', '#ECECEC', '#E0B32A', '#2E9A55', '#E07028'],
+    grains: { kind: 'bearing', plain: '#8A8F98' },
+    lights: {
+      sky: '#ffffff', ground: '#808590', hemi: 1.1,
+      key: ['#ffffff', 2.4, [-4, 7, 5]], fill: ['#dfe8ff', 0.6, [6, 1, 3]], rim: ['#ffffff', 1.4, [1, 4, -6]],
+    },
+    env: 1,
+    surface: 'plain',
+    sound: 'metal',
+    motion: 'smooth',
+    burst: { shape: 'dot', colors: 'faces', size: 0.06, speed: 2.6, gravity: -8, drag: 0.8, life: 0.9 },
+  },
+  {
+    // 반딧불. 어둠 속에 빛 알갱이로 지은 큐브. 가만히 있어도 알갱이가 제자리 둘레를 떠다니고, 층을 돌리면 한 줄기 빛 소용돌이로 휘돌다 돌아온다
+    id: 'fireflies',
+    name: '반딧불',
+    bg: '#05060C',
+    ink: '#EEF0FF',
+    backdrop: [
+      'radial-gradient(55% 45% at 50% 45%, rgba(80,90,160,.18), transparent 72%)',
+      'radial-gradient(95% 80% at 50% 45%, #0C0E1A, #030308)',
+    ].join(', '),
+    form: { bevel: 0.05, size: 0.9, radius: 0.05 },
+    body: { color: '#3A3F58', roughness: 0.6 },
+    faces: ['#FF4D6D', '#3D8BFF', '#F2F6FF', '#FFD23F', '#3DFF9A', '#FF8A3D'],
+    grains: { kind: 'firefly', plain: '#1A1E30' },
+    lights: {
+      sky: '#ffffff', ground: '#000000', hemi: 0.2,
+      key: ['#ffffff', 0.5, [-4, 7, 5]], fill: ['#ffffff', 0.2, [6, 1, 3]], rim: ['#ffffff', 0.2, [1, 4, -6]],
+    },
+    surface: 'plain',
+    sound: 'space',
+    motion: 'smooth',
+    burst: { shape: 'glow', colors: 'faces', size: 0.09, speed: 2.2, gravity: 0, drag: 1.4, life: 1, additive: true },
+  },
+  {
+    // 색종이. 납작한 색종이 조각이 면마다 겹겹이 붙었다. 층을 돌리면 팔랑팔랑 뒤집히며 흩날리다가 다시 납작이 내려앉는다
+    id: 'confetti',
+    name: '색종이',
+    bg: '#F6F1F4',
+    ink: '#2A2230',
+    backdrop: [
+      'radial-gradient(60% 45% at 50% 38%, rgba(255,255,255,.8), transparent 72%)',
+      'radial-gradient(95% 80% at 50% 45%, #FBF6F8, #E2D6DC)',
+    ].join(', '),
+    form: { bevel: 0.05, size: 0.9, radius: 0.05 },
+    body: { color: '#202024', roughness: 0.6 },
+    faces: ['#E8434F', '#3C7BE0', '#FAFAF5', '#F5C83A', '#3DB36A', '#F2873A'],
+    grains: { kind: 'confetti', plain: '#D9D2C8' },
+    lights: {
+      sky: '#ffffff', ground: '#c8bcc4', hemi: 1.6,
+      key: ['#ffffff', 1.8, [-4, 7, 5]], fill: ['#ffffff', 0.5, [6, 1, 3]], rim: ['#ffffff', 0.6, [1, 4, -6]],
+    },
+    surface: 'plain',
+    sound: 'paper',
+    motion: 'smooth',
+    burst: { shape: 'square', colors: 'faces', size: 0.06, speed: 2.4, gravity: -3, drag: 1.8, life: 1.2 },
+  },
+  {
+    // 물고기 떼. 면마다 같은 쪽을 보고 헤엄치는 작은 물고기들이 조각을 이룬다. 층을 돌리면 한 떼로 휘돌며 헤엄쳐 다니다 제자리로 돌아온다
+    id: 'fish',
+    name: '물고기 떼',
+    bg: '#0B3550',
+    ink: '#E6F4FF',
+    backdrop: [
+      'linear-gradient(100deg, transparent 30%, rgba(160,220,255,.08) 38%, transparent 46%, transparent 58%, rgba(160,220,255,.06) 64%, transparent 70%)',
+      'radial-gradient(70% 50% at 50% 0%, rgba(120,200,255,.35), transparent 70%)',
+      'linear-gradient(#1A6A90, #0B3550 55%, #061A2A)',
+    ].join(', '),
+    form: { bevel: 0.05, size: 0.9, radius: 0.05 },
+    body: { color: '#202024', roughness: 0.6 },
+    faces: ['#FF5A4E', '#2E7BFF', '#F4F6FF', '#FFD43B', '#22C27A', '#FF8C2E'],
+    grains: { kind: 'fish', plain: '#2E4A5E' },
+    lights: {
+      sky: '#cdeeff', ground: '#062030', hemi: 1.2,
+      key: ['#ffffff', 2.2, [-3, 8, 4]], fill: ['#7fd0ff', 0.6, [6, 1, 3]], rim: ['#bfe8ff', 1, [1, 4, -6]],
+    },
+    surface: 'plain',
+    sound: 'water',
+    motion: 'smooth',
+    burst: { shape: 'bubble', colors: ['#FFFFFF', '#CFEFFF'], size: 0.06, speed: 2, gravity: 2, drag: 2, life: 1 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3421,7 +3515,7 @@ export const themeById = (id) => THEMES.find((t) => t.id === id);
 // 테마 고르는 목록에서 묶어 보여 주는 무리. 테마는 모두 한 무리에만 들어간다(테스트가 본다)
 export const GROUPS = [
   { name: '기본', themes: ['classic', 'candy', 'brick', 'dice', 'jelly', 'clay', 'bubblewrap', 'paper', 'box', 'slime', 'stickmen'] },
-  { name: '자연', themes: ['timber', 'pebble', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert', 'space', 'sand'] },
+  { name: '자연', themes: ['timber', 'pebble', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert', 'space'] },
   { name: '빛·불', themes: ['neon', 'disco', 'kaleido'] },
   { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'bismuth', 'druze', 'pave', 'diamond', 'ruby', 'sapphire', 'emerald', 'quartz', 'starstone', 'moonstone', 'amberstone'] },
   { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'camo', 'enamel'] },
@@ -3439,6 +3533,7 @@ export const GROUPS = [
   { name: '명화', themes: ['oil', 'watercolor', 'monet', 'gogh', 'munch', 'cubism', 'warhol', 'collage'] },
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '원소', themes: ['fire', 'sod', 'aqua', 'lava', 'electric'] },
+  { name: '입자', themes: ['sand', 'bearings', 'fireflies', 'confetti', 'fish'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
   { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'chrome', 'fiberoptic', 'ledcube'] },
 ];
