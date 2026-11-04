@@ -5331,6 +5331,112 @@ B.men = {
   emissive: 'totalEmissiveRadiance = vec3(.85, .9, 1.) * fxFresnel(normal, 3.) * .15;',
 };
 
+// 착시 무리가 함께 쓰는 것: 무늬 함수를 화소 하나 안의 네 점에서 셈해 평균한다(가는 무늬가 계단지지 않게)
+const ILLU = /* glsl */ `
+    vec3 fxIB;
+    #define FX_SS(fn, p) (.25 * (fn((p) + (dFdx(p) + dFdy(p)) * .25) + fn((p) + (dFdx(p) - dFdy(p)) * .25) + fn((p) - (dFdx(p) - dFdy(p)) * .25) + fn((p) - (dFdx(p) + dFdy(p)) * .25)))
+    vec3 fxILight() { return mix(fxIB, vec3(1.), .55); }`;
+
+S.drift = {
+  // 돌아가는 고리(주변 표류 착시). 스티커마다 원판 하나, 고리 셋. 고리마다 조각이 검정, 짙은 면 색, 흰색, 옅은 면 색 순으로
+  // 되풀이되는데, 눈은 이 밝기 계단을 따라 움직임을 느껴 가만히 있는 고리가 저절로 도는 것처럼 보인다. 이웃 고리는
+  // 순서를 뒤집어 서로 반대로 돌고, 조각은 살짝 휘어 있다. 곧바로 보는 데보다 곁눈으로 보는 고리가 더 세게 돈다
+  head: ILLU + `
+    vec3 fxDrift(vec2 p) {
+      float r = length(p);
+      vec3 bg = fxIB * .92;
+      if (r > .94) return bg;
+      if (r < .2) return fxIB * .45;
+      // 고리 둘. 고리 사이와 바깥엔 검은 테
+      float w = (r - .2) / .37;
+      float ring = floor(w);
+      float fr = fract(w);
+      if (fr < .06 || fr > .94 || r > .9) return vec3(.04);
+      float n = 7. + ring * 5.;
+      float dir = ring < .5 ? 1. : -1.;
+      float u = fract(dir * (atan(p.y, p.x) / 6.2832 * n + (r - .2) * .9) + ring * .37);
+      // 검정(가늘게) → 짙은 면 색(넓게) → 흰색(가늘게) → 옅은 면 색(넓게)
+      if (u < .13) return vec3(.02);
+      if (u < .5) return fxIB * .4;
+      if (u < .63) return vec3(1.);
+      return fxILight();
+    }`,
+  color: `
+    fxIB = diffuseColor.rgb;
+    diffuseColor.rgb = FX_SS(fxDrift, vLocal.xy / uSticker.x);`,
+  surface: 'roughnessFactor = .7; metalnessFactor = 0.;',
+};
+S.pulse = {
+  // 맥동. 면 가운데서 톱니 고리가 겹겹이 퍼져 나가고, 고리마다 밝기가 어둡게 시작해 점점 밝아지다 뚝 떨어진다(톱니 밝기).
+  // 이 비대칭 밝기 때문에 가만히 있는 면이 바깥으로 울컥울컥 부풀어 오르는 것처럼 보인다
+  head: ILLU + `
+    vec3 fxPulse(vec2 F) {
+      float r = length(F);
+      float a = atan(F.y, F.x);
+      float zig = abs(fract(a / 6.2832 * 44.) - .5) * 2.;
+      float rr = r + zig * .05 * (.35 + r);
+      float t = fract(rr * 8.);
+      vec3 dark = fxIB * .2;
+      vec3 light = mix(fxIB, vec3(1.), .8);
+      return t < .55 ? mix(dark, fxIB, t / .55) : mix(fxIB, light, (t - .55) / .45);
+    }`,
+  color: `
+    fxIB = diffuseColor.rgb;
+    diffuseColor.rgb = FX_SS(fxPulse, fxFace());`,
+  surface: 'roughnessFactor = .7; metalnessFactor = 0.;',
+};
+S.cafewall = {
+  // 카페 벽. 밝은 타일과 검은 타일이 번갈아 놓인 줄을 회색 줄눈으로 나누고, 줄마다 타일을 0, 1/4, 1/2, 1/4칸씩 밀어 놓았다.
+  // 줄눈은 모두 곧고 나란한데 쐐기처럼 기울어 보인다(다 맞춘 면에서 가장 또렷하다)
+  head: ILLU + `
+    vec3 fxCafe(vec2 F) {
+      float rows = 9.;
+      float y = (F.y + 1.) * .5 * rows;
+      float row = floor(y);
+      float k = mod(row, 4.);
+      float shift = k < .5 ? 0. : (k < 1.5 ? .25 : (k < 2.5 ? .5 : .25));
+      float x = (F.x + 1.) * .5 * 9. + shift;
+      if (fract(y) < .12) return vec3(.5);
+      return mod(floor(x), 2.) < .5 ? mix(fxIB, vec3(1.), .62) : vec3(.03);
+    }`,
+  color: `
+    fxIB = diffuseColor.rgb;
+    diffuseColor.rgb = FX_SS(fxCafe, fxFace());`,
+  surface: 'roughnessFactor = .7; metalnessFactor = 0.;',
+};
+S.scintgrid = {
+  // 반짝이 격자. 짙은 네모 사이로 회색 줄이 지나고 줄이 만나는 곳마다 흰 점이 있다. 흰 점을 보지 않는 곳에서 검은 점이
+  // 깜빡깜빡 나타났다 사라진다. 바로 보는 점만 하얗다
+  head: ILLU + `
+    vec3 fxScint(vec2 F) {
+      vec2 g = (F + 1.) * .5 * 8.;
+      vec2 f = fract(g);
+      vec2 near = abs(f - floor(f + .5));
+      float d = min(near.x, near.y);
+      if (length(near) < .13) return vec3(1.);
+      if (d < .075) return mix(vec3(.52), fxIB, .25);
+      return fxIB * .2;
+    }`,
+  color: `
+    fxIB = diffuseColor.rgb;
+    diffuseColor.rgb = FX_SS(fxScint, fxFace());`,
+  surface: 'roughnessFactor = .7; metalnessFactor = 0.;',
+};
+S.ouchi = {
+  // 떠다니는 원(오우치 착시). 바깥은 가로로 긴 벽돌 바둑판, 가운데 원 안은 세로로 긴 벽돌 바둑판이다. 큐브를 돌리거나
+  // 눈을 움직이면 가운데 원이 바탕과 따로 미끄러지며 둥둥 떠다니는 것처럼 보인다
+  head: ILLU + `
+    vec3 fxOuchi(vec2 F) {
+      vec2 q = length(F) < .5 ? F.yx : F;
+      vec2 cell = floor(q * vec2(5., 20.));
+      return mod(cell.x + cell.y, 2.) < .5 ? mix(fxIB, vec3(1.), .25) : vec3(.03);
+    }`,
+  color: `
+    fxIB = diffuseColor.rgb;
+    diffuseColor.rgb = FX_SS(fxOuchi, fxFace());`,
+  surface: 'roughnessFactor = .7; metalnessFactor = 0.;',
+};
+
 S.anamorph = {
   // 착시(아나모픽). 큐브를 처음 놓인 그 각도에서 보면 보이는 세 면에 그린 무늬가 이어져, 큐브 앞에 납작한 동심원 세 개가
   // 떠 있는 것처럼 보인다. 스티커마다 원래 자리(다 맞춘 큐브 겉의 한 점)를 그 각도의 화면에 비춘 자리로 무늬를 칠하니,
