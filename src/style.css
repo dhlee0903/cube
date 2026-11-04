@@ -396,3 +396,204 @@ button:disabled {
 .palette .pick[aria-checked="true"] {
   font-weight: 700;
 }
+
+/* ---- 공식과 배우기 ---- */
+
+.menu-button {
+  position: absolute;
+  z-index: 2;
+  top: calc(10px + env(safe-area-inset-top, 0px));
+  left: calc(max(10px, env(safe-area-inset-left, 0px)) + 54px);
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--bg) 62%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ink) 12%, transparent);
+}
+
+.menu-button svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.guide {
+  position: absolute;
+  z-index: 3;
+  top: calc(64px + env(safe-area-inset-top, 0px));
+  left: max(10px, env(safe-area-inset-left, 0px));
+  width: min(calc(100vw - 20px), 440px);
+  max-height: calc(100% - 74px - env(safe-area-inset-top, 0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 16px 16px;
+  border-radius: 18px;
+  color: var(--ink);
+  background: var(--bg);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ink) 12%, transparent), 0 16px 40px rgb(0 0 0 / 0.28);
+  font-size: 14px;
+  line-height: 1.55;
+  scrollbar-width: thin;
+}
+
+.guide[hidden],
+.guide-pane[hidden],
+.coach[hidden] {
+  display: none;
+}
+
+.guide-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  gap: 4px;
+  margin: 0 -16px 10px;
+  padding: 10px 16px 8px;
+  background: var(--bg);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--ink) 8%, transparent);
+}
+
+.guide-tabs button {
+  padding: 6px 14px;
+  border-radius: 999px;
+  color: var(--ink);
+  font-weight: 600;
+  opacity: 0.6;
+}
+
+.guide-tabs button[aria-selected="true"] {
+  opacity: 1;
+  background: color-mix(in srgb, var(--ink) 10%, transparent);
+}
+
+.guide-steps {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 1.3em;
+}
+
+.guide-steps b,
+.guide-alg b {
+  display: block;
+}
+
+.guide-go {
+  width: 100%;
+  margin-top: 14px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  color: var(--bg);
+  background: var(--ink);
+  font-weight: 700;
+}
+
+.guide-moves {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 14px;
+  margin: 12px 0;
+}
+
+.guide-moves dt,
+.guide-alg code,
+.coach-alg {
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-weight: 700;
+}
+
+.guide-moves dd {
+  margin: 0;
+}
+
+.guide-alg {
+  display: grid;
+  gap: 4px;
+  padding: 10px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+}
+
+.guide-alg:last-child {
+  border-bottom: 0;
+}
+
+.guide-alg code {
+  font-size: 13px;
+  white-space: pre-wrap;
+}
+
+.guide-alg p {
+  margin: 0;
+  opacity: 0.75;
+}
+
+/* 지금 단계와 다음 수를 알려 주는 쪽지. 아래 단추 줄 바로 위 */
+.coach {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 12px;
+  width: min(calc(100vw - 24px), 420px);
+  padding: 10px 14px 12px;
+  border-radius: 16px;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ink) 12%, transparent), 0 10px 30px rgb(0 0 0 / 0.2);
+  transform: translateX(-50%);
+}
+
+.coach-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.coach-stage {
+  font-weight: 700;
+}
+
+.coach-close {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  color: var(--ink);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.coach-alg {
+  margin-top: 4px;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  word-spacing: 0.25em;
+}
+
+.coach-alg .next {
+  padding: 1px 5px;
+  border-radius: 6px;
+  color: var(--bg);
+  background: var(--ink);
+}
+
+.coach-alg .rest {
+  opacity: 0.55;
+}
+
+.coach-how {
+  margin: 4px 0 0;
+  font-size: 13px;
+  opacity: 0.75;
+}

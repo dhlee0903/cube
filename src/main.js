@@ -6,6 +6,7 @@ import { GROUPS, themeById } from './themes.js';
 import { CubeView } from './view.js';
 import { Timer, formatTime } from './timer.js';
 import { Sound } from './sound.js';
+import { STAGES, solveLBL } from './solver.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -50,6 +51,9 @@ const view = new CubeView($('stage'), {
       view.celebrate();
     }
     refresh();
+    // 따라 하는 중이면 다음 수를 바로 알려 주고, 아니면 지난 힌트 쪽지는 치운다
+    if (coaching) coach();
+    else $('coach').hidden = true;
   },
 });
 view.setCube(cube);
@@ -107,26 +111,136 @@ $('bigger').addEventListener('click', () => setSize(size + 1));
 
 $('scramble').addEventListener('click', async () => {
   if (busy()) return;
+  coaching = false;
+  $('coach').hidden = true;
   timer.reset();
   const moves = scramble(size);
-  await play(moves, Math.max(40, Math.min(110, 2400 / moves.length)));
+  await play(moves, Math.max(24, Math.min(65, 1300 / moves.length)));
   if (history.length) timer.arm();
   refresh();
 });
 
-$('hint').addEventListener('click', () => {
-  if (busy() || history.length === 0) return;
+// ---- 힌트와 따라 하며 배우기 ----
+// 3×3은 층별 풀이(solver.js)로 지금 단계와 다음 공식을 짚는다. 다른 크기는 섞은 수를 거꾸로 짚는다
+let coaching = false;
+
+function coach() {
+  const box = $('coach');
+  if (history.length === 0) {
+    $('coach-stage').textContent = '다 맞췄어요';
+    $('coach-alg').textContent = '';
+    $('coach-how').textContent = coaching ? '처음부터 다시 해 보려면 메뉴에서 따라 하며 배우기를 누르세요.' : '';
+    box.hidden = false;
+    coaching = false;
+    return;
+  }
+  timer.hinted = true;
+  if (size === 3) {
+    const plan = solveLBL(cube);
+    if (plan && plan.length) {
+      const stage = plan[0].stage;
+      const part = [];
+      for (const s of plan) {
+        if (s.stage !== stage || part.length >= 12) break;
+        part.push(s.text);
+      }
+      const more = plan.filter((s) => s.stage === stage).length > part.length;
+      $('coach-stage').textContent = `${stage + 1}/7 ${STAGES[stage].name}`;
+      const alg = $('coach-alg');
+      alg.replaceChildren();
+      part.forEach((t, i) => {
+        const el = document.createElement('span');
+        el.className = i === 0 ? 'next' : 'rest';
+        el.textContent = t;
+        alg.append(el, ' ');
+      });
+      if (more) alg.append('…');
+      $('coach-how').textContent = STAGES[stage].how;
+      box.hidden = false;
+      view.nudge(plan[0].move);
+      return;
+    }
+  }
   const [next] = simplify(invert(history), size);
   if (!next) return;
-  timer.hinted = true;
+  $('coach-stage').textContent = '다음 한 수';
+  $('coach-alg').textContent = '';
+  $('coach-how').textContent = '3×3이 아니면 섞은 수를 거꾸로 짚어 줘요. 살짝 움직이는 줄을 그쪽으로 돌리세요.';
+  box.hidden = false;
   view.nudge(next);
+}
+
+$('hint').addEventListener('click', () => {
+  if (busy() || history.length === 0) return;
+  coach();
+});
+
+$('coach-close').addEventListener('click', () => {
+  coaching = false;
+  $('coach').hidden = true;
+});
+
+// 메뉴: 배우기, 기호, 공식
+const guide = $('guide');
+const menuButton = $('menu');
+function openGuide(open) {
+  guide.hidden = !open;
+  menuButton.setAttribute('aria-expanded', String(open));
+}
+menuButton.addEventListener('click', () => openGuide(guide.hidden));
+document.addEventListener('pointerdown', (e) => {
+  if (!guide.hidden && !guide.contains(e.target) && !menuButton.contains(e.target)) openGuide(false);
+}, true);
+for (const name of ['learn', 'moves', 'algs']) {
+  $(`tab-${name}`).addEventListener('click', () => {
+    for (const other of ['learn', 'moves', 'algs']) {
+      $(`tab-${other}`).setAttribute('aria-selected', String(other === name));
+      $(`pane-${other}`).hidden = other !== name;
+    }
+  });
+}
+const ALGS = [
+  ['아래 십자', '(경우마다 다름)'],
+  ['첫 층 모서리', "R U R' U'  (맞을 때까지 되풀이)"],
+  ['가운데 층', "오른쪽으로: U R U' R' U' F' U F\n왼쪽으로:  U' L' U L U F U' F'"],
+  ['윗면 십자', "F R U R' U' F'"],
+  ['윗 모서리 맞추기', "R U R' U R U2 R' U"],
+  ['윗 귀 자리', "U R U' L' U R' U' L"],
+  ['윗 귀 돌리기', "R' D' R D  (윗면 색이 위를 볼 때까지)"],
+];
+STAGES.forEach((stage, i) => {
+  const item = document.createElement('div');
+  item.className = 'guide-alg';
+  const title = document.createElement('b');
+  title.textContent = `${i + 1}. ${stage.name}`;
+  const code = document.createElement('code');
+  code.textContent = ALGS[i][1];
+  const how = document.createElement('p');
+  how.textContent = stage.how;
+  item.append(title, code, how);
+  $('pane-algs').append(item);
+});
+
+$('practice').addEventListener('click', async () => {
+  openGuide(false);
+  if (busy()) return;
+  if (size !== 3) setSize(3);
+  timer.reset();
+  const moves = scramble(3);
+  await play(moves, Math.max(24, Math.min(65, 1300 / moves.length)));
+  if (history.length) timer.arm();
+  refresh();
+  coaching = true;
+  coach();
 });
 
 $('solve').addEventListener('click', async () => {
   if (busy() || history.length === 0) return;
+  coaching = false;
+  $('coach').hidden = true;
   timer.reset();
   const moves = simplify(invert(history), size);
-  await play(moves, Math.max(55, Math.min(170, 5000 / moves.length)));
+  await play(moves, Math.max(32, Math.min(95, 2400 / moves.length)));
   if (history.length === 0) view.celebrate(0.5);
 });
 

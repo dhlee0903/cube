@@ -17,6 +17,41 @@
       <span class="dot"></span>
     </button>
     <div id="themes" class="palette" role="radiogroup" aria-label="색" hidden></div>
+    <button id="menu" class="menu-button" type="button" aria-label="공식과 배우기" aria-haspopup="true" aria-expanded="false" aria-controls="guide">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14"/></svg>
+    </button>
+    <section id="guide" class="guide" aria-label="공식과 배우기" hidden>
+      <div class="guide-tabs" role="tablist">
+        <button id="tab-learn" type="button" role="tab" aria-selected="true" aria-controls="pane-learn">배우기</button>
+        <button id="tab-moves" type="button" role="tab" aria-selected="false" aria-controls="pane-moves">기호</button>
+        <button id="tab-algs" type="button" role="tab" aria-selected="false" aria-controls="pane-algs">공식</button>
+      </div>
+      <div id="pane-learn" class="guide-pane" role="tabpanel" aria-labelledby="tab-learn">
+        <ol class="guide-steps">
+          <li><b>돌리기</b> 큐브의 칸을 잡고 옆으로 끌면 그 줄이 돌아가요. 큐브 밖 바탕을 끌면 큐브 전체를 굴려 볼 수 있어요.</li>
+          <li><b>섞기와 맞추기</b> 섞기로 흩어 놓고, 막히면 맞추기로 처음 모습으로 되돌려요. 아래 −, + 로 2×2부터 7×7까지 바꿔요.</li>
+          <li><b>힌트</b> 3×3에서는 사람이 배우는 층별 풀이로 지금 몇 단계인지, 다음에 돌릴 공식이 무엇인지 알려 주고, 돌릴 줄이 살짝 움직여 보여요. 다른 크기는 섞은 수를 거꾸로 짚어 줘요. 힌트를 보면 그 판은 최고 기록에 들어가지 않아요.</li>
+          <li><b>따라 하며 배우기</b> 아래 단추를 누르면 3×3을 섞고, 한 수 돌릴 때마다 지금 단계와 다음 수를 계속 알려 줘요. 일곱 단계를 따라가면 끝까지 맞출 수 있어요.</li>
+        </ol>
+        <button id="practice" class="guide-go" type="button">따라 하며 배우기 시작</button>
+      </div>
+      <div id="pane-moves" class="guide-pane" role="tabpanel" aria-labelledby="tab-moves" hidden>
+        <p>공식은 면 이름 여섯 글자로 써요. 처음 놓인 모습에서 <b>윗면이 U</b>, <b>왼쪽 앞에 보이는 면이 F</b>, <b>오른쪽 앞에 보이는 면이 R</b>이고, 그 맞은편이 각각 D, B, L이에요.</p>
+        <dl class="guide-moves">
+          <dt>R</dt><dd>오른쪽(R) 면을, 그 면을 마주 보고 시계 방향으로 한 칸</dd>
+          <dt>R'</dt><dd>같은 면을 반시계 방향으로 한 칸 (따옴표는 거꾸로)</dd>
+          <dt>R2</dt><dd>같은 면을 반 바퀴 (두 칸)</dd>
+          <dt>U D F B L</dt><dd>위, 아래, 앞, 뒤, 왼쪽 면. 언제나 그 면을 마주 보는 쪽에서 시계 방향이 기본이에요</dd>
+        </dl>
+        <p>큐브를 굴려 보는 방향을 바꿔도 글자는 큐브의 자리에 붙어 있어요. 헷갈리면 힌트를 누르세요. 돌릴 줄이 살짝 움직여 보여요.</p>
+      </div>
+      <div id="pane-algs" class="guide-pane" role="tabpanel" aria-labelledby="tab-algs" hidden></div>
+    </section>
+    <div id="coach" class="coach" role="status" aria-live="polite" hidden>
+      <div class="coach-head"><span id="coach-stage" class="coach-stage"></span><button id="coach-close" class="coach-close" type="button" aria-label="안내 닫기">×</button></div>
+      <div id="coach-alg" class="coach-alg"></div>
+      <p id="coach-how" class="coach-how"></p>
+    </div>
     <button id="sound" class="sound-button" type="button" aria-label="소리 끄기" aria-pressed="true">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path class="spk" d="M4 9.5h3.2L12 5.5v13l-4.8-4H4z"/><path class="wave" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="mute" d="M16 9.5l5 5M21 9.5l-5 5"/></svg>
     </button>
