@@ -1947,7 +1947,7 @@ S.marquetry = {
     float fxTh = atan(fxQm.y, fxQm.x);
     float fxStar = max(step(fxR, .4 * (.22 + .78 * pow(abs(cos(fxTh * 2.)), 5.))), step(fxR, .26 * (.3 + .7 * pow(abs(sin(fxTh * 2.)), 5.))));
     float fxHalf = step(0., sin(fxTh * 8.));
-    float fxString = max(1. - smoothstep(.012, .025, abs(fxEdge() / uSticker.x - .1)), 1. - smoothstep(.01, .02, abs(fxR - .44)));
+    float fxString = max(1. - smoothstep(.012, .025, abs(fxEdge() / uSticker.x - .1)), 1. - smoothstep(.01, .02, abs(fxR - .4)));
     vec3 fxLight = dot(diffuseColor.rgb, vec3(.3, .59, .11)) > .55 ? vec3(.28, .18, .12) : vec3(.92, .84, .66);
     vec3 fxStarC = fxLight * mix(.72, 1., fxHalf) * (.88 + .18 * fxN2(vec2(fxTh * 3., fxR * 40.)));
     vec3 fxC = mix(fxWood, fxStarC, fxStar);
@@ -5329,6 +5329,49 @@ B.men = {
   color: 'diffuseColor.rgb *= .9 + .15 * fxN3(vLocal * 30. + vSeed);',
   surface: 'roughnessFactor = .06; metalnessFactor = .1;',
   emissive: 'totalEmissiveRadiance = vec3(.85, .9, 1.) * fxFresnel(normal, 3.) * .15;',
+};
+
+S.anamorph = {
+  // 착시(아나모픽). 큐브를 처음 놓인 그 각도에서 보면 보이는 세 면에 그린 무늬가 이어져, 큐브 앞에 납작한 동심원 세 개가
+  // 떠 있는 것처럼 보인다. 스티커마다 원래 자리(다 맞춘 큐브 겉의 한 점)를 그 각도의 화면에 비춘 자리로 무늬를 칠하니,
+  // 조금만 돌려 봐도 원이 모서리에서 꺾여 세 조각으로 깨지고, 섞으면 조각이 흩어졌다가 다 맞추면 다시 이어진다
+  head: `
+    // 면마다 바깥쪽과 스티커의 가로·세로 축(다 맞춘 큐브 좌표)
+    vec3 fxAnN(float f) {
+      if (f < .5) return vec3(1., 0., 0.); if (f < 1.5) return vec3(-1., 0., 0.);
+      if (f < 2.5) return vec3(0., 1., 0.); if (f < 3.5) return vec3(0., -1., 0.);
+      if (f < 4.5) return vec3(0., 0., 1.); return vec3(0., 0., -1.);
+    }
+    vec3 fxAnX(float f) {
+      if (f < .5) return vec3(0., 0., -1.); if (f < 1.5) return vec3(0., 0., 1.);
+      if (f < 4.5) return vec3(1., 0., 0.); return vec3(-1., 0., 0.);
+    }
+    vec3 fxAnY(float f) {
+      if (f < 1.5) return vec3(0., 1., 0.); if (f < 2.5) return vec3(0., 0., -1.);
+      if (f < 3.5) return vec3(0., 0., 1.); return vec3(0., 1., 0.);
+    }`,
+  color: `
+    vec3 fxBase = diffuseColor.rgb;
+    vec2 fxF = fxFace();
+    vec3 fxP = fxAnN(uFace) + fxAnX(uFace) * fxF.x + fxAnY(uFace) * fxF.y;
+    // 처음 시점(위로 0.45, 옆으로 -0.7 돌린)의 화면 가로·세로와 눈 쪽, 큐브 반폭을 1로 본 눈까지 거리
+    const vec3 fxU = vec3(.76484, 0., -.64422);
+    const vec3 fxV = vec3(-.28021, .90045, -.33268);
+    const vec3 fxD = vec3(.58008, .43497, .68870);
+    const float fxEye = 7.3;
+    vec2 fxQ = vec2(dot(fxP, fxU), dot(fxP, fxV)) * fxEye / (fxEye - dot(fxP, fxD));
+    float fxR = length(fxQ);
+    float fxAa = fwidth(fxR) + 1e-4;
+    float fxRing = 1. - smoothstep(.09 - fxAa, .09 + fxAa, fxR);
+    fxRing = max(fxRing, 1. - smoothstep(.05 - fxAa, .05 + fxAa, abs(fxR - .4)));
+    fxRing = max(fxRing, 1. - smoothstep(.05 - fxAa, .05 + fxAa, abs(fxR - .77)));
+    fxRing = max(fxRing, 1. - smoothstep(.05 - fxAa, .05 + fxAa, abs(fxR - 1.14)));
+    diffuseColor.rgb = mix(fxBase, vec3(.05, .05, .055), fxRing);`,
+  surface: 'roughnessFactor = .55; metalnessFactor = 0.;',
+};
+B.anamorph = {
+  color: 'diffuseColor.rgb *= .9 + .15 * fxN3(vLocal * 30. + vSeed);',
+  surface: 'roughnessFactor = .6; metalnessFactor = 0.;',
 };
 
 S.amber = {

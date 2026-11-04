@@ -3390,6 +3390,29 @@ export const THEMES = [
     motion: 'smooth',
     burst: { shape: 'star', colors: 'faces', size: 0.07, speed: 2.4, gravity: -4, drag: 1.6, life: 0.7 },
   },
+  {
+    // 착시. 처음 놓인 각도에서 보면 세 면의 무늬가 이어져 큐브 앞에 납작한 동심원 세 개가 떠 보인다.
+    // 조금만 돌려도 원이 모서리에서 꺾여 깨지고, 섞으면 흩어졌다가 다 맞추면 다시 이어진다
+    id: 'anamorph',
+    name: '착시',
+    bg: '#E8E6E1',
+    ink: '#1A1A1C',
+    backdrop: [
+      'radial-gradient(70% 55% at 50% 42%, rgba(255,255,255,.75), transparent 72%)',
+      'radial-gradient(95% 80% at 50% 45%, #EFEDE8, #CFCCC4)',
+    ].join(', '),
+    form: { bevel: 0.03, size: 0.97, radius: 0.025 },
+    body: { color: '#1C1C1E', roughness: 0.6 },
+    faces: ['#E8423A', '#2F6FD8', '#F2F0EA', '#F2C230', '#2EA35A', '#F07A2A'],
+    lights: {
+      sky: '#ffffff', ground: '#b8b4aa', hemi: 2,
+      key: ['#ffffff', 1.1, [-3, 6, 5]], fill: ['#ffffff', 0.5, [5, 1, 4]], rim: ['#ffffff', 0.4, [0, 3, -6]],
+    },
+    surface: 'anamorph',
+    sound: 'cube',
+    motion: 'snap',
+    burst: { shape: 'dot', colors: ['#1A1A1C'], size: 0.05, speed: 2, gravity: -4, drag: 1.4, life: 0.7 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3416,5 +3439,5 @@ export const GROUPS = [
   { name: '디지털·레트로', themes: ['glitch', 'holo', 'thermal', 'flip', 'comic', 'toon'] },
   { name: '원소', themes: ['fire', 'sod', 'aqua', 'lava', 'electric'] },
   { name: '그로테스크', themes: ['flesh', 'eldritch', 'bone', 'eyeball', 'teeth'] },
-  { name: '빛과 시점', themes: ['infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'chrome', 'fiberoptic', 'ledcube'] },
+  { name: '빛과 시점', themes: ['anamorph', 'infinitymirror', 'roomwindow', 'lenticular', 'well', 'prism', 'chrome', 'fiberoptic', 'ledcube'] },
 ];
