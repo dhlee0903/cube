@@ -14,6 +14,7 @@ import { Ambient, Burst } from './particles.js';
 import { MOTIONS } from './motions.js';
 import { Filter } from './filters.js';
 import { JOINTS, Men } from './men.js';
+import { Sand } from './sand.js';
 
 const BODY = 0.96;
 const SIZE = 3; // 몇 칸이든 화면에서는 같은 크기로 보이게
@@ -402,6 +403,7 @@ export class CubeView {
     this.now = cube.cubies.map(() => ({ pos: new Vector3(), quat: new Quaternion() }));
     this.pieceMats = cube.cubies.map(() => new Matrix4());
     this.sync();
+    this.makeSand();
   }
 
   /** 지금 자세(this.now)를 인스턴스 행렬로 옮긴다. */
@@ -490,7 +492,27 @@ export class CubeView {
 
   // ---- 테마 ----
 
+  /** 모래 테마면 조각을 모래알로 바꿔 그린다(몸통·스티커는 감춘다). 아니면 모래를 치운다 */
+  makeSand() {
+    if (this.sand) {
+      this.root.remove(this.sand.mesh);
+      this.sand.dispose();
+      this.sand = null;
+    }
+    const t = this.sandTheme;
+    if (t && this.cube) {
+      this.sand = new Sand(this.cube, t.faces, t.sand.plain);
+      this.root.add(this.sand.mesh);
+    }
+    for (const mesh of this.meshes ?? []) {
+      if (mesh === this.sand?.mesh) continue;
+      if (this.haloMeshes?.includes(mesh)) mesh.visible = !t && (this.haloOn ?? false);
+      else mesh.visible = !t;
+    }
+  }
+
   setTheme(theme) {
+    this.sandTheme = theme.sand ? theme : null;
     const { body, sticker = {}, glow = 0, light = 1, halo = 0 } = theme;
     const surface = theme.surface ?? 'plain';
     if (this.shape(theme.form, theme.haloMode) && this.cube) this.setCube(this.cube);
@@ -562,6 +584,7 @@ export class CubeView {
     this.moving = !this.still && (MOVING.has(surface) || ambient.length > 0 || Boolean(this.flicker) || this.filter.animated);
     this.themeAt = performance.now();
     if (this.cube) this.place();
+    this.makeSand();
     this.invalidate();
   }
 
@@ -784,6 +807,12 @@ export class CubeView {
     if (now - (this.lookedAt ?? 0) > 2500) u.uPointer.value.multiplyScalar(Math.exp(-dt * 2));
 
     // 막대 사람 셈이 어떤 환경에서 한 번 던져도 그리기 고리 전체가 멈추지 않게(멈추면 화면이 굳어 아무것도 안 듣는 것처럼 보인다)
+    // 모래알: 층이 돌면 흩날렸다가 제자리로 날아든다
+    let sandBusy = false;
+    if (this.sand && this.now) {
+      const down = new Vector3(0, -1, 0).applyQuaternion(this.root.quaternion.clone().invert());
+      sandBusy = this.sand.step(dt, this.now, down, now / 1000);
+    }
     if (this.menOn) {
       try { this.walkMen(dt); } catch (err) {
         if (!this.menFailed) console.error('막대 사람을 움직이지 못했다', err);
@@ -793,7 +822,7 @@ export class CubeView {
     if (this.filter.mode) this.filter.render(this.scene, this.camera);
     else this.renderer.render(this.scene, this.camera);
     this.pace(dt);
-    if (this.tweens.length || this.moving || bursting || settling) this.invalidate();
+    if (this.tweens.length || this.moving || bursting || settling || sandBusy) this.invalidate();
     else this.last = 0;
     for (const t of finished) t.resolve();
   }

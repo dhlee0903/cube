@@ -3390,6 +3390,30 @@ export const THEMES = [
     motion: 'smooth',
     burst: { shape: 'star', colors: 'faces', size: 0.07, speed: 2.4, gravity: -4, drag: 1.6, life: 0.7 },
   },
+  {
+    // 모래. 조각마다 고운 색 모래알 수백 알이 뭉친 덩어리. 층을 돌리면 그 층의 모래가 뒤처지며 줄기를 이루고 바람에
+    // 흩날리다가, 멈추면 하나씩 제자리로 날아들어 다시 반듯한 조각으로 뭉친다. 고르면 위에서 쏟아져 큐브로 쌓인다
+    id: 'sand',
+    name: '모래',
+    bg: '#EFE6D6',
+    ink: '#3A2E20',
+    backdrop: [
+      'radial-gradient(65% 50% at 50% 40%, rgba(255,250,240,.75), transparent 72%)',
+      'radial-gradient(95% 80% at 50% 45%, #F3EBDC, #D6C6A8)',
+    ].join(', '),
+    form: { bevel: 0.05, size: 0.9, radius: 0.05 },
+    body: { color: '#8A7558', roughness: 0.9 },
+    faces: ['#D9412F', '#2D64C8', '#F3EFE6', '#E8B92A', '#3A9A4F', '#E9772A'],
+    sand: { plain: '#CDB68E' },
+    lights: {
+      sky: '#fff8ec', ground: '#9a8460', hemi: 1.5,
+      key: ['#fff4e0', 2.4, [-4, 7, 5]], fill: ['#e8ecff', 0.5, [6, 1, 3]], rim: ['#ffffff', 0.8, [1, 4, -6]],
+    },
+    surface: 'plain',
+    sound: 'nature',
+    motion: 'smooth',
+    burst: { shape: 'dot', colors: 'faces', size: 0.05, speed: 2.4, gravity: -6, drag: 1.2, life: 1 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3397,7 +3421,7 @@ export const themeById = (id) => THEMES.find((t) => t.id === id);
 // 테마 고르는 목록에서 묶어 보여 주는 무리. 테마는 모두 한 무리에만 들어간다(테스트가 본다)
 export const GROUPS = [
   { name: '기본', themes: ['classic', 'candy', 'brick', 'dice', 'jelly', 'clay', 'bubblewrap', 'paper', 'box', 'slime', 'stickmen'] },
-  { name: '자연', themes: ['timber', 'pebble', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert', 'space'] },
+  { name: '자연', themes: ['timber', 'pebble', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert', 'space', 'sand'] },
   { name: '빛·불', themes: ['neon', 'disco', 'kaleido'] },
   { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'bismuth', 'druze', 'pave', 'diamond', 'ruby', 'sapphire', 'emerald', 'quartz', 'starstone', 'moonstone', 'amberstone'] },
   { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'camo', 'enamel'] },
