@@ -6,7 +6,7 @@ import { GROUPS, themeById } from './themes.js';
 import { CubeView } from './view.js';
 import { Timer, formatTime } from './timer.js';
 import { Sound } from './sound.js';
-import { STAGES, solveLBL } from './solver.js';
+import { STAGES, notation, solveLBL } from './solver.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -51,6 +51,7 @@ const view = new CubeView($('stage'), {
       view.celebrate();
     }
     refresh();
+    follow(move);
     // 따라 하는 중이면 다음 수를 바로 알려 주고, 아니면 지난 힌트 쪽지는 치운다
     if (coaching) coach();
     else $('coach').hidden = true;
@@ -101,6 +102,7 @@ function setSize(next) {
   store.set('cube.size', String(size));
   cube = createCube(size);
   history = [];
+  route = null;
   timer.reset();
   view.setCube(cube);
   refresh();
@@ -112,6 +114,7 @@ $('bigger').addEventListener('click', () => setSize(size + 1));
 $('scramble').addEventListener('click', async () => {
   if (busy()) return;
   coaching = false;
+  route = null;
   $('coach').hidden = true;
   timer.reset();
   const moves = scramble(size);
@@ -123,10 +126,31 @@ $('scramble').addEventListener('click', async () => {
 // ---- 힌트와 따라 하며 배우기 ----
 // 3×3은 층별 풀이(solver.js)로 지금 단계와 다음 공식을 짚는다. 다른 크기는 섞은 수를 거꾸로 짚는다
 let coaching = false;
+// 정해 둔 풀이 길(3×3). 힌트대로 돌리면 앞에서부터 하나씩 지우고, 다르게 돌리면 버린다.
+// 한 수마다 처음부터 다시 풀면 새 길의 첫 수가 방금 돌린 걸 되돌려 제자리를 맴돌 수 있다
+let route = null;
+const mod4 = (t) => ((t % 4) + 4) % 4;
+
+function follow(move) {
+  if (!route || !route.length) return;
+  const step = route[0];
+  const m = step.move;
+  const got = mod4(move.turns);
+  const want = mod4(m.turns);
+  if (m.axis !== move.axis || m.layer !== move.layer) route = null;
+  else if (got === want) route.shift();
+  else if (want === 2 && got % 2 === 1) {
+    // 반 바퀴를 한 칸씩 나눠 돌렸다: 같은 쪽으로 한 칸이 남는다
+    m.turns = got === 1 ? 1 : -1;
+    step.k = step.f % 2 === 0 ? -m.turns : m.turns;
+    step.text = notation([step.f, step.k]);
+  } else route = null;
+}
 
 function coach() {
   const box = $('coach');
   if (history.length === 0) {
+    route = null;
     $('coach-stage').textContent = '다 맞췄어요';
     $('coach-alg').textContent = '';
     $('coach-how').textContent = coaching ? '처음부터 다시 해 보려면 메뉴에서 따라 하며 배우기를 누르세요.' : '';
@@ -136,7 +160,8 @@ function coach() {
   }
   timer.hinted = true;
   if (size === 3) {
-    const plan = solveLBL(cube);
+    if (!route || !route.length) route = solveLBL(cube);
+    const plan = route;
     if (plan && plan.length) {
       const stage = plan[0].stage;
       const part = [];
@@ -225,6 +250,7 @@ $('practice').addEventListener('click', async () => {
   openGuide(false);
   if (busy()) return;
   if (size !== 3) setSize(3);
+  route = null;
   timer.reset();
   const moves = scramble(3);
   await play(moves, Math.max(24, Math.min(65, 1300 / moves.length)));
@@ -237,6 +263,7 @@ $('practice').addEventListener('click', async () => {
 $('solve').addEventListener('click', async () => {
   if (busy() || history.length === 0) return;
   coaching = false;
+  route = null;
   $('coach').hidden = true;
   timer.reset();
   const moves = simplify(invert(history), size);
