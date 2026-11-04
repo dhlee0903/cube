@@ -783,7 +783,13 @@ export class CubeView {
     // 손을 떼고 잠시 지나면 시선이 다시 보는 사람에게 돌아온다
     if (now - (this.lookedAt ?? 0) > 2500) u.uPointer.value.multiplyScalar(Math.exp(-dt * 2));
 
-    if (this.menOn) this.walkMen(dt);
+    // 막대 사람 셈이 어떤 환경에서 한 번 던져도 그리기 고리 전체가 멈추지 않게(멈추면 화면이 굳어 아무것도 안 듣는 것처럼 보인다)
+    if (this.menOn) {
+      try { this.walkMen(dt); } catch (err) {
+        if (!this.menFailed) console.error('막대 사람을 움직이지 못했다', err);
+        this.menFailed = true;
+      }
+    }
     if (this.filter.mode) this.filter.render(this.scene, this.camera);
     else this.renderer.render(this.scene, this.camera);
     this.pace(dt);
@@ -894,7 +900,8 @@ export class CubeView {
     // 오른쪽 버튼은 큐브 위에서도 전체 돌리기
     const hit = this.locked || this.turning || e.button === 2 ? null : this.pick(x, y);
     this.drag = { id: e.pointerId, x0: x, y0: y, x, y, hit, tile, mode: hit ? 'pending' : 'orbit' };
-    this.renderer.domElement.setPointerCapture(e.pointerId);
+    // 앱 안에 끼워 넣은 화면에서는 포인터를 붙잡지 못하고 던지기도 한다. 못 붙잡아도 끌기는 된다
+    try { this.renderer.domElement.setPointerCapture(e.pointerId); } catch { /* 그냥 둔다 */ }
   }
 
   move(e) {
