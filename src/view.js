@@ -722,7 +722,7 @@ export class CubeView {
     const was = this.menWas;
     this.menWas = this.now.map((p, i) => {
       const m = new Matrix4().compose(p.pos.clone().applyQuaternion(this.root.quaternion), q.copy(this.root.quaternion).multiply(p.quat), ONE);
-      if (was?.[i]) this.men.carry(this.men.list[i], m.clone().invert().multiply(was[i]), 0.75);
+      if (was?.[i]) this.men.carry(this.men.list[i], m.clone().invert().multiply(was[i]), 0.75, dt);
       return m;
     });
     // 보는 사람 쪽(카메라는 +z에 있다)

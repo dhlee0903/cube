@@ -31,6 +31,7 @@ const HIP = 0.2;
 const STAND = 0.84; // 바닥이 이만큼(약 33도) 넘게 기울면 서 있지 못한다
 const FADE = 0.65; // 동작이 바뀔 때 지금 몸에서 새 자세로 넘어가는 시간(초)
 const TURN = 3.5; // 몸이 도는 가장 빠른 빠르기(라디안/초)
+const KNOCK = 1.4; // 상자가 사람을 이보다 빨리(초당) 휘두르면 중심을 잃고 넘어진다
 const AXES = [new Vector3(1, 0, 0), new Vector3(0, 1, 0), new Vector3(0, 0, 1)];
 
 // 바닥에서 하는 일, 고르는 무게, 몇 초쯤
@@ -269,21 +270,38 @@ export class Men {
    * 조각이 움직이고 돈 만큼 사람을 거꾸로 옮긴다(관성). move는 지난 조각 좌표를 지금 조각 좌표로 옮기는 행렬이다.
    * 사람은 제자리에 있으려 하고 상자 벽이 와서 밀거나 그 밑에서 미끄러진다. k만큼만 받아 너무 세게 내동댕이쳐지지 않게
    */
-  carry(m, move, k) {
+  carry(m, move, k, dt = 0) {
     const e = move.elements;
+    let push = 0;
     for (const arr of [m.x, m.o]) {
       for (let j = 0; j < JOINTS; j++) {
         const i = j * 3;
         const px = arr[i], py = arr[i + 1], pz = arr[i + 2];
-        let dx = e[0] * px + e[4] * py + e[8] * pz + e[12] - px;
-        let dy = e[1] * px + e[5] * py + e[9] * pz + e[13] - py;
-        let dz = e[2] * px + e[6] * py + e[10] * pz + e[14] - pz;
+        const dx = e[0] * px + e[4] * py + e[8] * pz + e[12] - px;
+        const dy = e[1] * px + e[5] * py + e[9] * pz + e[13] - py;
+        const dz = e[2] * px + e[6] * py + e[10] * pz + e[14] - pz;
         const d = Math.hypot(dx, dy, dz);
+        if (arr === m.x && j === 2) push = d;
         const cap = d > 0.04 ? 0.04 / d : 1;
         arr[i] = px + dx * k * cap;
         arr[i + 1] = py + dy * k * cap;
         arr[i + 2] = pz + dz * k * cap;
       }
+    }
+    // 디딘 자리와 향한 쪽도 제자리에 남는다. 그래야 용수철이 몸을 상자 쪽으로 도로 끌어오지 않고,
+    // 상자가 사람 밑에서 돌아 벽이 와서 민다
+    v1.copy(m.ground).applyMatrix4(move);
+    m.ground.lerp(v1, k);
+    for (const d of [m.heading, m.face]) {
+      v2.copy(d).transformDirection(move);
+      d.lerp(v2, k).normalize();
+    }
+    // 너무 세게 휘둘리면 중심을 잃고 넘어진다
+    if (dt > 0 && push / dt > KNOCK && m.mode !== 'limp') {
+      m.mode = 'limp';
+      m.t = 0;
+      m.still = 0;
+      m.drive = 0;
     }
   }
 
