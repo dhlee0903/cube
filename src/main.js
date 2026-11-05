@@ -7,6 +7,7 @@ import { CubeView } from './view.js';
 import { Timer, formatTime } from './timer.js';
 import { Sound } from './sound.js';
 import { COUNTED, STAGES, notation, progress, solveLBL } from './solver.js';
+import { prepare as prepareShort, solveShort } from './shortest.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -60,7 +61,24 @@ const view = new CubeView($('stage'), {
 view.setCube(cube);
 
 // 개발 서버에서만. 브라우저 테스트가 손으로 돌린 것처럼 흉내 낼 수 있게 열어 둔다.
-if (import.meta.env.DEV) window.cube = { view, solution: () => simplify(invert(history), size) };
+if (import.meta.env.DEV) window.cube = { view, solution: () => solution() };
+
+/**
+ * 맞추기 길. 2×2·3×3은 컴퓨터 풀이(shortest.js)로 가장 짧게 찾고, 지금까지 돌린 걸 되감는 게 더 짧으면 되감는다.
+ * 다른 크기는 되감는다.
+ */
+function solution() {
+  const back = simplify(invert(history), size);
+  const short = solveShort(cube);
+  return short && short.length < back.length ? short : back;
+}
+
+/** 컴퓨터 풀이 표(0.5초쯤)를 쉬는 틈에 미리 만들어 둔다 */
+function warmShort() {
+  if (size > 3) return;
+  const idle = window.requestIdleCallback ?? ((f) => setTimeout(f, 400));
+  idle(() => prepareShort(), { timeout: 4000 });
+}
 
 function commit(move) {
   applyMove(cube, move);
@@ -119,10 +137,11 @@ $('scramble').addEventListener('click', async () => {
   await play(moves, Math.max(24, Math.min(65, 1300 / moves.length)));
   if (history.length) timer.arm();
   refresh();
+  warmShort();
 });
 
 // ---- 힌트와 배우기 ----
-// 3×3은 층별 풀이(solver.js)로 지금 단계와 다음 수를 짚는다. 다른 크기는 섞은 수를 거꾸로 짚는다.
+// 3×3은 층별 풀이(solver.js)로 지금 단계와 다음 수를 짚는다. 2×2는 컴퓨터 최단 풀이(shortest.js)의 다음 수, 4×4부터는 섞은 수를 거꾸로 짚는다.
 // mode: null(힌트만), { lesson: null }(처음부터 끝까지 따라 하기), { lesson: 0~6 }(그 단계만 연습)
 let mode = null;
 // 정해 둔 풀이 길(3×3). 힌트대로 돌리면 앞에서부터 하나씩 지우고, 다르게 돌리면 버린다.
@@ -214,9 +233,12 @@ function coach() {
   }
   timer.hinted = true;
   if (size !== 3) {
-    const [next] = simplify(invert(history), size);
+    const [next] = size === 2 ? solution() : simplify(invert(history), size);
     if (!next) return;
-    coachCard({ title: '다음 한 수', next: view.describe(next), how: '3×3이 아니면 섞은 수를 거꾸로 짚어 줘요. 들썩이는 줄을 그쪽으로 돌리세요.' });
+    const how = size === 2
+      ? '2×2는 컴퓨터가 찾은 가장 짧은 길의 다음 수를 짚어 줘요. 들썩이는 줄을 그쪽으로 돌리세요.'
+      : '4×4부터는 섞은 수를 거꾸로 짚어 줘요. 들썩이는 줄을 그쪽으로 돌리세요.';
+    coachCard({ title: '다음 한 수', next: view.describe(next), how });
     view.nudge(next);
     return;
   }
@@ -383,7 +405,7 @@ $('solve').addEventListener('click', async () => {
   if (busy() || history.length === 0) return;
   stopCoach();
   timer.reset();
-  const moves = simplify(invert(history), size);
+  const moves = solution();
   await play(moves, Math.max(32, Math.min(95, 2400 / moves.length)));
   if (history.length === 0) view.celebrate(0.5);
 });
