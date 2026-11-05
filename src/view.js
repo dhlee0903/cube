@@ -1,15 +1,20 @@
 import {
-  AdditiveBlending, Box3, CanvasTexture, Color, DirectionalLight, DynamicDrawUsage, Euler, ExtrudeGeometry,
+  AdditiveBlending, Box3, BufferGeometry, CanvasTexture, Color, DataTexture, DirectionalLight, DoubleSide, DynamicDrawUsage,
+  Euler, ExtrudeGeometry, Float32BufferAttribute, FloatType, FrontSide, NearestFilter, RGBAFormat,
   HemisphereLight, Group, InstancedBufferAttribute, InstancedMesh, Matrix4, MeshBasicMaterial, MeshStandardMaterial,
   NormalBlending, PMREMGenerator, PerspectiveCamera, PlaneGeometry, Quaternion, Raycaster, Scene, Shape,
   ShapeGeometry, Vector2, Vector3, WebGLRenderer,
 } from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { FACES, layerOf } from './cube.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { FACES, createCube, layerOf } from './cube.js';
 import { MOVING, wear } from './surfaces.js';
 import { Ambient, Burst } from './particles.js';
 import { MOTIONS } from './motions.js';
+import { Filter } from './filters.js';
+import { JOINTS, Men } from './men.js';
+import { Grains } from './sand.js';
 
 const BODY = 0.96;
 const SIZE = 3; // 몇 칸이든 화면에서는 같은 크기로 보이게
@@ -23,6 +28,7 @@ const ONE = new Vector3(1, 1, 1);
 //   size    스티커 한 변
 //   radius  스티커 모서리 둥글기(size/2면 동그라미)
 //   depth   스티커 두께. 0이면 납작한 스티커, 크면 솟아오른 타일
+//   blades  스티커 위에 세우는 풀잎의 가장 큰 높이(풀). 0이면 없음
 const FORM = { bevel: 0.08, size: 0.8, radius: 0.09, depth: 0 };
 
 // 조명. 테마가 lights로 덮어쓴다. [색, 세기, 위치]
@@ -54,6 +60,71 @@ function roundedSquare(size, r) {
 }
 
 /** 스티커 둘레로 번지는 빛(또는 그림자). 흰색 알파만 그려 두고 색은 재질이 입힌다. */
+// 풀잎이 솟은 스티커: 납작한 바닥(흙) 위에 끝으로 가늘어지는 풀잎 띠를 빽빽이 세운다. 잎마다 높이, 넓은 면이 향하는 쪽,
+// 휘는 쪽과 정도가 다르다. 잎은 진짜 면이라 조각 테두리 밖으로도 넘어 나와 실루엣이 풀숲이 된다
+// 칸이 많을수록 스티커가 작게 보이니 풀잎을 줄인다(7×7에서도 삼각형이 너무 많지 않게)
+function bladeCount(n) {
+  return Math.round(420 * Math.min(1, (3 / n) ** 1.2));
+}
+
+function bladeGeometry(f, count) {
+  const base = new ShapeGeometry(roundedSquare(f.size, f.radius), 8);
+  const pos = [];
+  const nor = [];
+  const uv = [];
+  const idx = [];
+  let seed = 9;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const half = f.size / 2 - 0.015;
+  const SEG = 3;
+  for (let b = 0; b < count; b++) {
+    const x = (rnd() * 2 - 1) * half;
+    const y = (rnd() * 2 - 1) * half;
+    const h = f.blades * (0.5 + 0.5 * rnd());
+    const w = 0.022 + 0.016 * rnd();
+    const face = rnd() * Math.PI * 2;
+    const bend = rnd() * Math.PI * 2;
+    const curl = (0.08 + 0.32 * rnd()) * h;
+    const cx = Math.cos(face);
+    const cy = Math.sin(face);
+    const bx = Math.cos(bend);
+    const by = Math.sin(bend);
+    const start = pos.length / 3;
+    for (let k = 0; k <= SEG; k++) {
+      const t = k / SEG;
+      const ww = (w * (1 - t)) / 2;
+      const ox = x + bx * curl * t * t;
+      const oy = y + by * curl * t * t;
+      const oz = h * t * (1 - 0.25 * t * (curl / h));
+      // 잎 겉 방향: 폭 방향과 잎이 뻗는 방향에 모두 수직
+      const tx = bx * curl * 2 * t;
+      const ty = by * curl * 2 * t;
+      const tz = h;
+      let nx = cy * tz;
+      let ny = -cx * tz;
+      let nz = cx * ty - cy * tx;
+      const nl = Math.hypot(nx, ny, nz) || 1;
+      nx /= nl; ny /= nl; nz /= nl;
+      pos.push(ox - cx * ww, oy - cy * ww, oz, ox + cx * ww, oy + cy * ww, oz);
+      nor.push(nx, ny, nz, nx, ny, nz);
+      uv.push(b / count, t, b / count, t);
+    }
+    for (let k = 0; k < SEG; k++) {
+      const a = start + k * 2;
+      idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+    }
+  }
+  const blades = new BufferGeometry();
+  blades.setAttribute('position', new Float32BufferAttribute(pos, 3));
+  blades.setAttribute('normal', new Float32BufferAttribute(nor, 3));
+  blades.setAttribute('uv', new Float32BufferAttribute(uv, 2));
+  blades.setIndex(idx);
+  const geo = mergeGeometries([base, blades]);
+  base.dispose();
+  blades.dispose();
+  return geo;
+}
+
 function haloTexture(size, radius, shadow) {
   const px = 128;
   const canvas = document.createElement('canvas');
@@ -80,15 +151,17 @@ function haloTexture(size, radius, shadow) {
 }
 
 export class CubeView {
-  constructor(host, { onMove, onGrab }) {
+  constructor(host, { onMove, onGrab, onSnap }) {
     this.host = host;
     this.onMove = onMove;
     this.onGrab = onGrab;
+    this.onSnap = onSnap;
     this.still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
 
     this.renderer = new WebGLRenderer({ antialias: true, alpha: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     host.appendChild(this.renderer.domElement);
+    this.drawn = new Vector2();
 
     this.scene = new Scene();
     this.camera = new PerspectiveCamera(FOV, 1, 0.1, 100);
@@ -121,8 +194,13 @@ export class CubeView {
       uPointer: { value: new Vector3(0, 0, 0) }, // 시점 공간. 0이면 카메라, 곧 보는 사람
       uBodyGlow: { value: new Color(0, 0, 0) },
       uSticker: { value: new Vector2(0.4, 0.09) },
+      // 막대 사람 마디 자리(스티커마다 한 줄, 스티커 좌표)
+      uMen: { value: null },
+      uMenSize: { value: new Vector2(1, 1) },
     };
     this.themeAt = 0;
+    // 렌더링 전체에 거는 화면 필터(카툰, 8비트, 고장 난 화면)
+    this.filter = new Filter(this.renderer, this.uniforms);
 
     this.bodyMat = new MeshStandardMaterial({ roughness: 0.55 });
     wear(this.bodyMat, 'body', this.uniforms);
@@ -183,7 +261,11 @@ export class CubeView {
     this.form = f;
     this.bodyGeo = new RoundedBoxGeometry(BODY, BODY, BODY, 3, f.bevel);
     let lift = 0.002;
-    if (f.grid) {
+    if (f.blades) {
+      this.stickerGeo = bladeGeometry(f, bladeCount(this.cube?.n ?? 3));
+      this.bladesFor = this.cube?.n ?? 3;
+      lift += f.blades;
+    } else if (f.grid) {
       // 겉이 실제로 솟는 질감용. 둥근 모서리는 셰이더가 잘라 낸다
       this.stickerGeo = this.grid(f, this.cube?.n ?? 3);
       lift += 0.12;
@@ -241,6 +323,11 @@ export class CubeView {
       this.stickerGeo.dispose();
       this.stickerGeo = this.grid(this.form, cube.n);
     }
+    if (this.form?.blades && this.bladesFor !== cube.n) {
+      this.stickerGeo.dispose();
+      this.stickerGeo = bladeGeometry(this.form, bladeCount(cube.n));
+      this.bladesFor = cube.n;
+    }
 
     // 조각마다 난수를 하나씩 줘서 무늬가 똑같이 반복되지 않게
     const seeded = (geometry, count) => {
@@ -264,7 +351,26 @@ export class CubeView {
     cube.cubies.forEach((piece, i) => {
       for (const s of piece.stickers) this.slots[s].push(i);
     });
-    this.stickerMeshes = this.slots.map((list, s) => instanced(seeded(this.stickerGeo, list.length), this.faceMats[s], list.length));
+    // 스티커마다 원래 면의 어느 칸이었는지(면 전체를 -1~1로 본 좌표, 스티커 자신의 가로·세로 축 기준)와
+    // 칸 크기를 준다. 면 전체에 그림 한 장을 그리는 질감은 이걸로 다 맞췄을 때 그림이 이어진다
+    const home = createCube(cube.n).cubies;
+    this.stickerMeshes = this.slots.map((list, s) => {
+      const g = seeded(this.stickerGeo, list.length);
+      const q = new Quaternion().setFromUnitVectors(AXES[2], new Vector3(...FACES[s]));
+      const ax = AXES[0].clone().applyQuaternion(q);
+      const ay = AXES[1].clone().applyQuaternion(q);
+      const at = new Float32Array(list.length * 3);
+      list.forEach((piece, k) => {
+        const p = new Vector3(...home[piece].pos).divideScalar(cube.n);
+        at[k * 3] = p.dot(ax);
+        at[k * 3 + 1] = p.dot(ay);
+        at[k * 3 + 2] = 2 / cube.n;
+      });
+      g.setAttribute('aHome', new InstancedBufferAttribute(at, 3));
+      const mesh = instanced(g, this.faceMats[s], list.length);
+      mesh.renderOrder = 1;
+      return mesh;
+    });
     this.haloMeshes = this.slots.map((list, s) => {
       const mesh = instanced(this.haloGeo, this.haloMats[s], list.length);
       mesh.renderOrder = 1;
@@ -272,10 +378,32 @@ export class CubeView {
       return mesh;
     });
 
+    // 막대 사람 테마: 조각마다 사는 사람의 마디 자리를 스티커마다 한 줄씩 텍스처에 담아 넘긴다(스티커 좌표로 옮겨서)
+    this.men = new Men(count);
+    this.menWas = null;
+    let row = 0;
+    this.manAt = this.stickerMeshes.map((mesh, s) => {
+      const n = mesh.count;
+      const rows = new Float32Array(n);
+      for (let k = 0; k < n; k++) rows[k] = row + k;
+      mesh.geometry.setAttribute('aManRow', new InstancedBufferAttribute(rows, 1));
+      const q = new Quaternion().setFromUnitVectors(AXES[2], new Vector3(...FACES[s]));
+      const out = { inv: q.invert(), at: new Vector3(...FACES[s]).multiplyScalar(BODY / 2 + 0.002), row };
+      row += n;
+      return out;
+    });
+    this.menTex?.dispose();
+    this.menTex = new DataTexture(new Float32Array((JOINTS + 1) * row * 4), JOINTS + 1, row, RGBAFormat, FloatType);
+    this.menTex.magFilter = this.menTex.minFilter = NearestFilter;
+    this.menTex.needsUpdate = true;
+    this.uniforms.uMen.value = this.menTex;
+    this.uniforms.uMenSize.value.set(JOINTS + 1, row);
+
     this.base = cube.cubies.map(() => ({ pos: new Vector3(), quat: new Quaternion() }));
     this.now = cube.cubies.map(() => ({ pos: new Vector3(), quat: new Quaternion() }));
     this.pieceMats = cube.cubies.map(() => new Matrix4());
     this.sync();
+    this.makeSand();
   }
 
   /** 지금 자세(this.now)를 인스턴스 행렬로 옮긴다. */
@@ -350,7 +478,9 @@ export class CubeView {
 
   /** 다음에 돌릴 층을 그 방향으로 두 번 살짝 밀었다 놓는다. */
   nudge({ axis, layer, turns }) {
-    const dir = turns === 3 ? -1 : 1;
+    // turns는 -1(=3)이나 1, 2로 온다. -1을 3과 같게 봐야 반대로 들썩이지 않는다
+    const t = ((turns % 4) + 4) % 4;
+    const dir = t === 3 ? -1 : 1;
     const angles = [];
     this.turning = true;
     return this.tween(1000, (k) => {
@@ -362,9 +492,64 @@ export class CubeView {
     });
   }
 
+  /**
+   * 지금 보이는 모습으로 한 수를 말로: 어느 쪽에 보이는 면을, 그 면을 바라보고 어느 방향으로.
+   * 바깥 층만 면 이름으로 말하고, 속 층은 몇 번째 층인지 말한다
+   */
+  describe({ axis, layer, turns }) {
+    const n = this.cube?.n ?? 3;
+    const t = ((turns % 4) + 4) % 4;
+    const outer = layer === 0 || layer === n - 1;
+    const side = layer === n - 1 ? 1 : -1;
+    const look = this.aimQuat();
+    const c = AXES[axis].clone().multiplyScalar(side).applyQuaternion(look);
+    let where;
+    if (c.y > 0.6) where = '윗면';
+    else if (c.y < -0.6) where = '아랫면';
+    else {
+      const lr = c.x > 0.25 ? '오른쪽 ' : c.x < -0.25 ? '왼쪽 ' : '';
+      where = `${lr}${c.z >= 0 ? '앞' : '뒤'} 면`;
+    }
+    if (!outer) where = `${where} 쪽에서 ${Math.min(layer, n - 1 - layer) + 1}번째 층`;
+    // 그 면 쪽에서 바라볼 때: + 쪽 면은 turns -1이 시계, - 쪽 면은 +1이 시계
+    const cw = t === 2 ? null : (side > 0 ? t === 3 : t === 1);
+    const how = t === 2 ? '반 바퀴' : cw ? '시계 방향으로' : '반시계 방향으로';
+    // 윗면·아랫면이 안 보이면 앞에서 보이는 줄로 다시 말한다: 앞쪽 점이 돌 때 화면에서 어느 쪽으로 가는지
+    let hint = '';
+    if (axis === 1 && c.z < -0.2 && t !== 2) {
+      const ax = AXES[axis].clone().applyQuaternion(look);
+      const toCam = new Vector3(0, 0, 1);
+      const perp = toCam.clone().addScaledVector(ax, -toCam.dot(ax)).normalize();
+      const p = ax.clone().multiplyScalar(layer - (n - 1) / 2).addScaledVector(perp, 1.5);
+      const v = ax.clone().multiplyScalar(t === 1 ? 1 : -1).cross(p);
+      hint = ` · 앞에서 보면 맨 ${c.y > 0 ? '윗' : '아랫'}줄을 ${v.x > 0 ? '오른쪽' : '왼쪽'}으로`;
+    } else if (c.z < -0.2) hint = ' (뒤쪽 면이에요. 큐브를 굴려 보세요)';
+    return `${where}을 ${how}${hint}`;
+  }
+
   // ---- 테마 ----
 
+  /** 입자 테마면 조각을 입자로 바꿔 그린다(몸통·스티커는 감춘다). 아니면 입자를 치운다 */
+  makeSand() {
+    if (this.sand) {
+      this.root.remove(this.sand.mesh);
+      this.sand.dispose();
+      this.sand = null;
+    }
+    const t = this.sandTheme;
+    if (t && this.cube) {
+      this.sand = new Grains(this.cube, t.faces, t.grains);
+      this.root.add(this.sand.mesh);
+    }
+    for (const mesh of this.meshes ?? []) {
+      if (mesh === this.sand?.mesh) continue;
+      if (this.haloMeshes?.includes(mesh)) mesh.visible = !t && (this.haloOn ?? false);
+      else mesh.visible = !t;
+    }
+  }
+
   setTheme(theme) {
+    this.sandTheme = theme.grains ? theme : null;
     const { body, sticker = {}, glow = 0, light = 1, halo = 0 } = theme;
     const surface = theme.surface ?? 'plain';
     if (this.shape(theme.form, theme.haloMode) && this.cube) this.setCube(this.cube);
@@ -372,6 +557,17 @@ export class CubeView {
     this.bodyMat.color.set(body.color);
     this.bodyMat.roughness = body.roughness ?? 0.55;
     this.bodyMat.metalness = body.metalness ?? 0;
+    // 유리처럼 비치는 테마. 몸통은 깊이를 쓰지 않아 뒤쪽 스티커까지 비치고, 스티커는 깊이를 써서
+    // 앞면 스티커 뒤로 반대편 스티커가 겹쳐 보이지 않게 한다(그러면 어느 면인지 헷갈린다)
+    const see = (m, opacity, depth) => {
+      const clear = opacity < 1;
+      if (m.transparent !== clear) m.needsUpdate = true;
+      m.transparent = clear;
+      m.opacity = opacity;
+      m.depthWrite = depth || !clear;
+    };
+    see(this.bodyMat, body.opacity ?? 1, false);
+    this.faceMats.forEach((m) => see(m, sticker.opacity ?? 1, true));
     this.uniforms.uBodyGlow.value.set(body.glow ?? '#000000');
     const glows = theme.faces.map((_, i) => (Array.isArray(glow) ? glow[i] : glow));
     const brightest = Math.max(...glows) || 1;
@@ -383,6 +579,9 @@ export class CubeView {
       m.emissiveIntensity = glows[i];
       m.roughness = sticker.roughness ?? 0.32;
       m.metalness = sticker.metalness ?? 0;
+      // 풀잎처럼 얇은 면은 양쪽에서 보인다
+      const side = sticker.double ? DoubleSide : FrontSide;
+      if (m.side !== side) { m.side = side; m.needsUpdate = true; }
       this.haloMats[i].color.set(shadow ? '#000000' : c);
       this.haloMats[i].opacity = Array.isArray(glow) ? (halo * glows[i]) / brightest : halo;
     });
@@ -413,13 +612,16 @@ export class CubeView {
     this.motion = MOTIONS[theme.motion] ?? MOTIONS.smooth;
     this.pulse = !this.still && Boolean(theme.pulse);
     this.jitter = !this.still && Boolean(theme.jitter);
+    if (this.filter.set(theme.filter)) this.resize();
     this.root.position.set(0, 0, 0);
     const ambient = [].concat(theme.ambient ?? []);
     this.ambients.forEach((a, i) => a.set(this.still ? null : ambient[i], theme.faces));
     this.burst.set(this.still ? null : theme.burst, theme.faces);
-    this.moving = !this.still && (MOVING.has(surface) || ambient.length > 0 || Boolean(this.flicker));
+    this.menOn = surface === 'men';
+    this.moving = !this.still && (MOVING.has(surface) || ambient.length > 0 || Boolean(this.flicker) || this.filter.animated);
     this.themeAt = performance.now();
     if (this.cube) this.place();
+    this.makeSand();
     this.invalidate();
   }
 
@@ -570,6 +772,47 @@ export class CubeView {
     });
   }
 
+  /** 막대 사람을 한 걸음 움직이고 마디 자리를 스티커 좌표로 옮겨 텍스처에 쓴다. 중력은 화면 아래쪽 */
+  walkMen(dt) {
+    if (!this.men || !this.now) return;
+    const q = new Quaternion();
+    const down = new Vector3(0, -1, 0);
+    const gs = this.now.map((p) => down.clone().applyQuaternion(q.copy(this.root.quaternion).multiply(p.quat).invert()));
+    // 관성: 조각이 지난 프레임에서 움직이고 돈 만큼 사람을 거꾸로 옮긴다
+    const was = this.menWas;
+    this.menWas = this.now.map((p, i) => {
+      const m = new Matrix4().compose(p.pos.clone().applyQuaternion(this.root.quaternion), q.copy(this.root.quaternion).multiply(p.quat), ONE);
+      if (was?.[i]) this.men.carry(this.men.list[i], m.clone().invert().multiply(was[i]), 0.75, dt);
+      return m;
+    });
+    // 보는 사람 쪽(카메라는 +z에 있다)
+    const eye = new Vector3(0, 0, 1);
+    const eyes = this.now.map((p) => eye.clone().applyQuaternion(q.copy(this.root.quaternion).multiply(p.quat).invert()));
+    this.men.update(dt, gs, eyes);
+    const data = this.menTex.image.data;
+    const w = JOINTS + 1;
+    const v = new Vector3();
+    this.slots.forEach((list, s) => {
+      const at = this.manAt[s];
+      list.forEach((piece, k) => {
+        const m = this.men.list[piece];
+        const base = (at.row + k) * w * 4;
+        for (let j = 0; j < JOINTS; j++) {
+          v.set(m.x[j * 3], m.x[j * 3 + 1], m.x[j * 3 + 2]).sub(at.at).applyQuaternion(at.inv);
+          data[base + j * 4] = v.x;
+          data[base + j * 4 + 1] = v.y;
+          data[base + j * 4 + 2] = v.z;
+        }
+        // 마지막 칸: 바닥 쪽(바닥에서 위로)
+        v.copy(m.floor ?? down).applyQuaternion(at.inv);
+        data[base + JOINTS * 4] = v.x;
+        data[base + JOINTS * 4 + 1] = v.y;
+        data[base + JOINTS * 4 + 2] = v.z;
+      });
+    });
+    this.menTex.needsUpdate = true;
+  }
+
   invalidate() {
     if (!this.frame) this.frame = requestAnimationFrame(this.tick);
   }
@@ -600,9 +843,23 @@ export class CubeView {
     // 손을 떼고 잠시 지나면 시선이 다시 보는 사람에게 돌아온다
     if (now - (this.lookedAt ?? 0) > 2500) u.uPointer.value.multiplyScalar(Math.exp(-dt * 2));
 
-    this.renderer.render(this.scene, this.camera);
+    // 막대 사람 셈이 어떤 환경에서 한 번 던져도 그리기 고리 전체가 멈추지 않게(멈추면 화면이 굳어 아무것도 안 듣는 것처럼 보인다)
+    // 입자: 층이 돌면 흩날렸다가 제자리로 날아든다
+    let sandBusy = false;
+    if (this.sand && this.now) {
+      const down = new Vector3(0, -1, 0).applyQuaternion(this.root.quaternion.clone().invert());
+      sandBusy = this.sand.step(dt, this.now, down, now / 1000);
+    }
+    if (this.menOn) {
+      try { this.walkMen(dt); } catch (err) {
+        if (!this.menFailed) console.error('막대 사람을 움직이지 못했다', err);
+        this.menFailed = true;
+      }
+    }
+    if (this.filter.mode) this.filter.render(this.scene, this.camera);
+    else this.renderer.render(this.scene, this.camera);
     this.pace(dt);
-    if (this.tweens.length || this.moving || bursting || settling) this.invalidate();
+    if (this.tweens.length || this.moving || bursting || settling || sandBusy) this.invalidate();
     else this.last = 0;
     for (const t of finished) t.resolve();
   }
@@ -630,6 +887,8 @@ export class CubeView {
     this.width = w;
     this.height = h;
     this.renderer.setSize(w, h);
+    this.renderer.getDrawingBufferSize(this.drawn);
+    this.filter.setSize(this.drawn.x, this.drawn.y, this.renderer.getPixelRatio());
     this.camera.aspect = w / h;
     const v = (FOV * Math.PI) / 180;
     const across = 2 * Math.atan(Math.tan(v / 2) * this.camera.aspect);
@@ -640,7 +899,8 @@ export class CubeView {
     this.camera.updateMatrixWorld();
 
     // 입자 크기(월드 단위)를 화면 픽셀로 바꾸는 비율, 입자가 떠다닐 범위
-    const scale = (h * this.renderer.getPixelRatio()) / (2 * Math.tan(v / 2));
+    // 8비트 필터는 낮은 해상도로 그리므로 입자도 그만큼 작게
+    const scale = (h * this.renderer.getPixelRatio()) / (2 * Math.tan(v / 2)) / this.filter.block;
     this.burst.setScale(scale);
     const halfH = distance * Math.tan(v / 2);
     for (const a of this.ambients) {
@@ -667,7 +927,8 @@ export class CubeView {
   look(e) {
     const r = this.renderer.domElement.getBoundingClientRect();
     if (!r.width) return;
-    const ndc = new Vector3(((e.clientX - r.left) / r.width) * 2 - 1, 1 - ((e.clientY - r.top) / r.height) * 2, 0.5);
+    const [lx, ly] = this.point(e, null);
+    const ndc = new Vector3((lx / r.width) * 2 - 1, 1 - (ly / r.height) * 2, 0.5);
     ndc.unproject(this.camera);
     const dir = ndc.sub(this.camera.position).normalize();
     // 큐브 앞쪽(z = 2) 평면과 만나는 점
@@ -677,18 +938,36 @@ export class CubeView {
     this.lookedAt = performance.now();
   }
 
-  point(e) {
+  point(e, tile = this.drag?.tile) {
     const r = this.renderer.domElement.getBoundingClientRect();
-    return [e.clientX - r.left, e.clientY - r.top];
+    let x = e.clientX - r.left;
+    let y = e.clientY - r.top;
+    // 같은 장면을 n×n으로 되풀이하는 필터(워홀풍)에서는 짚은 칸 안의 자리를 화면 전체 자리로 바꾼다.
+    // 끌기는 처음 짚은 칸을 기준으로 이어 간다
+    const n = this.filter.tiles;
+    if (n > 1) {
+      const t = tile ?? this.tileOf(x, y);
+      x = (x - (t[0] * this.width) / n) * n;
+      y = (y - (t[1] * this.height) / n) * n;
+    }
+    return [x, y];
+  }
+
+  tileOf(x, y) {
+    const n = this.filter.tiles;
+    return [Math.min(n - 1, Math.floor((x / this.width) * n)), Math.min(n - 1, Math.floor((y / this.height) * n))];
   }
 
   down(e) {
     if (this.drag || e.button === 1) return;
-    const [x, y] = this.point(e);
+    const r = this.renderer.domElement.getBoundingClientRect();
+    const tile = this.tileOf(e.clientX - r.left, e.clientY - r.top);
+    const [x, y] = this.point(e, tile);
     // 오른쪽 버튼은 큐브 위에서도 전체 돌리기
     const hit = this.locked || this.turning || e.button === 2 ? null : this.pick(x, y);
-    this.drag = { id: e.pointerId, x0: x, y0: y, x, y, hit, mode: hit ? 'pending' : 'orbit' };
-    this.renderer.domElement.setPointerCapture(e.pointerId);
+    this.drag = { id: e.pointerId, x0: x, y0: y, x, y, hit, tile, mode: hit ? 'pending' : 'orbit' };
+    // 앱 안에 끼워 넣은 화면에서는 포인터를 붙잡지 못하고 던지기도 한다. 못 붙잡아도 끌기는 된다
+    try { this.renderer.domElement.setPointerCapture(e.pointerId); } catch { /* 그냥 둔다 */ }
   }
 
   move(e) {
@@ -715,6 +994,46 @@ export class CubeView {
     this.pitch = Math.min(QUARTER, Math.max(-QUARTER, this.pitch + dy * speed));
     this.root.quaternion.setFromEuler(new Euler(this.pitch, this.yaw, 0));
     this.invalidate();
+  }
+
+  /** 큐브를 위에서(pitch > 0) 또는 아래에서(pitch < 0) 보도록 천천히 기울인다. 옆으로 돈 각도는 그대로 둔다 */
+  tilt(pitch, ms = 600) {
+    return this.turnTo(pitch, this.goal?.yaw ?? this.yaw, ms);
+  }
+
+  /** 보는 각도를 천천히 바꾼다. 도는 동안에도 말로 짚는 방향은 다 돈 뒤 모습으로 셈하게 가는 곳을 적어 둔다 */
+  turnTo(pitch, yaw, ms = 600) {
+    const p0 = this.pitch;
+    const y0 = this.yaw;
+    if (Math.abs(p0 - pitch) < 1e-3 && Math.abs(y0 - yaw) < 1e-3) return Promise.resolve();
+    const goal = { pitch, yaw };
+    this.goal = goal;
+    return this.tween(ms, (k) => {
+      const e = k * k * (3 - 2 * k);
+      this.pitch = p0 + (pitch - p0) * e;
+      this.yaw = y0 + (yaw - y0) * e;
+      this.root.quaternion.setFromEuler(new Euler(this.pitch, this.yaw, 0));
+    }).then(() => { if (this.goal === goal) this.goal = null; });
+  }
+
+  /** 다 돈 뒤(또는 지금) 큐브가 놓인 방향 */
+  aimQuat() {
+    return this.goal ? new Quaternion().setFromEuler(new Euler(this.goal.pitch, this.goal.yaw, 0)) : this.root.quaternion;
+  }
+
+  /** 다음 수의 옆면이 뒤로 숨어 있으면 큐브를 옆으로 돌려 그 면이 앞에 오게 한다 */
+  see({ axis, layer }) {
+    const n = this.cube?.n ?? 3;
+    if (axis === 1 || (layer !== 0 && layer !== n - 1)) return;
+    const side = layer === n - 1 ? 1 : -1;
+    const normal = AXES[axis].clone().multiplyScalar(side);
+    const pitch = this.goal?.pitch ?? this.pitch;
+    const yaw = this.goal?.yaw ?? this.yaw;
+    const facing = (y) => normal.clone().applyQuaternion(new Quaternion().setFromEuler(new Euler(pitch, y, 0))).z;
+    if (facing(yaw) > 0.3) return;
+    let best = yaw;
+    for (const d of [Math.PI / 2, -Math.PI / 2, Math.PI]) if (facing(yaw + d) > facing(best)) best = yaw + d;
+    this.turnTo(pitch, best, 700);
   }
 
   /** 화면 좌표에서 큐브 겉면의 어디를 짚었는지. 큐브 안쪽 좌표로 돌려준다. */
@@ -801,6 +1120,8 @@ export class CubeView {
     let q = d.angle / QUARTER;
     if (Math.abs(speed) > 0.003) q += Math.sign(speed) * 0.4;
     const quarters = Math.round(q);
+    // 손을 떼는 순간 층이 칸에 맞아 들어가는 소리
+    if (((quarters % 4) + 4) % 4) this.onSnap?.();
     const from = d.angle;
     const to = quarters * QUARTER;
     const angles = [];

@@ -1,0 +1,547 @@
+// 투명 큐브 속 막대 사람. 조각 하나에 한 사람씩 살고, 화면 아래쪽이 곧 중력이다.
+//
+// 사람은 마디 열한 개(머리, 목, 골반, 팔꿈치·손 둘, 무릎·발 둘)를 뼈로 이은 헝겊 인형(래그돌)이다. 마디마다 중력을 받아
+// 베를레 적분으로 움직이고, 뼈 길이는 늘 지키며, 유리 벽에 부딪히면 멈추고 마찰로 미끄러진다.
+// 살아 있을 때는 마디마다 용수철이 동작 자세 쪽으로 끌어 그 동작을 한다: 걷기, 뛰기, 손 흔들기, 춤, 뛰어오르기,
+// 보는 사람 쪽 유리로 걸어가 두드리기, 앉아 쉬기, 누워 자기, 벽에 기대 팔짱 끼기, 기지개. 이때 몸은 중력을
+// 거슬러 곧게 서려고 바닥이 기운 만큼 기울어진다. 바닥이 너무 기울거나(층을 돌리거나 큐브를 굴려서) 바닥이 아예 바뀌면
+// 용수철을 놓아 그냥 헝겊 인형이 되어 떨어지고 뒹굴고 벽을 타고 미끄러진다.
+// 몸이 바닥에 멈추면 무릎을 굽혀 일어나 다시 돌아다닌다. 동작이 바뀔 땐 지금 몸 자세에서 새 자세로 0.65초에 걸쳐
+// 부드럽게 넘어가고, 몸이 향하는 쪽도 천천히 돌아선다. 큐브를 돌리면 사람은 관성으로 제자리에 남으려 해서
+// 상자 벽에 밀리고 바닥 위에서 미끄러진다. 자리는 조각 좌표(가운데가 0, 벽이 ±0.46)로 센다.
+import { Vector3 } from 'three';
+
+export const JOINTS = 11; // 머리, 목, 골반, 왼팔꿈치, 왼손, 오른팔꿈치, 오른손, 왼무릎, 왼발, 오른무릎, 오른발
+const WALL = 0.46;
+const RADIUS = [0.055, 0.024, 0.026, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02, 0.02];
+// 뼈: 두 마디와 길이
+const BONES = [
+  [0, 1, 0.062], [1, 2, 0.15],
+  [1, 3, 0.086], [3, 4, 0.08], [1, 5, 0.086], [5, 6, 0.08],
+  [2, 7, 0.1], [7, 8, 0.1], [2, 9, 0.1], [9, 10, 0.1],
+];
+// 버팀: 이보다 가까워지지 않는다(무릎·팔꿈치가 거꾸로 접히거나 몸이 납작해지지 않게)
+const STRUTS = [
+  [0, 2, 0.2], [2, 8, 0.07], [2, 10, 0.07], [1, 4, 0.05], [1, 6, 0.05],
+  [7, 9, 0.025], [8, 10, 0.02], [0, 4, 0.04], [0, 6, 0.04], [0, 7, 0.17], [0, 9, 0.17],
+];
+const GRAVITY = 5.2;
+const STEP = 1 / 120;
+const HIP = 0.2;
+const STAND = 0.84; // 바닥이 이만큼(약 33도) 넘게 기울면 서 있지 못한다
+const FADE = 0.65; // 동작이 바뀔 때 지금 몸에서 새 자세로 넘어가는 시간(초)
+const TURN = 3.5; // 몸이 도는 가장 빠른 빠르기(라디안/초)
+const KNOCK = 1.4; // 상자가 사람을 이보다 빨리(초당) 휘두르면 중심을 잃고 넘어진다
+const AXES = [new Vector3(1, 0, 0), new Vector3(0, 1, 0), new Vector3(0, 0, 1)];
+
+// 바닥에서 하는 일, 고르는 무게, 몇 초쯤
+const CHORES = [
+  ['walk', 4, 2.5, 5],
+  ['run', 1.2, 1.2, 2.5],
+  ['idle', 1.2, 1, 2.5],
+  ['wave', 1, 1.2, 2],
+  ['jump', 0.8, 0.8, 0.8],
+  ['dance', 0.8, 1.6, 3],
+  ['knock', 1.2, 4, 6],
+  ['sit', 1.6, 4, 7],
+  ['sleep', 1, 5, 8],
+  ['lean', 1.3, 5, 8],
+  ['stretch', 1, 2.6, 3.4],
+];
+// 앉거나 누웠다가 다른 걸 하려면 먼저 일어난다
+const LOW = new Set(['sit', 'sleep']);
+const RATE = {
+  walk: 7, run: 12, idle: 2, wave: 9, jump: 4, dance: 7, limp: 13, getup: 3,
+  knock: 9, sit: 1.2, sleep: 1, lean: 1, stretch: 1,
+};
+const SPEED = { walk: 0.2, run: 0.42 };
+
+const v1 = new Vector3();
+const v2 = new Vector3();
+const v3 = new Vector3();
+
+function pick() {
+  const total = CHORES.reduce((s, c) => s + c[1], 0);
+  let r = Math.random() * total;
+  for (const c of CHORES) {
+    r -= c[1];
+    if (r <= 0) return c;
+  }
+  return CHORES[0];
+}
+
+/** 바닥 쪽(바닥에서 위로 향하는 축). 중력이 가장 센 축의 반대. 지금 바닥이 거의 비슷하면 그대로 둔다 */
+function floorOf(g, prev) {
+  let best = 0;
+  for (let a = 1; a < 3; a++) if (Math.abs(g.getComponent(a)) > Math.abs(g.getComponent(best))) best = a;
+  if (prev) {
+    const pa = Math.abs(prev.x) > 0.5 ? 0 : Math.abs(prev.y) > 0.5 ? 1 : 2;
+    const along = -g.getComponent(pa) * prev.getComponent(pa);
+    if (along > 0 && along > Math.abs(g.getComponent(best)) - 0.12) return prev;
+  }
+  return AXES[best].clone().multiplyScalar(-Math.sign(g.getComponent(best)) || 1);
+}
+
+/** 바닥에 나란한 아무 방향 */
+function tangent(floor, out = new Vector3()) {
+  const a = Math.abs(floor.x) > 0.5 ? AXES[1] : AXES[0];
+  v1.crossVectors(floor, a).normalize();
+  v2.crossVectors(floor, v1);
+  const th = Math.random() * Math.PI * 2;
+  return out.copy(v1).multiplyScalar(Math.cos(th)).addScaledVector(v2, Math.sin(th)).normalize();
+}
+
+/** 두 토막 팔다리의 가운데 마디(팔꿈치·무릎) 자리. a 뿌리, c 끝, bend 굽는 쪽 */
+function ik(a, c, l1, l2, bend) {
+  const d = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+  const L = Math.hypot(d[0], d[1], d[2]) || 1e-6;
+  const u = d.map((v) => v / L);
+  const r = Math.min(L, l1 + l2 - 1e-4);
+  const along = (l1 * l1 - l2 * l2 + r * r) / (2 * r);
+  const h = Math.sqrt(Math.max(0, l1 * l1 - along * along));
+  const bd = bend[0] * u[0] + bend[1] * u[1] + bend[2] * u[2];
+  const b = [bend[0] - u[0] * bd, bend[1] - u[1] * bd, bend[2] - u[2] * bd];
+  const bl = Math.hypot(b[0], b[1], b[2]) || 1;
+  return [0, 1, 2].map((i) => a[i] + u[i] * along + (b[i] / bl) * h);
+}
+
+function limb(side, ab, sw) {
+  return [side * Math.sin(ab), -Math.cos(ab) * Math.cos(sw), Math.cos(ab) * Math.sin(sw)];
+}
+
+/**
+ * 동작 자세를 몸 좌표(오른쪽, 위, 앞; 바닥이 0)로 셈해 out(마디 11개 × 3)에 넣는다.
+ * mode 동작, ph 걸음 위상, k 동작이 얼마나 지났는지(0~1)
+ */
+function pose(out, mode, ph, k) {
+  const set = (j, p) => { out[j * 3] = p[0]; out[j * 3 + 1] = p[1]; out[j * 3 + 2] = p[2]; };
+  if (mode === 'sit') {
+    // 바닥에 앉아 쉰다: 무릎을 세우고 두 손을 무릎에 얹고, 천천히 숨 쉰다
+    const br = Math.sin(ph) * 0.004;
+    const pel = [0, 0.035, 0];
+    const neck = [0, 0.035 + 0.144 + br, -0.035];
+    set(0, [0, neck[1] + 0.06, neck[2] + 0.012]); set(1, neck); set(2, pel);
+    for (const [kn, f, e, h, side] of [[7, 8, 3, 4, -1], [9, 10, 5, 6, 1]]) {
+      const foot = [side * 0.045, 0.014, 0.17];
+      const knee = ik([side * 0.019, pel[1], 0], foot, 0.1, 0.1, [0, 1, 0]);
+      set(f, foot); set(kn, knee);
+      const hand = [knee[0] - side * 0.005, knee[1] + 0.012, knee[2] + 0.01];
+      set(h, hand); set(e, ik(neck, hand, 0.086, 0.08, [side, -0.4, -0.2]));
+    }
+    return;
+  }
+  if (mode === 'sleep') {
+    // 반듯이 누워 깍지 낀 손을 머리 뒤에 받치고 잔다. 한쪽 무릎을 세웠고, 가슴이 천천히 오르내린다
+    const br = (0.5 + 0.5 * Math.sin(ph)) * 0.005;
+    const pel = [0, 0.03, 0];
+    const neck = [0, 0.032 + br, 0.15];
+    set(0, [0, 0.045, 0.21]); set(1, neck); set(2, pel);
+    for (const [e, h, side] of [[3, 4, -1], [5, 6, 1]]) {
+      const hand = [side * 0.025, 0.035, 0.225];
+      set(h, hand); set(e, ik(neck, hand, 0.086, 0.08, [side, 0.25, 0.1]));
+    }
+    const footL = [-0.04, 0.014, -0.2];
+    set(8, footL); set(7, ik([-0.019, pel[1], 0], footL, 0.1, 0.1, [0, 1, 0]));
+    const footR = [0.05, 0.014, -0.13];
+    set(10, footR); set(9, ik([0.019, pel[1], 0], footR, 0.1, 0.1, [0, 1, 0]));
+    return;
+  }
+  let legL = 0, legR = 0, knL = 0.05, knR = 0.05;
+  let armL = 0.05, armR = -0.05, abL = 0.18, abR = 0.18, elL = 0.25, elR = 0.25;
+  let lean = 0, bob = 0;
+  if (mode === 'walk') {
+    legL = Math.sin(ph) * 0.55; legR = -legL;
+    knL = Math.max(0, Math.sin(ph + 1.7)) * 0.8; knR = Math.max(0, Math.sin(ph + 4.84)) * 0.8;
+    armL = -legL * 0.8; armR = -legR * 0.8; elL = elR = 0.4;
+    bob = Math.abs(Math.cos(ph)) * 0.008; lean = 0.06;
+  } else if (mode === 'run') {
+    legL = Math.sin(ph) * 0.95; legR = -legL;
+    knL = Math.max(0, Math.sin(ph + 1.7)) * 1.5 + 0.2; knR = Math.max(0, Math.sin(ph + 4.84)) * 1.5 + 0.2;
+    armL = -legL * 0.9; armR = -legR * 0.9; elL = elR = 1.5;
+    bob = Math.abs(Math.cos(ph)) * 0.02; lean = 0.3;
+  } else if (mode === 'idle') {
+    armL = Math.sin(ph) * 0.05; armR = -armL; bob = Math.sin(ph) * 0.003;
+  } else if (mode === 'wave') {
+    abR = 2.5; armR = 0; elR = 0.5 + 0.5 * Math.sin(ph);
+  } else if (mode === 'jump') {
+    // 웅크렸다가 팔을 번쩍 들고 솟는다, 내려서 다시 웅크린다
+    const c = 1 - smooth((k - 0.1) / 0.2) + smooth((k - 0.85) / 0.15);
+    knL = knR = c * 1.6; legL = legR = c * 0.8; lean = c * 0.35;
+    armL = armR = 2.8 + (-0.6 - 2.8) * c; abL = abR = 0.4 - 0.2 * c;
+    bob = -c * 0.06 + Math.max(0, Math.sin(Math.PI * Math.min(1, Math.max(0, (k - 0.3) / 0.55)))) * 0.16;
+  } else if (mode === 'dance') {
+    legL = Math.sin(ph) * 0.35; legR = -legL * 0.6;
+    knL = Math.max(0, Math.sin(ph)) * 0.6; knR = Math.max(0, -Math.sin(ph)) * 0.6;
+    abL = 2.3 + Math.sin(ph * 2) * 0.5; abR = 2.3 - Math.sin(ph * 2) * 0.5; elL = elR = 0.6 + 0.4 * Math.sin(ph);
+    bob = Math.abs(Math.sin(ph)) * 0.015;
+  } else if (mode === 'limp') {
+    // 떨어지며 허우적댄다
+    legL = Math.sin(ph * 1.3) * 0.8; legR = Math.sin(ph * 1.1 + 2) * 0.8; knL = 0.6; knR = 0.4;
+    abL = 1.6 + Math.sin(ph) * 0.7; abR = 1.6 + Math.cos(ph * 1.2) * 0.7; elL = elR = 0.9;
+  } else if (mode === 'stretch') {
+    // 기지개: 두 팔을 천천히 머리 위로 쭉 뻗고 몸을 젖혔다가 내린다
+    const up = Math.sin(Math.PI * Math.min(1, Math.max(0, (k - 0.08) / 0.84)));
+    abL = abR = 0.25 + 0.1 * up; armL = armR = 2.9 * smooth(up * 1.3); elL = elR = 0.25 - 0.2 * up;
+    lean = -0.12 * up; bob = 0.012 * up;
+  } else if (mode === 'lean') {
+    // 벽에 등을 기대고 팔짱을 낀다(팔은 아래에서 따로 놓는다)
+    lean = -0.16; legL = 0.32; legR = 0.26; knL = 0.12; knR = 0.08; bob = -0.008 + Math.sin(ph) * 0.002;
+  } else if (mode === 'knock') {
+    // 유리를 두드린다: 오른팔을 앞으로 뻗어 주먹으로 콩콩
+    armR = 1.45; abR = 0.25; elR = 0.25 + 0.6 * (0.5 + 0.5 * Math.sin(ph * 2.2));
+    armL = 0.1; lean = 0.05;
+  } else if (mode === 'getup') {
+    const c = 1 - smooth(k);
+    knL = knR = c * 1.9; legL = legR = c * 1.2; lean = c * 0.8; armL = armR = c * 0.7; elL = elR = 0.5;
+    bob = -c * 0.09;
+  }
+  const sp = [0, Math.cos(lean), Math.sin(lean)];
+  const pel = [0, HIP + bob, 0];
+  const neck = [pel[0], pel[1] + sp[1] * 0.15, pel[2] + sp[2] * 0.15];
+  const add = (p, d, s) => [p[0] + d[0] * s, p[1] + d[1] * s, p[2] + d[2] * s];
+  set(0, add(neck, sp, 0.062));
+  set(1, neck);
+  set(2, pel);
+  const eL = add(neck, limb(-1, abL, armL), 0.086);
+  const eR = add(neck, limb(1, abR, armR), 0.086);
+  set(3, eL); set(4, add(eL, limb(-1, abL, armL + elL), 0.08));
+  set(5, eR); set(6, add(eR, limb(1, abR, armR + elR), 0.08));
+  const kL = add([pel[0] - 0.019, pel[1], pel[2]], limb(-1, 0.06, legL), 0.1);
+  const kR = add([pel[0] + 0.019, pel[1], pel[2]], limb(1, 0.06, legR), 0.1);
+  set(7, kL); set(8, add(kL, limb(-1, 0.06, legL - knL), 0.1));
+  set(9, kR); set(10, add(kR, limb(1, 0.06, legR - knR), 0.1));
+  if (mode === 'lean') {
+    // 팔짱: 두 손을 가슴 앞에서 서로 반대편 팔꿈치 쪽으로
+    for (const [e, h, side] of [[3, 4, -1], [5, 6, 1]]) {
+      const hand = [-side * 0.045, neck[1] - 0.065 + side * 0.006, neck[2] + 0.055];
+      set(h, hand); set(e, ik(neck, hand, 0.086, 0.08, [side, -1, 0.25]));
+    }
+  }
+}
+
+export class Men {
+  constructor(count) {
+    this.local = new Float32Array(JOINTS * 3);
+    this.list = Array.from({ length: count }, () => {
+      const m = {
+        x: new Float32Array(JOINTS * 3),
+        o: new Float32Array(JOINTS * 3),
+        target: new Float32Array(JOINTS * 3),
+        mode: 'limp',
+        t: 0,
+        dur: 1,
+        phase: Math.random() * 10,
+        drive: 0,
+        still: 0,
+        floor: null,
+        ground: new Vector3(),
+        heading: new Vector3(0, 0, 1),
+        face: new Vector3(0, 0, 1),
+        from: new Float32Array(JOINTS * 3),
+        fade: 1,
+        act: null,
+        spare: 0,
+      };
+      // 처음엔 아무 데나 서 있다가 떨어진다
+      const c = new Vector3((Math.random() - 0.5) * 0.3, (Math.random() - 0.5) * 0.3, (Math.random() - 0.5) * 0.3);
+      pose(this.local, 'idle', 0, 0);
+      for (let j = 0; j < JOINTS; j++) {
+        m.x[j * 3] = c.x + this.local[j * 3];
+        m.x[j * 3 + 1] = c.y + this.local[j * 3 + 1] - HIP;
+        m.x[j * 3 + 2] = c.z + this.local[j * 3 + 2];
+      }
+      m.o.set(m.x);
+      return m;
+    });
+  }
+
+  /** gs: 조각마다 조각 좌표로 본 중력 방향(단위 벡터), eyes: 보는 사람 쪽 */
+  update(dt, gs, eyes) {
+    this.list.forEach((m, i) => this.think(m, gs[i], dt, eyes?.[i]));
+    // 물리는 1/120초씩 고르게 나눠 돈다
+    this.acc = Math.min((this.acc ?? 0) + dt, STEP * 6);
+    while (this.acc >= STEP) {
+      this.acc -= STEP;
+      this.list.forEach((m, i) => this.physics(m, gs[i]));
+    }
+  }
+
+  /**
+   * 조각이 움직이고 돈 만큼 사람을 거꾸로 옮긴다(관성). move는 지난 조각 좌표를 지금 조각 좌표로 옮기는 행렬이다.
+   * 사람은 제자리에 있으려 하고 상자 벽이 와서 밀거나 그 밑에서 미끄러진다. k만큼만 받아 너무 세게 내동댕이쳐지지 않게
+   */
+  carry(m, move, k, dt = 0) {
+    const e = move.elements;
+    let push = 0;
+    for (const arr of [m.x, m.o]) {
+      for (let j = 0; j < JOINTS; j++) {
+        const i = j * 3;
+        const px = arr[i], py = arr[i + 1], pz = arr[i + 2];
+        const dx = e[0] * px + e[4] * py + e[8] * pz + e[12] - px;
+        const dy = e[1] * px + e[5] * py + e[9] * pz + e[13] - py;
+        const dz = e[2] * px + e[6] * py + e[10] * pz + e[14] - pz;
+        const d = Math.hypot(dx, dy, dz);
+        if (arr === m.x && j === 2) push = d;
+        const cap = d > 0.04 ? 0.04 / d : 1;
+        arr[i] = px + dx * k * cap;
+        arr[i + 1] = py + dy * k * cap;
+        arr[i + 2] = pz + dz * k * cap;
+      }
+    }
+    // 디딘 자리와 향한 쪽도 제자리에 남는다. 그래야 용수철이 몸을 상자 쪽으로 도로 끌어오지 않고,
+    // 상자가 사람 밑에서 돌아 벽이 와서 민다
+    v1.copy(m.ground).applyMatrix4(move);
+    m.ground.lerp(v1, k);
+    for (const d of [m.heading, m.face]) {
+      v2.copy(d).transformDirection(move);
+      d.lerp(v2, k).normalize();
+    }
+    // 너무 세게 휘둘리면 중심을 잃고 넘어진다
+    if (dt > 0 && push / dt > KNOCK && m.mode !== 'limp') {
+      m.mode = 'limp';
+      m.t = 0;
+      m.still = 0;
+      m.drive = 0;
+    }
+  }
+
+  joint(m, j, out) {
+    return out.set(m.x[j * 3], m.x[j * 3 + 1], m.x[j * 3 + 2]);
+  }
+
+  /** 동작을 고르고 그 자세의 목표 자리를 정한다 */
+  think(m, g, dt, eye) {
+    m.phase += dt * RATE[m.mode];
+    m.t += dt;
+    m.fade = Math.min(1, m.fade + dt / FADE);
+    const floor = floorOf(g, m.floor);
+    const changed = !m.floor || !floor.equals(m.floor);
+    m.floor = floor;
+    const level = -g.dot(floor);
+    const alive = m.mode !== 'limp' && m.mode !== 'getup';
+
+    if ((alive || m.mode === 'getup') && (changed || level < STAND)) {
+      m.mode = 'limp';
+      m.t = 0;
+      m.still = 0;
+    }
+
+    const pelvis = this.joint(m, 2, v3);
+    if (m.mode === 'limp') {
+      // 다 멈췄고, 바닥 가까이 있고, 설 만한 바닥이면 일어난다
+      let fast = 0;
+      for (let j = 0; j < JOINTS * 3; j++) fast = Math.max(fast, Math.abs(m.x[j] - m.o[j]));
+      const moving = fast / STEP;
+      m.still = moving < 0.12 ? m.still + dt : 0;
+      const nearFloor = pelvis.dot(floor) + WALL < 0.13;
+      // 힘을 놓고 그냥 헝겊 인형이 된다
+      m.drive = 0;
+      m.act = 'limp';
+      if (m.still > 0.35 && nearFloor && level > STAND + 0.03) {
+        m.mode = 'getup';
+        m.t = 0;
+        m.dur = 1;
+        m.ground.copy(pelvis).addScaledVector(floor, -pelvis.dot(floor) - WALL);
+        // 머리가 누워 있던 쪽을 보고 일어난다
+        this.joint(m, 0, v1).sub(pelvis);
+        v1.addScaledVector(floor, -v1.dot(floor));
+        if (v1.lengthSq() < 1e-4) tangent(floor, v1);
+        m.heading.copy(v1).normalize();
+        m.face.copy(m.heading);
+      }
+      return;
+    }
+
+    if (m.mode === 'getup') {
+      const k = Math.min(1, m.t / m.dur);
+      // 쓰러졌다 일어날 땐 힘을 서서히 주고, 앉았다 일어날 땐 힘을 그대로 둔다
+      m.drive = Math.max(m.drive, 0.15 + 0.85 * smooth(k * 1.4));
+      this.blend(m, 'getup');
+      this.aim(m, floor, g, 'getup', m.drive, false, k);
+      if (m.t > m.dur) this.next(m);
+      return;
+    }
+
+    // 서서 하는 일
+    m.drive = Math.min(1, m.drive + dt * 3);
+    let speed = SPEED[m.mode] ?? 0;
+    let act = m.mode;
+    if (m.mode === 'lean') {
+      // 가장 가까운 벽으로 걸어가 등을 돌려 기댄다
+      if (!m.wall) {
+        let best = -1;
+        let bv = -1;
+        for (let a = 0; a < 3; a++) {
+          if (Math.abs(floor.getComponent(a)) > 0.5) continue;
+          if (Math.abs(m.ground.getComponent(a)) > bv) { bv = Math.abs(m.ground.getComponent(a)); best = a; }
+        }
+        m.wall = AXES[best].clone().multiplyScalar(Math.sign(m.ground.getComponent(best)) || 1);
+      }
+      const gap = WALL - 0.1 - m.ground.dot(m.wall);
+      if (gap > 0.02) { act = 'walk'; speed = SPEED.walk; m.heading.copy(m.wall); }
+      else m.heading.copy(m.wall).negate();
+    } else if (m.mode === 'knock') {
+      // 보는 사람 쪽 유리로 걸어가 얼굴을 그쪽으로 두고 두드린다(위에서 내려다보면 그냥 손을 흔든다)
+      v1.copy(eye ?? floor).addScaledVector(floor, -(eye ?? floor).dot(floor));
+      if (v1.lengthSq() < 0.1) act = 'wave';
+      else {
+        m.heading.copy(v1).normalize();
+        let gap = 1;
+        for (let a = 0; a < 3; a++) {
+          if (Math.abs(floor.getComponent(a)) > 0.5 || Math.abs(m.heading.getComponent(a)) < 0.5) continue;
+          gap = WALL - 0.13 - m.ground.getComponent(a) * Math.sign(m.heading.getComponent(a));
+        }
+        if (gap > 0.02) { act = 'walk'; speed = SPEED.walk; }
+      }
+    }
+    m.heading.addScaledVector(floor, -m.heading.dot(floor));
+    if (m.heading.lengthSq() < 1e-4) tangent(floor, m.heading);
+    m.heading.normalize();
+    if (speed && m.mode !== 'knock' && m.mode !== 'lean') {
+      // 이리저리 헤매며 걷고, 벽에 다다르면 돌아선다
+      m.heading.applyAxisAngle(floor, (Math.sin(m.phase * 0.21 + m.t) * 0.9 + (Math.random() - 0.5) * 2) * dt);
+    }
+    if (speed) m.ground.addScaledVector(m.heading, speed * dt);
+    if (m.mode === 'dance') m.heading.applyAxisAngle(floor, dt * 2.5 * Math.sin(m.phase * 0.25));
+    // 발 디딘 자리는 바닥 위, 벽에서 조금 떨어진 곳. 몸이 밀려나면 따라간다
+    m.ground.lerp(v1.copy(pelvis), Math.min(1, dt * 1.5));
+    m.ground.addScaledVector(floor, -m.ground.dot(floor) - WALL);
+    const room = WALL - 0.1;
+    for (let a = 0; a < 3; a++) {
+      if (Math.abs(floor.getComponent(a)) > 0.5) continue;
+      const c = m.ground.getComponent(a);
+      if (Math.abs(c) > room) {
+        m.ground.setComponent(a, Math.sign(c) * room);
+        if (m.heading.getComponent(a) * c > 0) m.heading.setComponent(a, -m.heading.getComponent(a));
+      }
+    }
+    // 몸은 가려는 쪽으로 단번에 돌지 않고 천천히 돌아선다
+    m.face.addScaledVector(floor, -m.face.dot(floor));
+    if (m.face.lengthSq() < 1e-4) m.face.copy(m.heading);
+    m.face.normalize();
+    const ang = Math.atan2(v1.crossVectors(m.face, m.heading).dot(floor), m.face.dot(m.heading));
+    m.face.applyAxisAngle(floor, Math.max(-TURN * dt, Math.min(TURN * dt, ang)));
+    this.blend(m, act);
+    this.aim(m, floor, g, act, m.drive, false, Math.min(1, m.t / m.dur));
+    if (m.t > m.dur) this.next(m);
+  }
+
+  /** 하는 일이 바뀌면 지금 몸 자세에서 새 자세로 천천히 넘어가게 지금 마디 자리를 붙잡아 둔다 */
+  blend(m, act) {
+    if (act === m.act) return;
+    if (m.act !== null) {
+      m.from.set(m.x);
+      m.fade = 0;
+    }
+    m.act = act;
+  }
+
+  next(m) {
+    m.wall = null;
+    if (LOW.has(m.mode)) {
+      m.mode = 'getup';
+      m.t = 0;
+      m.dur = 0.9;
+      return;
+    }
+    const c = pick();
+    m.mode = c[0];
+    m.t = 0;
+    m.dur = c[2] + Math.random() * (c[3] - c[2]);
+  }
+
+  /** 자세 목표를 조각 좌표로 놓는다. body가 참이면 지금 몸(목-골반)을 기준으로, 아니면 발 디딘 자리를 기준으로 */
+  aim(m, floor, g, mode, drive, body, k = 0) {
+    m.drive = drive;
+    pose(this.local, mode, m.phase, k);
+    const up = new Vector3();
+    const fwd = new Vector3();
+    const origin = new Vector3();
+    if (body) {
+      const neck = this.joint(m, 1, new Vector3());
+      const pelvis = this.joint(m, 2, new Vector3());
+      up.copy(neck).sub(pelvis).normalize();
+      fwd.copy(this.joint(m, 0, new Vector3())).sub(neck).cross(up);
+      if (fwd.lengthSq() < 1e-6) fwd.set(up.y, up.z, up.x).cross(up);
+      fwd.normalize();
+      origin.copy(pelvis).addScaledVector(up, -HIP);
+    } else {
+      // 중력을 거슬러 곧게 서려고 바닥이 기운 만큼 몸을 기울인다
+      up.copy(floor).multiplyScalar(0.35).addScaledVector(g, -0.65).normalize();
+      fwd.copy(m.face).addScaledVector(up, -m.face.dot(up)).normalize();
+      origin.copy(m.ground);
+    }
+    const right = new Vector3().crossVectors(up, fwd);
+    // 동작이 막 바뀌었으면 붙잡아 둔 자세에서 새 자세로 부드럽게 옮겨 간다
+    const e = smooth(m.fade);
+    for (let j = 0; j < JOINTS; j++) {
+      const x = this.local[j * 3];
+      const y = this.local[j * 3 + 1];
+      const z = this.local[j * 3 + 2];
+      for (let a = 0; a < 3; a++) {
+        const c = a === 0 ? 'x' : a === 1 ? 'y' : 'z';
+        const t = origin[c] + right[c] * x + up[c] * y + fwd[c] * z;
+        m.target[j * 3 + a] = e < 1 ? m.from[j * 3 + a] + (t - m.from[j * 3 + a]) * e : t;
+      }
+    }
+  }
+
+  physics(m, g) {
+    const { x, o, target } = m;
+    const gx = g.x * GRAVITY * STEP * STEP;
+    const gy = g.y * GRAVITY * STEP * STEP;
+    const gz = g.z * GRAVITY * STEP * STEP;
+    // 베를레: 지난 걸음만큼 그대로 가고 중력을 더한다. 용수철은 자세 쪽으로 끈다
+    // 용수철은 너무 세지 않게: 자세를 바로 따라붙지 않고 조금 늦게 무게 있게 따라간다
+    const pull = m.drive * 0.1;
+    for (let j = 0; j < JOINTS; j++) {
+      const i = j * 3;
+      for (let a = 0; a < 3; a++) {
+        const v = (x[i + a] - o[i + a]) * 0.9997;
+        o[i + a] = x[i + a];
+        x[i + a] += v + (a === 0 ? gx : a === 1 ? gy : gz);
+        if (pull) x[i + a] += (target[i + a] - x[i + a]) * pull;
+      }
+    }
+    for (let it = 0; it < 6; it++) {
+      for (const [a, b, len] of BONES) relax(x, a, b, len, false);
+      for (const [a, b, len] of STRUTS) relax(x, a, b, len, true);
+    }
+    // 유리 벽: 마디 크기만큼 안쪽에 가두고, 닿은 마디는 벽을 따라 미끄러지며 마찰로 느려진다
+    for (let j = 0; j < JOINTS; j++) {
+      const i = j * 3;
+      const lim = WALL - RADIUS[j];
+      for (let a = 0; a < 3; a++) {
+        const c = x[i + a];
+        if (Math.abs(c) <= lim) continue;
+        const vn = c - o[i + a];
+        x[i + a] = Math.sign(c) * lim;
+        // 벽으로 들이받던 속도는 조금만 되튀고, 벽을 따라가는 두 방향은 마찰로 줄인다
+        o[i + a] = vn * Math.sign(c) > 0 ? x[i + a] + vn * 0.2 : x[i + a] - vn;
+        for (let b = 0; b < 3; b++) {
+          if (b === a) continue;
+          o[i + b] = x[i + b] - (x[i + b] - o[i + b]) * 0.93;
+        }
+      }
+    }
+  }
+}
+
+/** 두 마디 사이를 len으로 맞춘다. least면 그보다 가까울 때만 벌린다 */
+function relax(x, a, b, len, least) {
+  const ia = a * 3;
+  const ib = b * 3;
+  const dx = x[ib] - x[ia];
+  const dy = x[ib + 1] - x[ia + 1];
+  const dz = x[ib + 2] - x[ia + 2];
+  const d = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1e-6;
+  if (least && d >= len) return;
+  const k = ((d - len) / d) * 0.5;
+  x[ia] += dx * k; x[ia + 1] += dy * k; x[ia + 2] += dz * k;
+  x[ib] -= dx * k; x[ib + 1] -= dy * k; x[ib + 2] -= dz * k;
+}
+
+function smooth(k) {
+  const x = Math.min(1, Math.max(0, k));
+  return x * x * (3 - 2 * x);
+}
