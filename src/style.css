@@ -597,3 +597,107 @@ button:disabled {
   font-size: 13px;
   opacity: 0.75;
 }
+
+.guide-lead {
+  margin: 0;
+}
+
+.guide-sub {
+  margin: 14px 0 6px;
+  opacity: 0.7;
+}
+
+.lessons {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.lesson {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+
+.lesson b {
+  grid-column: 1;
+}
+
+.lesson p {
+  grid-column: 1;
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.75;
+}
+
+.lesson code {
+  grid-column: 1;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.lesson button {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  padding: 7px 14px;
+  border-radius: 999px;
+  color: var(--bg);
+  background: var(--ink);
+  font-weight: 700;
+}
+
+.guide-tips {
+  margin-top: 14px;
+}
+
+.guide-tips summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.guide-tips ul {
+  margin: 8px 0 0;
+  padding-left: 1.2em;
+}
+
+.coach-next {
+  margin: 6px 0 2px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.coach-next .sym {
+  margin-left: 6px;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  opacity: 0.7;
+}
+
+.coach-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.coach-actions:empty {
+  display: none;
+}
+
+.coach-actions button {
+  padding: 7px 14px;
+  border-radius: 999px;
+  color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 10%, transparent);
+  font-weight: 700;
+}
+
+.coach-actions button.go {
+  color: var(--bg);
+  background: var(--ink);
+}

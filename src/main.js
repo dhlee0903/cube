@@ -6,7 +6,7 @@ import { GROUPS, themeById } from './themes.js';
 import { CubeView } from './view.js';
 import { Timer, formatTime } from './timer.js';
 import { Sound } from './sound.js';
-import { STAGES, notation, solveLBL } from './solver.js';
+import { COUNTED, STAGES, notation, progress, solveLBL } from './solver.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -52,8 +52,8 @@ const view = new CubeView($('stage'), {
     }
     refresh();
     follow(move);
-    // 따라 하는 중이면 다음 수를 바로 알려 주고, 아니면 지난 힌트 쪽지는 치운다
-    if (coaching) coach();
+    // 배우는 중이면 다음 수를 바로 알려 주고, 아니면 지난 힌트 쪽지는 치운다
+    if (mode) coach();
     else $('coach').hidden = true;
   },
 });
@@ -113,9 +113,7 @@ $('bigger').addEventListener('click', () => setSize(size + 1));
 
 $('scramble').addEventListener('click', async () => {
   if (busy()) return;
-  coaching = false;
-  route = null;
-  $('coach').hidden = true;
+  stopCoach();
   timer.reset();
   const moves = scramble(size);
   await play(moves, Math.max(24, Math.min(65, 1300 / moves.length)));
@@ -123,9 +121,10 @@ $('scramble').addEventListener('click', async () => {
   refresh();
 });
 
-// ---- 힌트와 따라 하며 배우기 ----
-// 3×3은 층별 풀이(solver.js)로 지금 단계와 다음 공식을 짚는다. 다른 크기는 섞은 수를 거꾸로 짚는다
-let coaching = false;
+// ---- 힌트와 배우기 ----
+// 3×3은 층별 풀이(solver.js)로 지금 단계와 다음 수를 짚는다. 다른 크기는 섞은 수를 거꾸로 짚는다.
+// mode: null(힌트만), { lesson: null }(처음부터 끝까지 따라 하기), { lesson: 0~6 }(그 단계만 연습)
+let mode = null;
 // 정해 둔 풀이 길(3×3). 힌트대로 돌리면 앞에서부터 하나씩 지우고, 다르게 돌리면 버린다.
 // 한 수마다 처음부터 다시 풀면 새 길의 첫 수가 방금 돌린 걸 되돌려 제자리를 맴돌 수 있다
 let route = null;
@@ -147,52 +146,126 @@ function follow(move) {
   } else route = null;
 }
 
+// 받침에 따라 붙는 말: 이에요/예요, 을/를
+const hasCoda = (word) => {
+  const c = word.trim().slice(-1).charCodeAt(0);
+  return c >= 0xac00 && c <= 0xd7a3 && (c - 0xac00) % 28 !== 0;
+};
+const ieyo = (w) => `${w}${hasCoda(w) ? '이에요' : '예요'}`;
+const eul = (w) => `${w}${hasCoda(w) ? '을' : '를'}`;
+
+// 아래 두 단계는 아랫면을 만드니 아래에서 올려다보고, 그 뒤로는 위에서 내려다본다
+function lookFor(stage) {
+  view.tilt(stage <= 1 ? -0.45 : 0.45);
+}
+
+function coachCard({ title, next = '', sym = '', alg = [], how = '', actions = [] }) {
+  $('coach-stage').textContent = title;
+  const nextEl = $('coach-next');
+  nextEl.replaceChildren();
+  if (next) {
+    nextEl.append(next);
+    if (sym) {
+      const s = document.createElement('span');
+      s.className = 'sym';
+      s.textContent = sym;
+      nextEl.append(s);
+    }
+  }
+  const algEl = $('coach-alg');
+  algEl.replaceChildren();
+  alg.forEach((t, i) => {
+    const el = document.createElement('span');
+    el.className = i === 0 ? 'next' : 'rest';
+    el.textContent = t;
+    algEl.append(el, ' ');
+  });
+  $('coach-how').textContent = how;
+  const act = $('coach-actions');
+  act.replaceChildren();
+  for (const { label, go, run } of actions) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = label;
+    if (go) b.className = 'go';
+    b.addEventListener('click', run);
+    act.append(b);
+  }
+  $('coach').hidden = false;
+}
+
+function stopCoach() {
+  mode = null;
+  route = null;
+  $('coach').hidden = true;
+}
+
 function coach() {
-  const box = $('coach');
   if (history.length === 0) {
+    const finished = mode !== null;
     route = null;
-    $('coach-stage').textContent = '다 맞췄어요';
-    $('coach-alg').textContent = '';
-    $('coach-how').textContent = coaching ? '처음부터 다시 해 보려면 메뉴에서 따라 하며 배우기를 누르세요.' : '';
-    box.hidden = false;
-    coaching = false;
+    mode = null;
+    coachCard({
+      title: '다 맞췄어요!',
+      how: finished ? '일곱 단계를 모두 해냈어요. 메뉴의 배우기에서 다른 단계도 연습해 보세요.' : '',
+      actions: [{ label: '닫기', run: stopCoach }],
+    });
     return;
   }
   timer.hinted = true;
-  if (size === 3) {
-    if (!route || !route.length) route = solveLBL(cube);
-    const plan = route;
-    if (plan && plan.length) {
-      const stage = plan[0].stage;
-      const part = [];
-      for (const s of plan) {
-        if (s.stage !== stage || part.length >= 12) break;
-        part.push(s.text);
-      }
-      const more = plan.filter((s) => s.stage === stage).length > part.length;
-      $('coach-stage').textContent = `${stage + 1}/7 ${STAGES[stage].name}`;
-      const alg = $('coach-alg');
-      alg.replaceChildren();
-      part.forEach((t, i) => {
-        const el = document.createElement('span');
-        el.className = i === 0 ? 'next' : 'rest';
-        el.textContent = t;
-        alg.append(el, ' ');
-      });
-      if (more) alg.append('…');
-      $('coach-how').textContent = STAGES[stage].how;
-      box.hidden = false;
-      view.nudge(plan[0].move);
-      return;
-    }
+  if (size !== 3) {
+    const [next] = simplify(invert(history), size);
+    if (!next) return;
+    coachCard({ title: '다음 한 수', next: view.describe(next), how: '3×3이 아니면 섞은 수를 거꾸로 짚어 줘요. 들썩이는 줄을 그쪽으로 돌리세요.' });
+    view.nudge(next);
+    return;
   }
-  const [next] = simplify(invert(history), size);
-  if (!next) return;
-  $('coach-stage').textContent = '다음 한 수';
-  $('coach-alg').textContent = '';
-  $('coach-how').textContent = '3×3이 아니면 섞은 수를 거꾸로 짚어 줘요. 살짝 움직이는 줄을 그쪽으로 돌리세요.';
-  box.hidden = false;
-  view.nudge(next);
+  const prog = progress(cube);
+  const lesson = mode?.lesson ?? null;
+  if (lesson !== null && prog.stage > lesson) {
+    // 이 단계 끝
+    route = null;
+    const last = lesson >= 6;
+    coachCard({
+      title: `${lesson + 1}단계 ${STAGES[lesson].name} 끝!`,
+      how: last ? '마지막 단계까지 해냈어요.' : `잘했어요. 다음은 ${lesson + 2}단계 ${ieyo(STAGES[lesson + 1].name)}.`,
+      actions: last ? [{ label: '닫기', run: stopCoach }] : [
+        { label: '다음 단계', go: true, run: () => { mode = { lesson: lesson + 1 }; coach(); } },
+        { label: '그만', run: stopCoach },
+      ],
+    });
+    return;
+  }
+  if (!route || !route.length) {
+    const limit = lesson ?? 6;
+    route = (solveLBL(cube) ?? []).filter((s) => s.stage <= limit);
+  }
+  if (!route.length) return;
+  const step = route[0];
+  const stage = step.stage;
+  const repair = lesson !== null && stage < lesson;
+  if (mode && (mode.view ?? -1) !== (stage <= 1)) {
+    mode.view = stage <= 1;
+    lookFor(stage);
+  }
+  // 다음 면이 뒤에 숨어 있으면 큐브를 돌려 보여 준다
+  view.see(step.move);
+  const alg = [];
+  for (const s of route) {
+    if (s.stage !== stage || alg.length >= 12) break;
+    alg.push(s.text);
+  }
+  coachCard({
+    title: repair
+      ? `앞 단계가 흐트러졌어요 · 먼저 ${stage + 1}단계 ${eul(STAGES[stage].name)} 되돌려요`
+      : `${stage + 1}/7 ${STAGES[stage].name} · ${COUNTED[stage]} ${prog.counts[stage]}/4`,
+    next: view.describe(step.move),
+    sym: step.text,
+    alg,
+    how: STAGES[stage].how,
+    actions: mode ? [{ label: '그만', run: stopCoach }] : [],
+  });
+  view.nudge(step.move);
 }
 
 $('hint').addEventListener('click', () => {
@@ -200,10 +273,7 @@ $('hint').addEventListener('click', () => {
   coach();
 });
 
-$('coach-close').addEventListener('click', () => {
-  coaching = false;
-  $('coach').hidden = true;
-});
+$('coach-close').addEventListener('click', stopCoach);
 
 // 메뉴: 배우기, 기호, 공식
 const guide = $('guide');
@@ -225,26 +295,75 @@ for (const name of ['learn', 'moves', 'algs']) {
   });
 }
 const ALGS = [
-  ['아래 십자', '(경우마다 다름)'],
-  ['첫 층 모서리', "R U R' U'  (맞을 때까지 되풀이)"],
-  ['가운데 층', "오른쪽으로: U R U' R' U' F' U F\n왼쪽으로:  U' L' U L U F U' F'"],
-  ['윗면 십자', "F R U R' U' F'"],
-  ['윗 모서리 맞추기', "R U R' U R U2 R' U"],
-  ['윗 귀 자리', "U R U' L' U R' U' L"],
-  ['윗 귀 돌리기', "R' D' R D  (윗면 색이 위를 볼 때까지)"],
+  '(경우마다 다름)',
+  "R U R' U'  (맞을 때까지 되풀이)",
+  "오른쪽으로: U R U' R' U' F' U F\n왼쪽으로:  U' L' U L U F U' F'",
+  "F R U R' U' F'",
+  "R U R' U R U2 R' U",
+  "U R U' L' U R' U' L",
+  "R' D' R D  (윗면 색이 위를 볼 때까지)",
+];
+const GOALS = [
+  '아래 면에 같은 색 십자를 만들고, 십자 끝 모서리의 옆 색을 옆면 가운데 색과 맞춰요.',
+  '아래 귀 넷을 채워 아래 면을 한 색으로 만들고, 첫 층 옆 줄도 맞춰요.',
+  '가운데 층 모서리 넷을 넣어 아래 두 층을 끝내요.',
+  '윗 모서리 넷의 윗면 색이 위를 보게 해 윗면에 십자를 만들어요.',
+  '윗 모서리 넷의 옆 색을 옆면 가운데 색과 맞춰요.',
+  '윗 귀 넷을 제자리로 옮겨요. 돌아가 있어도 괜찮아요.',
+  '윗 귀를 돌려 윗면을 한 색으로 만들면 끝이에요.',
 ];
 STAGES.forEach((stage, i) => {
+  // 공식 판
   const item = document.createElement('div');
   item.className = 'guide-alg';
   const title = document.createElement('b');
   title.textContent = `${i + 1}. ${stage.name}`;
   const code = document.createElement('code');
-  code.textContent = ALGS[i][1];
+  code.textContent = ALGS[i];
   const how = document.createElement('p');
   how.textContent = stage.how;
   item.append(title, code, how);
   $('pane-algs').append(item);
+  // 배우기 판의 단계 연습
+  const li = document.createElement('li');
+  li.className = 'lesson';
+  const name = document.createElement('b');
+  name.textContent = `${i + 1}. ${stage.name}`;
+  const goal = document.createElement('p');
+  goal.textContent = GOALS[i];
+  const formula = document.createElement('code');
+  formula.textContent = ALGS[i].split('\n')[0];
+  const go = document.createElement('button');
+  go.type = 'button';
+  go.textContent = '연습';
+  go.addEventListener('click', () => startLesson(i));
+  li.append(name, goal, formula, go);
+  $('lessons').append(li);
 });
+
+/** 그 단계만 연습: 섞은 뒤 앞 단계까지는 맞춰 둔 큐브를 준비한다 */
+function startLesson(k) {
+  openGuide(false);
+  if (busy()) return;
+  if (size !== 3) setSize(3);
+  timer.reset();
+  route = null;
+  // 섞고 앞 단계까지 맞춘다. 그 단계가 우연히 이미 끝나 있으면 다시 섞는다
+  for (let tries = 0; tries < 20; tries++) {
+    for (const m of scramble(3)) commit(m);
+    if (k > 0) {
+      for (const s of solveLBL(cube) ?? []) {
+        if (s.stage >= k) break;
+        commit(s.move);
+      }
+    }
+    if (progress(cube).stage === k) break;
+  }
+  view.sync();
+  refresh();
+  mode = { lesson: k };
+  coach();
+}
 
 $('practice').addEventListener('click', async () => {
   openGuide(false);
@@ -256,15 +375,13 @@ $('practice').addEventListener('click', async () => {
   await play(moves, Math.max(24, Math.min(65, 1300 / moves.length)));
   if (history.length) timer.arm();
   refresh();
-  coaching = true;
+  mode = { lesson: null };
   coach();
 });
 
 $('solve').addEventListener('click', async () => {
   if (busy() || history.length === 0) return;
-  coaching = false;
-  route = null;
-  $('coach').hidden = true;
+  stopCoach();
   timer.reset();
   const moves = simplify(invert(history), size);
   await play(moves, Math.max(32, Math.min(95, 2400 / moves.length)));

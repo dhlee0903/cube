@@ -261,6 +261,37 @@ class Plan {
 }
 
 /**
+ * 단계마다 넷 가운데 몇이 맞았는지와, 아직 다 안 된 첫 단계(다 맞췄으면 7).
+ * 0 아래 십자 모서리, 1 아래 귀, 2 가운데 층 모서리, 3 윗면 십자(윗면 색이 위를 보는 윗 모서리),
+ * 4 옆 색까지 맞은 윗 모서리, 5 자리 맞은 윗 귀, 6 윗면 색이 위를 보는 윗 귀
+ */
+export function progress(cube) {
+  if (cube.n !== 3) return null;
+  if (isSolved(cube)) return { stage: 7, counts: [4, 4, 4, 4, 4, 4, 4] };
+  const p = new Plan(cube);
+  const topEdges = p.cube.cubies.filter((c) => c.stickers.length === 2 && c.pos[1] > 0);
+  const topCorners = p.cube.cubies.filter((c) => c.stickers.length === 3 && c.pos[1] > 0);
+  const counts = [
+    SIDES.filter((X) => p.edgeSolved(D, X)).length,
+    SIDES.filter((X) => p.cornerSolved(D, X, RIGHT[X])).length,
+    SIDES.filter((X) => p.edgeSolved(X, RIGHT[X])).length,
+    topEdges.filter((c) => c.stickers.includes(p.tgt[U]) && p.where(c, p.tgt[U]) === U).length,
+    SIDES.filter((X) => p.edgeSolved(U, X)).length,
+    SIDES.filter((X) => {
+      const slot = [0, 1, 2].map((i) => 2 * (NORMAL[X][i] + NORMAL[RIGHT[X]][i] + NORMAL[U][i]));
+      return p.piece([p.tgt[U], p.tgt[X], p.tgt[RIGHT[X]]]).pos.every((v, i) => v === slot[i]);
+    }).length,
+    topCorners.filter((c) => c.stickers.includes(p.tgt[U]) && p.where(c, p.tgt[U]) === U).length,
+  ];
+  let stage = 0;
+  while (stage < 6 && counts[stage] === 4) stage++;
+  return { stage, counts };
+}
+
+/** 단계마다 쪽지에 쓰는 진행 이름 */
+export const COUNTED = ['십자 모서리', '아래 귀', '가운데 모서리', '윗면 십자 모서리', '옆 색 맞은 윗 모서리', '자리 맞은 윗 귀', '돌려 맞춘 윗 귀'];
+
+/**
  * 지금 큐브를 층별 풀이로 푼 차례. 3×3만 된다.
  * 돌려주는 값: [{ stage(0~6), f, k, move(앱 회전), text(기호) }]
  */

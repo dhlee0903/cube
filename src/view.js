@@ -478,7 +478,9 @@ export class CubeView {
 
   /** 다음에 돌릴 층을 그 방향으로 두 번 살짝 밀었다 놓는다. */
   nudge({ axis, layer, turns }) {
-    const dir = turns === 3 ? -1 : 1;
+    // turns는 -1(=3)이나 1, 2로 온다. -1을 3과 같게 봐야 반대로 들썩이지 않는다
+    const t = ((turns % 4) + 4) % 4;
+    const dir = t === 3 ? -1 : 1;
     const angles = [];
     this.turning = true;
     return this.tween(1000, (k) => {
@@ -488,6 +490,41 @@ export class CubeView {
       this.turning = false;
       this.sync();
     });
+  }
+
+  /**
+   * 지금 보이는 모습으로 한 수를 말로: 어느 쪽에 보이는 면을, 그 면을 바라보고 어느 방향으로.
+   * 바깥 층만 면 이름으로 말하고, 속 층은 몇 번째 층인지 말한다
+   */
+  describe({ axis, layer, turns }) {
+    const n = this.cube?.n ?? 3;
+    const t = ((turns % 4) + 4) % 4;
+    const outer = layer === 0 || layer === n - 1;
+    const side = layer === n - 1 ? 1 : -1;
+    const look = this.aimQuat();
+    const c = AXES[axis].clone().multiplyScalar(side).applyQuaternion(look);
+    let where;
+    if (c.y > 0.6) where = '윗면';
+    else if (c.y < -0.6) where = '아랫면';
+    else {
+      const lr = c.x > 0.25 ? '오른쪽 ' : c.x < -0.25 ? '왼쪽 ' : '';
+      where = `${lr}${c.z >= 0 ? '앞' : '뒤'} 면`;
+    }
+    if (!outer) where = `${where} 쪽에서 ${Math.min(layer, n - 1 - layer) + 1}번째 층`;
+    // 그 면 쪽에서 바라볼 때: + 쪽 면은 turns -1이 시계, - 쪽 면은 +1이 시계
+    const cw = t === 2 ? null : (side > 0 ? t === 3 : t === 1);
+    const how = t === 2 ? '반 바퀴' : cw ? '시계 방향으로' : '반시계 방향으로';
+    // 윗면·아랫면이 안 보이면 앞에서 보이는 줄로 다시 말한다: 앞쪽 점이 돌 때 화면에서 어느 쪽으로 가는지
+    let hint = '';
+    if (axis === 1 && c.z < -0.2 && t !== 2) {
+      const ax = AXES[axis].clone().applyQuaternion(look);
+      const toCam = new Vector3(0, 0, 1);
+      const perp = toCam.clone().addScaledVector(ax, -toCam.dot(ax)).normalize();
+      const p = ax.clone().multiplyScalar(layer - (n - 1) / 2).addScaledVector(perp, 1.5);
+      const v = ax.clone().multiplyScalar(t === 1 ? 1 : -1).cross(p);
+      hint = ` · 앞에서 보면 맨 ${c.y > 0 ? '윗' : '아랫'}줄을 ${v.x > 0 ? '오른쪽' : '왼쪽'}으로`;
+    } else if (c.z < -0.2) hint = ' (뒤쪽 면이에요. 큐브를 굴려 보세요)';
+    return `${where}을 ${how}${hint}`;
   }
 
   // ---- 테마 ----
@@ -957,6 +994,46 @@ export class CubeView {
     this.pitch = Math.min(QUARTER, Math.max(-QUARTER, this.pitch + dy * speed));
     this.root.quaternion.setFromEuler(new Euler(this.pitch, this.yaw, 0));
     this.invalidate();
+  }
+
+  /** 큐브를 위에서(pitch > 0) 또는 아래에서(pitch < 0) 보도록 천천히 기울인다. 옆으로 돈 각도는 그대로 둔다 */
+  tilt(pitch, ms = 600) {
+    return this.turnTo(pitch, this.goal?.yaw ?? this.yaw, ms);
+  }
+
+  /** 보는 각도를 천천히 바꾼다. 도는 동안에도 말로 짚는 방향은 다 돈 뒤 모습으로 셈하게 가는 곳을 적어 둔다 */
+  turnTo(pitch, yaw, ms = 600) {
+    const p0 = this.pitch;
+    const y0 = this.yaw;
+    if (Math.abs(p0 - pitch) < 1e-3 && Math.abs(y0 - yaw) < 1e-3) return Promise.resolve();
+    const goal = { pitch, yaw };
+    this.goal = goal;
+    return this.tween(ms, (k) => {
+      const e = k * k * (3 - 2 * k);
+      this.pitch = p0 + (pitch - p0) * e;
+      this.yaw = y0 + (yaw - y0) * e;
+      this.root.quaternion.setFromEuler(new Euler(this.pitch, this.yaw, 0));
+    }).then(() => { if (this.goal === goal) this.goal = null; });
+  }
+
+  /** 다 돈 뒤(또는 지금) 큐브가 놓인 방향 */
+  aimQuat() {
+    return this.goal ? new Quaternion().setFromEuler(new Euler(this.goal.pitch, this.goal.yaw, 0)) : this.root.quaternion;
+  }
+
+  /** 다음 수의 옆면이 뒤로 숨어 있으면 큐브를 옆으로 돌려 그 면이 앞에 오게 한다 */
+  see({ axis, layer }) {
+    const n = this.cube?.n ?? 3;
+    if (axis === 1 || (layer !== 0 && layer !== n - 1)) return;
+    const side = layer === n - 1 ? 1 : -1;
+    const normal = AXES[axis].clone().multiplyScalar(side);
+    const pitch = this.goal?.pitch ?? this.pitch;
+    const yaw = this.goal?.yaw ?? this.yaw;
+    const facing = (y) => normal.clone().applyQuaternion(new Quaternion().setFromEuler(new Euler(pitch, y, 0))).z;
+    if (facing(yaw) > 0.3) return;
+    let best = yaw;
+    for (const d of [Math.PI / 2, -Math.PI / 2, Math.PI]) if (facing(yaw + d) > facing(best)) best = yaw + d;
+    this.turnTo(pitch, best, 700);
   }
 
   /** 화면 좌표에서 큐브 겉면의 어디를 짚었는지. 큐브 안쪽 좌표로 돌려준다. */
