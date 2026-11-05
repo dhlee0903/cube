@@ -64,13 +64,11 @@ view.setCube(cube);
 if (import.meta.env.DEV) window.cube = { view, solution: () => solution() };
 
 /**
- * 맞추기 길. 2×2·3×3은 컴퓨터 풀이(shortest.js)로 가장 짧게 찾고, 지금까지 돌린 걸 되감는 게 더 짧으면 되감는다.
- * 다른 크기는 되감는다.
+ * 맞추기 길. 2×2·3×3은 지금 큐브 상태만 보고 컴퓨터 풀이(shortest.js)로 푼다(돌린 기록은 안 본다).
+ * 4×4부터는 지금까지 돌린 걸 되감는다.
  */
 function solution() {
-  const back = simplify(invert(history), size);
-  const short = solveShort(cube);
-  return short && short.length < back.length ? short : back;
+  return solveShort(cube) ?? simplify(invert(history), size);
 }
 
 /** 컴퓨터 풀이 표(0.5초쯤)를 쉬는 틈에 미리 만들어 둔다 */
