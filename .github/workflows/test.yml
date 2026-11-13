@@ -1,0 +1,27 @@
+name: 테스트
+
+# 배포는 Vercel이 맡는다(저장소를 Vercel에 연결하면 push마다 알아서 올린다).
+# 여기서는 PR과 main에서 테스트와 빌드만 확인한다.
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - run: npm ci
+
+      - name: 테스트
+        run: npm test
+
+      - name: 빌드
+        run: npm run build

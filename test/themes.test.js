@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { THEMES, themeById } from '../src/themes.js';
+import { GROUPS, THEMES, themeById } from '../src/themes.js';
 import { Timer, formatTime } from '../src/timer.js';
 
 // sRGB hex → CIE Lab
@@ -29,6 +29,13 @@ test('테마마다 면 색 여섯 개, 이름과 id는 겹치지 않는다', () 
     for (const c of [...t.faces, t.bg, t.ink, t.body.color]) assert.match(c, /^#[0-9A-F]{6}$/i, `${t.id} ${c}`);
     assert.equal(themeById(t.id), t);
   }
+});
+
+test('테마는 모두 한 무리에만 들어간다', () => {
+  const listed = GROUPS.flatMap((g) => g.themes);
+  assert.equal(new Set(listed).size, listed.length, '두 무리에 든 테마가 있다');
+  for (const id of listed) assert.ok(themeById(id), `없는 테마 ${id}`);
+  for (const t of THEMES) assert.ok(listed.includes(t.id), `무리에 없는 테마 ${t.name}`);
 });
 
 test('한 테마 안의 면 색은 서로 헷갈리지 않는다', () => {
@@ -114,5 +121,18 @@ test('돌아가는 곡선은 0에서 시작해 정확히 1에서 끝난다', asy
     assert.ok(Math.abs(ease(0)) < 0.02, `${name}(0) = ${ease(0)}`);
     assert.equal(ease(1), 1, `${name}(1)`);
     assert.ok(time > 0);
+  }
+});
+
+test('테마마다 소리 묶음이 있고 그 소리 파일이 모두 있다', async () => {
+  const { KITS } = await import('../src/sound.js');
+  const { existsSync } = await import('node:fs');
+  for (const t of THEMES) {
+    assert.ok(KITS.includes(t.sound), `${t.name}: 소리 묶음 '${t.sound}'이 없다`);
+  }
+  for (const kit of KITS) {
+    for (const name of [`${kit}-1`, `${kit}-2`, `${kit}-3`]) {
+      assert.ok(existsSync(new URL(`../public/sounds/${name}.mp3`, import.meta.url)), `${name}.mp3가 없다`);
+    }
   }
 });
