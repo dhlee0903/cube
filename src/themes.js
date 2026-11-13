@@ -3535,6 +3535,32 @@ export const THEMES = [
     ambient: { mode: 'float', shape: 'glow', colors: ['#FFD27A', '#FFB040'], count: 14, size: 0.014, speed: 0.08, opacity: 0.6, additive: true },
     burst: { shape: 'glow', colors: ['#FFE2A0', '#FFC050', '#FF9A30'], size: 0.05, speed: 2, gravity: 1.8, drag: 2, life: 0.8, additive: true },
   },
+  {
+    // 살아 있는 무늬. 큐브 겉면 전체가 살아 있는 한 장의 피부. 반응-확산 시뮬레이션이 여섯 면 위에서 실시간으로 돌아 산호 같은
+    // 무늬가 스스로 자라고 갈라지며 실제로 솟고, 스티커 경계를 넘어 이어진다. 층을 돌리면 무늬가 잘리고, 돌아간 뒤 새 이웃과 다시 이어 아문다
+    id: 'living',
+    name: '살아 있는 무늬',
+    bg: '#06141A',
+    ink: '#D8EEF0',
+    backdrop: [
+      'radial-gradient(55% 40% at 50% 0%, rgba(90,190,200,.28), transparent 70%)',
+      'radial-gradient(85% 70% at 50% 45%, #0B2630, #030A0E)',
+    ].join(', '),
+    drift: 'radial-gradient(40% 30% at 50% 8%, rgba(120,210,220,.1), transparent 70%)',
+    form: { bevel: 0.06, size: 0.95, radius: 0.08, grid: 72 },
+    body: { color: '#141C1E', roughness: 0.5 },
+    faces: ['#FF6A3A', '#2AC8C0', '#9A5AE8', '#F2C83A', '#FFB4C8', '#58C85A'],
+    lights: {
+      sky: '#bfe8f0', ground: '#06181c', hemi: 1.1,
+      key: ['#dff6ff', 2.2, [-3, 7, 4]], fill: ['#ffd2b0', 0.45, [6, -2, 3]], rim: ['#9ad8e8', 0.8, [1, 4, -6]],
+    },
+    env: 0.35,
+    surface: 'living',
+    sound: 'squish',
+    motion: 'smooth',
+    ambient: { mode: 'float', shape: 'glow', colors: ['#9AE8E0', '#D8FFF4'], count: 12, size: 0.012, speed: 0.06, opacity: 0.5, additive: true },
+    burst: { shape: 'bubble', colors: ['#D8FFF8', '#9AE8E0'], size: 0.05, speed: 1.6, gravity: 1.2, drag: 2.2, life: 0.9 },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3542,7 +3568,7 @@ export const themeById = (id) => THEMES.find((t) => t.id === id);
 // 테마 고르는 목록에서 묶어 보여 주는 무리. 테마는 모두 한 무리에만 들어간다(테스트가 본다)
 export const GROUPS = [
   { name: '기본', themes: ['classic', 'candy', 'brick', 'dice', 'jelly', 'clay', 'bubblewrap', 'paper', 'box', 'slime', 'stickmen'] },
-  { name: '자연', themes: ['timber', 'pebble', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert', 'space'] },
+  { name: '자연', themes: ['timber', 'pebble', 'sunset', 'water', 'rain', 'ice', 'aurora', 'desert', 'space', 'living'] },
   { name: '빛·불', themes: ['neon', 'disco', 'kaleido'] },
   { name: '보석·광물', themes: ['gem', 'opal', 'agate', 'marble', 'bismuth', 'druze', 'pave', 'diamond', 'ruby', 'sapphire', 'emerald', 'quartz', 'starstone', 'moonstone', 'amberstone'] },
   { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'camo', 'enamel'] },

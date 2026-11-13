@@ -6318,6 +6318,93 @@ B.golddragon = {
   surface: 'roughnessFactor = .42 + .1 * fxN2(fxBodyUV() * 140. + vSeed); metalnessFactor = .9;',
 };
 
+S.living = {
+  // 살아 있는 무늬. 큐브 겉면 전체가 살아 있는 한 장의 피부다. 반응-확산(Gray–Scott) 시뮬레이션이 GPU에서(life.js) 여섯 면
+  // 모든 스티커 위에서 실시간으로 돌아, 산호·표범 무늬·지문 같은 튜링 무늬가 스스로 자라고 갈라지고 합쳐지며 멈추지 않는다.
+  // 무늬는 이웃 스티커로 확산이 통해 스티커 경계와 큐브 모서리를 넘어 이어진다. 층을 돌리면 그 순간 무늬가 조각 경계에서
+  // 잘리고, 돌아간 뒤엔 새 이웃과 다시 이어 자라 흉터가 아물듯 메워진다. 능선(v 농도 높은 곳)은 산호처럼 실제로 솟아 젖은 듯
+  // 반들거리고 골은 어둡고 거칠다. 골은 면 색의 어둡고 탁한 톤, 능선은 면 색의 밝은 톤이라 무늬가 곧 면 색
+  head: `
+    uniform sampler2D uLife;
+    uniform vec4 uLifeGrid;
+    // 전역 타일 번호 = 원래 면 × n² + 원래 칸. aHome(정점에선 속성, 조각에선 varying)과 uFace만으로 정해져 따로 속성이 없어도 된다
+    float fxLifeTile() {
+      float n = floor(2. / aHome.z + .5);
+      vec2 c = floor(aHome.xy / aHome.z + (n - 1.) * .5 + .5);
+      return uFace * n * n + c.y * n + c.x;
+    }
+    // 타일 안 좌표(0~1) → atlas 좌표. 반 텍셀 안쪽으로 눌러 옆 타일이 새어 들지 않게
+    vec2 fxLifeUV(float tile, vec2 uv) {
+      vec2 o = vec2(mod(tile, uLifeGrid.x), floor(tile / uLifeGrid.x));
+      return (o + clamp(uv, .5 / uLifeGrid.z, 1. - .5 / uLifeGrid.z)) / uLifeGrid.xy;
+    }
+    // 스티커 평면 점 p의 (u, v) 농도. 텍셀 사이를 3차 B-스플라인(선형 필터 네 번)으로 이어 능선 윤곽에 계단이 지지 않고
+    // 기울기(법선)도 텍셀 격자를 따라 일렁이지 않게
+    vec2 fxLifeAt(vec2 p) {
+      float r = uLifeGrid.z;
+      float tile = fxLifeTile();
+      vec2 t = (p / (2. * uSticker.x) + .5) * r - .5;
+      vec2 i = floor(t);
+      vec2 f = t - i;
+      vec2 f2 = f * f, f3 = f2 * f;
+      vec2 w0 = (1. - 3. * f + 3. * f2 - f3) / 6.;
+      vec2 w1 = (4. - 6. * f2 + 3. * f3) / 6.;
+      vec2 w3 = f3 / 6.;
+      vec2 g0 = w0 + w1;
+      vec2 g1 = 1. - g0;
+      vec2 h0 = (i - .5 + w1 / g0) / r;
+      vec2 h1 = (i + 1.5 + w3 / g1) / r;
+      vec2 a = texture2D(uLife, fxLifeUV(tile, vec2(h0.x, h0.y))).rg;
+      vec2 b = texture2D(uLife, fxLifeUV(tile, vec2(h1.x, h0.y))).rg;
+      vec2 c = texture2D(uLife, fxLifeUV(tile, vec2(h0.x, h1.y))).rg;
+      vec2 d = texture2D(uLife, fxLifeUV(tile, vec2(h1.x, h1.y))).rg;
+      return mix(mix(a, b, g1.x), mix(c, d, g1.x), g1.y);
+    }
+    float fxLifeRidge(float v) { return smoothstep(.1, .3, v); }
+    float fxLivingH(vec2 p, float seed) {
+      float v = fxLifeAt(p).g;
+      float r = fxLifeRidge(v);
+      return smoothstep(0., .05, fxEdgeAt(p)) * (.003 + .055 * r * (.7 + .3 * smoothstep(.25, .38, v)));
+    }`,
+  height: 'fxLivingH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec2 fxL = fxLifeAt(vLocal.xy);
+    float fxV = fxL.g;
+    float fxAa = fwidth(fxV) + .004;
+    float fxRidge = smoothstep(.1 - fxAa, .3 + fxAa, fxV);
+    float fxCrest = smoothstep(.24, .37, fxV);
+    float fxHt = fxLivingH(vLocal.xy, vSeed);
+    vec3 fxBase = diffuseColor.rgb;
+    float fxLum = dot(fxBase, vec3(.3, .59, .11));
+    vec3 fxDeep = mix(fxBase, vec3(fxLum), .5) * .2;
+    vec3 fxFlank = fxBase * .62;
+    vec3 fxTop = mix(fxBase, vec3(1.), .22) * 1.05;
+    vec3 fxC = mix(fxDeep, fxFlank, fxRidge);
+    fxC = mix(fxC, fxTop, fxCrest);
+    // 골의 잔 구멍(숨구멍)과 영양(u)이 남은 자리의 창백함
+    vec2 fxU = fxUV();
+    float fxPore = smoothstep(.55, .85, fxN2(fxU * 70. + vSeed * 9.));
+    fxC *= 1. - (1. - fxRidge) * .18 * fxPore;
+    fxC = mix(fxC, fxC * 1.25 + .02, (1. - fxRidge) * smoothstep(.8, 1., fxL.r) * .35);
+    diffuseColor.rgb = fxC;`,
+  normal: 'normal = fxBump(normal, clamp(fxHt - vLift, -.02, .02) - fxPore * (1. - smoothstep(.04, .12, fxV)) * .0003);',
+  surface: 'roughnessFactor = mix(mix(.8, .5, fxRidge), .16, fxCrest); metalnessFactor = 0.;',
+  emissive: `
+    float fxFr = fxFresnel(normal, 3.);
+    totalEmissiveRadiance = mix(fxDeep, fxTop, fxRidge) * fxFr * .5 + fxTop * fxCrest * .03;`,
+};
+B.living = {
+  // 몸통은 어둡고 축축한 돌
+  color: `
+    float fxG = fxN3(vLocal * 14. + vSeed * 3.);
+    float fxWet = smoothstep(.6, .9, fxN3(vLocal * 40. + 7.));
+    diffuseColor.rgb *= (.65 + .5 * fxG) * (1. - .25 * fxWet);`,
+  normal: 'normal = fxBump(normal, fxN3(vLocal * 40. + 7.) * .002);',
+  surface: 'roughnessFactor = .35 + .35 * fxG - .2 * fxWet; metalnessFactor = 0.;',
+  emissive: 'totalEmissiveRadiance = vec3(.35, .55, .55) * fxFresnel(normal, 4.) * .12;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -6339,6 +6426,7 @@ export const MOVING = new Set([
   'aqua',
   'men',
   'golddragon',
+  'living',
 ]);
 
 /**

@@ -3,7 +3,7 @@ import {
   Euler, ExtrudeGeometry, Float32BufferAttribute, FloatType, FrontSide, NearestFilter, RGBAFormat,
   HemisphereLight, Group, InstancedBufferAttribute, InstancedMesh, Matrix4, MeshBasicMaterial, MeshStandardMaterial,
   NormalBlending, PMREMGenerator, PerspectiveCamera, PlaneGeometry, Quaternion, Raycaster, Scene, Shape,
-  ShapeGeometry, Vector2, Vector3, WebGLRenderer,
+  ShapeGeometry, Vector2, Vector3, Vector4, WebGLRenderer,
 } from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
@@ -15,6 +15,7 @@ import { MOTIONS } from './motions.js';
 import { Filter } from './filters.js';
 import { JOINTS, Men } from './men.js';
 import { Grains } from './sand.js';
+import { Life } from './life.js';
 
 const BODY = 0.96;
 const SIZE = 3; // 몇 칸이든 화면에서는 같은 크기로 보이게
@@ -197,6 +198,9 @@ export class CubeView {
       // 막대 사람 마디 자리(스티커마다 한 줄, 스티커 좌표)
       uMen: { value: null },
       uMenSize: { value: new Vector2(1, 1) },
+      // 살아 있는 무늬: 반응-확산 상태 atlas(R=u, G=v)와 그 격자(cols, rows, RES, 타일 수)
+      uLife: { value: null },
+      uLifeGrid: { value: new Vector4(1, 1, 1, 1) },
     };
     this.themeAt = 0;
     // 렌더링 전체에 거는 화면 필터(카툰, 8비트, 고장 난 화면)
@@ -402,6 +406,7 @@ export class CubeView {
     this.base = cube.cubies.map(() => ({ pos: new Vector3(), quat: new Quaternion() }));
     this.now = cube.cubies.map(() => ({ pos: new Vector3(), quat: new Quaternion() }));
     this.pieceMats = cube.cubies.map(() => new Matrix4());
+    this.makeLife();
     this.sync();
     this.makeSand();
   }
@@ -440,6 +445,8 @@ export class CubeView {
       this.now[i].quat.copy(b.quat);
     });
     this.place();
+    // 살아 있는 무늬: 수가 확정되면 무늬의 이웃을 지금 자리에 맞춰 다시 잇는다
+    this.life?.update(this.cube);
   }
 
   /** axis 축의 층마다 angles[층]만큼 돌린 모습으로 놓는다. */
@@ -548,10 +555,29 @@ export class CubeView {
     }
   }
 
+  /**
+   * 살아 있는 무늬 테마: 큐브 겉면 전체에서 도는 반응-확산 시뮬레이션(life.js). 테마가 켤 때만 만들고 끌 때 치운다.
+   * 큐브 크기가 바뀌면 타일 수가 달라지니 새로 만든다(그때 씨를 다시 뿌린다). 섞거나 돌릴 때는 sync()가 이웃만 다시 잇는다
+   */
+  makeLife() {
+    const want = this.lifeOn && this.cube;
+    if (this.life && (!want || this.life.n !== this.cube.n)) {
+      this.life.dispose();
+      this.life = null;
+      this.uniforms.uLife.value = null;
+    }
+    if (want && !this.life) {
+      this.life = new Life(this.renderer, this.cube);
+      this.uniforms.uLifeGrid.value.copy(this.life.grid);
+      this.uniforms.uLife.value = this.life.texture;
+    }
+  }
+
   setTheme(theme) {
     this.sandTheme = theme.grains ? theme : null;
     const { body, sticker = {}, glow = 0, light = 1, halo = 0 } = theme;
     const surface = theme.surface ?? 'plain';
+    this.lifeOn = surface === 'living';
     if (this.shape(theme.form, theme.haloMode) && this.cube) this.setCube(this.cube);
 
     this.bodyMat.color.set(body.color);
@@ -622,6 +648,7 @@ export class CubeView {
     this.themeAt = performance.now();
     if (this.cube) this.place();
     this.makeSand();
+    this.makeLife();
     this.invalidate();
   }
 
@@ -854,6 +881,16 @@ export class CubeView {
       try { this.walkMen(dt); } catch (err) {
         if (!this.menFailed) console.error('막대 사람을 움직이지 못했다', err);
         this.menFailed = true;
+      }
+    }
+    // 살아 있는 무늬: 오프스크린에서 몇 스텝 자라게 한 뒤 가장 최근 장을 스티커가 읽는다(그리는 장과는 다른 장)
+    if (this.life) {
+      try {
+        this.life.step(now / 1000);
+        this.uniforms.uLife.value = this.life.texture;
+      } catch (err) {
+        if (!this.lifeFailed) console.error('살아 있는 무늬를 키우지 못했다', err);
+        this.lifeFailed = true;
       }
     }
     if (this.filter.mode) this.filter.render(this.scene, this.camera);
