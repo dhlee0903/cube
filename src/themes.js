@@ -3508,6 +3508,33 @@ export const THEMES = [
     motion: 'smooth',
     burst: { shape: 'bubble', colors: ['#FFFFFF', '#CFEFFF'], size: 0.06, speed: 2, gravity: 2, drag: 2, life: 1 },
   },
+  {
+    // 보물 더미 위의 황금 용. 다 맞추면 면 하나가 금 비늘 덮인 살갗 한 장. 두툼한 방패꼴 금 비늘이 기와처럼 겹쳐 끝이 들리고,
+    // 세공한 테두리 홈이 돌며, 골짜기엔 그을린 금과 붉은 기운. 비늘 한가운데 세팅된 보석 카보숑 빛깔이 곧 면 색
+    id: 'golddragon',
+    name: '황금 용',
+    bg: '#0C0805',
+    ink: '#F6EBD6',
+    backdrop: [
+      'radial-gradient(42% 30% at 50% 80%, rgba(255,170,60,.22), transparent 70%)',
+      'radial-gradient(26% 18% at 20% 88%, rgba(255,140,40,.12), transparent 70%)',
+      'radial-gradient(85% 65% at 50% 40%, #2A1A0E, #070402)',
+    ].join(', '),
+    drift: 'radial-gradient(35% 24% at 50% 84%, rgba(255,190,80,.08), transparent 70%)',
+    form: { bevel: 0.07, size: 0.94, radius: 0.08, grid: 72 },
+    body: { color: '#2A1C10', roughness: 0.42, metalness: 0.9 },
+    faces: ['#B4202C', '#1E8C50', '#2652C8', '#7E34B0', '#ECE8DE', '#2AB0BE'],
+    lights: {
+      sky: '#ffd9a8', ground: '#1a0c04', hemi: 0.45,
+      key: ['#ffe2b8', 2.2, [-4, 6, 5]], fill: ['#ff9a4a', 0.5, [6, -2, 3]], rim: ['#9ab8ff', 1.7, [2, 4, -6]],
+    },
+    env: 0.75,
+    surface: 'golddragon',
+    sound: 'metal',
+    motion: 'heavy',
+    ambient: { mode: 'float', shape: 'glow', colors: ['#FFD27A', '#FFB040'], count: 14, size: 0.014, speed: 0.08, opacity: 0.6, additive: true },
+    burst: { shape: 'glow', colors: ['#FFE2A0', '#FFC050', '#FF9A30'], size: 0.05, speed: 2, gravity: 1.8, drag: 2, life: 0.8, additive: true },
+  },
 ];
 
 export const themeById = (id) => THEMES.find((t) => t.id === id);
@@ -3521,7 +3548,7 @@ export const GROUPS = [
   { name: '공예·천', themes: ['dancheong', 'najeon', 'stained', 'mosaic', 'glass', 'marquetry', 'ink', 'knit', 'camo', 'enamel'] },
   { name: '문양', themes: ['lantern'] },
   { name: '패턴', themes: ['houndstooth', 'glencheck', 'herringbone', 'gingham', 'argyle', 'chevron', 'tartan', 'windowpane', 'buffalo', 'madras', 'birdseye'] },
-  { name: '판타지', themes: ['dragon', 'phoenix', 'mithril', 'damascus', 'fairywing', 'dragonegg'] },
+  { name: '판타지', themes: ['dragon', 'phoenix', 'mithril', 'damascus', 'fairywing', 'dragonegg', 'golddragon'] },
   { name: '동물', themes: ['wool', 'hamster', 'wild', 'croc', 'python', 'calf'] },
   { name: '금속·기계', themes: ['metal', 'gauge', 'rust', 'mercury', 'circuit', 'carbon', 'candypaint'] },
   {

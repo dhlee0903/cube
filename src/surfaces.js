@@ -6223,6 +6223,101 @@ B.candypaint = {
   surface: 'roughnessFactor = .08; metalnessFactor = .3;',
 };
 
+S.golddragon = {
+  // 황금 용의 비늘. 다 맞추면 면 하나가 금 비늘 덮인 살갗 한 장이다. 끝이 둥근 두툼한 방패꼴 금 비늘이 기와처럼 아래로 겹쳐,
+  // 윗비늘 끝이 아랫비늘 뿌리를 덮는다. 비늘은 뿌리에서 끝으로 갈수록 두꺼워져 끝이 크게 들렸고, 가장자리를 따라 세공한
+  // 테두리 홈이 돌며, 끝 쪽엔 넓고 완만한 능선이 섰다. 금은 세공 긁힘이 한 방향으로 잔잔히 나 있고(이방성 광택),
+  // 비스듬히 보면 따뜻하게 되비친다. 비늘 골짜기와 윗비늘 그늘엔 그을린 어두운 금과 붉은 기운(화염 변색), 비늘 뿌리 밑
+  // 틈으로 금빛이 아주 약하게 샌다. 비늘 한가운데엔 세공 홈 안에 보석 카보숑이 박혀 있고, 그 보석 빛깔이 곧 면 색
+  head: `
+    // 비늘: x 윤곽 거리(0 가운데 ~ 1 가장자리), y 가로(-1 ~ 1), z 세로(1 뿌리 ~ -1 끝), w 비늘마다 난수
+    float fxGdSh;
+    vec4 fxGdScale(vec2 F) {
+      vec2 g = F * vec2(3.1, 3.5);
+      fxGdSh = 9.;
+      for (int j = 2; j >= -1; j--) {
+        float row = floor(g.y) + float(j);
+        float off = mod(row, 2.) * .5;
+        float cx = floor(g.x - off) + .5 + off;
+        for (int i = -1; i <= 1; i++) {
+          vec2 c = vec2(cx + float(i), row + .5);
+          float hs = fxH2(c + 5.3);
+          vec2 d = (g - c) / vec2(.78, 1.1);
+          d.x += (hs - .5) * .07 * (1. - d.y);
+          // 둥근 방패: 끝은 둥글고 넓게, 뿌리 쪽은 살짝 좁다
+          float w = 1. - .16 * smoothstep(-.3, 1., d.y);
+          float r = max(length(vec2(d.x / w, d.y)), abs(d.x / w) * .35 - d.y);
+          if (r < 1.) return vec4(r, d.x / w, d.y, hs);
+          fxGdSh = min(fxGdSh, r - 1.);
+        }
+      }
+      return vec4(1., 0., 0., 0.);
+    }
+    // 보석 카보숑: 양끝이 뾰족한 눈(마퀴즈)꼴(0 가운데 ~ 1 테두리)
+    float fxGdGem(vec4 s) { vec2 a = abs(vec2(s.y / .2, (s.z + .36) / .34)); return pow(pow(a.x, 1.5) + pow(a.y, 1.5), 1. / 1.5); }
+    float fxGdScaleH(vec4 s) {
+      float t = clamp((1. - s.z) * .5, 0., 1.);
+      float dome = sqrt(max(0., 1. - s.y * s.y * .7));
+      float body = (.22 + .78 * pow(t, 1.25)) * (.6 + .4 * dome);
+      float e = fxGdGem(s);
+      float keel = exp(-s.y * s.y / .09) * smoothstep(.9, 1.4, e) * smoothstep(.6, -.3, s.z) * .1;
+      float lip = smoothstep(1., .72, s.x);
+      float gem = sqrt(max(0., 1. - e * e)) * .26;
+      return (body + keel) * (.14 + .86 * lip) + gem;
+    }
+    float fxGoldH(vec2 p, float seed) {
+      vec4 s = fxGdScale(aHome.xy + p * aHome.z);
+      return smoothstep(0., .06, fxEdgeAt(p)) * (.008 + .09 * fxGdScaleH(s));
+    }`,
+  height: 'fxGoldH',
+  color: `
+    if (fxEdge() < 0.) discard;
+    vec2 fxF = fxFace();
+    vec4 fxS = fxGdScale(fxF);
+    float fxHt = fxGoldH(vLocal.xy, vSeed);
+    vec3 fxGem = diffuseColor.rgb;
+    float fxT = clamp((1. - fxS.z) * .5, 0., 1.);
+    float fxE = fxGdGem(fxS);
+    float fxAA = fwidth(fxE) * 1.2 + 1e-4;
+    float fxIn = 1. - smoothstep(1. - fxAA, 1. + fxAA, fxE);
+    // 잔 세공은 격자보다 가늘어 법선에서만 새긴다: 보석 둘레 세팅 홈, 가장자리 테두리 홈
+    float fxBezel = exp(-pow((fxE - 1.18) / .14, 2.));
+    float fxGroove = exp(-pow((fxS.x - .82) / .05, 2.));
+    float fxLip = smoothstep(1., .72, fxS.x);
+    float fxChase = (-fxGroove * .009 * fxLip - fxBezel * .007) * (1. - smoothstep(.02, .05, fwidth(fxS.x)));
+    float fxSh = 1. - smoothstep(0., .26, fxGdSh);
+    // 골짜기(뿌리, 세공 홈, 보석 둘레 홈, 윗비늘 그늘)에는 그을린 금과 붉은 변색이 남았다
+    float fxAO = smoothstep(0., .6, fxT) * (1. - fxSh * .85) * (1. - fxGroove * .6) * (1. - fxBezel * .55);
+    // 세공 긁힘: 뿌리에서 끝으로 가는 결, 가늘고 불규칙하다
+    float fxStri = fxN2(vec2(fxS.y * 70. + fxS.w * 9., fxS.z * 5. + fxS.w * 3.)) * .6 + fxN2(vec2(fxS.y * 160. + fxS.w * 31., fxS.z * 9.)) * .4;
+    float fxScr = smoothstep(.72, .9, fxN2(vec2(fxS.y * 24. + fxS.w * 50., fxS.z * 110.)));
+    vec3 fxGold = vec3(1., .6, .16) * (.82 + .18 * fxS.w);
+    vec3 fxBurnt = vec3(.22, .07, .025);
+    vec3 fxRed = vec3(.6, .14, .05);
+    vec3 fxC = mix(fxBurnt, fxGold, fxAO);
+    fxC = mix(fxC, fxRed, (1. - fxAO) * (.7 * smoothstep(.2, .7, fxN2(fxF * 6. + fxS.w * 4.)) + fxSh * .5));
+    fxC *= .96 + .08 * fxStri - fxScr * .08;
+    // 보석: 둥근 카보숑, 가장자리로 갈수록 두꺼워 짙다
+    float fxDeep = sqrt(max(0., 1. - fxE * fxE));
+    vec3 fxStone = fxGem * (.3 + .5 * fxDeep);
+    fxStone = mix(fxStone, fxGem * .12, smoothstep(.6, 1., fxE) * .7);
+    diffuseColor.rgb = mix(fxC, fxStone, fxIn);`,
+  normal: 'normal = fxBump(normal, clamp(fxHt - vLift, -.012, .012) + fxChase + (fxStri * .0004 + fxScr * .0003) * fxAO * (1. - fxIn));',
+  surface: `
+    roughnessFactor = mix(mix(.16, .42, 1. - fxAO) + fxStri * .07 + fxScr * .08, .06, fxIn);
+    metalnessFactor = 1. - fxIn;`,
+  emissive: `
+    float fxFr = fxFresnel(normal, 2.5);
+    vec3 fxSeep = vec3(1., .55, .18) * fxSh * fxSh * smoothstep(.55, .95, fxT) * .1;
+    totalEmissiveRadiance = vec3(1., .58, .22) * fxFr * .12 * fxAO * (1. - fxIn) + fxSeep * (1. - fxIn)
+      + fxIn * (fxGem * fxDeep * fxDeep * .1 + mix(fxGem, vec3(1., .95, .85), .5) * fxFr * .2);`,
+};
+B.golddragon = {
+  // 몸통은 그을린 흑금(어두운 청동빛), 잔 긁힘
+  color: `diffuseColor.rgb *= (.78 + .3 * fxN3(vLocal * 24. + vSeed)) * (.94 + .1 * fxN2(fxBodyUV() * 180. + vSeed));`,
+  surface: 'roughnessFactor = .42 + .1 * fxN2(fxBodyUV() * 140. + vSeed); metalnessFactor = .9;',
+};
+
 export const SURFACES = Object.keys(S);
 
 export const MOVING = new Set([
@@ -6243,6 +6338,7 @@ export const MOVING = new Set([
   'sod',
   'aqua',
   'men',
+  'golddragon',
 ]);
 
 /**
